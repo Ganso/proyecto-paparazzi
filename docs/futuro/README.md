@@ -27,7 +27,31 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 
 ---
 
-## 2. Índice de Especificaciones Técnicas
+## 2. Estimación Comparativa de Complejidad y Esfuerzo
+
+Evaluación técnica de la dificultad de implementación, riesgo de regresión y alcance arquitectónico de cada futurible:
+
+| Especificación / Futurible | Complejidad Estimada | Factores Clave de Esfuerzo | Impacto Arquitectónico | Dependencias |
+|---|:---:|---|---|---|
+| [01. Mapa Abierto y Protagonista Controlable](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) | **Muy Alta (XL)** | Reescritura del bucle de cámara, físicas de movimiento 3D del personaje, navegación libre por el parque, replanteamiento de la IA de evasión de peatones y controles simultáneos (movimiento + cámara). | Modificación nuclear de `main.gd` y del modelo de control. | Ninguna |
+| [02. Mejora Gráfica y Estilos Artísticos](02_ESTILO_VISUAL_Y_POLIGONOS.md) | **Alta (L)** | Remodelado procedural de todas las piezas de `data/piezas/`, adaptación del pesaje rígido de 20 huesos a mayor densidad de polígonos y preservación del presupuesto de VRAM (<60 MiB). | Activos procedurales y pipeline de malla combinada. | Ninguna |
+| [03. Nuevas Cámaras y TLR](03_NUEVAS_CAMARAS_Y_TLR.md) | **Media (M)** | Inversión horizontal en shader/viewport para emular visor de cintura, simulación de procesado computacional móvil y ampliación del catálogo en `equipment.gd`. | Módulo de cámara y renderizado en espejo. | Ninguna |
+| [04. Diversidad de Escenarios Urbanos](04_DIVERSIDAD_ESCENARIOS.md) | **Alta (L)** | Creación de geometrías de bulevares, estaciones y terrazas, adaptación del sistema de carriles a recorridos lineales/irregulares y mantenimiento de 1 draw call estático. | Escenarios (`park.gd`), navegación y POIs. | Ninguna |
+| [05. Desafíos y Modos de Juego](05_DESAFIOS_Y_MODOS_JUEGO.md) | **Baja-Media (S-M)** | Temporizadores, filtros de encargos fotográficos, condiciones de puntuación y menús adicionales; no requiere cambios gráficos ni de motor físico. | Capa de juego (`gameplay.gd`), aislada y modular. | Ninguna |
+| [06. Academia y Tutor de Fotografía](06_MODO_TUTOR_ACADEMIA.md) | **Media (M)** | Lógica pedagógica de diagnóstico interactivo de errores (sub/sobreexposición, desenfoque, trepidación), textos en `textos.es.json` y UI de retroalimentación. | Interfaz y máquina de estados del juego. | Ninguna |
+| [07. Visores Realistas y Ergonomía Móvil](07_VISORES_REALISTAS_Y_MOVIL.md) | **Media (M)** | Shaders de viñeteo óptico y LCD retro en visor, diseño de interfaz táctil a dos pulgares con `TouchScreenButton` y disparador de 2 fases (*half-press*). | Capa de visor (`viewfinder.gd`) y controles. | Ninguna |
+| [08. Captura Automática de Evidencias](08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) | **Baja-Media (S-M)** | Script standalone en `tools/` con subviewports para exportar PNGs, spritesheets combinados y GIFs animados; protegido contra `.import` por `.gdignore`. | Aislado en `tools/`, riesgo cero de regresión en el juego. | Ninguna |
+| [09. Exportación Automatizada a Android](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) | **Baja (S)** | Configuración de preset en `export_presets.cfg` y script bash con llamada headless a Godot y ADB; el motor ya usa `gl_compatibility` y presupuestos óptimos para móvil. | Toolchain externo e infraestructura de build. | SDK de Android |
+
+### Criterios de Calificación de Complejidad
+- **Baja (S)**: Tarea autocontenida de 1 a 2 días de desarrollo; sin riesgo de regresión en la física, óptica o navegación existente.
+- **Media (M)**: Requiere modificaciones en módulos específicos (visores, shaders, lógica de reglas de juego), con pruebas unitarias focalizadas.
+- **Alta (L)**: Demanda remodelado masivo de mallas o rediseño estructural de escenarios y carriles; requiere rebalanceo de presupuestos de GPU y VRAM.
+- **Muy Alta (XL)**: Cambio de paradigma arquitectónico fundamental (del modelo paparazzi estático/raíles a un juego de acción y exploración libre con controles simultáneos de personaje y óptica).
+
+---
+
+## 3. Índice de Especificaciones Técnicas
 
 1. [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](file:///home/ganso/codigo/afotando/docs/futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md) — Protagonista controlable, navegación libre, alternativas de raíles/bancos y esquema de controles.
 2. [02_ESTILO_VISUAL_Y_POLIGONOS.md](file:///home/ganso/codigo/afotando/docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md) — Análisis comparativo de estilos (muñeco de dibujo anatómico vs. low-poly redondeado vs. semi-realismo) y nuevos accesorios.
