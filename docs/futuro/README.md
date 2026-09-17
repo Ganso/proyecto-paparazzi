@@ -11,7 +11,7 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 | Propuesta | Estado | Documento de Especificación / Dónde vive |
 |---|:---:|---|
 | **Protagonista Controlable y Mapa Abierto** | 📝 *Propuesta futura* | [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](file:///home/ganso/codigo/afotando/docs/futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md) |
-| **Mejora Gráfica Intensiva y Estilos Artísticos** | 📝 *Propuesta futura* | [02_ESTILO_VISUAL_Y_POLIGONOS.md](file:///home/ganso/codigo/afotando/docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md) |
+| **Mejora Gráfica Canónica (Maniquí + Cell Shading)** | 🎯 *Dirección Canónica Definida* | Estilo maniquí de madera, cell shading, 4 planos de profundidad y multitud de fondo según [referencia.jpg](referencia.jpg) en [02_ESTILO_VISUAL_Y_POLIGONOS.md](file:///home/ganso/codigo/afotando/docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md). |
 | **Nuevas Cámaras: TLR (Visor invertido), Móvil, Gran Formato** | 📝 *Propuesta futura* | [03_NUEVAS_CAMARAS_Y_TLR.md](file:///home/ganso/codigo/afotando/docs/futuro/03_NUEVAS_CAMARAS_Y_TLR.md) |
 | **Mayor Diversidad de Escenarios Urbanos** | 📝 *Propuesta futura* | [04_DIVERSIDAD_ESCENARIOS.md](file:///home/ganso/codigo/afotando/docs/futuro/04_DIVERSIDAD_ESCENARIOS.md) |
 | **Desafíos Específicos y Modos de Juego** | 📝 *Propuesta futura* | [05_DESAFIOS_Y_MODOS_JUEGO.md](file:///home/ganso/codigo/afotando/docs/futuro/05_DESAFIOS_Y_MODOS_JUEGO.md) |
@@ -54,7 +54,7 @@ Evaluación técnica de la dificultad de implementación, riesgo de regresión y
 ## 3. Índice de Especificaciones Técnicas
 
 1. [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](file:///home/ganso/codigo/afotando/docs/futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md) — Protagonista controlable, navegación libre, alternativas de raíles/bancos y esquema de controles.
-2. [02_ESTILO_VISUAL_Y_POLIGONOS.md](file:///home/ganso/codigo/afotando/docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md) — Análisis comparativo de estilos (muñeco de dibujo anatómico vs. low-poly redondeado vs. semi-realismo) y nuevos accesorios.
+2. [02_ESTILO_VISUAL_Y_POLIGONOS.md](file:///home/ganso/codigo/afotando/docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md) — Estilo visual canónico (Maniquíes de madera + Cell Shading con outlines), 4 planos de profundidad escénica, multitud de fondo no jugable, elementos de parque agradable y banco de accesorios segun [referencia.jpg](referencia.jpg).
 3. [03_NUEVAS_CAMARAS_Y_TLR.md](file:///home/ganso/codigo/afotando/docs/futuro/03_NUEVAS_CAMARAS_Y_TLR.md) — Cámaras de formato medio TLR con visor de cintura invertido horizontalmente, smartphones computacionales y banco óptico 4×5.
 4. [04_DIVERSIDAD_ESCENARIOS.md](file:///home/ganso/codigo/afotando/docs/futuro/04_DIVERSIDAD_ESCENARIOS.md) — Nuevas localizaciones (Bulevar comercial, Estación de tren, Terraza nocturna, Pista deportiva).
 5. [05_DESAFIOS_Y_MODOS_JUEGO.md](file:///home/ganso/codigo/afotando/docs/futuro/05_DESAFIOS_Y_MODOS_JUEGO.md) — Modos de juego reglados (Reto de focal fija, Paparazzi contrarreloj, Multitud maratón, Fotoperiodismo puro).

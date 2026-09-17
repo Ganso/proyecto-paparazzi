@@ -2,7 +2,7 @@
 
 Simulador fotográfico y juego de observación procedural desarrollado en **Godot 4**. El jugador se sitúa en un parque urbano y debe localizar a objetivos específicos descritos por sus rasgos y vestuario, capturándolos con la técnica fotográfica adecuada (exposición, enfoque, distancia focal, velocidad y encuadre).
 
-El visor toma como referencia compositiva `referencia.jpg`; el parque, la iluminación, el mobiliario y la multitud de viandantes son geometría 3D generada y ensamblada proceduralmente a partir de datos paramétricos.
+El visor toma como referencia compositiva [`docs/futuro/referencia.jpg`](docs/futuro/referencia.jpg); el parque, la iluminación, el mobiliario y la multitud de viandantes son geometría 3D generada y ensamblada proceduralmente a partir de datos paramétricos.
 
 ---
 
