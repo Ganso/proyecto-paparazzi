@@ -1,0 +1,1897 @@
+{
+  "perfiles": [
+    {
+      "id": "estandar",
+      "etiqueta": "adulto de complexión estándar",
+      "altura": 1.75,
+      "hombros": 0.42,
+      "relacion_cabeza": 7.5,
+      "radio": 0.045,
+      "zancada": 1.461,
+      "fps_animacion": 24,
+      "fotogramas_ciclo": 24,
+      "piezas": [
+        {
+          "id": "cuerpo",
+          "etiqueta": "adulto de complexión estándar",
+          "genero": "m",
+          "zona_color": "piel",
+          "zonas": [
+            "piel"
+          ],
+          "ranura": "cuerpo",
+          "indice": 0,
+          "recurso": "res://data/piezas/estandar_cuerpo_0.json"
+        },
+        {
+          "id": "camiseta",
+          "etiqueta": "camiseta",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0.42,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_torso_0.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 0
+        },
+        {
+          "id": "camisa",
+          "etiqueta": "camisa",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "collar",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_torso_1.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 1
+        },
+        {
+          "id": "americana",
+          "etiqueta": "americana",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "lapel",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_torso_2.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 2
+        },
+        {
+          "id": "sudadera",
+          "etiqueta": "sudadera",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "hood",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_torso_3.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 3
+        },
+        {
+          "id": "camiseta_deportiva",
+          "etiqueta": "camiseta deportiva",
+          "genero": "f",
+          "style": "sport",
+          "sleeve": 0.35,
+          "sport": true,
+          "zona_color": "tela_a",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 4,
+          "recurso": "res://data/piezas/estandar_torso_4.json"
+        },
+        {
+          "id": "pantalón",
+          "etiqueta": "pantalón",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_piernas_0.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 0
+        },
+        {
+          "id": "pantalón de vestir",
+          "etiqueta": "pantalón de vestir",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "formal",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_piernas_1.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 1
+        },
+        {
+          "id": "bermudas",
+          "etiqueta": "bermudas",
+          "genero": "fp",
+          "zona_color": "tela_b",
+          "length": 0.5,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_piernas_2.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 2
+        },
+        {
+          "id": "falda",
+          "etiqueta": "falda",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "length": 0.55,
+          "style": "skirt",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_piernas_3.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 3
+        },
+        {
+          "id": "short_deportivo",
+          "etiqueta": "pantalón deportivo corto",
+          "genero": "m",
+          "style": "sport",
+          "length": 0.5,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 4,
+          "recurso": "res://data/piezas/estandar_piernas_4.json"
+        },
+        {
+          "id": "mallas",
+          "etiqueta": "mallas deportivas",
+          "genero": "fp",
+          "style": "sport",
+          "length": 1,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 5,
+          "recurso": "res://data/piezas/estandar_piernas_5.json"
+        },
+        {
+          "id": "pelo corto",
+          "etiqueta": "pelo corto",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "short",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_cabeza_0.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 0
+        },
+        {
+          "id": "flequillo",
+          "etiqueta": "flequillo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "fringe",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_cabeza_1.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 1
+        },
+        {
+          "id": "melena",
+          "etiqueta": "melena",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "long",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_cabeza_2.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 2
+        },
+        {
+          "id": "coleta",
+          "etiqueta": "coleta",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "tail",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_cabeza_3.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 3
+        },
+        {
+          "id": "calvo",
+          "etiqueta": "calvo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bald",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_cabeza_4.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 4
+        },
+        {
+          "id": "gorra",
+          "etiqueta": "gorra",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/estandar_cabeza_5.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 5
+        },
+        {
+          "id": "sombrero",
+          "etiqueta": "sombrero de ala",
+          "genero": "m",
+          "style": "hat",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 6,
+          "recurso": "res://data/piezas/estandar_cabeza_6.json"
+        },
+        {
+          "id": "gorro",
+          "etiqueta": "gorro de lana",
+          "genero": "m",
+          "style": "beanie",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 7,
+          "recurso": "res://data/piezas/estandar_cabeza_7.json"
+        },
+        {
+          "id": "ninguno",
+          "etiqueta": "sin accesorios",
+          "genero": "f",
+          "style": "none",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 0,
+          "recurso": "res://data/piezas/estandar_accesorio_0.json"
+        },
+        {
+          "id": "bufanda",
+          "etiqueta": "bufanda",
+          "genero": "f",
+          "style": "scarf",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 1,
+          "recurso": "res://data/piezas/estandar_accesorio_1.json"
+        },
+        {
+          "id": "bandolera",
+          "etiqueta": "bandolera",
+          "genero": "f",
+          "style": "bag",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 2,
+          "recurso": "res://data/piezas/estandar_accesorio_2.json"
+        }
+      ]
+    },
+    {
+      "id": "delgado",
+      "etiqueta": "adulto delgado",
+      "altura": 1.8,
+      "hombros": 0.36,
+      "relacion_cabeza": 8,
+      "radio": 0.038,
+      "zancada": 1.518,
+      "fps_animacion": 24,
+      "fotogramas_ciclo": 24,
+      "piezas": [
+        {
+          "id": "cuerpo",
+          "etiqueta": "adulto delgado",
+          "genero": "m",
+          "zona_color": "piel",
+          "zonas": [
+            "piel"
+          ],
+          "ranura": "cuerpo",
+          "indice": 0,
+          "recurso": "res://data/piezas/delgado_cuerpo_0.json"
+        },
+        {
+          "id": "camiseta",
+          "etiqueta": "camiseta",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0.42,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_torso_0.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 0
+        },
+        {
+          "id": "camisa",
+          "etiqueta": "camisa",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "collar",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_torso_1.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 1
+        },
+        {
+          "id": "americana",
+          "etiqueta": "americana",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "lapel",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_torso_2.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 2
+        },
+        {
+          "id": "sudadera",
+          "etiqueta": "sudadera",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "hood",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_torso_3.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 3
+        },
+        {
+          "id": "camiseta_deportiva",
+          "etiqueta": "camiseta deportiva",
+          "genero": "f",
+          "style": "sport",
+          "sleeve": 0.35,
+          "sport": true,
+          "zona_color": "tela_a",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 4,
+          "recurso": "res://data/piezas/delgado_torso_4.json"
+        },
+        {
+          "id": "pantalón",
+          "etiqueta": "pantalón",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_piernas_0.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 0
+        },
+        {
+          "id": "pantalón de vestir",
+          "etiqueta": "pantalón de vestir",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "formal",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_piernas_1.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 1
+        },
+        {
+          "id": "bermudas",
+          "etiqueta": "bermudas",
+          "genero": "fp",
+          "zona_color": "tela_b",
+          "length": 0.5,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_piernas_2.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 2
+        },
+        {
+          "id": "falda",
+          "etiqueta": "falda",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "length": 0.55,
+          "style": "skirt",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_piernas_3.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 3
+        },
+        {
+          "id": "short_deportivo",
+          "etiqueta": "pantalón deportivo corto",
+          "genero": "m",
+          "style": "sport",
+          "length": 0.5,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 4,
+          "recurso": "res://data/piezas/delgado_piernas_4.json"
+        },
+        {
+          "id": "mallas",
+          "etiqueta": "mallas deportivas",
+          "genero": "fp",
+          "style": "sport",
+          "length": 1,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 5,
+          "recurso": "res://data/piezas/delgado_piernas_5.json"
+        },
+        {
+          "id": "pelo corto",
+          "etiqueta": "pelo corto",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "short",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_cabeza_0.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 0
+        },
+        {
+          "id": "flequillo",
+          "etiqueta": "flequillo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "fringe",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_cabeza_1.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 1
+        },
+        {
+          "id": "melena",
+          "etiqueta": "melena",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "long",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_cabeza_2.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 2
+        },
+        {
+          "id": "coleta",
+          "etiqueta": "coleta",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "tail",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_cabeza_3.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 3
+        },
+        {
+          "id": "calvo",
+          "etiqueta": "calvo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bald",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_cabeza_4.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 4
+        },
+        {
+          "id": "gorra",
+          "etiqueta": "gorra",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/delgado_cabeza_5.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 5
+        },
+        {
+          "id": "sombrero",
+          "etiqueta": "sombrero de ala",
+          "genero": "m",
+          "style": "hat",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 6,
+          "recurso": "res://data/piezas/delgado_cabeza_6.json"
+        },
+        {
+          "id": "gorro",
+          "etiqueta": "gorro de lana",
+          "genero": "m",
+          "style": "beanie",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 7,
+          "recurso": "res://data/piezas/delgado_cabeza_7.json"
+        },
+        {
+          "id": "ninguno",
+          "etiqueta": "sin accesorios",
+          "genero": "f",
+          "style": "none",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 0,
+          "recurso": "res://data/piezas/delgado_accesorio_0.json"
+        },
+        {
+          "id": "bufanda",
+          "etiqueta": "bufanda",
+          "genero": "f",
+          "style": "scarf",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 1,
+          "recurso": "res://data/piezas/delgado_accesorio_1.json"
+        },
+        {
+          "id": "bandolera",
+          "etiqueta": "bandolera",
+          "genero": "f",
+          "style": "bag",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 2,
+          "recurso": "res://data/piezas/delgado_accesorio_2.json"
+        }
+      ]
+    },
+    {
+      "id": "robusto",
+      "etiqueta": "adulto robusto",
+      "altura": 1.7,
+      "hombros": 0.52,
+      "relacion_cabeza": 6.8,
+      "radio": 0.055,
+      "zancada": 1.397,
+      "fps_animacion": 24,
+      "fotogramas_ciclo": 24,
+      "piezas": [
+        {
+          "id": "cuerpo",
+          "etiqueta": "adulto robusto",
+          "genero": "m",
+          "zona_color": "piel",
+          "zonas": [
+            "piel"
+          ],
+          "ranura": "cuerpo",
+          "indice": 0,
+          "recurso": "res://data/piezas/robusto_cuerpo_0.json"
+        },
+        {
+          "id": "camiseta",
+          "etiqueta": "camiseta",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0.42,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_torso_0.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 0
+        },
+        {
+          "id": "camisa",
+          "etiqueta": "camisa",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "collar",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_torso_1.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 1
+        },
+        {
+          "id": "americana",
+          "etiqueta": "americana",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "lapel",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_torso_2.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 2
+        },
+        {
+          "id": "sudadera",
+          "etiqueta": "sudadera",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "hood",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_torso_3.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 3
+        },
+        {
+          "id": "camiseta_deportiva",
+          "etiqueta": "camiseta deportiva",
+          "genero": "f",
+          "style": "sport",
+          "sleeve": 0.35,
+          "sport": true,
+          "zona_color": "tela_a",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 4,
+          "recurso": "res://data/piezas/robusto_torso_4.json"
+        },
+        {
+          "id": "pantalón",
+          "etiqueta": "pantalón",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_piernas_0.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 0
+        },
+        {
+          "id": "pantalón de vestir",
+          "etiqueta": "pantalón de vestir",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "formal",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_piernas_1.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 1
+        },
+        {
+          "id": "bermudas",
+          "etiqueta": "bermudas",
+          "genero": "fp",
+          "zona_color": "tela_b",
+          "length": 0.5,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_piernas_2.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 2
+        },
+        {
+          "id": "falda",
+          "etiqueta": "falda",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "length": 0.55,
+          "style": "skirt",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_piernas_3.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 3
+        },
+        {
+          "id": "short_deportivo",
+          "etiqueta": "pantalón deportivo corto",
+          "genero": "m",
+          "style": "sport",
+          "length": 0.5,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 4,
+          "recurso": "res://data/piezas/robusto_piernas_4.json"
+        },
+        {
+          "id": "mallas",
+          "etiqueta": "mallas deportivas",
+          "genero": "fp",
+          "style": "sport",
+          "length": 1,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 5,
+          "recurso": "res://data/piezas/robusto_piernas_5.json"
+        },
+        {
+          "id": "pelo corto",
+          "etiqueta": "pelo corto",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "short",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_cabeza_0.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 0
+        },
+        {
+          "id": "flequillo",
+          "etiqueta": "flequillo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "fringe",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_cabeza_1.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 1
+        },
+        {
+          "id": "melena",
+          "etiqueta": "melena",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "long",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_cabeza_2.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 2
+        },
+        {
+          "id": "coleta",
+          "etiqueta": "coleta",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "tail",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_cabeza_3.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 3
+        },
+        {
+          "id": "calvo",
+          "etiqueta": "calvo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bald",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_cabeza_4.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 4
+        },
+        {
+          "id": "gorra",
+          "etiqueta": "gorra",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/robusto_cabeza_5.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 5
+        },
+        {
+          "id": "sombrero",
+          "etiqueta": "sombrero de ala",
+          "genero": "m",
+          "style": "hat",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 6,
+          "recurso": "res://data/piezas/robusto_cabeza_6.json"
+        },
+        {
+          "id": "gorro",
+          "etiqueta": "gorro de lana",
+          "genero": "m",
+          "style": "beanie",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 7,
+          "recurso": "res://data/piezas/robusto_cabeza_7.json"
+        },
+        {
+          "id": "ninguno",
+          "etiqueta": "sin accesorios",
+          "genero": "f",
+          "style": "none",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 0,
+          "recurso": "res://data/piezas/robusto_accesorio_0.json"
+        },
+        {
+          "id": "bufanda",
+          "etiqueta": "bufanda",
+          "genero": "f",
+          "style": "scarf",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 1,
+          "recurso": "res://data/piezas/robusto_accesorio_1.json"
+        },
+        {
+          "id": "bandolera",
+          "etiqueta": "bandolera",
+          "genero": "f",
+          "style": "bag",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 2,
+          "recurso": "res://data/piezas/robusto_accesorio_2.json"
+        }
+      ]
+    },
+    {
+      "id": "nino",
+      "etiqueta": "niño",
+      "altura": 1.15,
+      "hombros": 0.28,
+      "relacion_cabeza": 4.8,
+      "radio": 0.032,
+      "zancada": 0.877,
+      "fps_animacion": 24,
+      "fotogramas_ciclo": 24,
+      "piezas": [
+        {
+          "id": "cuerpo",
+          "etiqueta": "niño",
+          "genero": "m",
+          "zona_color": "piel",
+          "zonas": [
+            "piel"
+          ],
+          "ranura": "cuerpo",
+          "indice": 0,
+          "recurso": "res://data/piezas/nino_cuerpo_0.json"
+        },
+        {
+          "id": "camiseta",
+          "etiqueta": "camiseta",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0.42,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_torso_0.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 0
+        },
+        {
+          "id": "camisa",
+          "etiqueta": "camisa",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "collar",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_torso_1.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 1
+        },
+        {
+          "id": "americana",
+          "etiqueta": "americana",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "lapel",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_torso_2.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 2
+        },
+        {
+          "id": "sudadera",
+          "etiqueta": "sudadera",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "hood",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_torso_3.json",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 3
+        },
+        {
+          "id": "camiseta_deportiva",
+          "etiqueta": "camiseta deportiva",
+          "genero": "f",
+          "style": "sport",
+          "sleeve": 0.35,
+          "sport": true,
+          "zona_color": "tela_a",
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 4,
+          "recurso": "res://data/piezas/nino_torso_4.json"
+        },
+        {
+          "id": "pantalón",
+          "etiqueta": "pantalón",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_piernas_0.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 0
+        },
+        {
+          "id": "pantalón de vestir",
+          "etiqueta": "pantalón de vestir",
+          "genero": "m",
+          "zona_color": "tela_b",
+          "length": 1,
+          "style": "formal",
+          "etiquetas": [
+            "formal"
+          ],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_piernas_1.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 1
+        },
+        {
+          "id": "bermudas",
+          "etiqueta": "bermudas",
+          "genero": "fp",
+          "zona_color": "tela_b",
+          "length": 0.5,
+          "style": "plain",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_piernas_2.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 2
+        },
+        {
+          "id": "falda",
+          "etiqueta": "falda",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "length": 0.55,
+          "style": "skirt",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_piernas_3.json",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 3
+        },
+        {
+          "id": "short_deportivo",
+          "etiqueta": "pantalón deportivo corto",
+          "genero": "m",
+          "style": "sport",
+          "length": 0.5,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 4,
+          "recurso": "res://data/piezas/nino_piernas_4.json"
+        },
+        {
+          "id": "mallas",
+          "etiqueta": "mallas deportivas",
+          "genero": "fp",
+          "style": "sport",
+          "length": 1,
+          "sport": true,
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "piernas",
+          "indice": 5,
+          "recurso": "res://data/piezas/nino_piernas_5.json"
+        },
+        {
+          "id": "pelo corto",
+          "etiqueta": "pelo corto",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "short",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_cabeza_0.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 0
+        },
+        {
+          "id": "flequillo",
+          "etiqueta": "flequillo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "fringe",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_cabeza_1.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 1
+        },
+        {
+          "id": "melena",
+          "etiqueta": "melena",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "long",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_cabeza_2.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 2
+        },
+        {
+          "id": "coleta",
+          "etiqueta": "coleta",
+          "genero": "f",
+          "zona_color": "pelo",
+          "style": "tail",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_cabeza_3.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 3
+        },
+        {
+          "id": "calvo",
+          "etiqueta": "calvo",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bald",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_cabeza_4.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 4
+        },
+        {
+          "id": "gorra",
+          "etiqueta": "gorra",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap",
+          "etiquetas": [],
+          "admite_patron": false,
+          "recurso": "res://data/piezas/nino_cabeza_5.json",
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 5
+        },
+        {
+          "id": "sombrero",
+          "etiqueta": "sombrero de ala",
+          "genero": "m",
+          "style": "hat",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 6,
+          "recurso": "res://data/piezas/nino_cabeza_6.json"
+        },
+        {
+          "id": "gorro",
+          "etiqueta": "gorro de lana",
+          "genero": "m",
+          "style": "beanie",
+          "zona_color": "tela_b",
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 7,
+          "recurso": "res://data/piezas/nino_cabeza_7.json"
+        },
+        {
+          "id": "ninguno",
+          "etiqueta": "sin accesorios",
+          "genero": "f",
+          "style": "none",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 0,
+          "recurso": "res://data/piezas/nino_accesorio_0.json"
+        },
+        {
+          "id": "bufanda",
+          "etiqueta": "bufanda",
+          "genero": "f",
+          "style": "scarf",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 1,
+          "recurso": "res://data/piezas/nino_accesorio_1.json"
+        },
+        {
+          "id": "bandolera",
+          "etiqueta": "bandolera",
+          "genero": "f",
+          "style": "bag",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "ranura": "accesorio",
+          "indice": 2,
+          "recurso": "res://data/piezas/nino_accesorio_2.json"
+        }
+      ]
+    }
+  ],
+  "piezas": {
+    "torso": [
+      {
+        "id": "camiseta",
+        "etiqueta": "camiseta",
+        "genero": "f",
+        "zona_color": "tela_a",
+        "sleeve": 0.42,
+        "style": "plain",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:upper",
+        "zonas": [
+          "tela_a"
+        ]
+      },
+      {
+        "id": "camisa",
+        "etiqueta": "camisa",
+        "genero": "f",
+        "zona_color": "tela_a",
+        "sleeve": 1,
+        "style": "collar",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:upper",
+        "zonas": [
+          "tela_a"
+        ]
+      },
+      {
+        "id": "americana",
+        "etiqueta": "americana",
+        "genero": "f",
+        "zona_color": "tela_a",
+        "sleeve": 1,
+        "style": "lapel",
+        "etiquetas": [
+          "formal"
+        ],
+        "admite_patron": false,
+        "recurso": "procedural:upper",
+        "zonas": [
+          "tela_a"
+        ]
+      },
+      {
+        "id": "sudadera",
+        "etiqueta": "sudadera",
+        "genero": "f",
+        "zona_color": "tela_a",
+        "sleeve": 1,
+        "style": "hood",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:upper",
+        "zonas": [
+          "tela_a"
+        ]
+      },
+      {
+        "id": "camiseta_deportiva",
+        "etiqueta": "camiseta deportiva",
+        "genero": "f",
+        "style": "sport",
+        "sleeve": 0.35,
+        "sport": true,
+        "zona_color": "tela_a",
+        "zonas": [
+          "tela_a"
+        ]
+      }
+    ],
+    "piernas": [
+      {
+        "id": "pantalón",
+        "etiqueta": "pantalón",
+        "genero": "m",
+        "zona_color": "tela_b",
+        "length": 1,
+        "style": "plain",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:lower",
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "pantalón de vestir",
+        "etiqueta": "pantalón de vestir",
+        "genero": "m",
+        "zona_color": "tela_b",
+        "length": 1,
+        "style": "formal",
+        "etiquetas": [
+          "formal"
+        ],
+        "admite_patron": false,
+        "recurso": "procedural:lower",
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "bermudas",
+        "etiqueta": "bermudas",
+        "genero": "fp",
+        "zona_color": "tela_b",
+        "length": 0.5,
+        "style": "plain",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:lower",
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "falda",
+        "etiqueta": "falda",
+        "genero": "f",
+        "zona_color": "tela_b",
+        "length": 0.55,
+        "style": "skirt",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:lower",
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "short_deportivo",
+        "etiqueta": "pantalón deportivo corto",
+        "genero": "m",
+        "style": "sport",
+        "length": 0.5,
+        "sport": true,
+        "zona_color": "tela_b",
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "mallas",
+        "etiqueta": "mallas deportivas",
+        "genero": "fp",
+        "style": "sport",
+        "length": 1,
+        "sport": true,
+        "zona_color": "tela_b",
+        "zonas": [
+          "tela_b"
+        ]
+      }
+    ],
+    "cabeza": [
+      {
+        "id": "pelo corto",
+        "etiqueta": "pelo corto",
+        "genero": "m",
+        "zona_color": "pelo",
+        "style": "short",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:hair",
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "flequillo",
+        "etiqueta": "flequillo",
+        "genero": "m",
+        "zona_color": "pelo",
+        "style": "fringe",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:hair",
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "melena",
+        "etiqueta": "melena",
+        "genero": "f",
+        "zona_color": "pelo",
+        "style": "long",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:hair",
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "coleta",
+        "etiqueta": "coleta",
+        "genero": "f",
+        "zona_color": "pelo",
+        "style": "tail",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:hair",
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "calvo",
+        "etiqueta": "calvo",
+        "genero": "m",
+        "zona_color": "pelo",
+        "style": "bald",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:hair",
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "gorra",
+        "etiqueta": "gorra",
+        "genero": "f",
+        "zona_color": "tela_b",
+        "style": "cap",
+        "etiquetas": [],
+        "admite_patron": false,
+        "recurso": "procedural:hair",
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "sombrero",
+        "etiqueta": "sombrero de ala",
+        "genero": "m",
+        "style": "hat",
+        "zona_color": "tela_b",
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "gorro",
+        "etiqueta": "gorro de lana",
+        "genero": "m",
+        "style": "beanie",
+        "zona_color": "tela_b",
+        "zonas": [
+          "tela_b"
+        ]
+      }
+    ],
+    "accesorio": [
+      {
+        "id": "ninguno",
+        "etiqueta": "sin accesorios",
+        "genero": "f",
+        "style": "none",
+        "zona_color": "accesorio",
+        "zonas": [
+          "accesorio"
+        ]
+      },
+      {
+        "id": "bufanda",
+        "etiqueta": "bufanda",
+        "genero": "f",
+        "style": "scarf",
+        "zona_color": "accesorio",
+        "zonas": [
+          "accesorio"
+        ]
+      },
+      {
+        "id": "bandolera",
+        "etiqueta": "bandolera",
+        "genero": "f",
+        "style": "bag",
+        "zona_color": "accesorio",
+        "zonas": [
+          "accesorio"
+        ]
+      }
+    ]
+  },
+  "tonos_piel": {
+    "clara": "e4be96",
+    "media": "c5956c",
+    "morena": "996343",
+    "oscura": "634330"
+  },
+  "tonos_pelo": {
+    "moreno": {
+      "rgb": "302923",
+      "formas": [
+        "moreno",
+        "morena",
+        "morenos",
+        "morenas"
+      ]
+    },
+    "castaño": {
+      "rgb": "704832",
+      "formas": [
+        "castaño",
+        "castaña",
+        "castaños",
+        "castañas"
+      ]
+    },
+    "rubio": {
+      "rgb": "cfb46f",
+      "formas": [
+        "rubio",
+        "rubia",
+        "rubios",
+        "rubias"
+      ]
+    },
+    "pelirrojo": {
+      "rgb": "b85832",
+      "formas": [
+        "pelirrojo",
+        "pelirroja",
+        "pelirrojos",
+        "pelirrojas"
+      ]
+    },
+    "canoso": {
+      "rgb": "a6a5a0",
+      "formas": [
+        "canoso",
+        "canosa",
+        "canosos",
+        "canosas"
+      ]
+    }
+  },
+  "tonos_ropa": {
+    "negro": {
+      "rgb": "24292e",
+      "formas": [
+        "negro",
+        "negra",
+        "negros",
+        "negras"
+      ]
+    },
+    "blanco": {
+      "rgb": "ebe8dc",
+      "formas": [
+        "blanco",
+        "blanca",
+        "blancos",
+        "blancas"
+      ]
+    },
+    "gris": {
+      "rgb": "77818a",
+      "formas": [
+        "gris",
+        "gris",
+        "grises",
+        "grises"
+      ]
+    },
+    "azul marino": {
+      "rgb": "253d5b",
+      "formas": [
+        "azul marino",
+        "azul marino",
+        "azul marino",
+        "azul marino"
+      ]
+    },
+    "vaquero": {
+      "rgb": "4f7898",
+      "formas": [
+        "vaquero",
+        "vaquera",
+        "vaqueros",
+        "vaqueras"
+      ]
+    },
+    "rojo": {
+      "rgb": "b74536",
+      "formas": [
+        "rojo",
+        "roja",
+        "rojos",
+        "rojas"
+      ]
+    },
+    "verde": {
+      "rgb": "5c7a43",
+      "formas": [
+        "verde",
+        "verde",
+        "verdes",
+        "verdes"
+      ]
+    },
+    "amarillo": {
+      "rgb": "dcb653",
+      "formas": [
+        "amarillo",
+        "amarilla",
+        "amarillos",
+        "amarillas"
+      ]
+    },
+    "beige": {
+      "rgb": "c3aa83",
+      "formas": [
+        "beige",
+        "beige",
+        "beige",
+        "beige"
+      ]
+    },
+    "burdeos": {
+      "rgb": "723c54",
+      "formas": [
+        "burdeos",
+        "burdeos",
+        "burdeos",
+        "burdeos"
+      ]
+    }
+  }
+}
