@@ -23,6 +23,7 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 | **Variedad de Árboles y Elementos en el Escenario** | 🟡 **Parcialmente hecho** | Capa vegetal densa de 280 elementos añadida en `park.gd`. Nuevas propuestas de mobiliario y atrezo en [04_DIVERSIDAD_ESCENARIOS.md](file:///home/ganso/codigo/afotando/docs/futuro/04_DIVERSIDAD_ESCENARIOS.md). |
 | **Ampliación de Accesorios de Vestimenta** | 📝 *Propuesta futura* | Incluido en [02_ESTILO_VISUAL_Y_POLIGONOS.md](file:///home/ganso/codigo/afotando/docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md) (paraguas, mochilas, periódicos, gafas). |
 | **Captura Automática de Evidencias Gráficas** | 📝 *Propuesta futura* | [08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md](file:///home/ganso/codigo/afotando/docs/futuro/08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) |
+| **Exportación Automatizada a Android (.apk)** | 📝 *Propuesta futura* | [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](file:///home/ganso/codigo/afotando/docs/futuro/09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) |
 
 ---
 
@@ -36,3 +37,4 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 6. [06_MODO_TUTOR_ACADEMIA.md](file:///home/ganso/codigo/afotando/docs/futuro/06_MODO_TUTOR_ACADEMIA.md) — Academia interactiva de fotografía, lecciones pedagógicas con ejercicios prácticos y evaluación por examen.
 7. [07_VISORES_REALISTAS_Y_MOVIL.md](file:///home/ganso/codigo/afotando/docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md) — Ocular de visor fotorrealista, pantallas LCD de datos, paralelaje en compactas y ergonomía táctil móvil.
 8. [08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md](file:///home/ganso/codigo/afotando/docs/futuro/08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) — Suite de capturas automáticas de hitos, spritesheets de assets por categoría, muestrario de personajes representativos, GIFs animados de cinemática y prevención de `.import` mediante `.gdignore`.
+9. [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](file:///home/ganso/codigo/afotando/docs/futuro/09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) — Pipeline de compilación y empaquetado desatendido a APK de depuración para pruebas en hardware móvil real vía CLI y ADB.
