@@ -76,3 +76,10 @@ Resultado: APROBADO CON MENCIÓN (94/100)
 ```
 
 Al superar las 5 lecciones, el juego desbloquea el título **"Graduado de la Academia Fotográfica"** y concede acceso al catálogo de ópticas profesionales en el modo estándar.
+
+
+---
+
+## 5. Raíces en el Documento Fundacional (2012)
+Esta especificación formaliza la propuesta 3 del documento de mayo de 2012 ([PROYECTO_PAPARAZZI_2012.md](../origen/PROYECTO_PAPARAZZI_2012.md)):
+> *"Un tutor interactivo para aprender técnica fotográfica. Concepto: Simuladores de cámaras (CameraSim). El motor del juego se utiliza para demostrar en la práctica los conceptos más técnicos... y ofrecer un sistema de ayuda pedagógica interactiva."*
