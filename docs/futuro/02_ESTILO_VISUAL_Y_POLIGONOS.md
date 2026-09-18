@@ -268,7 +268,7 @@ graph TD
 ### Subfase 2.2: Remodelado Procedural del Maniquí de Madera Articulado
 **Objetivo**: Transformar los cuerpos geométricos duros en figuras de maniquí de dibujo con rótulas esféricas visibles y torso torneado, preservando el pesaje rígido de 20 huesos.
 
-- [ ] **Tarea 2.2.1 (Atómica)**: Actualizar `tools/build_catalog.py` para generar la anatomía base (`cuerpo_0.json`) con:
+- [ ] **Tarea 2.2.1 (Atómica)**: Parametrizar `tools/build_catalog.py` con soporte multi-perfil (segmentos $6, 8, 14$) y generar la anatomía base del maniquí con:
   - Cabeza ovoide torneada pulida.
   - Rótulas esféricas visibles en hombros, codos, muñecas, cintura lumbar, caderas, rodillas y tobillos.
   - Normales elipsoidales analíticas continuas.
@@ -345,3 +345,57 @@ graph TD
 | Incompatibilidad del shader Toon en WebGL/GLES3 | Alto | Usar exclusivamente directivas estándar `render_mode diffuse_toon, specular_toon` y cálculos vectoriales básicos sin pases post-procesado pesados. |
 | Caída de FPS por añadir personajes de fondo | Medio | Desacoplamiento estricto Tier 2: los personajes ambientales no ejecutan raycasts ni colisiones dinámicas continuas. |
 | Deslizamiento de pie en nuevas mallas | Crítico | Mantener inalterado el cálculo analítico de `gait.gd` y los 20 huesos del rig universal. Validado automáticamente por `test_gait.gd`. |
+
+---
+
+## 9. Sistema Multi-Perfil de Carga Gráfica (Scalable Graphics Profiles)
+
+Para garantizar una experiencia visual óptima tanto en **dispositivos móviles de gama baja y WebGL en navegadores**, como en **escritorios potentes con pantallas de alta tasa de refresco**, se especifica una arquitectura de **3 Perfiles Gráficos Escalonados**.
+
+A diferencia de los ajustes gráficos tradicionales que solo reducen la resolución de texturas, en Proyecto Paparazzi la carga geométrica y procedural se adapta dinámicamente tanto en el **generador de mallas** (`build_catalog.py`) como en los **shaders de contorno**, el **árbol escénico de capas** y la **densidad de población**.
+
+### 9.1 Tabla Comparativa de Perfiles Gráficos
+
+| Parámetro Técnico | Perfil 1: Rendimiento Móvil / WebGL (*Low*) | Perfil 2: Equilibrado Estándar (*Medium / Default*) | Perfil 3: Fidelidad Alta / Desktop (*Ultra*) |
+|---|---|---|---|
+| **Dispositivos Objetivo** | Móviles antiguos, WebGL ligero, Raspberry Pi. | Móviles de gama media, portátiles, WebGL estándar. | PCs de escritorio, monitores 1440p/4K, hardware dedicado. |
+| **Segmentos Radiales Mallas (`segments`)** | **6 segmentos** (estética facetada/origami limpia). | **8 segmentos** (maniquí estilizado suave estándar). | **12-16 segmentos** (esferas y cilindros de madera torneada pura). |
+| **Triángulos por Maniquí** | $pprox 950 - 1.200\text{ tris}$ | $pprox 1.800 - 2.400\text{ tris}$ | $pprox 3.800 - 5.200\text{ tris}$ |
+| **Delineado de Contorno (*Outlines*)** | **Desactivado** (Toon puro en 1 draw call) o edge-detection ligero. | **Inverted Hull básico** (`next_pass` a 8 mm). | **Inverted Hull suavizado** con grosor adaptativo según distancia. |
+| **Población en Escena** | **21 viandantes** (Tier 1 jugable únicamente, sin Tier 2). | **21 viandantes jugables + 12 ambientales** (Tier 1 + Tier 2 moderado). | **21 viandantes jugables + 28 ambientales** (Tier 1 + Tier 2 denso y banco habitado). |
+| **Arquitectura de Capas** | **4 capas simplificadas** (sin Capa -1 de follaje ni Capa 6 de bruma). | **7 capas completas** (enmarcado frontal, acera, calzada, estanque, verja, árboles, bruma). | **7 capas completas + props dinámicos** (hojas mecidas por viento, reflejos en agua). |
+| **Sombra Direccional** | Atlas de 1024 / Sombras duras. | Atlas de 2048 / Filtro de sombra suave PCF. | Atlas de 4096 / Sombras de alta definición con penumbra gradual. |
+| **Triángulos Totales en Escena** | $\le 45.000\text{ tris}$ | $\le 95.000\text{ tris}$ | $pprox 160.000 - 200.000\text{ tris}$ |
+| **Consumo de VRAM Objetivo** | $< 35\text{ MiB}$ | $< 55\text{ MiB}$ | $< 90\text{ MiB}$ |
+
+---
+
+### 9.2 Impacto en el Pipeline de Modelado Procedural (`tools/build_catalog.py`)
+
+El generador paramétrico `loft_mesh` y las primitivas esféricas se parametrizan mediante un flag de resolución o multiplicador de densidad:
+
+```python
+# tools/build_catalog.py
+# Generación paramétrica multi-LOD para los 3 perfiles
+LOD_PROFILES = {
+    "low":    {"segments": 6,  "sphere_rings": 4, "subdivisions": 1},
+    "medium": {"segments": 8,  "sphere_rings": 6, "subdivisions": 2},
+    "high":   {"segments": 14, "sphere_rings": 10, "subdivisions": 3},
+}
+```
+
+1. **Estructura de Almacenamiento en Datos**:
+   - Para no duplicar innecesariamente el peso del repositorio, se puede:
+     - **Opción A (Recomendada - Tiempo de Carga/Generación)**: Mantener las especificaciones geométricas en JSON como descriptores de curvas guía (radios y alturas) y compilar la malla en runtime según el perfil elegido en las opciones del juego.
+     - **Opción B (Pre-generación en carpetas)**: Generar carpetas `data/piezas/low/`, `data/piezas/medium/` y `data/piezas/high/`, cargando la ruta correspondiente en el inicio del juego.
+2. **Preservación Incondicional del Rigging**:
+   - Sea cual sea el número de segmentos radiales ($6$, $8$ o $14$), **los 20 huesos y los índices de asignación ósea se mantienen estrictamente idénticos**.
+   - Cada vértice sigue perteneciendo con peso `1.0` a su hueso padre. `gait.gd` garantiza exactamente la misma cinemática sin deslizamiento en cualquiera de los perfiles.
+
+---
+
+### 9.3 Selector de Perfil y Escalabilidad Dinámica en Runtime
+
+El menú de configuración y el visor técnico incorporan el selector de perfil gráfico:
+- **Ajuste Automático**: Al arrancar en navegador WebGL o dispositivos identificados como Android de gama baja, el juego selecciona por defecto el **Perfil Rendimiento (*Low*)**.
+- **Ajuste Manual**: Desde el menú de pausa / sandbox, el jugador puede conmutar entre los perfiles; el escenario reajusta dinámicamente la visibilidad de las capas periféricas y el shader de los maniquíes sin necesidad de reiniciar la sesión.
