@@ -87,6 +87,8 @@ godot-4 --headless --path . --script tests/test_gait.gd
 
 ### 4.2 Pruebas con Entorno Gráfico (Requieren Display / X11 / Wayland)
 ```bash
+# Suite completa de captura automática de evidencias gráficas
+./tools/run_evidence.sh
 # Simulación de atascos durante 20s (debe dar 0 deadlocks)
 godot-4 --path . --script tests/simulate_jams.gd
 
