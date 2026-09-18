@@ -57,7 +57,12 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 - **Carril 3**: $r = 11.5\text{ m}$ (aforo máx. 6).
 - **Fondo vegetal**: Cortina densa de setos y arbolado entre $r = 13.2\text{ m}$ y $r = 17.5\text{ m}$.
 
-### 3.4 Ética y Fotografía Determinista
+### 3.4 Actualización Obligatoria e Inmediata de Documentación (Directiva Crítica)
+- **Documentación Viva e Inmediata**: Es **FUNDAMENTAL y OBLIGATORIO** actualizar la documentación técnica y las matrices de estado (`docs/`, `docs/futuro/README.md`, etc.) **inmediatamente después de cualquier cambio** de código, refactorización o resolución de tareas. Ningún desarrollo se considera completado si su estado documental no refleja con total exactitud la realidad del código y de las herramientas disponibles.
+- **Sincronización de Matrices de Estado**: Cuando una funcionalidad futura o propuesta se implementa, debe cambiarse su estado a `✅ Ya implementado` o `✅ Completado`, vinculando los scripts, pruebas y evidencias generadas.
+- **Preservación de Trazabilidad**: Todo nuevo script en `tools/`, shader o módulo del motor debe quedar registrado en el documento técnico monográfico correspondiente y en `AGENTS.md`.
+
+### 3.5 Ética y Fotografía Determinista
 - **Regla Ética**: El tono de piel **nunca** se utiliza para describir al objetivo ni forma parte de los predicados.
 - **Determinismo**: Una entrada fotográfica idéntica en `photography.gd` produce siempre la misma puntuación numérica.
 - **Oclusión física**: Se evalúan **5 rayos directos** contra la geometría 3D real de personajes y mobiliario.

@@ -229,17 +229,119 @@ Para enriquecer la narrativa visual y las combinaciones de encargos, se especifi
 
 ---
 
-## 7. Hoja de Ruta de Implementación de la Nueva Estética
+## 7. Plan de Implementación Detallado: Subfases, Tareas Atómicas y Controles
 
-1. **Fase 1: Shaders Toon y Delineado**  
-   - Implementar el shader `res://shaders/cel_shading.gdshader` con pase de contorno *inverted hull*.
-   - Aplicar experimentalmente a los personajes actuales para validar el rendimiento en WebGL y escritorio.
-2. **Fase 2: Prototipado del Maniquí Articulado**  
-   - Modelar el cuerpo de maniquí de madera con rótulas esféricas en `tools/build_catalog.py`.
-   - Vestir el maniquí con las prendas existentes respetando el rig de 20 huesos y el coloreado de vértice.
-3. **Fase 3: Remodelación Escénica del Parque a 7 Capas**  
-   - Reestructurar `scripts/park.gd` para incorporar la acera frontal, los bancos habitados, el cenador octogonal, el estanque, los pilares de piedra de la verja y el follaje de enmarcado.
-4. **Fase 4: Separación de Capas (Jugable vs. Ambiental)**  
-   - Añadir soporte en `scripts/main.gd` para instanciar peatones de ambientación no evaluables (Tier 2) en bancos y parque interior.
-5. **Fase 5: Actualización del Visor HUD**  
-   - Rediseñar los colimadores centrales a 15 puntos en diamante y aplicar el display LCD verde de 7 segmentos de la referencia.
+Para acometer esta transformación estética sin introducir regresiones en los invariantes del proyecto (rendimiento en `gl_compatibility`, VRAM < 60 MiB, cinemática de pie fijo `gait.gd` y determinismo fotográfico), el trabajo se estructura en **5 subfases atómicas progresivas**:
+
+```mermaid
+graph TD
+    S1[Subfase 2.1: Shaders Cel-Shading y Delineado] --> S2[Subfase 2.2: Remodelado a Maniquí de Madera]
+    S2 --> S3[Subfase 2.3: Arquitectura Escénica de 7 Capas]
+    S3 --> S4[Subfase 2.4: Multitud Ambiental Desacoplada y Poses]
+    S4 --> S5[Subfase 2.5: Retícula HUD Réflex y Banco de Accesorios]
+    
+    S1 -. Control 1 .-> S1_Test[test_art & test_photography]
+    S2 -. Control 2 .-> S2_Test[test_gait & test_art]
+    S3 -. Control 3 .-> S3_Test[simulate_jams & test_navigation]
+    S4 -. Control 4 .-> S4_Test[smoke_test & test_game]
+    S5 -. Hito Final .-> S5_Test[run_evidence.sh & GALERIA.md]
+```
+
+---
+
+### Subfase 2.1: Pipeline de Shaders (Cel-Shading y Contorno Inverted Hull)
+**Objetivo**: Implementar el sombreado estilo cómic/animación mediante cuantización de luz en bandas y delineado exterior limpio sin alterar la geometría de mallas actual.
+
+- [ ] **Tarea 2.1.1 (Atómica)**: Crear el shader `shaders/cel_shading.gdshader` con:
+  - Función `light()` que cuantiza la luz difusa en 2 bandas (`smoothstep(threshold - smoothness, threshold + smoothness, NdotL)`).
+  - Soporte completo para `COLOR` de vértices (`ARRAY_COLOR`).
+  - Delineado `next_pass` mediante extrusión de normales con descarte de caras frontales (`cull_front`, `VERTEX += NORMAL * 0.008`).
+- [ ] **Tarea 2.1.2 (Atómica)**: Crear el material `ShaderMaterial` en `scripts/person.gd` en sustitución del `StandardMaterial3D` plano.
+- [ ] **Tarea 2.1.3 (Atómica)**: Aplicar una variante del shader toon con tinte vegetal a los elementos del parque en `scripts/park.gd`.
+
+> **Control Intermedio 1**:
+> - Ejecutar pruebas headless: `godot-4 --headless --path . --script tests/test_photography.gd` y `godot-4 --headless --path . --script tests/test_art.gd`.
+> - Verificar visualmente con captura rápida que no hay artefactos en `gl_compatibility`.
+
+---
+
+### Subfase 2.2: Remodelado Procedural del Maniquí de Madera Articulado
+**Objetivo**: Transformar los cuerpos geométricos duros en figuras de maniquí de dibujo con rótulas esféricas visibles y torso torneado, preservando el pesaje rígido de 20 huesos.
+
+- [ ] **Tarea 2.2.1 (Atómica)**: Actualizar `tools/build_catalog.py` para generar la anatomía base (`cuerpo_0.json`) con:
+  - Cabeza ovoide torneada pulida.
+  - Rótulas esféricas visibles en hombros, codos, muñecas, cintura lumbar, caderas, rodillas y tobillos.
+  - Normales elipsoidales analíticas continuas.
+- [ ] **Tarea 2.2.2 (Atómica)**: Adaptar los moldes de las prendas (`torso`, `piernas`, `cabeza`, `accesorio`) en `tools/build_catalog.py` para que se ajusten sobre la silueta del maniquí dejando las juntas esféricas parcialmente a la vista.
+- [ ] **Tarea 2.2.3 (Atómica)**: Recompilar el catálogo completo (`python3 tools/build_catalog.py`) y validar la integridad de los 92 archivos JSON en `data/piezas/`.
+
+> **Control Intermedio 2**:
+> - `godot-4 --headless --path . --script tests/test_gait.gd` (8.840 checks de cero deslizamiento de pie).
+> - `godot-4 --headless --path . --script tests/test_art.gd` (2.880 verificaciones de mallas y 20 huesos).
+> - VRAM check: verificar que la memoria de mallas permanece por debajo de 50 MiB.
+
+---
+
+### Subfase 2.3: Reestructuración Escénica del Parque en 7 Capas
+**Objetivo**: Expandir el espacio cilíndrico desde los 4 planos actuales hasta un diorama de 7 capas concéntricas con hitos visuales de composición (estanque, cenador, verja con pilares y ramas de enmarcado frontal).
+
+- [ ] **Tarea 2.3.1 (Atómica)**: Redefinir la zonificación radial en `scripts/park.gd`:
+  - Capa -1 ($r pprox 0.8\text{ m}$): Ramas de sauce y hojas colgantes en margen superior (bokeh frontal).
+  - Capa 0 ($r pprox 1.8\text{ m}$): Acera biselada y bancos de listones de madera.
+  - Capas 1 y 2 ($r pprox 3.5 - 5.5\text{ m}$): Calzada peatonal bitonal activa (los 21 viandantes jugables).
+  - Capa 3 ($r pprox 7.5 - 9.5\text{ m}$): Estanque reflectante azul y cenador/pérgola octogonal de madera.
+  - Capa 4 ($r pprox 12.5\text{ m}$): Verja clásica de hierro negro con pilares de sillería piramidales.
+  - Capa 5 ($r pprox 15.0 - 20.0\text{ m}$): Arbolado facetado denso.
+  - Capa 6 ($r pprox 35.0 - 50.0\text{ m}$): Skyline de siluetas urbanas lejanas con bruma atmosférica.
+- [ ] **Tarea 2.3.2 (Atómica)**: Preservar la fusión de todo el parque estático en **1 único draw call** (`Mesh.ARRAY_VERTEX`, `ARRAY_COLOR`) en `scripts/park.gd::build()`.
+- [ ] **Tarea 2.3.3 (Atómica)**: Ajustar los límites de calzada peatonal `LANE_BOUNDS` en `scripts/person.gd` y `scripts/main.gd` para que los 21 viandantes circulen sin atascos en las nuevas cotas.
+
+> **Control Intermedio 3**:
+> - `godot-4 --path . --script tests/test_navigation.gd` (10 checks de carriles).
+> - `godot-4 --path . --script tests/simulate_jams.gd` (20 segundos sin un solo deadlock peatonal).
+> - Triángulos totales en escena $\le 100.000$ (verificado en runtime).
+
+---
+
+### Subfase 2.4: Multitud Ambiental Desacoplada (Tier 2) y Poses de Reposo
+**Objetivo**: Dar vida al parque habitando los bancos y el fondo sin sobrecargar la CPU de evaluación fotográfica ni la lógica de navegación.
+
+- [ ] **Tarea 2.4.1 (Atómica)**: Implementar en `scripts/person.gd` el modo `ambient = true` (Tier 2):
+  - Excluido de listas de objetivos en `main.gd` y libre de cálculos de oclusión por raycasts en `photography.gd`.
+- [ ] **Tarea 2.4.2 (Atómica)**: Añadir poses estáticas o de ciclo corto:
+  - `pose_sitting()`: personaje sentado en los bancos de la Capa 0 y cenador con flexión de cadera y rodillas a $90^\circ$.
+  - `pose_conversing()`: leve giro de cabeza y brazo en diálogo.
+- [ ] **Tarea 2.4.3 (Atómica)**: Instanciar 8-12 personajes ambientales en los bancos y 6-8 figuras secundarias en la verja de fondo (Capa 4).
+
+> **Control Intermedio 4**:
+> - `godot-4 --path . -- --smoke-test` (triángulos $\le 100\text{k}$, 21 viandantes jugables intactos).
+> - `godot-4 --path . --script tests/test_game.gd` (sesión completa de 5 encargos con fluidez absoluta a 60 FPS).
+
+---
+
+### Subfase 2.5: Retícula Réflex en Diamante (15 Puntos) y Nuevos Accesorios
+**Objetivo**: Pulir la interfaz óptica profesional y ampliar el banco de accesorios con atrezo temático.
+
+- [ ] **Tarea 2.5.1 (Atómica)**: Rediseñar la retícula del visor en `scripts/viewfinder.gd`:
+  - Distribución de 15 colimadores AF en patrón de diamante (según `referencia.jpg`).
+  - Marcos de esquina y visualización LCD verde de 7 segmentos en display inferior.
+- [ ] **Tarea 2.5.2 (Atómica)**: Modelar nuevos accesorios en `tools/build_catalog.py` y `data/catalogo.json`:
+  - Mochila urbana/escolar (accesorio de espalda/tórax).
+  - Periódico/revista en mano (accesorio para personajes sentados).
+- [ ] **Tarea 2.5.3 (Atómica)**: Registrar los nuevos textos descriptivos de accesorios en `data/textos.es.json` y `scripts/texts.gd`.
+
+> **Control Intermedio 5 (Hito Final)**:
+> - Ejecutar la suite completa de pruebas: `test_photography.gd`, `test_art.gd`, `test_equipment.gd`, `test_gait.gd`, `test_navigation.gd`, `test_expansion.gd`, `test_game.gd`.
+> - Regenerar automáticamente la suite visual con `./tools/run_evidence.sh` y comprobar que [`docs/evidencias/GALERIA.md`](../evidencias/GALERIA.md) refleja la nueva estética con total fidelidad.
+> - Actualizar matrices y documentos técnicos en `docs/` y `AGENTS.md`.
+
+---
+
+## 8. Matriz de Riesgos Técnicos y Mitigaciones
+
+| Riesgo Técnico | Impacto | Estrategia de Mitigación |
+|---|:---:|---|
+| Aumento de triángulos por las juntas esféricas del maniquí | Medio | Emplear cilindros y esferas de bajo conteo (8 segmentos por anillo en `loft_mesh`). Presupuesto: máx. 2.600 tris/personaje. |
+| Incompatibilidad del shader Toon en WebGL/GLES3 | Alto | Usar exclusivamente directivas estándar `render_mode diffuse_toon, specular_toon` y cálculos vectoriales básicos sin pases post-procesado pesados. |
+| Caída de FPS por añadir personajes de fondo | Medio | Desacoplamiento estricto Tier 2: los personajes ambientales no ejecutan raycasts ni colisiones dinámicas continuas. |
+| Deslizamiento de pie en nuevas mallas | Crítico | Mantener inalterado el cálculo analítico de `gait.gd` y los 20 huesos del rig universal. Validado automáticamente por `test_gait.gd`. |
