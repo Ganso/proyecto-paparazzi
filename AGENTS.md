@@ -26,7 +26,7 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 | **Equipamiento y Ópticas** | [docs/EQUIPAMIENTO_Y_OPTICAS.md](file:///home/ganso/codigo/afotando/docs/EQUIPAMIENTO_Y_OPTICAS.md) | Cuerpos (compacta, telemétrica, réflex), catálogo de objetivos (28 mm a 135 mm), diafragmas, carretes analógicos y visor HUD de 9 colimadores. |
 | **Escenario y Rendimiento** | [docs/ESCENARIO_Y_RENDIMIENTO.md](file:///home/ganso/codigo/afotando/docs/ESCENARIO_Y_RENDIMIENTO.md) | Disposición del parque, masa vegetal densa de fondo, ciclo día/noche, sombras dinámicas, sistema de nubes y presupuestos de hardware. |
 | **Pruebas y Verificación** | [docs/TESTS_Y_VERIFICACION.md](file:///home/ganso/codigo/afotando/docs/TESTS_Y_VERIFICACION.md) | Clasificación Headless vs. Display, suite de atascos (`simulate_jams.gd`), smoke test y comandos de validación obligatorios. |
-| **Banco de Futuras Mejoras** | [docs/futuro/README.md](file:///home/ganso/codigo/afotando/docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí y desafíos. |
+| **Banco de Futuras Mejoras** | [docs/futuro/README.md](file:///home/ganso/codigo/afotando/docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí, animación universal (Quaternius) y desafíos. |
 
 ---
 
