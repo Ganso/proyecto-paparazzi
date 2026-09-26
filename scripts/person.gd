@@ -58,7 +58,7 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	skin = Skin.new()
 	for i in rests.size(): skin.add_bind(i, rests[i].affine_inverse())
 	var colors = {
-		"piel":Color(catalog.tonos_piel[t.skin]),
+		"piel":Color(catalog.tonos_madera[catalog.madera_por_tono[t.skin]]),
 		"acento":Color("eee9dc"),
 		"accesorio":Color(catalog.tonos_ropa[t.get("accessory_color","rojo")].rgb),
 		"tela_a":Color(catalog.tonos_ropa[t.upper_color].rgb),
@@ -180,6 +180,17 @@ func occlusion(v: Vector3, n: Vector3) -> float:
 	var ground = clampf(1-v.y/(.3*height),0,1)*.15
 	return 1-minf(down+inner+ground,.4)
 
+# Toon shading plus ink outline (next_pass), shared by every person: one material, two passes.
+static var shared_material: ShaderMaterial
+static func mannequin_material() -> ShaderMaterial:
+	if shared_material == null:
+		shared_material = ShaderMaterial.new()
+		shared_material.shader = preload("res://shaders/cel_shading.gdshader")
+		var outline = ShaderMaterial.new()
+		outline.shader = preload("res://shaders/cel_outline.gdshader")
+		shared_material.next_pass = outline
+	return shared_material
+
 func finish_mesh() -> void:
 	# One draw surface per person: vertex colors preserve the four named color zones.
 	var vertices = PackedVector3Array()
@@ -208,11 +219,7 @@ func finish_mesh() -> void:
 	arrays[Mesh.ARRAY_WEIGHTS] = weights
 	arrays[Mesh.ARRAY_COLOR] = colors
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
-	var mat = StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.vertex_color_is_srgb = true
-	mat.roughness = 1
-	mesh.surface_set_material(0,mat)
+	mesh.surface_set_material(0,mannequin_material())
 	var instance = MeshInstance3D.new()
 	instance.mesh = mesh
 	instance.skin = skin
@@ -245,6 +252,8 @@ func vector(values: Array) -> Vector3:
 func build_shape(shape: Dictionary, colors: Dictionary) -> void:
 	var color: Color = colors[shape.color]
 	color = color.darkened(shape.get("darken",0)).lightened(shape.get("lighten",0))
+	# Alpha only flags shapes the ink outline must skip (cel_outline.gdshader); the surface is opaque.
+	if not shape.get("outline",true): color.a = 0
 	match shape.type:
 		"mesh": build_contoured_mesh(shape,color)
 		"ellipsoid": ellipsoid(shape.bone,vector(shape.position),vector(shape.size),color)

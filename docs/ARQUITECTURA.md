@@ -35,6 +35,7 @@ graph TD
 
     A --> K[shaders/develop.gdshader<br/>Simulación de Revelado Químico]
     F --> L[shaders/focus_aid.gdshader<br/>Ayuda de Enfoque Telemétrico/Prisma]
+    C --> M[shaders/cel_shading.gdshader + cel_outline.gdshader<br/>Maniquí toon y contorno de tinta]
 ```
 
 ### Responsabilidades por Módulo

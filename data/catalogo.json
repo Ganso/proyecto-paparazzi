@@ -1899,5 +1899,17 @@
     "marrón": "5b3a26",
     "blanco": "e3dfd4",
     "gris": "62676d"
+  },
+  "tonos_madera": {
+    "arce": "d8b27f",
+    "haya": "c79463",
+    "roble": "a8744a",
+    "nogal": "76492e"
+  },
+  "madera_por_tono": {
+    "clara": "arce",
+    "media": "haya",
+    "morena": "roble",
+    "oscura": "nogal"
   }
 }

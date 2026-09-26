@@ -104,7 +104,7 @@ godot-4 --path . -- --smoke-test
 - **[docs/evidencias/GALERIA.md](docs/evidencias/GALERIA.md)**: Galería de capturas generada por `tools/run_evidence.sh`.
 - **[docs/origen/](docs/origen/)**: Documento de diseño original de 2012 e imágenes.
 - **`scripts/`**: Lógica de juego, generación procedural de personajes y parque, cinemática y visor.
-- **`shaders/`**: Shaders de revelado fotográfico (`develop.gdshader`) y ayuda de prisma (`focus_aid.gdshader`).
+- **`shaders/`**: Shaders de revelado fotográfico (`develop.gdshader`), ayuda de prisma (`focus_aid.gdshader`) y maniquí toon con contorno de tinta (`cel_shading.gdshader`, `cel_outline.gdshader`).
 - **`data/`**: Catálogo paramétrico de piezas (`catalogo.json`, `data/piezas/`) y textos en español (`textos.es.json`).
 - **`tools/`**: Generación de geometría (`build_catalog.py`), visualizadores (`preview_gait.gd`, `preview_people.gd`) y suite de evidencias (`run_evidence.sh`, `capture_evidence.gd`, `build_sheets.py`).
 

@@ -87,7 +87,7 @@ Para mantener el máximo rendimiento en `gl_compatibility`:
 | **Triángulos en escena** | $\le 100.000$ | `--smoke-test` |
 | **Triángulos por viandante** | $\le 1.900$ | `tests/test_art.gd` |
 | **Memoria de vídeo (VRAM)** | $< 60\text{ MiB}$ | `tests/test_game.gd` |
-| **Draw calls** | 1 parque estático + 1 por viandante | Por construcción (`merge_static_meshes`, superficie única en `person.gd`); ningún test lo mide |
+| **Draw calls** | 1 parque estático + 2 por viandante (superficie única dibujada con toon + contorno de tinta) | Por construcción (`merge_static_meshes`, superficie única y material de 2 pases en `person.gd`; `test_art.gd` comprueba el material); ningún test cuenta los draw calls |
 | **Tiempo de fotograma** | Objetivo 60 FPS | `godot-4 --path . -- --metrics` imprime mediana, p95 y máximo; no hay umbral automatizado |
 | **Relación de aspecto** | 16:9 estricto ($1280 \times 720$) | `project.godot` |
 

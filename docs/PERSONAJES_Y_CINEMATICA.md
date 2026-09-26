@@ -70,13 +70,17 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
 
      | Zona | Origen del color |
      |---|---|
-     | `piel` | `tonos_piel[t.skin]` |
+     | `piel` | Madera: `tonos_madera[madera_por_tono[t.skin]]` (arce, haya, roble o nogal) |
      | `pelo` | `tonos_pelo[t.hair_color]` |
      | `tela_a` / `tela_b` | `tonos_ropa` de la prenda superior / inferior |
      | `accesorio` | `tonos_ropa[t.accessory_color]` |
      | `acento` | Blanco roto fijo (zapatillas y franjas deportivas) |
      | `calzado` | `tonos_calzado` (negro, marrón, blanco, gris) |
 
+   - **Estilo maniquí** (subfases 2.1 y 2.2 de [futuro/02](futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md)):
+     - Material único compartido (`Person.mannequin_material()`) con [`cel_shading.gdshader`](../shaders/cel_shading.gdshader), luz en 3 bandas (iluminada 0,85, media 0,5 y sombra), y como `next_pass` [`cel_outline.gdshader`](../shaders/cel_outline.gdshader), un contorno de tinta por casco invertido de 1,6 px (máx. 12 mm). El contorno vuelve a dibujar los triángulos de cada viandante: el número de triángulos de la malla no cambia, pero el trabajo de rasterizado de los personajes se duplica.
+     - Los paneles de doble cara (solapas, cremalleras, bolsillos, franjas deportivas) llevan `outline: false` en su JSON; `person.gd` les pone alfa 0 en los vértices y el shader de contorno los colapsa, porque si no el casco los cubría de negro. El alfa no se usa para transparencia.
+     - Rótulas visibles: esferas un 22 % más oscuras y más gruesas que el miembro en codos, rodillas y muñecas cuando no hay ropa encima, y en la base del cuello.
    - **Oclusión ambiental precalculada** (`person.gd::occlusion()`): al combinar la malla, cada vértice oscurece el color de su zona hasta un 40 % según tres términos: caras que miran hacia abajo, caras interiores de brazos y muslos (que miran al eje del cuerpo) y cercanía al suelo. Da volumen a las zonas de color planas sin coste de render ni texturas.
    - **Calzado**: el color se deriva de los rasgos con un hash (`Person.shoe_color()`), **sin consumir el generador aleatorio**, para no alterar el reparto de encargos ni la navegación, y para que el retrato del encargo coincida con el viandante. El pantalón de vestir solo lleva negro o marrón. No forma parte de los predicados de los encargos.
 4. **Uniones sin huecos** (verificado en `test_art.gd`, "GARMENT CHECKS"):
@@ -84,7 +88,7 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
    - **Hombros**: la esfera del hombro no es más ancha que la manga y usa 3 anillos (`person.gd::ellipsoid()`), para que no forme una hombrera ni un pico.
    - **Cabeza**: el casquete del pelo es un *loft* de 10 segmentos (antes se generaba con 8 mientras el código de la línea frontal y del recorte suponía 10, lo que dejaba picos dentados). La gorra tiene copa propia cerrada y una visera curva que solo sale hacia delante (`visor_mesh()` en `build_catalog.py`); antes era un aro que atravesaba la cabeza y de frente parecía un halo.
    - La falda es más ancha que los muslos a la altura de la cadera (`test_art.gd` lo mide) para que no asomen por los lados.
-   - Comparativas antes/después de estas correcciones: [general](evidencias/comparativas/uniones_calzado_1_general.png), [cadera](evidencias/comparativas/uniones_calzado_2_cadera.png), [en movimiento](evidencias/comparativas/uniones_calzado_3_movimiento.png), [hombros](evidencias/comparativas/uniones_calzado_4_hombros.png) y [calzado](evidencias/comparativas/uniones_calzado_5_calzado.png). Cabeza y proporciones: [gorra](evidencias/comparativas/cabeza_1_gorra.png), [pelo](evidencias/comparativas/cabeza_2_pelo.png), [proporciones](evidencias/comparativas/proporciones_1_general.png) y [proporciones en movimiento](evidencias/comparativas/proporciones_2_movimiento.png). Sombreado y revisión: [oclusión](evidencias/comparativas/sombreado_1_oclusion.png), [lineup](evidencias/comparativas/revision_1_lineup.png) y [hoja de prendas](evidencias/comparativas/revision_2_prendas.png).
+   - Comparativas antes/después de estas correcciones: [general](evidencias/comparativas/uniones_calzado_1_general.png), [cadera](evidencias/comparativas/uniones_calzado_2_cadera.png), [en movimiento](evidencias/comparativas/uniones_calzado_3_movimiento.png), [hombros](evidencias/comparativas/uniones_calzado_4_hombros.png) y [calzado](evidencias/comparativas/uniones_calzado_5_calzado.png). Cabeza y proporciones: [gorra](evidencias/comparativas/cabeza_1_gorra.png), [pelo](evidencias/comparativas/cabeza_2_pelo.png), [proporciones](evidencias/comparativas/proporciones_1_general.png) y [proporciones en movimiento](evidencias/comparativas/proporciones_2_movimiento.png). Sombreado y revisión: [oclusión](evidencias/comparativas/sombreado_1_oclusion.png), [lineup](evidencias/comparativas/revision_1_lineup.png) y [hoja de prendas](evidencias/comparativas/revision_2_prendas.png). Estilo maniquí: [general](evidencias/comparativas/maniqui_1_general.png), [lineup](evidencias/comparativas/maniqui_2_lineup.png), [parque](evidencias/comparativas/maniqui_3_parque.png) y [vistas](evidencias/comparativas/maniqui_4_vistas.png).
 5. **Presupuesto Geométrico**:
    - Límite máximo: **1.900 triángulos por viandante** (`test_art.gd`).
    - Valor medido actual (máximo del catálogo): ver [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md).
@@ -131,6 +135,7 @@ El generador de personajes en [scripts/casting.gd](../scripts/casting.gd) respet
 
 1. **Principio Ético Invariable**:
    - El **tono de piel nunca se utiliza para identificar al objetivo**, ni forma parte de las descripciones o predicados de los encargos.
+   - Los cuerpos son **maniquíes de madera** (arce, haya, roble o nogal). El rasgo interno sigue llamándose `skin` y conserva sus claves (`clara`, `media`, `morena`, `oscura`) para no alterar el sorteo de `casting.gd`; solo se usa para elegir el acabado de madera (`madera_por_tono`), y `test_art.gd` comprueba que ningún vértice conserva un tono de piel.
 2. **Concordancia Gramatical Estricta en Español**:
    - Cada prenda en `catalogo.json` declara su género y número morfológico:
      - `pantalones`: masculino plural (`"los pantalones verdes"`).

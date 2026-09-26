@@ -53,6 +53,22 @@ func max_y(geometry: Array, bone: String) -> float:
 			for v in shape.vertices: top = maxf(top,v[1])
 	return top
 
+# Cross-section radius of the bare (wood) meshes of a limb segment near its lower end, where
+# it meets the next joint.
+func max_radius(geometry: Array, bone: String, bare: bool) -> float:
+	var lowest = 0.0
+	for shape in geometry:
+		if shape.bone == bone and shape.type == "mesh" and (shape.color == "piel") == bare:
+			for v in shape.vertices: lowest = minf(lowest,v[1])
+	var widest = 0.0
+	for shape in geometry:
+		if shape.bone == bone and shape.type == "mesh" and (shape.color == "piel") == bare:
+			for v in shape.vertices:
+				if v[1] <= lowest*.8: widest = maxf(widest,Vector2(v[0],v[2]).length())
+		if shape.bone == bone and shape.type == "segment" and (shape.color == "piel") == bare:
+			widest = maxf(widest,maxf(shape.radius_a,shape.radius_b))
+	return widest
+
 func max_x(geometry: Array, bone: String) -> float:
 	var widest = 0.0
 	for shape in geometry:
@@ -112,6 +128,36 @@ func garment_checks(casting) -> void:
 		var shoe = Person.shoe_color(t,casting.catalog)
 		check(shoe in colors and shoe == Person.shoe_color(t.duplicate(),casting.catalog),"Shoe colour is a deterministic palette entry")
 		if casting.catalog.piezas.piernas[t.lower].get("style","") == "formal": check(shoe in ["negro","marrón"],"Dress trousers take dark shoes")
+	# Wooden mannequin (docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md, subphases 2.1 and 2.2).
+	var mannequin = Person.new()
+	root.add_child(mannequin)
+	mannequin.setup({"profile":3,"upper":0,"lower":2,"hair":0,"skin":"oscura","hair_color":"moreno","upper_color":"rojo","lower_color":"vaquero","accessory":0,"accessory_color":"rojo","runner":false},casting.catalog,5)
+	var material = mannequin.mesh.surface_get_material(0)
+	check(material is ShaderMaterial and material.shader.resource_path.ends_with("cel_shading.gdshader"),"Mannequins use the toon shader")
+	check(material.next_pass is ShaderMaterial and material.next_pass.shader.resource_path.ends_with("cel_outline.gdshader"),"Toon material carries the ink outline pass")
+	check(material == Person.mannequin_material(),"One shared mannequin material")
+	var wood = Color(casting.catalog.tonos_madera[casting.catalog.madera_por_tono["oscura"]])
+	var body_colours = mannequin.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+	var wood_found = false
+	for c in body_colours:
+		if absf(c.r/maxf(c.g,.001)-wood.r/wood.g) < .01 and absf(c.b/maxf(c.g,.001)-wood.b/wood.g) < .01: wood_found = true
+		for tone in casting.catalog.tonos_piel.values():
+			var skin = Color(tone)
+			if absf(c.r/maxf(c.g,.001)-skin.r/skin.g) < .002 and absf(c.b/maxf(c.g,.001)-skin.b/skin.g) < .002: check(false,"No vertex keeps a skin tone")
+	check(wood_found,"Bare body parts take the mapped wood finish")
+	mannequin.free()
+	for profile in casting.catalog.perfiles:
+		for piece in profile.piezas:
+			var geometry: Array = JSON.parse_string(FileAccess.get_file_as_string(piece.recurso)).geometry
+			for shape in geometry:
+				if shape.type == "mesh" and not shape.get("collision",true) and shape.normals.size() > 0 and shape.normals.count(shape.normals[0]) == shape.normals.size():
+					check(not shape.get("outline",true),"Double-sided panels skip the outline: "+piece.recurso)
+			# Bare joints are ball joints: a darker sphere wider than the limb it joins.
+			var joints = {"antebrazo":"brazo","pierna":"muslo"}
+			for bone in joints:
+				for shape in geometry:
+					if shape.bone == bone+".I" and shape.type == "ellipsoid" and shape.color == "piel":
+						check(shape.get("darken",0) > 0 and shape.size[0]*.5 > max_radius(geometry,joints[bone]+".I",shape.color == "piel"),"Bare "+bone+" joint reads as a ball joint: "+piece.recurso)
 	# Baked occlusion: bounded, leaves lit tops untouched and darkens undersides near the ground.
 	var probe = Person.new()
 	probe.height = 1.75

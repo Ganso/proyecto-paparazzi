@@ -21,7 +21,7 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 |---|---|---|
 | **Arquitectura Global** | [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) | Diagrama de módulos, máquina de estados (`INTRO`, `BRIEFING`, `SEARCH`, `RESULT`, `SUMMARY`…), pipeline de fotograma y renderizado. |
 | **Navegación y Colisiones** | [docs/NAVEGACION_Y_COLISIONES.md](docs/NAVEGACION_Y_COLISIONES.md) | Coordenadas cilíndricas, calzadas peatonales, límites `LANE_BOUNDS`, steering lateral 2D, cruces, adelantamientos y anti-deadlock. |
-| **Personajes y Locomoción** | [docs/PERSONAJES_Y_CINEMATICA.md](docs/PERSONAJES_Y_CINEMATICA.md) | 4 perfiles anatómicos, rig universal de 20 huesos, pesaje rígido, coloreado por vértice (`ARRAY_COLOR`), cinemática `gait.gd` y ética de casting. |
+| **Personajes y Locomoción** | [docs/PERSONAJES_Y_CINEMATICA.md](docs/PERSONAJES_Y_CINEMATICA.md) | 4 perfiles anatómicos, rig universal de 20 huesos, pesaje rígido, coloreado por vértice (`ARRAY_COLOR`), estilo maniquí (madera, rótulas, shaders toon y de contorno), cinemática `gait.gd` y ética de casting. |
 | **Simulación Óptica y Foto** | [docs/SIMULACION_FOTOGRAFICA.md](docs/SIMULACION_FOTOGRAFICA.md) | Ecuaciones de CoC, profundidad de campo, EV, trepidación, shaders de revelado (`develop.gdshader`), ayuda de foco y algoritmo de puntuación. |
 | **Equipamiento y Ópticas** | [docs/EQUIPAMIENTO_Y_OPTICAS.md](docs/EQUIPAMIENTO_Y_OPTICAS.md) | Cuerpos (compacta, telemétrica, réflex), catálogo de objetivos (24 mm a 200 mm), diafragmas, carretes analógicos y visor HUD de 9 colimadores. |
 | **Escenario y Rendimiento** | [docs/ESCENARIO_Y_RENDIMIENTO.md](docs/ESCENARIO_Y_RENDIMIENTO.md) | Disposición del parque, masa vegetal densa de fondo, ciclo día/noche, sombras dinámicas, sistema de nubes y presupuestos de hardware. |
@@ -40,7 +40,7 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 - **Triángulos totales en escena**: Máximo **100.000 triángulos** (parque, vegetación de fondo y 21 personas).
 - **Memoria de vídeo (VRAM)**: Mantener siempre por debajo de **60 MiB** (atlas de sombras de 2048 incluido).
 - Los valores medidos actuales de estos presupuestos están en [docs/TESTS_Y_VERIFICACION.md §5](docs/TESTS_Y_VERIFICACION.md).
-- **Draw Calls**: Cada personaje consta de **1 única superficie combinada** con colores de vértice (`Mesh.ARRAY_COLOR`), sin texturas individuales. El parque estático se fusiona en **1 único draw call**.
+- **Draw Calls**: Cada personaje consta de **1 única superficie combinada** con colores de vértice (`Mesh.ARRAY_COLOR`), sin texturas individuales, dibujada con un material de 2 pases (toon `shaders/cel_shading.gdshader` + contorno `shaders/cel_outline.gdshader`). El parque estático se fusiona en **1 único draw call**.
 
 ### 3.2 Rigging y Locomoción
 - **Esqueleto**: Exactamente **20 huesos** idénticos para los 4 perfiles anatómicos.
@@ -67,7 +67,7 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
   2. **Actualizar y ejecutar la suite de evidencias gráficas** (`./tools/run_evidence.sh`), comprobando que las capturas de estado, hojas de assets y animaciones en `docs/evidencias/` reflejan fielmente el nuevo estándar visual.
 
 ### 3.5 Ética y Fotografía Determinista
-- **Regla Ética**: El tono de piel **nunca** se utiliza para describir al objetivo ni forma parte de los predicados.
+- **Regla Ética**: El tono de piel **nunca** se utiliza para describir al objetivo ni forma parte de los predicados. Los personajes son maniquíes de madera: el rasgo `skin` solo elige el acabado (`madera_por_tono`).
 - **Determinismo**: Una entrada fotográfica idéntica en `photography.gd` produce siempre la misma puntuación numérica.
 - **Oclusión física**: Se evalúan **5 rayos directos** contra la geometría 3D real de personajes y mobiliario.
 - **Textos e Idioma**: Todo texto visible debe resolverse a través de `texts.gd` y estar registrado en `data/textos.es.json`.

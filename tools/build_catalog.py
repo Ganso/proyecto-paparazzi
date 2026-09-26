@@ -80,8 +80,13 @@ def visor_mesh(head, cz, steps=6, spread=math.radians(78)):
         tris+=[(a,b,d),(a,d,c)]
     return dict(vertices=vertices,normals=normals,indices=oriented(vertices,normals,tris))
 
+# Wooden mannequin finishes (docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md, 3.1). The trait keeps its
+# 'skin' keys so casting draws stay identical; person.gd paints the body with the mapped wood.
+cat['tonos_madera']={'arce':'d8b27f','haya':'c79463','roble':'a8744a','nogal':'76492e'}
+cat.setdefault('madera_por_tono',{'clara':'arce','media':'haya','morena':'roble','oscura':'nogal'})
 # Street-shoe palette; picked per person from its traits (scripts/person.gd), not a predicate.
 cat.setdefault('tonos_calzado',{'negro':'26282b','marrón':'5b3a26','blanco':'e3dfd4','gris':'62676d'})
+JOINT=.22
 for profile in cat['perfiles']:
     h,w,ratio,j=(profile[k] for k in ('altura','hombros','relacion_cabeza','radio'))
     nz,head=h-h/ratio,h/ratio
@@ -106,21 +111,29 @@ for profile in cat['perfiles']:
                 n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
                 length=max(.0001,math.sqrt(sum(t*t for t in n)))
                 n=[t/length for t in n]
+                # Point the normal away from the bone axis: mirrored panels came out facing inwards,
+                # which the toon bands render as solid shadow.
+                centre=[sum(p[k] for p in points)/len(points) for k in range(3)]
+                if n[0]*centre[0]+n[2]*centre[2]<0: n=[-t for t in n]
                 ids=[]
                 for i in range(1,len(points)-1): ids.extend([0,i,i+1])
                 # Front/back avoid disappearance of seams from grazing angles.
                 ids+=sum(([ids[i],ids[i+2],ids[i+1]] for i in range(0,len(ids),3)),[])
-                shape('mesh',bone,color,vertices=points,normals=[n]*len(points),indices=ids,collision=False,**kwargs)
+                # Double-sided panels are left out of the ink outline: its hull pass would cover them.
+                shape('mesh',bone,color,vertices=points,normals=[n]*len(points),indices=ids,collision=False,outline=False,**kwargs)
             if slot=='cuerpo':
                 loft('cabeza',[(head*y,head*x,head*z,head*offset) for y,x,z,offset in [
                     (0,.17,.20,-.025),(.12,.28,.30,-.03),(.34,.36,.365,-.015),
                     (.64,.375,.395,.015),(.84,.31,.34,.025),(.96,.19,.23,.025),(1,.045,.06,.025)]],'piel',10)
                 seg('cuello',[0,-nz*.025,0],[0,nz*.045,0],j*.82,j*.73,'piel')
+                # Visible ball joints of the drawing mannequin, a shade darker than the wood.
+                ball('cuello',[0,nz*.035,0],[j*1.9,j*1.3,j*1.9],'piel',darken=JOINT)
                 for side in ['I','D']:
                     length=nz*.085
                     loft('mano.'+side,[(-length,j*.25,j*.23,-.004),(-length*.82,j*.57,j*.35,-.008),(-length*.32,j*.65,j*.40,0),(0,j*.50,j*.43,0)],'piel',6)
                     sign=-1 if side=='I' else 1
                     ball('mano.'+side,[sign*j*.59,-length*.32,-j*.08],[j*.6,length*.55,j*.57],'piel')
+                    ball('mano.'+side,[0,0,0],[j*1.55]*3,'piel',darken=JOINT)
             elif slot=='torso':
                 casual=piece['style'] in ('plain','hood')
                 bulk=1.08 if piece['style']=='hood' else 1.0
@@ -150,7 +163,7 @@ for profile in cat['perfiles']:
                         seg('brazo.'+side,[0,end+.004,0],[0,-arm,0],j*.9,j*.84,'piel')
                         loft('brazo.'+side,[(end-.004,j*.98,j*1.00,0),(end+.007,j*1.02,j*1.04,0)],'tela_a',6,darken=.16)
                     fc='tela_a' if sleeve==1 else 'piel'
-                    ball('antebrazo.'+side,[0,0,0],[j*1.90]*3,fc)
+                    ball('antebrazo.'+side,[0,0,0],[j*(2.4 if fc=='piel' else 1.90)]*3,fc,darken=JOINT if fc=='piel' else 0)
                     loft('antebrazo.'+side,[(-fore,j*.66,j*.67,0),(-fore*.60,j*.90,j*.90,0),(-fore*.15,j*.96,j*.98,0),(0,j*.88,j*.91,0)],fc,6)
                     if sleeve==1: loft('antebrazo.'+side,[(-fore,j*.70,j*.72,0),(-fore+.014,j*.73,j*.75,0)],'tela_a',6,darken=.17)
                 if piece['style']=='sport':
@@ -173,7 +186,7 @@ for profile in cat['perfiles']:
                     top=[] if skirt else [(nz*.075,j*1.40,j*1.44,0)]
                     loft('muslo.'+side,[(-thigh,j*1.26,j*1.32,0),(-thigh*.55,j*1.55,j*1.54,0),(0,j*1.45,j*1.50,0)]+top,tc,6)
                     kc='piel' if short else 'tela_b'
-                    ball('pierna.'+side,[0,0,0],[j*2.5]*3,kc)
+                    ball('pierna.'+side,[0,0,0],[j*(2.8 if kc=='piel' else 2.5)]*3,kc,darken=JOINT if kc=='piel' else 0)
                     loft('pierna.'+side,[(-calf,j*.84,j*.90,0),(-calf*.65,j*1.10,j*1.24,.006),(-calf*.25,j*1.32,j*1.43,.008),(0,j*1.19,j*1.25,0)],kc,6)
                     if not skirt and short:
                         loft('muslo.'+side,[(-thigh,j*1.30,j*1.37,0),(-thigh+.012,j*1.33,j*1.39,0)],'tela_b',6,darken=.18)
