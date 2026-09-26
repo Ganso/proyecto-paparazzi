@@ -53,6 +53,27 @@ func max_y(geometry: Array, bone: String) -> float:
 			for v in shape.vertices: top = maxf(top,v[1])
 	return top
 
+func max_x(geometry: Array, bone: String) -> float:
+	var widest = 0.0
+	for shape in geometry:
+		if shape.bone == bone and shape.type == "mesh":
+			for v in shape.vertices: widest = maxf(widest,absf(v[0]))
+	return widest
+
+# Half-width of the skirt body at the hip joint height (y = 0), interpolated between its rings.
+func skirt_half_width(geometry: Array) -> float:
+	var body = geometry.filter(func(s): return s.bone == "caderas" and s.type == "mesh")[1]
+	var rings = {}
+	for v in body.vertices:
+		var y = snappedf(v[1],.000001)
+		rings[y] = maxf(rings.get(y,0.0),absf(v[0]))
+	var below = -INF
+	var above = INF
+	for y in rings:
+		if y <= 0: below = maxf(below,y)
+		else: above = minf(above,y)
+	return lerpf(rings[below],rings[above],-below/(above-below))
+
 # Regressions of the visible seams fixed in tools/build_catalog.py (see docs/PERSONAJES_Y_CINEMATICA.md).
 func garment_checks(casting) -> void:
 	for profile in casting.catalog.perfiles:
@@ -67,7 +88,9 @@ func garment_checks(casting) -> void:
 				var opening = -INF
 				for i in 8: opening = maxf(opening,seat.vertices[i][1])
 				var thigh = max_y(geometry,"muslo.I")
-				if piece.style == "skirt": check(thigh <= .0001,"Thighs stay below a skirt waist: "+piece.recurso)
+				if piece.style == "skirt":
+					check(thigh <= .0001,"Thighs stay below a skirt waist: "+piece.recurso)
+					check(skirt_half_width(geometry) >= profile.hombros*.22+max_x(geometry,"muslo.I"),"Skirt covers the thighs at the hip: "+piece.recurso)
 				else: check(thigh >= opening,"Thigh fills the seat leg opening: "+piece.recurso)
 			if piece.ranura == "cabeza" and piece.style == "cap":
 				# The peak is the last head mesh; a ring reaching behind the forehead read as a halo.

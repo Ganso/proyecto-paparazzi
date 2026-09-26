@@ -145,14 +145,14 @@ for profile in cat['perfiles']:
                     arm,fore,sleeve=nz*.215,nz*.169,piece['sleeve']
                     ball('brazo.'+side,[0,-j*.25,0],[j*1.95,j*1.7,j*2.0],'tela_a')
                     end=-arm*sleeve
-                    loft('brazo.'+side,[(end,j*.85,j*.87,0),(end*.64,j*1.08,j*1.04,0),(-j*.1,j*1.07,j*1.07,0)],'tela_a',6)
+                    loft('brazo.'+side,[(end,j*.95,j*.97,0),(end*.64,j*1.16,j*1.12,0),(-j*.1,j*1.10,j*1.10,0)],'tela_a',6)
                     if sleeve<1:
-                        seg('brazo.'+side,[0,end+.004,0],[0,-arm,0],j*.8,j*.75,'piel')
-                        loft('brazo.'+side,[(end-.004,j*.88,j*.90,0),(end+.007,j*.92,j*.94,0)],'tela_a',6,darken=.16)
+                        seg('brazo.'+side,[0,end+.004,0],[0,-arm,0],j*.9,j*.84,'piel')
+                        loft('brazo.'+side,[(end-.004,j*.98,j*1.00,0),(end+.007,j*1.02,j*1.04,0)],'tela_a',6,darken=.16)
                     fc='tela_a' if sleeve==1 else 'piel'
-                    ball('antebrazo.'+side,[0,0,0],[j*1.70]*3,fc)
-                    loft('antebrazo.'+side,[(-fore,j*.59,j*.60,0),(-fore*.60,j*.80,j*.80,0),(-fore*.15,j*.86,j*.88,0),(0,j*.78,j*.81,0)],fc,6)
-                    if sleeve==1: loft('antebrazo.'+side,[(-fore,j*.63,j*.65,0),(-fore+.014,j*.66,j*.68,0)],'tela_a',6,darken=.17)
+                    ball('antebrazo.'+side,[0,0,0],[j*1.90]*3,fc)
+                    loft('antebrazo.'+side,[(-fore,j*.66,j*.67,0),(-fore*.60,j*.90,j*.90,0),(-fore*.15,j*.96,j*.98,0),(0,j*.88,j*.91,0)],fc,6)
+                    if sleeve==1: loft('antebrazo.'+side,[(-fore,j*.70,j*.72,0),(-fore+.014,j*.73,j*.75,0)],'tela_a',6,darken=.17)
                 if piece['style']=='sport':
                     for sign in [-1,1]:
                         patch('lumbar',[[sign*shoulder*.60,nz*.02,-shoulder*.55],[sign*shoulder*.70,nz*.02,-shoulder*.53],[sign*shoulder*.70,nz*.20,-shoulder*.55],[sign*shoulder*.60,nz*.20,-shoulder*.57]],'acento')
@@ -171,12 +171,12 @@ for profile in cat['perfiles']:
                     # Trouser thighs continue above the joint into the pelvis, filling the raised
                     # leg openings at the hips; under a skirt they would poke through its waist.
                     top=[] if skirt else [(nz*.075,j*1.40,j*1.44,0)]
-                    loft('muslo.'+side,[(-thigh,j*.96,j*1.02,0),(-thigh*.55,j*1.27,j*1.26,0),(0,j*1.42,j*1.48,0)]+top,tc,6)
+                    loft('muslo.'+side,[(-thigh,j*1.26,j*1.32,0),(-thigh*.55,j*1.55,j*1.54,0),(0,j*1.45,j*1.50,0)]+top,tc,6)
                     kc='piel' if short else 'tela_b'
-                    ball('pierna.'+side,[0,0,0],[j*1.91]*3,kc)
-                    loft('pierna.'+side,[(-calf,j*.65,j*.70,0),(-calf*.65,j*.84,j*.95,.006),(-calf*.25,j*1.01,j*1.10,.008),(0,j*.91,j*.96,0)],kc,6)
+                    ball('pierna.'+side,[0,0,0],[j*2.5]*3,kc)
+                    loft('pierna.'+side,[(-calf,j*.84,j*.90,0),(-calf*.65,j*1.10,j*1.24,.006),(-calf*.25,j*1.32,j*1.43,.008),(0,j*1.19,j*1.25,0)],kc,6)
                     if not skirt and short:
-                        loft('muslo.'+side,[(-thigh,j*1.0,j*1.07,0),(-thigh+.012,j*1.03,j*1.09,0)],'tela_b',6,darken=.18)
+                        loft('muslo.'+side,[(-thigh,j*1.30,j*1.37,0),(-thigh+.012,j*1.33,j*1.39,0)],'tela_b',6,darken=.18)
                     ankle=nz*.03
                     # Footwear has its own colour zone: trainers stay light, street shoes use 'calzado'.
                     shoe='acento' if piece.get('sport') else 'calzado'

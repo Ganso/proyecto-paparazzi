@@ -10,12 +10,14 @@ La población se genera proceduralmente a partir de **4 complexiones anatómicas
 
 | Perfil | Altura ($h$) | Hombros | Relación Cabeza | Radio Articular ($j$) | Zancada Base (`zancada`) |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **0. Adulto Estándar** | $1.75\text{ m}$ | $0.42\text{ m}$ | $1 : 7.5$ | $0.045\text{ m}$ | $1.461\text{ m}$ |
-| **1. Adulto Delgado** | $1.80\text{ m}$ | $0.36\text{ m}$ | $1 : 8.0$ | $0.038\text{ m}$ | $1.518\text{ m}$ |
-| **2. Adulto Robusto** | $1.70\text{ m}$ | $0.52\text{ m}$ | $1 : 6.8$ | $0.055\text{ m}$ | $1.397\text{ m}$ |
-| **3. Niño / Niña** | $1.15\text{ m}$ | $0.28\text{ m}$ | $1 : 4.8$ | $0.032\text{ m}$ | $0.877\text{ m}$ |
+| **0. Adulto Estándar** | $1.75\text{ m}$ | $0.42\text{ m}$ | $1 : 7.0$ | $0.045\text{ m}$ | $1.446\text{ m}$ |
+| **1. Adulto Delgado** | $1.80\text{ m}$ | $0.36\text{ m}$ | $1 : 7.5$ | $0.038\text{ m}$ | $1.503\text{ m}$ |
+| **2. Adulto Robusto** | $1.70\text{ m}$ | $0.52\text{ m}$ | $1 : 6.4$ | $0.055\text{ m}$ | $1.382\text{ m}$ |
+| **3. Niño / Niña** | $1.15\text{ m}$ | $0.28\text{ m}$ | $1 : 4.5$ | $0.032\text{ m}$ | $0.862\text{ m}$ |
 
-La zancada es la longitud de un **ciclo completo** (dos pasos) y es la base de `gait.gd`; `person.gd` la multiplica por $0.8$ en caminantes y por $1.4$ en corredores.
+La zancada es la longitud de un **ciclo completo** (dos pasos) y es la base de `gait.gd`; `person.gd` la multiplica por $0.8$ en caminantes y por $1.4$ en corredores. En los cuatro perfiles vale $\approx 0.9637 \cdot NZ$ (proporcional a la longitud de pierna): si se cambia `altura` o `relacion_cabeza` en `catalogo.json`, hay que recalcularla con esa regla.
+
+Las cabezas son algo mayores que las de una figura realista (p. ej. 1:7 en el adulto estándar) para que peinados y tocados, que forman parte de los encargos, se lean a distancia. Las extremidades se engrosaron en la misma revisión; los brazos, menos que las piernas, porque a la altura de la cintura ya rozan el torso y de frente se fundirían con él.
 
 ### Escalado Anatómico por Base del Cráneo ($NZ$)
 Para que las extremidades de los menores no se deformen ni requieran tablas ad-hoc, las alturas articulares se calculan en función de $NZ$ (altura sin cabeza):
@@ -80,7 +82,8 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
    - **Cadera**: el asiento del pantalón (`caderas`) tiene aberturas laterales elevadas para las piernas; en pantalones y shorts el muslo continúa $0.075 \cdot NZ$ por encima de la articulación para rellenarlas. En falda no se prolonga (asomaría por la cintura) y la falda es más ancha arriba para cubrir los muslos.
    - **Hombros**: la esfera del hombro no es más ancha que la manga y usa 3 anillos (`person.gd::ellipsoid()`), para que no forme una hombrera ni un pico.
    - **Cabeza**: el casquete del pelo es un *loft* de 10 segmentos (antes se generaba con 8 mientras el código de la línea frontal y del recorte suponía 10, lo que dejaba picos dentados). La gorra tiene copa propia cerrada y una visera curva que solo sale hacia delante (`visor_mesh()` en `build_catalog.py`); antes era un aro que atravesaba la cabeza y de frente parecía un halo.
-   - Comparativas antes/después de estas correcciones: [general](evidencias/comparativas/uniones_calzado_1_general.png), [cadera](evidencias/comparativas/uniones_calzado_2_cadera.png), [en movimiento](evidencias/comparativas/uniones_calzado_3_movimiento.png), [hombros](evidencias/comparativas/uniones_calzado_4_hombros.png) y [calzado](evidencias/comparativas/uniones_calzado_5_calzado.png).
+   - La falda es más ancha que los muslos a la altura de la cadera (`test_art.gd` lo mide) para que no asomen por los lados.
+   - Comparativas antes/después de estas correcciones: [general](evidencias/comparativas/uniones_calzado_1_general.png), [cadera](evidencias/comparativas/uniones_calzado_2_cadera.png), [en movimiento](evidencias/comparativas/uniones_calzado_3_movimiento.png), [hombros](evidencias/comparativas/uniones_calzado_4_hombros.png) y [calzado](evidencias/comparativas/uniones_calzado_5_calzado.png). Cabeza y proporciones: [gorra](evidencias/comparativas/cabeza_1_gorra.png), [pelo](evidencias/comparativas/cabeza_2_pelo.png), [proporciones](evidencias/comparativas/proporciones_1_general.png) y [proporciones en movimiento](evidencias/comparativas/proporciones_2_movimiento.png).
 5. **Presupuesto Geométrico**:
    - Límite máximo: **1.900 triángulos por viandante** (`test_art.gd`).
    - Valor medido actual (máximo del catálogo): ver [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md).
@@ -112,7 +115,7 @@ Al alimentar $\Delta \text{distancia} = \|\mathbf{p}_{t} - \mathbf{p}_{t-1}\|$, 
 - **Cabeceo de cadera**: La posición vertical de la pelvis desciende en el contacto inicial (~6 cm) y se eleva en la posición de paso medio (~1 cm), emulando el movimiento biomecánico natural.
 
 ### 4.3 Diferenciación Marcha vs. Carrera
-- **Caminantes** ($v \in [0.55, 0.85]\text{ m/s}$): Zancada base del perfil $\times 0.8$ (p. ej. $1.461 \times 0.8 \approx 1.17\text{ m}$ en el adulto estándar); braceo suave de brazos; siempre hay al menos un pie en contacto con el suelo.
+- **Caminantes** ($v \in [0.55, 0.85]\text{ m/s}$): Zancada base del perfil $\times 0.8$ (p. ej. $1.446 \times 0.8 \approx 1.16\text{ m}$ en el adulto estándar); braceo suave de brazos; siempre hay al menos un pie en contacto con el suelo.
 - **Corredores** ($v \in [2.6, 3.0]\text{ m/s}$):
   - Ropa deportiva exclusiva (accesorios sueltos desactivados).
   - Zancada base del perfil $\times 1.4$.

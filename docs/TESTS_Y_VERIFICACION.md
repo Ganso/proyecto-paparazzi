@@ -34,7 +34,7 @@ xvfb-run -a -s "-screen 0 1440x900x24" godot-4 --audio-driver Dummy --path . --s
 | Suite | Comando | Qué valida | Línea de salida |
 |---|---|---|---|
 | **Óptica y determinismo** | `godot-4 --headless --path . --script tests/test_photography.gd` | CoC, profundidad de campo, error de EV, puntuación y determinismo (la misma evidencia da la misma nota) | `TESTS: N checks, N failures` |
-| **Arte y mallas** | `godot-4 --headless --path . --script tests/test_art.gd` | Ensambla todas las combinaciones del catálogo en los 4 perfiles: ≤ 1.900 triángulos por viandante, 20 huesos, pesos rígidos. Además revisa las piezas: calzado con zona de color propia, muslo que rellena el asiento del pantalón (y no asoma bajo la falda), hombro no más ancho que la manga y color de zapato determinista | `ART TESTS: N assemblies, maximum N triangles/person, N failures` y `GARMENT CHECKS: N checks, N failures` |
+| **Arte y mallas** | `godot-4 --headless --path . --script tests/test_art.gd` | Ensambla todas las combinaciones del catálogo en los 4 perfiles: ≤ 1.900 triángulos por viandante, 20 huesos, pesos rígidos. Además revisa las piezas: calzado con zona de color propia, muslo que rellena el asiento del pantalón (y no asoma bajo la falda), hombro no más ancho que la manga, falda más ancha que los muslos, visera de gorra solo hacia delante y color de zapato determinista | `ART TESTS: N assemblies, maximum N triangles/person, N failures` y `GARMENT CHECKS: N checks, N failures` |
 | **Equipo** | `godot-4 --headless --path . --script tests/test_equipment.gd` | Cuerpos, objetivos, diafragmas, modos AF/MF, carrete, lectura de EV y rayos de oclusión | `EQUIPMENT TESTS: N checks, N failures` |
 | **Marcha** | `godot-4 --headless --path . --script tests/test_gait.gd` | Pie de apoyo sin deslizamiento y suela a $y = 0$ en marcha y carrera | `GAIT TESTS: N checks, N failures, min sole y …, max contact drift …` |
 
@@ -86,7 +86,7 @@ Medidas el **2026-09-26** con **Godot 4.7-stable** (Linux; suites con display ba
 | Comprobaciones de óptica | 535, 0 fallos | 0 fallos | `test_photography.gd` |
 | Ensamblajes de personajes | 2.880, 0 fallos | 0 fallos | `test_art.gd` |
 | Triángulos por viandante (**máximo** del catálogo) | 1.582 | ≤ 1.900 | `test_art.gd` |
-| Comprobaciones de prendas | 414, 0 fallos | 0 fallos | `test_art.gd` |
+| Comprobaciones de prendas | 422, 0 fallos | 0 fallos | `test_art.gd` |
 | Comprobaciones de equipo | 543, 0 fallos | 0 fallos | `test_equipment.gd` |
 | Comprobaciones de marcha | 8.840, 0 fallos | 0 fallos | `test_gait.gd` |
 | Deriva máxima del pie de apoyo | 0.000000 m/fotograma | 0 | `test_gait.gd` |
@@ -94,8 +94,8 @@ Medidas el **2026-09-26** con **Godot 4.7-stable** (Linux; suites con display ba
 | Viandantes atascados tras 20 s | 0 | 0 | `simulate_jams.gd` |
 | Comprobaciones de expansión | 140, 0 fallos | 0 fallos | `test_expansion.gd` |
 | Comprobaciones de sesión | 23 (ver nota) | 0 fallos | `test_game.gd` |
-| VRAM en sesión completa | 42,72 MiB (texturas 33,90 · buffers 8,83) | < 60 MiB | `test_game.gd` |
-| Triángulos en escena (21 viandantes + parque) | 58.636 | ≤ 100.000 | `--smoke-test` |
+| VRAM en sesión completa | 42,74 MiB (texturas 33,90 · buffers 8,84) | < 60 MiB | `test_game.gd` |
+| Triángulos en escena (21 viandantes + parque) | 58.604 | ≤ 100.000 | `--smoke-test` |
 
 **Nota sobre `test_game.gd`**: bajo Xvfb pasaron 22 de 23 comprobaciones; la que falla es la de latencia de 50 ms (ver §1). Hay que confirmar los 23/23 en una máquina con GPU.
 
