@@ -1,140 +1,114 @@
 # Manual de Pruebas y Verificación — Proyecto Paparazzi
 
-Este documento contiene la guía operativa completa para ejecutar y ampliar las suites de pruebas automatizadas del proyecto **Proyecto Paparazzi**.
+Este documento es la **fuente única** de comandos de prueba y de cifras medidas del proyecto. El resto de documentos (README, AGENTS y los monográficos de `docs/`) enlazan aquí en lugar de repetir comandos o valores.
 
 ---
 
 ## 1. Clasificación Fundamental: Headless vs. Display
 
-El motor en esta máquina se ejecuta con el comando:
-```bash
-godot-4
-```
+El motor se invoca como `godot-4` (en macOS u otros sistemas puede llamarse `godot`).
 
 > [!WARNING]
 > **REGLA CRÍTICA DE EJECUCIÓN**:
 > Las pruebas que toman capturas o esperan fotogramas renderizados (`RenderingServer.frame_post_draw`) **NO DEBEN EJECUTARSE NUNCA CON `--headless`**. En modo headless el servidor de render no procesa fotogramas de dibujo y el proceso se congela indefinidamente.
 
+| Tipo | Suites | Requisito |
+|---|---|---|
+| **Headless** | `test_photography`, `test_art`, `test_equipment`, `test_gait` | Ninguno (CI, servidor) |
+| **Display** | `test_navigation`, `simulate_jams`, `test_expansion`, `test_game`, `--smoke-test`, `tools/run_evidence.sh` | Ventana X11 / Wayland con OpenGL 3.3 |
+
+### Servidores sin pantalla (Xvfb)
+Las suites con display funcionan en una máquina sin monitor con un servidor X virtual y renderizado por software (Mesa llvmpipe):
+```bash
+xvfb-run -a -s "-screen 0 1440x900x24" godot-4 --audio-driver Dummy --path . --script tests/test_game.gd
 ```
-                     +-----------------------------------+
-                     |       SUITES DE PRUEBA GODOT-4    |
-                     +-----------------------------------+
-                                       |
-            +--------------------------+--------------------------+
-            |                                                     |
-            v                                                     v
-   MODO HEADLESS (Sin Display)                            REQUIEREN DISPLAY
-   - CI/CD en servidor                                    - Ventana X11 / Wayland activa
-   - Sin dependencias gráficas                            - Capturas reales y shaders
-   - Fórmulas, mallas y cinemática                       - Viewport, navegación y VRAM
-```
+`--audio-driver Dummy` evita los avisos de ALSA cuando no hay tarjeta de sonido.
+
+> [!NOTE]
+> Con renderizado por software cada fotograma tarda más de 50 ms, así que la comprobación `Pan input under 50 ms` de `test_game.gd` (latencia real de un fotograma) falla bajo Xvfb. El resto de comprobaciones son válidas; la de latencia solo es significativa con GPU.
 
 ---
 
 ## 2. Suites en Modo Headless (Sin Pantalla)
 
-Pueden ejecutarse en terminales de fondo, servidores o integración continua:
-
-### 2.1 Óptica, Fotometría y Determinismo (`test_photography.gd`)
-Valida la física óptica, las fórmulas de círculo de confusión (CoC), profundidad de campo, valores de exposición EV y determinismo numérico:
-```bash
-godot-4 --headless --path . --script tests/test_photography.gd
-```
-- **Volumen**: 535 comprobaciones matemáticas.
-- **Invariante**: Dos expedientes idénticos devuelven la misma puntuación exacta.
-
-### 2.2 Presupuestos de Arte y Mallas (`test_art.gd`)
-Ensambla proceduralmente cada una de las combinaciones del catálogo para todos los perfiles anatómicos:
-```bash
-godot-4 --headless --path . --script tests/test_art.gd
-```
-- **Volumen**: 2.880 ensamblajes anatómicos.
-- **Invariantes**:
-  - Máximo **1.900 triángulos** por viandante (la media es ~1.550).
-  - Exactamente **20 huesos** por esqueleto.
-  - Pesaje rígido: 100% peso a un solo hueso por vértice.
-
-### 2.3 Cuerpos, Objetivos y Físicas (`test_equipment.gd`)
-Comprueba las ópticas, diafragmas, tiempos de obturación, modos AF/MF, lectura fotométrica y avance gradual de carril:
-```bash
-godot-4 --headless --path . --script tests/test_equipment.gd
-```
-- **Volumen**: 543 comprobaciones.
-
-### 2.4 Cinemática Inversa y Locomoción (`test_gait.gd`)
-Verifica analíticamente el sistema de marcha y carrera:
-```bash
-godot-4 --headless --path . --script tests/test_gait.gd
-```
-- **Volumen**: 8.840 comprobaciones biomecánicas.
-- **Invariante**: **Deriva de pie en contacto = $0.000000\text{ m/frame}$** y suela horizontal a $y = 0.0\text{ m}$.
+| Suite | Comando | Qué valida | Línea de salida |
+|---|---|---|---|
+| **Óptica y determinismo** | `godot-4 --headless --path . --script tests/test_photography.gd` | CoC, profundidad de campo, error de EV, puntuación y determinismo (la misma evidencia da la misma nota) | `TESTS: N checks, N failures` |
+| **Arte y mallas** | `godot-4 --headless --path . --script tests/test_art.gd` | Ensambla todas las combinaciones del catálogo en los 4 perfiles: ≤ 1.900 triángulos por viandante, 20 huesos, pesos rígidos | `ART TESTS: N assemblies, maximum N triangles/person, N failures` |
+| **Equipo** | `godot-4 --headless --path . --script tests/test_equipment.gd` | Cuerpos, objetivos, diafragmas, modos AF/MF, carrete, lectura de EV y rayos de oclusión | `EQUIPMENT TESTS: N checks, N failures` |
+| **Marcha** | `godot-4 --headless --path . --script tests/test_gait.gd` | Pie de apoyo sin deslizamiento y suela a $y = 0$ en marcha y carrera | `GAIT TESTS: N checks, N failures, min sole y …, max contact drift …` |
 
 ---
 
 ## 3. Suites con Entorno Gráfico (Requieren Display)
 
-### 3.1 Simulación Autónoma de Atascos de 20 Segundos (`simulate_jams.gd`)
-Simula 20 segundos de juego real continuo (400 pasos de física a $\Delta t = 0.05\text{ s}$) sin interacción del jugador, monitorizando la velocidad y el tiempo de bloqueo de cada viandante:
-```bash
-godot-4 --path . --script tests/simulate_jams.gd
-```
-- **Criterio de éxito**: **0 viandantes en deadlock** (`stuck_time > 0.8s`).
-
-### 3.2 Navegación 2D, Cruces y Evasión (`test_navigation.gd`)
-Valida maniobras específicas de navegación peatonal en calzadas anchas:
-```bash
-godot-4 --path . --script tests/test_navigation.gd
-```
-- **Checks incluidos (10/10)**:
-  - Cruce de dos viandantes en sentidos opuestos en el Carril 1 con separación $\ge 0.70\text{ m}$.
-  - Adelantamiento de un corredor rápido a un caminante lento en el mismo carril.
-  - Desvío lateral autónomo para rodear un obstáculo estático frontal sin atascarse.
-
-### 3.3 Sesión de Juego Completa (`test_game.gd`)
-Simula una partida íntegra de 5 encargos, evaluando entradas de ratón, disparo, revelado, consumo de VRAM y flujo entre pantallas:
-```bash
-godot-4 --path . --script tests/test_game.gd
-```
-- **Invariante de memoria**: **VRAM $< 60\text{ MiB}$** en todo momento (típicamente $\approx 42.6\text{ MiB}$).
-
-### 3.4 Pantalla Previa, Nubes, Carretes y Sandbox (`test_expansion.gd`)
-Verifica la pantalla de briefing, ropa deportiva de corredores, atenuación lumínica de nubes, bloqueo de ISO con película y el modo libre sandbox:
-```bash
-godot-4 --path . --script tests/test_expansion.gd
-```
-- **Volumen**: 140 comprobaciones con capturas PNG en `/tmp`.
-
-### 3.5 Prueba de Humo Rápida (`--smoke-test`)
-Comprobación ultrarrápida del estado general del juego:
-```bash
-godot-4 --path . -- --smoke-test
-```
-- **Verifica**: 21 viandantes, 20 huesos por persona, presupuesto total $\le 100.000$ triángulos (actualmente $57.532$) y expediente determinista.
+| Suite | Comando | Qué valida | Línea de salida |
+|---|---|---|---|
+| **Navegación** | `godot-4 --path . --script tests/test_navigation.gd` | Cruce en sentidos opuestos en el carril 1, adelantamiento de un corredor a un caminante y desvío ante un obstáculo estático | `NAVIGATION TESTS: N checks, N failures` |
+| **Atascos (20 s)** | `godot-4 --path . --script tests/simulate_jams.gd` | 400 pasos a $\Delta t = 0.05\text{ s}$ sin jugador. Éxito: **0 viandantes con `stuck_time > 0.8 s`** | `Deadlocked pedestrians (stuck_time > 0.8s): N` |
+| **Expansión** | `godot-4 --path . --script tests/test_expansion.gd` | Pantalla de encargo, ropa deportiva de corredores, nubes y EV, bloqueo de ISO con carrete y sandbox. Guarda capturas en `/tmp/paparazzi-*.png` | `EXPANSION TESTS: N checks, N failures` |
+| **Sesión completa** | `godot-4 --path . --script tests/test_game.gd` | 5 encargos, entrada, disparo, revelado, flujo de pantallas y **VRAM < 60 MiB**. Guarda capturas en `/tmp/paparazzi-*.png` | `SESSION VIDEO MEMORY: …` y `GAME TESTS: N checks, N failures` |
+| **Humo** | `godot-4 --path . -- --smoke-test` | 21 viandantes, 20 huesos por persona, ≤ 100.000 triángulos y expediente determinista | `SMOKE PASS: …` |
 
 ---
 
-## 4. Herramientas Auxiliares
+## 4. Herramientas y Opciones de Arranque
 
-```bash
-# Regeneración del catálogo paramétrico JSON
-python3 tools/build_catalog.py
+### 4.1 Opciones de línea de comandos de `main.gd`
+Se pasan tras `--` (`godot-4 --path . -- <opción>`):
 
-# Previsualizador interactivo de vestimentas y perfiles anatómicos
-godot-4 --path . --script tools/preview_people.gd
+| Opción | Efecto |
+|---|---|
+| `--smoke-test` | Prueba de humo (§3) y salida. |
+| `--metrics` | Tras 120 fotogramas en `SEARCH`, mide 600 fotogramas e imprime `METRICS frames=… median_ms=… p95_ms=… max_ms=…`. Es la única medida de rendimiento disponible; no tiene umbral automatizado. |
+| `--stress` | Confina a los viandantes en el sector $\theta \in [96^\circ, 144^\circ]$ para forzar congestión. |
+| `--screenshot=<ruta>` | Guarda una captura del fotograma 100 en `<ruta>`. |
 
-# Previsualizador interactivo de locomoción y cinemática inversa
-godot-4 --path . --script tools/preview_gait.gd
-```
+### 4.2 Scripts de `tools/`
+
+| Herramienta | Comando | Función |
+|---|---|---|
+| `run_evidence.sh` | `./tools/run_evidence.sh` | Orquesta la suite de evidencias gráficas: ejecuta `capture_evidence.gd` y después `build_sheets.py`. Requiere display. |
+| `capture_evidence.gd` | `godot-4 --path . --script tools/capture_evidence.gd` | Renderiza estados del juego, assets y fotogramas de animación en `docs/evidencias/scratch/`. |
+| `build_sheets.py` | `python3 tools/build_sheets.py` | Monta hojas de assets, GIFs y [`docs/evidencias/GALERIA.md`](evidencias/GALERIA.md). Requiere Pillow. |
+| `build_catalog.py` | `python3 tools/build_catalog.py` | Regenera `data/catalogo.json` y `data/piezas/`. |
+| `preview_people.gd` | `godot-4 --path . --script tools/preview_people.gd` | Visor interactivo de vestuario y perfiles anatómicos. |
+| `preview_gait.gd` | `godot-4 --path . --script tools/preview_gait.gd` | Visor interactivo de la marcha. |
 
 ---
 
-## 5. Tabla Resumen de Diagnóstico Rápido
+## 5. Cifras de Referencia (Fuente Única)
 
-Si modificas... | Debes ejecutar obligatoriamente:
----|---
-**Geometría de piezas o `catalogo.json`** | `godot-4 --headless --path . --script tests/test_art.gd`
-**Locomoción o `gait.gd`** | `godot-4 --headless --path . --script tests/test_gait.gd`
-**Fórmulas ópticas, CoC o puntuación** | `godot-4 --headless --path . --script tests/test_photography.gd`
-**Cámaras, lentes o exposímetro** | `godot-4 --headless --path . --script tests/test_equipment.gd`
-**Navegación, carriles o `park.gd`** | `godot-4 --path . --script tests/test_navigation.gd` y `simulate_jams.gd`
-**Cualquier cambio antes de dar por cerrada una tarea** | `godot-4 --path . -- --smoke-test`
+Medidas el **2026-09-26** con **Godot 4.7-stable** (Linux; suites con display bajo Xvfb y Mesa llvmpipe). Cada cifra es la que imprime la suite indicada; si cambia el código, vuelve a ejecutar la suite y actualiza esta tabla.
+
+| Cifra | Valor | Límite (invariante) | Fuente |
+|---|:---:|:---:|---|
+| Comprobaciones de óptica | 535, 0 fallos | 0 fallos | `test_photography.gd` |
+| Ensamblajes de personajes | 2.880, 0 fallos | 0 fallos | `test_art.gd` |
+| Triángulos por viandante (**máximo** del catálogo) | 1.550 | ≤ 1.900 | `test_art.gd` |
+| Comprobaciones de equipo | 543, 0 fallos | 0 fallos | `test_equipment.gd` |
+| Comprobaciones de marcha | 8.840, 0 fallos | 0 fallos | `test_gait.gd` |
+| Deriva máxima del pie de apoyo | 0.000000 m/fotograma | 0 | `test_gait.gd` |
+| Comprobaciones de navegación | 10, 0 fallos | 0 fallos | `test_navigation.gd` |
+| Viandantes atascados tras 20 s | 0 | 0 | `simulate_jams.gd` |
+| Comprobaciones de expansión | 140, 0 fallos | 0 fallos | `test_expansion.gd` |
+| Comprobaciones de sesión | 23 (ver nota) | 0 fallos | `test_game.gd` |
+| VRAM en sesión completa | 42,68 MiB (texturas 33,90 · buffers 8,78) | < 60 MiB | `test_game.gd` |
+| Triángulos en escena (21 viandantes + parque) | 57.532 | ≤ 100.000 | `--smoke-test` |
+
+**Nota sobre `test_game.gd`**: bajo Xvfb pasaron 22 de 23 comprobaciones; la que falla es la de latencia de 50 ms (ver §1). Hay que confirmar los 23/23 en una máquina con GPU.
+
+---
+
+## 6. Tabla Resumen de Diagnóstico Rápido
+
+| Si modificas… | Debes ejecutar obligatoriamente |
+|---|---|
+| **Geometría de piezas o `catalogo.json`** | `test_art.gd` |
+| **Locomoción o `gait.gd`** | `test_gait.gd` |
+| **Fórmulas ópticas, CoC o puntuación** | `test_photography.gd` |
+| **Cámaras, objetivos o exposímetro** | `test_equipment.gd` |
+| **Navegación, carriles o `park.gd`** | `test_navigation.gd` y `simulate_jams.gd` |
+| **Interfaz, flujo de pantallas o memoria** | `test_game.gd` y `test_expansion.gd` |
+| **Cambios visuales (shaders, mallas, escena)** | `./tools/run_evidence.sh` |
+| **Cualquier cambio antes de dar por cerrada una tarea** | `godot-4 --path . -- --smoke-test` |

@@ -1,6 +1,6 @@
 # Simulación Fotográfica y Evaluación Determinista — Proyecto Paparazzi
 
-Este documento describe las leyes ópticas, el cálculo fotométrico, los shaders de revelado químico y el algoritmo determinista de calificación implementados en [scripts/photography.gd](file:///home/ganso/codigo/afotando/scripts/photography.gd).
+Este documento describe las leyes ópticas, el cálculo fotométrico, los shaders de revelado químico y el algoritmo determinista de calificación implementados en [scripts/photography.gd](../scripts/photography.gd).
 
 ---
 
@@ -9,116 +9,131 @@ Este documento describe las leyes ópticas, el cálculo fotométrico, los shader
 El juego modela el comportamiento óptico de una lente delgada sobre un sensor de **formato completo (36 × 24 mm)** con un círculo de confusión estándar admisible de **$c_{\text{adm}} = 0.030\text{ mm}$**.
 
 ### 1.1 Fórmula del Círculo de Confusión
-Dado un objetivo con distancia focal $f$ (en mm), número f/apertura $N$, enfocado a una distancia $s$ (en metros) para un sujeto situado a distancia $d$ (en metros):
+Dado un objetivo con distancia focal $f$ (mm) y número f $N$, enfocado a $s$ (m) y con el sujeto a $d$ (m):
 
-$$c = \frac{f^2}{N \cdot (s \cdot 1000 - f)} \cdot \frac{|d - s| \cdot 1000}{d \cdot 1000} \quad (\text{mm})$$
+$$c = \frac{f^2 \cdot |d - s|}{N \cdot d \cdot (s \cdot 1000 - f)} \quad (\text{mm})$$
 
-En `photography.gd`:
+Con enfoque a infinito ($s = \infty$): $c = \dfrac{f^2}{N \cdot d \cdot 1000}$.
+
+En `photography.gd` (argumentos en el orden focal, número f, **distancia al sujeto**, **distancia de enfoque**):
 ```gdscript
-static func coc(focal_mm: float, aperture: float, focus_dist_m: float, subject_dist_m: float) -> float:
-    var s = focus_dist_m * 1000.0
-    var d = subject_dist_m * 1000.0
-    var f = focal_mm
-    var num = f * f * absf(d - s)
-    var den = aperture * (s - f) * d
-    return num / den
+static func coc(f: float, n: float, d: float, s: float) -> float:
+	if is_inf(s): return f*f/(n*d*1000.0)
+	return f*f*abs(d-s)/(n*d*(s*1000.0-f))
 ```
 
-### 1.2 Distancia Hiperfocal y Profundidad de Campo
-- **Distancia Hiperfocal ($H$)**:
-  $$H = \frac{f^2}{N \cdot c_{\text{adm}}} + f$$
-- **Límite cercano de foco nítido ($D_{\text{near}}$)**:
-  $$D_{\text{near}} = \frac{s \cdot (H - f)}{H + s - 2f}$$
-- **Límite lejano de foco nítido ($D_{\text{far}}$)**:
-  $$D_{\text{far}} = \frac{s \cdot (H - f)}{H - s}$$
+### 1.2 Distancia Hiperfocal y Profundidad de Campo (`Photo.dof`)
+Con $s$ en mm:
+- **Hiperfocal**: $H = \dfrac{f^2}{N \cdot c_{\text{adm}}} + f$
+- **Límite cercano**: $D_{\text{near}} = \dfrac{H \cdot s}{H + s - f}$
+- **Límite lejano**: $D_{\text{far}} = \dfrac{H \cdot s}{H - s + f}$, o $\infty$ si $H \le s - f$.
+
+`dof()` devuelve ambos límites en metros como `Vector2(near, far)`.
 
 ---
 
 ## 2. Fotometría y Triángulo de Exposición
 
-### 2.1 Ecuación del Valor de Exposición ($EV$)
-La relación entre apertura ($N$), tiempo de obturación ($t$ en segundos) y sensibilidad ISO ($S$) se rige por:
+### 2.1 Error de Exposición (`Photo.ev`)
+La función no devuelve el EV de la cámara, sino directamente el **error** entre el ajuste de la cámara y la luz medida:
 
-$$EV_{100} = \log_2\left(\frac{N^2}{t}\right)$$
-$$EV_S = EV_{100} - \log_2\left(\frac{S}{100}\right)$$
+$$\Delta EV = \log_2\left(\frac{N^2}{t}\right) - \log_2\left(\frac{S}{100}\right) - EV_{\text{escena}}$$
 
-### 2.2 Fuentes de Luz en el Parque
-- **Día despejado**: $EV = 14.0$ (Sol directo alto).
-- **Paso de nube**: Atenúa la luz solar en aproximadamente **$3.0\text{ EV}$** ($EV \approx 11.0$).
-- **Noche bajo farola**: $EV = 4.0$ a $6.0$ dependiendo de la distancia radial a la luminaria.
-- **Noche en sombra**: $EV \approx 1.5 - 2.5$.
+- $\Delta EV > 0$: **subexpuesta** (la cámara deja pasar menos luz de la necesaria).
+- $\Delta EV < 0$: **sobreexpuesta**.
+- $|\Delta EV| \le 0.5$: dentro de tolerancia (medio paso).
+
+### 2.2 Luz de Escena (`park.illumination_ev` / `park.sky_ev`)
+La luz se calcula como luz incidente en el punto medido, con rayos reales hacia el sol o las farolas (se excluye la propia geometría del sujeto):
+
+| Situación | Cálculo | EV resultante |
+|---|---|:---:|
+| Día, punto al sol | $\log_2(2^{11} + 2^{14.7} \cdot T_{\text{sol}})$ | $\approx 14.8$ |
+| Día, punto en sombra | $\log_2(2^{11})$ | $11.0$ |
+| Día, nube completa sobre el sol ($T_{\text{sol}} = 0.09$) | igual, con transmisión reducida | $\approx 12.1$ al sol (−2.7 EV) |
+| Cielo sin impacto (día) | $15 + \log_2 T_{\text{sol}}$ | $15.0 \rightarrow 11.5$ con nube |
+| Noche, sin farola | $\log_2(2^{2})$ | $2.0$ |
+| Noche, bajo farola ($E = 2.2$, alcance 6 m) | $2^2 + 150 \cdot E \cdot \frac{(1 - (r/6)^4)^2}{\max(0.25, r^2)}$ por farola visible | $\approx 8.4$ a 1 m · $5.2$ a 3 m · $2.9$ a 5 m |
+| Cielo sin impacto (noche) | constante | $3.0$ |
+
+$T_{\text{sol}} = \text{lerp}(1.0, 0.09, \text{cloud\_cover})$ (`park.sun_transmission()`).
 
 ---
 
 ## 3. Trepidación y Desenfoque por Movimiento
 
-### 3.1 Movimiento del Sujeto
-El desplazamiento angular y lineal del sujeto durante el tiempo de obturación $t$ proyecta una estela en el sensor:
-$$\text{desenfoque}_{\text{sujeto}} = \frac{v_{\text{relativa}} \cdot t \cdot f}{d} \quad (\text{mm})$$
+### 3.1 Arrastre del Sujeto
+Con $v$ la velocidad perpendicular al eje óptico (m/s), $t$ el tiempo de obturación (s), $f$ en mm y $d$ en m:
+$$\text{arrastre} = \frac{v \cdot t \cdot f}{d} \quad (\text{mm en el sensor})$$
 
-### 3.2 Trepidación de la Cámara (Pulso del Fotógrafo)
-Sigue la regla empírica clásica de la fotografía manual:
-$$t_{\text{segura}} \le \frac{1}{f\text{ (mm)}}$$
-Si el tiempo de obturación supera $1 / f$ sin apoyo, se calcula una penalización por trepidación angular proporcional a $t \cdot f$.
+### 3.2 Pulso del Fotógrafo
+Se mide con la razón $t \cdot f$ (regla clásica $t \le 1/f$): sin penalización si $t \cdot f \le 1$ y penalización máxima a partir de $t \cdot f = 3$.
+
+La componente de movimiento de la nota es el mínimo de ambas (ver §5).
 
 ---
 
 ## 4. Shaders de Revelado y Ayuda Óptica
 
-### 4.1 Revelado Químico (`shaders/develop.gdshader`)
-Al capturar la fotografía, la imagen del Viewport no se guarda en bruto, sino que se procesa a través de un shader de simulación química analógica:
-1. **Desenfoque Óptico de CoC**: Muestreo en disco (*bokeh*) cuyo radio de dispersión en píxeles corresponde al valor calculado de CoC.
-2. **Desenfoque de Movimiento**: Muestreo direccional orientado en el vector de velocidad proyectada de cada sujeto.
-3. **Grano de Haluro de Plata**: Simulación de ruido analógico proporcional a la sensibilidad ISO de la película ($S = 100 \rightarrow \text{fino}$, $S = 1600 \rightarrow \text{grano pronunciado}$).
-4. **Curva Característica Sensitométrica**: Respuesta no lineal (curva Hurter & Driffield con hombro y pie suaves para luces y sombras).
+### 4.1 Revelado (`shaders/develop.gdshader`)
+Shader `canvas_item` aplicado a la captura del Viewport. `main.gd` le pasa estos uniformes a partir del resultado de `evaluate()`:
 
-### 4.2 Ayuda de Enfoque Telemétrica / Microprisma (`shaders/focus_aid.gdshader`)
-Renderiza en el centro del visor:
-- **Círculo de imagen partida**: Divide la mitad superior e inferior de la escena horizontalmente; si el objeto está desenfocado, las dos mitades se desplazan lateralmente.
-- **Corona de microprismas**: Produce un patrón de fractura visual cuando la imagen no coincide en foco exacto.
+| Uniforme | Valor asignado en `main.gd` | Efecto |
+|---|---|---|
+| `coc_pixels` | $\min(\text{CoC}/36 \cdot \text{ancho} \cdot 0.5,\ 35)$ | Radio del disco de desenfoque |
+| `motion` | $\min(\text{arrastre}/36 \cdot \text{ancho},\ 90)$ en horizontal, con el signo del movimiento | Estela lineal |
+| `shake` | $\min(\max(0, t f - 1) \cdot 5,\ 45)$ con ángulo derivado de la semilla | Trepidación |
+| `exposure` | $\Delta EV$ acotado a $[-8, 8]$ | Aclara/oscurece |
+| `grain` | $\log_2(S/100) \cdot 0.035$ | Amplitud de ruido |
+| `shot_seed` | número de disparo | Semilla del grano |
+
+Funcionamiento:
+1. **17 muestras en espiral** (ángulo áureo) que combinan disco de CoC, estela de movimiento y trepidación en una sola pasada.
+2. **Exposición**: `pow(color, 1 + ΔEV·0.06) · 2^(−ΔEV)` (con ΔEV acotado a ±3 en el exponente). Es una curva gamma simple, no una curva sensitométrica completa.
+3. **Grano**: ruido pseudoaleatorio uniforme, mayor cuanto mayor es el ISO (0 a ISO 100, 0.175 a ISO 3200).
+
+### 4.2 Ayuda de Enfoque Manual (`shaders/focus_aid.gdshader`)
+Solo visible en MF. Recibe `offset` proporcional al error de foco ($\text{error} \cdot f \cdot 0.006$, acotado a ±0.06):
+- **Réflex y compacta** (`body != 1`): círculo central de imagen partida; la mitad superior se desplaza `+offset` y la inferior `−offset`, con una línea divisoria oscura.
+- **Telemétrica** (`body == 1`): parche rectangular teñido donde se superpone la imagen desplazada (doble imagen).
 
 ---
 
 ## 5. Algoritmo Determinista de Calificación (`Photo.evaluate`)
 
-Al disparar, se genera un diccionario inmutable de evidencia (`evidence`) con todas las variables físicas. La función `Photo.evaluate(evidence)` produce una calificación matemática entre **0 y 100 créditos**:
+Al disparar, `main.gd` construye un diccionario de evidencia (`evidence`) con todas las variables físicas; `Photo.evaluate(evidence)` es una función pura, así que la misma entrada da siempre la misma nota.
 
-```
-+-------------------------------------------------------------+
-|               FACTORES DE CALIFICACIÓN (0 - 100)            |
-+-------------------------------------------------------------+
-  1. Sujeto Correcto (Condición previa obligatoria):
-     - Si la persona fotografiada NO coincide con el encargo -> 0 puntos (Rechazada).
-  
-  2. Nitidez y Enfoque (Hasta 35 puntos):
-     - CoC <= 0.030 mm -> 35 puntos (máxima nitidez).
-     - CoC > 0.030 mm  -> Penalización cuadrática en función del radio de confusión.
-  
-  3. Encuadre y Composición (Hasta 25 puntos):
-     - Posición del sujeto respecto a los puntos áureos / regla de los tercios.
-     - Altura de cabeza (*headroom*) equilibrada en el tercio superior.
-     - Proporción del sujeto en el encuadre (ni excesivamente lejos ni cortado).
-  
-  4. Exposición Fotométrica (Hasta 20 puntos):
-     - Error Delta EV = |EV_medido - EV_exposicion|
-     - |Delta EV| <= 0.3 EV -> 20 puntos (exposición clavada).
-     - Penalización por sobreexposición (altas luces quemadas) o subexposición (ruido).
-  
-  5. Ausencia de Trepidación (Hasta 20 puntos):
-     - Desplazamiento por obturación lenta por debajo del umbral visible.
-  
-  6. Descuento por Oclusión Física (0 a -50 puntos):
-     - 5 rayos físicos directos lanzados desde la cámara hacia:
-       cabeza, tórax, cintura, rodilla y pies.
-     - Rayos que colisionan con farolas, bancos, árboles u otros viandantes
-       reducen la puntuación proporcionalmente.
-```
+### 5.1 Componentes (cada una en $[0, 1]$)
+
+| Componente | Fórmula | 1.0 cuando… | 0.0 cuando… |
+|---|---|---|---|
+| **Foco** | $\text{clamp}\left(\frac{5c_{\text{adm}} - \text{CoC}}{4c_{\text{adm}}}\right)$ | CoC ≤ 0.030 mm | CoC ≥ 0.150 mm |
+| **Exposición** | $1 - \frac{\max(0,\ |\Delta EV| - 0.5)}{2.5}$ | $|\Delta EV| \le 0.5$ | $|\Delta EV| \ge 3$ |
+| **Movimiento** | $\min(\text{pulso}, \text{sujeto})$; pulso $= 1 - \frac{tf - 1}{2}$; sujeto $= \frac{3c_{\text{adm}} - \text{arrastre}}{2c_{\text{adm}}}$ | $tf \le 1$ y arrastre ≤ 0.030 mm | $tf \ge 3$ o arrastre ≥ 0.090 mm |
+| **Oclusión** | $(5 - \text{bloqueos}) / 5$ | 5 puntos visibles | 5 puntos tapados |
+| **Encuadre** | $\text{clamp}(\text{tamaño} \cdot \text{recorte} + \text{tercios})$ | ver abajo | — |
+
+**Encuadre**, con $h$ = altura cabeza–pies en pantalla (fracción de la altura del visor):
+- *tamaño* = 1 si $h \in [0.45, 0.85]$; baja linealmente hasta 0 en $h = 0.15$ y en $h = 1.15$.
+- *recorte* = 1 si cabeza y pies están dentro del encuadre; 0.6 en caso contrario.
+- *tercios* = +0.15 si el pecho está a menos de 0.05 (horizontal) de una línea de tercios.
+
+### 5.2 Oclusión física
+Se lanzan **5 rayos** desde la cámara hacia los puntos de control del objetivo (`person.control_points()`): **cabeza, tórax, caderas, pierna izquierda y pierna derecha**. Un rayo cuenta como bloqueado si choca antes con cualquier cosa que no sea el propio objetivo (farolas, bancos, árboles, otros viandantes…); la etiqueta del obstáculo se muestra en el informe.
+
+### 5.3 Rechazo, nota, estrellas y créditos
+- **Rechazada** (nota 0, 0 estrellas) si el objetivo está detrás de la cámara, si su pecho queda fuera del encuadre o si **4 o más** de los 5 puntos están tapados.
+- **Nota**:
+$$\text{nota} = \text{round}\big(100 \cdot (0.28\,\text{foco} + 0.24\,\text{exposición} + 0.18\,\text{movimiento} + 0.15\,\text{oclusión} + 0.15\,\text{encuadre})\big)$$
+- **Estrellas**: ≥ 90 → 5 · ≥ 75 → 4 · ≥ 60 → 3 · ≥ 40 → 2 · resto → 1.
+- **Créditos**: $\text{round}(150 \cdot [0,\ 0.15,\ 0.35,\ 0.60,\ 0.85,\ 1.0][\text{estrellas}])$.
+- Un encargo se considera **superado** con 3 o más estrellas (`main.gd`, pantalla de resumen). Cuenta la mejor de las 3 fotos del encargo.
+
+### 5.4 Informe
+`evaluate()` devuelve también `lines`: una línea por componente con su porcentaje y un consejo concreto (p. ej. la velocidad mínima `1/x s` que congelaría el movimiento, calculada recorriendo `DENOMINATORS`).
 
 ---
 
 ## 6. Verificación Automatizada
 
-```bash
-# Verificación de fórmulas ópticas, triángulo de exposición, CoC y determinismo (535 checks)
-godot-4 --headless --path . --script tests/test_photography.gd
-```
+Suite `tests/test_photography.gd` (headless). Comando, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).

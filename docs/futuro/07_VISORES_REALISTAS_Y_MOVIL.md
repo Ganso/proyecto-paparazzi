@@ -6,7 +6,7 @@ Este documento detalla la simulación estética fotorrealista de carcasas de vis
 
 ## 1. Simulación Realista de Carcasas de Visor Óptico
 
-Actualmente, [scripts/viewfinder.gd](file:///home/ganso/codigo/afotando/scripts/viewfinder.gd) dibuja líneas vectoriales limpias. La propuesta futura consiste en simular **la experiencia física de apoyar el ojo contra el ocular de una cámara real**.
+Actualmente, [scripts/viewfinder.gd](../../scripts/viewfinder.gd) dibuja líneas vectoriales limpias. La propuesta futura consiste en simular **la experiencia física de apoyar el ojo contra el ocular de una cámara real**.
 
 ```
 +-------------------------------------------------------------------------------+

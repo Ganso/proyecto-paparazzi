@@ -8,12 +8,14 @@ Este documento describe el modelado procedural de personajes, la jerarquía de h
 
 La población se genera proceduralmente a partir de **4 complexiones anatómicas** declaradas en `data/catalogo.json`:
 
-| Perfil | Altura ($h$) | Hombros | Relación Cabeza | Radio Articular ($j$) | Zancada Base |
+| Perfil | Altura ($h$) | Hombros | Relación Cabeza | Radio Articular ($j$) | Zancada Base (`zancada`) |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **0. Adulto Estándar** | $1.75\text{ m}$ | $0.42\text{ m}$ | $1 : 7.5$ | $0.045\text{ m}$ | $0.80\text{ m}$ |
-| **1. Adulto Delgado** | $1.80\text{ m}$ | $0.36\text{ m}$ | $1 : 8.0$ | $0.038\text{ m}$ | $0.85\text{ m}$ |
-| **2. Adulto Robusto** | $1.70\text{ m}$ | $0.52\text{ m}$ | $1 : 6.8$ | $0.055\text{ m}$ | $0.78\text{ m}$ |
-| **3. Niño / Niña** | $1.15\text{ m}$ | $0.28\text{ m}$ | $1 : 4.8$ | $0.032\text{ m}$ | $0.55\text{ m}$ |
+| **0. Adulto Estándar** | $1.75\text{ m}$ | $0.42\text{ m}$ | $1 : 7.5$ | $0.045\text{ m}$ | $1.461\text{ m}$ |
+| **1. Adulto Delgado** | $1.80\text{ m}$ | $0.36\text{ m}$ | $1 : 8.0$ | $0.038\text{ m}$ | $1.518\text{ m}$ |
+| **2. Adulto Robusto** | $1.70\text{ m}$ | $0.52\text{ m}$ | $1 : 6.8$ | $0.055\text{ m}$ | $1.397\text{ m}$ |
+| **3. Niño / Niña** | $1.15\text{ m}$ | $0.28\text{ m}$ | $1 : 4.8$ | $0.032\text{ m}$ | $0.877\text{ m}$ |
+
+La zancada es la longitud de un **ciclo completo** (dos pasos) y es la base de `gait.gd`; `person.gd` la multiplica por $0.8$ en caminantes y por $1.4$ en corredores.
 
 ### Escalado Anatómico por Base del Cráneo ($NZ$)
 Para que las extremidades de los menores no se deformen ni requieran tablas ad-hoc, las alturas articulares se calculan en función de $NZ$ (altura sin cabeza):
@@ -64,13 +66,13 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
    - Los colores de piel, ropa superior, ropa inferior, pelo y accesorios se asignan como atributo de color en cada vértice (`ARRAY_COLOR`), sin requerir texturas PNG ni materiales individuales en GPU.
 4. **Presupuesto Geométrico**:
    - Límite máximo: **1.900 triángulos por viandante** (`test_art.gd`).
-   - Media real del catálogo: **~1.550 triángulos**.
+   - Valor medido actual (máximo del catálogo): ver [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md).
 
 ---
 
 ## 4. Cinemática Inversa y Locomoción Analítica (`gait.gd`)
 
-El archivo [scripts/gait.gd](file:///home/ganso/codigo/afotando/scripts/gait.gd) implementa un modelo de cinemática analítica en tiempo real para las extremidades inferiores.
+El archivo [scripts/gait.gd](../scripts/gait.gd) implementa un modelo de cinemática analítica en tiempo real para las extremidades inferiores.
 
 ```mermaid
 graph LR
@@ -93,10 +95,10 @@ Al alimentar $\Delta \text{distancia} = \|\mathbf{p}_{t} - \mathbf{p}_{t-1}\|$, 
 - **Cabeceo de cadera**: La posición vertical de la pelvis desciende en el contacto inicial (~6 cm) y se eleva en la posición de paso medio (~1 cm), emulando el movimiento biomecánico natural.
 
 ### 4.3 Diferenciación Marcha vs. Carrera
-- **Caminantes** ($v \in [0.55, 0.85]\text{ m/s}$): Zancada base $0.80\text{ m} \times 0.8$; braceo suave de brazos; siempre hay al menos un pie en contacto con el suelo.
+- **Caminantes** ($v \in [0.55, 0.85]\text{ m/s}$): Zancada base del perfil $\times 0.8$ (p. ej. $1.461 \times 0.8 \approx 1.17\text{ m}$ en el adulto estándar); braceo suave de brazos; siempre hay al menos un pie en contacto con el suelo.
 - **Corredores** ($v \in [2.6, 3.0]\text{ m/s}$):
   - Ropa deportiva exclusiva (accesorios sueltos desactivados).
-  - Zancada ampliada ($1.4 \times$).
+  - Zancada base del perfil $\times 1.4$.
   - Codos flexionados en ángulo pronunciado ($> 60^\circ$).
   - Fase aérea balística: periodo del ciclo donde ambos pies están en el aire simultáneamente.
 
@@ -104,7 +106,7 @@ Al alimentar $\Delta \text{distancia} = \|\mathbf{p}_{t} - \mathbf{p}_{t-1}\|$, 
 
 ## 5. Reglas Éticas de Casting y Concordancia Gramatical
 
-El generador de personajes en [scripts/casting.gd](file:///home/ganso/codigo/afotando/scripts/casting.gd) respeta las siguientes reglas de diseño:
+El generador de personajes en [scripts/casting.gd](../scripts/casting.gd) respeta las siguientes reglas de diseño:
 
 1. **Principio Ético Invariable**:
    - El **tono de piel nunca se utiliza para identificar al objetivo**, ni forma parte de las descripciones o predicados de los encargos.
@@ -117,12 +119,6 @@ El generador de personajes en [scripts/casting.gd](file:///home/ganso/codigo/afo
 
 ---
 
-## 6. Comandos de Verificación Automatizada
+## 6. Verificación Automatizada
 
-```bash
-# 1. Validación de mallas, presupuestos y pesaje rígido (2.880 ensamblajes)
-godot-4 --headless --path . --script tests/test_art.gd
-
-# 2. Validación de cinemática inversa y deriva cero de pie (8.840 checks)
-godot-4 --headless --path . --script tests/test_gait.gd
-```
+Suites `tests/test_art.gd` y `tests/test_gait.gd` (headless). Comandos, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).

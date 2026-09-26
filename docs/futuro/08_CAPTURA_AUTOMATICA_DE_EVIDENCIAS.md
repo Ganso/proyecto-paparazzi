@@ -110,7 +110,7 @@ graph TD
 
 | Archivo GIF | Animación Representada | Detalles Técnicos Demostrados |
 |---|---|---|
-| `anim_caminar.gif` | Ciclo de marcha pausada ($v \approx 0.70\text{ m/s}$) | Demuestra el **deslizamiento nulo** (`drift == 0.000000 m/frame`), la planta del pie horizontal ($y = 0$) durante el apoyo y la suave basculación de cadera/hombros calculada en [scripts/gait.gd](file:///home/ganso/codigo/proyecto-paparazzi/scripts/gait.gd). |
+| `anim_caminar.gif` | Ciclo de marcha pausada ($v \approx 0.70\text{ m/s}$) | Demuestra el **deslizamiento nulo** (`drift == 0.000000 m/frame`), la planta del pie horizontal ($y = 0$) durante el apoyo y la suave basculación de cadera/hombros calculada en [scripts/gait.gd](../../scripts/gait.gd). |
 | `anim_correr.gif` | Ciclo de carrera atlética ($v \approx 2.80\text{ m/s}$) | Demuestra la **fase aérea balística** (ambos pies en el aire), la inclinación aerodinámica del torso hacia delante y la flexión pronunciada de rodillas y tobillos. |
 | `anim_clima_luz.gif` | Paso de nubes y ciclo de luz diurno/nocturno | Demuestra la atenuación progresiva de 3 EV, la adaptación de la aguja del exposímetro analógico y el encendido crepuscular de farolas con sombras dinámicas. |
 

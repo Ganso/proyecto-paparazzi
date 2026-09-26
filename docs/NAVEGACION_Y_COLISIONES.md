@@ -35,6 +35,8 @@ El parque cuenta con **4 calzadas peatonales circulares concéntricas** donde ci
 | **2** | $7.0\text{ m}$ | $0.35\text{ m}$ | $[6.10, 7.90]\text{ m}$ (ancho: $1.80\text{ m}$) | 6 | 7 | Tránsito intermedio y encargos secundarios |
 | **3** | $11.5\text{ m}$ | $0.35\text{ m}$ | $[10.60, 12.40]\text{ m}$ (ancho: $1.80\text{ m}$) | 5 | 6 | Tránsito perimetral lejano |
 
+**Población** es el reparto inicial de `populate()` (`counts = [3, 7, 6, 5]`, 21 en total); **aforo** es el máximo que `try_change_lane()` admite tras los cambios de carril (`LANE_CAPACITIES = [3, 7, 7, 6]`).
+
 ### Despeje de Calzadas y Obstáculos Físicos
 Para asegurar que la calzada del carril 1 mantenga más de $1.9\text{ m}$ de paso continuo sin barreras:
 - **Bancos reducidos a 4**: Desplazados al borde exterior a **$r = 4.85\text{ m}$** y orientados hacia el centro a $90^\circ$ ($\theta = 35^\circ, 125^\circ, 215^\circ, 305^\circ$).
@@ -51,20 +53,28 @@ Los viandantes en sentido horario (`direction = 1`) tienden a su sub-radio exter
 Esto proporciona una **separación natural de $\ge 0.70\text{ m}$**, permitiendo que dos viandantes en sentidos opuestos se crucen sin rozarse.
 
 ### 3.2 Detección Frontal y Evasión Lateral Sensible al Espacio
-El viandante analiza un arco de $2.2\text{ m}$ por delante. Si detecta a otro personaje u objeto que interrumpe su radio:
-1. **Cálculo de espacio disponible a ambos lados**:
-   ```gdscript
-   var space_out = bounds.y - other.radius
-   var space_in = other.radius - bounds.x
-   ```
-2. **Decisión de desvío**:
-   - **Cruces opuestos**: El viandante se inclina hacia su propio sub-carril por defecto, pero si queda menos de $0.65\text{ m}$ contra el borde de la calzada, toma el lado con mayor amplitud libre.
-   - **Adelantamientos (mismo sentido)**: El viandante más veloz elige el lado (`space_out` vs. `space_in`) que ofrece mayor holgura libre para rebasar sin frenar.
+Para cada otro viandante visible, se considera "delante" si la distancia de arco en el sentido de marcha está en $(0.02, 2.5)\text{ m}$ y la distancia euclídea es menor de $2.5\text{ m}$. Con
+```gdscript
+var space_out = bounds.y - other.radius
+var space_in = other.radius - bounds.x
+```
+se elige un sentido de desvío por este orden:
+1. Si `space_out < 0.65` → hacia dentro; si `space_in < 0.65` → hacia fuera (el otro está pegado a un borde).
+2. **Mismo sentido (adelantamiento)**: hacia el lado con más holgura (`space_out >= space_in` → fuera).
+3. **Sentido opuesto con $|\Delta r| < 0.75\text{ m}$**: hacia el propio sub-carril (fuera si `direction > 0`).
+
+Cada obstáculo aporta su voto ponderado por cercanía, $w = (2.5 - \text{dist}) / 2.5$. Si la suma no es nula, el radio objetivo pasa a $r_{\text{nom}} \pm 0.38\text{ m}$ (carriles 0 y 1) o $\pm 0.48\text{ m}$ (carriles 2 y 3), acotado a `LANE_BOUNDS`. El radio se acerca al objetivo a $1.4 \cdot v$ m/s.
+
+**Frenado**: si el obstáculo más cercano está a menos de $0.90\text{ m}$ y con $|\Delta r| < 0.52\text{ m}$, la velocidad se multiplica por $\text{clamp}((\text{dist} - 0.40)/0.50,\ 0.20,\ 1.0)$.
+
+**Pasos de reserva**: si el paso 2D completo no es válido (`travel_clear`), se prueba en orden: solo radial, solo tangencial, tangencial con desvío de $+0.12\text{ m}$ y con $-0.12\text{ m}$. Si ninguno pasa, se acumula `stuck_time` (§5).
 
 ### 3.3 Transición Diagonal entre Carriles
 Cuando un viandante cambia de carril (`destination_lane >= 0`):
-- Avanza **diagonalmente en 2D**, combinando desplazamiento radial hacia el nuevo carril (`dt * p.speed * 0.7`) y desplazamiento tangencial (`dt * p.direction * 0.5`).
-- El viandante nunca se detiene en seco para girar $90^\circ$, evitando formar cuellos de botella tras de sí.
+- Avanza **diagonalmente**: radio hacia el sub-carril destino a $0.7 \cdot v$ m/s y avance tangencial a $0.5 \cdot v$.
+- Si el paso diagonal no es válido prueba solo el radial y luego solo el tangencial. Se considera llegado a menos de $0.15\text{ m}$ del radio destino.
+- Si lleva más de $1.2\text{ s}$ bloqueado (`lane_change_blocked`), cancela el cambio y adopta el carril nominal más cercano a su radio actual.
+- Además, cada $8 - 18\text{ s}$ (`lane_timer`) intenta un cambio de carril espontáneo.
 
 ### 3.4 Control de Aforo (`LANE_CAPACITIES`)
 Antes de permitir un cambio de carril, `try_change_lane()` contabiliza cuántos viandantes ocupan o se dirigen al carril destino:
@@ -95,38 +105,30 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3) -> bool:
 
 ## 5. Máquina de Estados de Viandantes y Anti-Deadlock
 
+El estado vive en `person.gd::state` y se actualiza en `main.gd::update_person()`:
+
 ```mermaid
 stateDiagram-v2
-    [*] --> CAMINANDO: Respawn en bastidores
-    CAMINANDO --> DETENIDO: stuck_time >= 2.0s (ceder el paso)
-    CAMINANDO --> SENTADO: Llega a banco libre (p = 0.15)
-    DETENIDO --> CAMINANDO: stuck_time se disipa / espacio libre
-    SENTADO --> CAMINANDO: Fin de tiempo sentado
-    CAMINANDO --> RETIRADO: Traspasa bastidores (theta = 296° / 304°)
-    RETIRADO --> CAMINANDO: Respawn tras intervalo
+    [*] --> CAMINANDO
+    CAMINANDO --> DETENIDO: Nuevo sector de 30° (θ < 240°), p = 0.15, no corredor, POI libre
+    CAMINANDO --> SENTADO: Carril 1, junto a banco libre, p = 0.06 por fotograma, no corredor ni objetivo protegido
+    DETENIDO --> CAMINANDO: Tras 3–8 s
+    SENTADO --> CAMINANDO: Tras 20–60 s (libera el banco)
 ```
 
+- **DETENIDO** es una pausa de "punto de interés", no un mecanismo anti-atascos.
+- **RETIRADO**: `update_person()` y el sorteo de objetivos contemplan este estado (reaparición en $\theta = 296^\circ / 304^\circ$, detrás del jugador), pero **ningún código lo asigna actualmente**; la rama es inalcanzable en el juego.
+
 ### Escalado Anti-Deadlock
-Si dos viandantes se encuentran en una situación de bloqueo mutuo:
-1. **$t_{\text{stuck}} \ge 0.8\text{ s}$**: El viandante busca un carril adyacente despejado con `try_change_lane()`.
-2. **$t_{\text{stuck}} \ge 2.0\text{ s}$**: Pasa temporalmente a estado `DETENIDO` durante $1.5\text{ s}$, cediendo el derecho de paso al otro viandante para romper la simetría.
-3. **$t_{\text{stuck}} \ge 4.0\text{ s}$**: Invierte su sentido de marcha (`direction *= -1`), garantizando matemáticamente la disolución de cualquier congestión.
+Cuando todos los pasos de §3.2 fallan, `stuck_time` crece con `dt` (y decrece cuando el viandante logra avanzar):
+1. **$t_{\text{stuck}} > 0.8\text{ s}$**: intenta cambiar a un carril con aforo libre (`try_change_lane()`, carriles ordenados por cercanía de radio).
+2. **$t_{\text{stuck}} > 2.5\text{ s}$**: invierte su sentido de marcha (`direction *= -1`) y reinicia `stuck_time`.
 
 ### Puntos de Interés (POI) sin Congestión
-- Cuando un viandante decide sentarse en un banco o admirar una jardinera, el sistema verifica que no haya otro viandante en el mismo POI dentro de un arco angular de $12^\circ$ en el mismo carril.
+Antes de detenerse, el viandante comprueba que ningún otro en el mismo carril esté `DETENIDO` o `SENTADO` a menos de $12^\circ$.
 
 ---
 
 ## 6. Verificación Determinista de Navegación
 
-El sistema de navegación se valida de forma continua mediante dos suites de prueba:
-
-```bash
-# 1. Simulación autónoma de 20 segundos sin jugador (400 pasos a dt = 0.05 s)
-godot-4 --path . --script tests/simulate_jams.gd
-# Resultado esperado: 0 viandantes en deadlock (stuck_time > 0.8s)
-
-# 2. Pruebas unitarias de adelantamiento, cruces opuestos y evasión lateral
-godot-4 --path . --script tests/test_navigation.gd
-# Resultado esperado: 10/10 checks superados
-```
+Suites `tests/simulate_jams.gd` y `tests/test_navigation.gd` (requieren display). Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).

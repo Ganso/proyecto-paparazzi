@@ -19,14 +19,14 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 
 | Tema / Dominio | Documento Técnico | Qué encontrarás allí |
 |---|---|---|
-| **Arquitectura Global** | [docs/ARQUITECTURA.md](file:///home/ganso/codigo/afotando/docs/ARQUITECTURA.md) | Diagrama de módulos, máquina de estados (`INTRO`, `SEARCH`, `RESULT`, `SANDBOX`), pipeline de fotograma y renderizado. |
-| **Navegación y Colisiones** | [docs/NAVEGACION_Y_COLISIONES.md](file:///home/ganso/codigo/afotando/docs/NAVEGACION_Y_COLISIONES.md) | Coordenadas cilíndricas, calzadas peatonales, límites `LANE_BOUNDS`, steering lateral 2D, cruces, adelantamientos y anti-deadlock. |
-| **Personajes y Locomoción** | [docs/PERSONAJES_Y_CINEMATICA.md](file:///home/ganso/codigo/afotando/docs/PERSONAJES_Y_CINEMATICA.md) | 4 perfiles anatómicos, rig universal de 20 huesos, pesaje rígido, coloreado por vértice (`ARRAY_COLOR`), cinemática `gait.gd` y ética de casting. |
-| **Simulación Óptica y Foto** | [docs/SIMULACION_FOTOGRAFICA.md](file:///home/ganso/codigo/afotando/docs/SIMULACION_FOTOGRAFICA.md) | Ecuaciones de CoC, profundidad de campo, EV, trepidación, shaders de revelado (`develop.gdshader`), ayuda de foco y algoritmo de puntuación. |
-| **Equipamiento y Ópticas** | [docs/EQUIPAMIENTO_Y_OPTICAS.md](file:///home/ganso/codigo/afotando/docs/EQUIPAMIENTO_Y_OPTICAS.md) | Cuerpos (compacta, telemétrica, réflex), catálogo de objetivos (28 mm a 135 mm), diafragmas, carretes analógicos y visor HUD de 9 colimadores. |
-| **Escenario y Rendimiento** | [docs/ESCENARIO_Y_RENDIMIENTO.md](file:///home/ganso/codigo/afotando/docs/ESCENARIO_Y_RENDIMIENTO.md) | Disposición del parque, masa vegetal densa de fondo, ciclo día/noche, sombras dinámicas, sistema de nubes y presupuestos de hardware. |
-| **Pruebas y Verificación** | [docs/TESTS_Y_VERIFICACION.md](file:///home/ganso/codigo/afotando/docs/TESTS_Y_VERIFICACION.md) | Clasificación Headless vs. Display, suite de atascos (`simulate_jams.gd`), smoke test y comandos de validación obligatorios. |
-| **Banco de Futuras Mejoras** | [docs/futuro/README.md](file:///home/ganso/codigo/afotando/docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí, animación universal (Quaternius) y desafíos. |
+| **Arquitectura Global** | [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) | Diagrama de módulos, máquina de estados (`INTRO`, `BRIEFING`, `SEARCH`, `RESULT`, `SUMMARY`…), pipeline de fotograma y renderizado. |
+| **Navegación y Colisiones** | [docs/NAVEGACION_Y_COLISIONES.md](docs/NAVEGACION_Y_COLISIONES.md) | Coordenadas cilíndricas, calzadas peatonales, límites `LANE_BOUNDS`, steering lateral 2D, cruces, adelantamientos y anti-deadlock. |
+| **Personajes y Locomoción** | [docs/PERSONAJES_Y_CINEMATICA.md](docs/PERSONAJES_Y_CINEMATICA.md) | 4 perfiles anatómicos, rig universal de 20 huesos, pesaje rígido, coloreado por vértice (`ARRAY_COLOR`), cinemática `gait.gd` y ética de casting. |
+| **Simulación Óptica y Foto** | [docs/SIMULACION_FOTOGRAFICA.md](docs/SIMULACION_FOTOGRAFICA.md) | Ecuaciones de CoC, profundidad de campo, EV, trepidación, shaders de revelado (`develop.gdshader`), ayuda de foco y algoritmo de puntuación. |
+| **Equipamiento y Ópticas** | [docs/EQUIPAMIENTO_Y_OPTICAS.md](docs/EQUIPAMIENTO_Y_OPTICAS.md) | Cuerpos (compacta, telemétrica, réflex), catálogo de objetivos (24 mm a 200 mm), diafragmas, carretes analógicos y visor HUD de 9 colimadores. |
+| **Escenario y Rendimiento** | [docs/ESCENARIO_Y_RENDIMIENTO.md](docs/ESCENARIO_Y_RENDIMIENTO.md) | Disposición del parque, masa vegetal densa de fondo, ciclo día/noche, sombras dinámicas, sistema de nubes y presupuestos de hardware. |
+| **Pruebas y Verificación** | [docs/TESTS_Y_VERIFICACION.md](docs/TESTS_Y_VERIFICACION.md) | **Fuente única** de comandos de prueba, opciones de arranque, herramientas de `tools/` y cifras de referencia medidas. Headless vs. Display y uso con Xvfb. |
+| **Banco de Futuras Mejoras** | [docs/futuro/README.md](docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí, animación universal (Quaternius) y desafíos. |
 
 ---
 
@@ -36,9 +36,10 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 
 ### 3.1 Presupuestos de Geometría y Memoria
 - **Población en escena**: Exactamente **21 viandantes** (`counts = [3, 7, 6, 5]`).
-- **Triángulos por viandante**: Máximo **1.900 triángulos** (media del catálogo $\approx 1.550$).
-- **Triángulos totales en escena**: Máximo **100.000 triángulos** (con parque, vegetación de fondo densa y 21 personas suma **57.532 triángulos**).
-- **Memoria de vídeo (VRAM)**: Mantener siempre por debajo de **60 MiB** (consumo medido: **42.68 MiB** con atlas de sombras de 2048).
+- **Triángulos por viandante**: Máximo **1.900 triángulos**.
+- **Triángulos totales en escena**: Máximo **100.000 triángulos** (parque, vegetación de fondo y 21 personas).
+- **Memoria de vídeo (VRAM)**: Mantener siempre por debajo de **60 MiB** (atlas de sombras de 2048 incluido).
+- Los valores medidos actuales de estos presupuestos están en [docs/TESTS_Y_VERIFICACION.md §5](docs/TESTS_Y_VERIFICACION.md).
 - **Draw Calls**: Cada personaje consta de **1 única superficie combinada** con colores de vértice (`Mesh.ARRAY_COLOR`), sin texturas individuales. El parque estático se fusiona en **1 único draw call**.
 
 ### 3.2 Rigging y Locomoción
@@ -78,47 +79,18 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 > [!WARNING]
 > **NO USAR `--headless` EN PRUEBAS CON DISPLAY**: Las pruebas que esperan a `RenderingServer.frame_post_draw` (`test_expansion.gd`, `test_game.gd`, `test_navigation.gd`, `simulate_jams.gd` y `--smoke-test`) se congelan si se ejecutan con `--headless`.
 
-### 4.1 Pruebas Headless (CI / Servidor)
-```bash
-# Óptica, CoC y determinismo (535 checks)
-godot-4 --headless --path . --script tests/test_photography.gd
+Los comandos de todas las suites, qué valida cada una, las opciones de arranque (`--smoke-test`, `--metrics`, `--stress`, `--screenshot=`), las herramientas de `tools/` y las cifras de referencia medidas están en **[docs/TESTS_Y_VERIFICACION.md](docs/TESTS_Y_VERIFICACION.md)**, que es la fuente única. No dupliques comandos ni cifras en otros documentos: enlaza ahí.
 
-# Ensamblaje de mallas, pesos y 20 huesos (2.880 mallas)
-godot-4 --headless --path . --script tests/test_art.gd
-
-# Equipos, aperturas, modos AF/MF y EV (543 checks)
-godot-4 --headless --path . --script tests/test_equipment.gd
-
-# Cinemática inversa y cero deslizamiento (8.840 checks)
-godot-4 --headless --path . --script tests/test_gait.gd
-```
-
-### 4.2 Pruebas con Entorno Gráfico (Requieren Display / X11 / Wayland)
-```bash
-# Suite completa de captura automática de evidencias gráficas
-./tools/run_evidence.sh
-# Simulación de atascos durante 20s (debe dar 0 deadlocks)
-godot-4 --path . --script tests/simulate_jams.gd
-
-# Pruebas de navegación, adelantamientos y cruces (10 checks)
-godot-4 --path . --script tests/test_navigation.gd
-
-# Prueba rápida de humo (21 viandantes, triángulos <= 100k)
-godot-4 --path . -- --smoke-test
-
-# Sesión de juego completa (5 encargos, VRAM < 60 MB)
-godot-4 --path . --script tests/test_game.gd
-
-# Expansión, nubes, carretes analógicos y sandbox (140 checks)
-godot-4 --path . --script tests/test_expansion.gd
-```
+- **Headless**: `test_photography.gd`, `test_art.gd`, `test_equipment.gd`, `test_gait.gd`.
+- **Con display**: `test_navigation.gd`, `simulate_jams.gd`, `test_expansion.gd`, `test_game.gd`, `--smoke-test`, `./tools/run_evidence.sh`. En servidores sin pantalla se pueden ejecutar con `xvfb-run` (ver §1 del documento de pruebas).
+- **Mínimo antes de cerrar una tarea**: `godot-4 --path . -- --smoke-test`.
 
 ---
 
 ## 5. Preguntas Frecuentes y Respuestas Rápidas para Agentes
 
 - **¿Dónde cambio la cantidad de personajes?**  
-  En `scripts/main.gd::populate()` (`counts = [3, 7, 6, 5]`) y ajusta `LANE_CAPACITIES = [3, 7, 7, 6]`. Actualiza también la aserción en `smoke_test()`, `test_game.gd:85` y `test_expansion.gd:36`.
+  En `scripts/main.gd::populate()` (`counts = [3, 7, 6, 5]`) y ajusta `LANE_CAPACITIES = [3, 7, 7, 6]`. Actualiza también la aserción en `smoke_test()` y `test_game.gd:85`.
 - **¿Cómo cambio la velocidad de los viandantes?**  
   En `scripts/person.gd:49` (`speed = rng.randf_range(...)`). La animación de pisada se adapta automáticamente en `gait.gd` sin deslizar.
 - **¿Por qué los viandantes no se atascan en el Carril 1?**  

@@ -1,6 +1,6 @@
 # Escenario Cilíndrico, Clima y Presupuestos de Rendimiento — Proyecto Paparazzi
 
-Este documento describe la arquitectura geométrica del parque procedural, la iluminación dinámica, el sistema meteorológico de nubes y los presupuestos estrictos de rendimiento documentados en [scripts/park.gd](file:///home/ganso/codigo/afotando/scripts/park.gd).
+Este documento describe la arquitectura geométrica del parque procedural, la iluminación dinámica, el sistema meteorológico de nubes y los presupuestos estrictos de rendimiento documentados en [scripts/park.gd](../scripts/park.gd).
 
 ---
 
@@ -58,15 +58,16 @@ Para cerrar visualmente el horizonte y proporcionar un fondo natural continuo tr
   - Sol direccional (`DirectionalLight3D`): `light_energy = 1.4`, color cálido `fff0d7`.
   - Sombras dinámicas ortogonales activadas con atlas de 2048.
   - Cielo celeste y luz ambiental difusa (`c6d6df`, energía 0.16).
-  - Exposición base en el parque: **$EV = 14.0$**.
+  - Luz incidente: **$EV \approx 14.8$** al sol y **$EV = 11.0$** en sombra (detalle en [SIMULACION_FOTOGRAFICA.md §2.2](SIMULACION_FOTOGRAFICA.md)).
 - **Noche**:
   - Sol desactivado / atenuado (`light_energy = 0.035`, tinte nocturno `9caed4`).
   - 12 farolas cilíndricas con luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas.
-  - Exposición bajo farola: **$EV = 4.0 - 6.0$**.
+  - Luz incidente: **$EV = 2.0$** lejos de farolas; bajo farola $\approx 8.4$ a 1 m, $5.2$ a 3 m y $2.9$ a 5 m.
 
 ### 3.2 Sistema Meteorológico de Nubes
 El parque cuenta con un sistema de nubes procedurales cúbicas de baja altura:
-- **Transición de cobertura ($1.4\text{ s}$)**: Cuando una nube tapa el sol, la energía lumínica directa desciende bruscamente, reduciendo el valor de exposición en aproximadamente **$3.0\text{ EV}$** (de $EV = 14$ a $EV = 11$).
+- **Ciclo de 18 s** (`park.gd`, `weather_time`): `cloud_cover` sube de 0 a 1 entre los segundos 6.0 y 7.2 del ciclo, se mantiene hasta el 11.0 y baja a 0 entre el 11.0 y el 12.2.
+- **Atenuación**: la transmisión solar pasa de 1.0 a 0.09 (`sun_transmission()`, −3.5 EV en la luz directa). En un punto al sol la luz incidente baja de $EV \approx 14.8$ a $\approx 12.1$ (−2.7 EV), porque la componente ambiental ($EV = 11$) no cambia.
 - **Afectación dual**: La nube oscurece tanto la imagen renderizada en el Viewport como la lectura del exposímetro fotográfico en tiempo real, obligando al jugador a compensar la apertura o la velocidad sobre la marcha.
 
 ---
@@ -81,26 +82,19 @@ Para mantener el máximo rendimiento en `gl_compatibility`:
 
 ## 5. Presupuestos y Rendimiento (Invariantes de Diseño)
 
-| Métrica | Límite Máximo Permitido | Valor Medido Actual | Margen de Seguridad |
-|---|:---:|:---:|:---:|
-| **Triángulos en Escena** | $\le 100.000$ | **$57.532$** | $+42.468$ triángulos libres |
-| **Triángulos por Viandante** | $\le 1.900$ | **$\sim 1.550$** | $+350$ triángulos libres |
-| **Memoria de Vídeo (VRAM)** | $< 60\text{ MiB}$ | **$42.68\text{ MiB}$** | $+17.32\text{ MiB}$ libres |
-| **Draw Calls Totales** | $< 40$ | **$\sim 23$** (1 parque + 21 personas + 1 visor) | Excelente |
-| **Tasa de Refresco** | $\ge 60\text{ FPS}$ sostenidos | **$\ge 60\text{ FPS}$** en desktop y WebGL | Cumplido |
-| **Relación de Aspecto** | **16:9 estricto** | $1280 \times 720$ nativo | Bloqueado |
+| Métrica | Límite | Cómo se verifica |
+|---|:---:|---|
+| **Triángulos en escena** | $\le 100.000$ | `--smoke-test` |
+| **Triángulos por viandante** | $\le 1.900$ | `tests/test_art.gd` |
+| **Memoria de vídeo (VRAM)** | $< 60\text{ MiB}$ | `tests/test_game.gd` |
+| **Draw calls** | 1 parque estático + 1 por viandante | Por construcción (`merge_static_meshes`, superficie única en `person.gd`); ningún test lo mide |
+| **Tiempo de fotograma** | Objetivo 60 FPS | `godot-4 --path . -- --metrics` imprime mediana, p95 y máximo; no hay umbral automatizado |
+| **Relación de aspecto** | 16:9 estricto ($1280 \times 720$) | `project.godot` |
+
+Los valores medidos actuales (triángulos, VRAM, etc.) están en la tabla única de [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md).
 
 ---
 
-## 6. Comandos de Verificación Automatizada
+## 6. Verificación Automatizada
 
-```bash
-# 1. Verificación de presupuestos de geometría y smoke test
-godot-4 --path . -- --smoke-test
-
-# 2. Verificación de VRAM (< 60 MiB) y renderizado completo
-godot-4 --path . --script tests/test_game.gd
-
-# 3. Verificación de sistema de nubes y transiciones EV
-godot-4 --path . --script tests/test_expansion.gd
-```
+`--smoke-test`, `tests/test_game.gd` y `tests/test_expansion.gd` (requieren display). Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).

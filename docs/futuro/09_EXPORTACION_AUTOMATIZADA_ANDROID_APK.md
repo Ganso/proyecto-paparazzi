@@ -8,7 +8,7 @@ Este documento detalla la arquitectura, el toolchain y los scripts necesarios pa
 
 Probar el juego en hardware móvil real es esencial para validar varios pilares interactivos que no pueden evaluarse fidedignamente en un entorno de escritorio:
 
-1. **Ergonomía Táctil**: Validar el control a dos pulgares especificado en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](file:///home/ganso/codigo/afotando/docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md) (rueda de enfoque, diafragma y botón de dos fases *half-press*).
+1. **Ergonomía Táctil**: Validar el control a dos pulgares especificado en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) (rueda de enfoque, diafragma y botón de dos fases *half-press*).
 2. **Respuesta Háptica del Obturador**: Confirmar la sensación física de vibración corta del teléfono al enfocar (*lock*) y al disparar el obturador.
 3. **Apuntado Opcional por Giroscopio (*Motion Aiming*)**: Evaluar si la rotación del móvil usando los sensores de acelerómetro y giroscopio proporciona una experiencia inmersiva para encuadrar y seguir a los sujetos.
 4. **Rendimiento en GPUs Móviles**: Medir tasa de cuadros (60 FPS sostenidos), consumo de batería y temperaturas bajo el backend `gl_compatibility` (OpenGL ES 3.0 / ANGLE).
@@ -162,5 +162,5 @@ Las decisiones arquitectónicas del proyecto benefician directamente la ejecuci�
 
 1. **Fase 1: Configuración de Plantillas y Preset**: Registrar `export_presets.cfg` con el identificador `org.ganso.proyectopaparazzi`.
 2. **Fase 2: Script `export_android.sh`**: Implementar y validar el script con comprobación automática de `debug.keystore`.
-3. **Fase 3: Controles Táctiles en Pantalla**: Integrar la capa de UI táctil descrita en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](file:///home/ganso/codigo/afotando/docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md) condicionada a `OS.has_feature("mobile")`.
+3. **Fase 3: Controles Táctiles en Pantalla**: Integrar la capa de UI táctil descrita en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) condicionada a `OS.has_feature("mobile")`.
 4. **Fase 4: Integración CI/CD (GitHub Actions)**: Flujo de trabajo automatizado que genera el APK firmado con clave de debug en cada commit etiquetado y lo adjunta como artefacto descargable.

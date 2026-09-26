@@ -41,55 +41,54 @@ graph TD
 
 | Módulo | Archivo | Responsabilidad Principal |
 |---|---|---|
-| **Controlador** | [scripts/main.gd](file:///home/ganso/codigo/afotando/scripts/main.gd) | Máquina de estados, bucle principal, navegación 2D de viandantes, interacción ratón/táctil y gestión de interfaz de usuario. |
-| **Escenario** | [scripts/park.gd](file:///home/ganso/codigo/afotando/scripts/park.gd) | Geometría procedural del parque, plazas, carriles concéntricos, farolas con sombras, ciclo día/noche y nubes procedurales. |
-| **Viandantes** | [scripts/person.gd](file:///home/ganso/codigo/afotando/scripts/person.gd) | Ensamblado de piezas anatómicas, rig universal de 20 huesos, pesaje rígido y combinación en una sola superficie con colores de vértice. |
-| **Locomoción** | [scripts/gait.gd](file:///home/ganso/codigo/afotando/scripts/gait.gd) | Cinemática analítica de marcha y carrera, cálculo de altura de cadera, orientación de suela y pisada con deslizamiento cero (`drift = 0`). |
-| **Casting** | [scripts/casting.gd](file:///home/ganso/codigo/afotando/scripts/casting.gd) | Generación aleatoria de rasgos de vestimenta, asignación de encargos y concordancia morfológica estricta de género y número en español. |
-| **Óptica y Foto** | [scripts/photography.gd](file:///home/ganso/codigo/afotando/scripts/photography.gd) | Fórmulas ópticas reales: CoC, profundidad de campo, triángulo de exposición, desenfoque por velocidad de obturación y calificación determinista. |
-| **Equipo** | [scripts/equipment.gd](file:///home/ganso/codigo/afotando/scripts/equipment.gd) | Catálogo de cuerpos (compacta, telemétrica, réflex), objetivos fotográficos (28 mm a 135 mm), pasos de diafragma y carretes analógicos. |
-| **Visor HUD** | [scripts/viewfinder.gd](file:///home/ganso/codigo/afotando/scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 colimadores AF, cuadrícula de tercios, exposímetro analógico y microprisma. |
-| **Localización** | [scripts/texts.gd](file:///home/ganso/codigo/afotando/scripts/texts.gd) | Resolución de claves localizadas desde `data/textos.es.json` con interpolación de variables. |
+| **Controlador** | [scripts/main.gd](../scripts/main.gd) | Máquina de estados, bucle principal, navegación 2D de viandantes, interacción ratón/táctil y gestión de interfaz de usuario. |
+| **Escenario** | [scripts/park.gd](../scripts/park.gd) | Geometría procedural del parque, plazas, carriles concéntricos, farolas con sombras, ciclo día/noche y nubes procedurales. |
+| **Viandantes** | [scripts/person.gd](../scripts/person.gd) | Ensamblado de piezas anatómicas, rig universal de 20 huesos, pesaje rígido y combinación en una sola superficie con colores de vértice. |
+| **Locomoción** | [scripts/gait.gd](../scripts/gait.gd) | Cinemática analítica de marcha y carrera, cálculo de altura de cadera, orientación de suela y pisada con deslizamiento cero (`drift = 0`). |
+| **Casting** | [scripts/casting.gd](../scripts/casting.gd) | Generación aleatoria de rasgos de vestimenta, asignación de encargos y concordancia morfológica estricta de género y número en español. |
+| **Óptica y Foto** | [scripts/photography.gd](../scripts/photography.gd) | Fórmulas ópticas reales: CoC, profundidad de campo, triángulo de exposición, desenfoque por velocidad de obturación y calificación determinista. |
+| **Equipo** | [scripts/equipment.gd](../scripts/equipment.gd) | Catálogo de cuerpos (compacta, telemétrica, réflex), objetivos fotográficos (24 mm a 200 mm), pasos de diafragma y carretes analógicos. |
+| **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 colimadores AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
+| **Localización** | [scripts/texts.gd](../scripts/texts.gd) | Resolución de claves localizadas desde `data/textos.es.json` con interpolación de variables. |
 
 ---
 
 ## 3. Máquina de Estados del Juego
 
-El flujo del juego se gestiona en `main.gd` a través de la variable `mode`:
+El flujo se gestiona en `main.gd` con la variable `mode`. El sandbox **no es un estado propio**: es la bandera `sandbox = true` durante `SEARCH`/`RESULT`.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> INTRO: Iniciar aplicación
-    INTRO --> BRIEFING: Comenzar sesión
-    BRIEFING --> SEARCH: Aceptar encargo (Enter / Clic)
-    
-    state SEARCH {
-        [*] --> Encuadre: Mover cámara (Pan/Tilt)
-        Encuadre --> Zoom_Enfoque: Ajustar focal / Distancia foco
-        Zoom_Enfoque --> Medicion: Exposímetro lee EV
-        Medicion --> Disparo: Espacio / Botón obturador
-    }
-    
-    SEARCH --> RESULT: Foto disparada
-    RESULT --> SEARCH: Reintentar (si quedan disparos)
+    [*] --> INTRO: Arranque
+    INTRO --> BRIEFING: Parque · Día / Noche (start_session)
+    INTRO --> SEARCH: Sandbox (sandbox = true)
+    BRIEFING --> SEARCH: Aceptar encargo (Intro / botón)
+    SEARCH --> RESULT: Disparo
+    RESULT --> SEARCH: Reintentar (quedan disparos) o volver en sandbox
     RESULT --> BRIEFING: Siguiente encargo (1 a 5)
-    RESULT --> SUMMARY: Fin de los 5 encargos
-    SUMMARY --> INTRO: Reiniciar sesión
-    
-    INTRO --> SANDBOX: Modo libre sin misiones
-    SANDBOX --> RESULT: Disparo de prueba
-    RESULT --> SANDBOX: Volver a modo libre
-    SANDBOX --> INTRO: Salir de sandbox
+    RESULT --> SUMMARY: Tras el 5.º encargo
+    SUMMARY --> INTRO: Otra sesión
+    SEARCH --> HELP: H / ? / Esc
+    HELP --> SEARCH: Cerrar ayuda
+    SEARCH --> SANDBOX_SETTINGS: «Sandbox · escena» (solo sandbox)
+    SANDBOX_SETTINGS --> SEARCH: Probar la cámara
+    SANDBOX_SETTINGS --> INTRO: Volver al menú
+    INTRO --> EQUIPMENT: Equipo / modos
+    EQUIPMENT --> INTRO: Usar este equipo (vuelve al estado de origen)
 ```
+
+`EQUIPMENT` se puede abrir desde la intro y desde la barra superior durante la partida; al cerrarse vuelve al estado desde el que se abrió (`equipment_return`).
 
 ### Detalle de Estados
 
-1. **`INTRO`**: Pantalla inicial con título, selección de modo (misión estándar o sandbox libre) y controles informativos.
-2. **`BRIEFING`**: Pantalla de encargo previo. Presenta al sujeto objetivo con un retrato 3D estático (`brief_preview`), sus rasgos morfológicos descriptivos, y congela la iluminación del parque.
-3. **`SEARCH`**: Fase activa de juego. Los viandantes caminan o corren en sus carriles cilíndricos; el jugador mueve la cámara en $360^\circ$, enfoca manual o automáticamente, selecciona apertura/velocidad/ISO y encuadra.
-4. **`RESULT`**: Pantalla de revelado químico tras la captura. Muestra la imagen procesada por el shader de revelado (`develop.gdshader`), el desglose numérico de la puntuación determinista (0 a 100 créditos) y permite reintentar o pasar al siguiente encargo.
-5. **`SUMMARY`**: Pantalla final tras completar los 5 encargos. Resume la puntuación global, créditos obtenidos y galería de las mejores fotografías.
-6. **`SANDBOX`**: Modo de exploración y pruebas fotográficas sin límite de carrete, sin tiempo y con opción de pausar el movimiento de los personajes para estudiar el desenfoque óptico.
+1. **`INTRO`**: Pantalla inicial: Parque · Día, Parque · Noche, Sandbox y Equipo / modos.
+2. **`BRIEFING`**: Ficha del encargo con retrato 3D del objetivo (`brief_preview`) y sus rasgos descriptivos. El parque queda pausado durante la lectura.
+3. **`SEARCH`**: Fase activa: los viandantes se mueven, el jugador encuadra, enfoca, ajusta la exposición y dispara. Cada encargo tiene 3 disparos (ilimitados en sandbox).
+4. **`RESULT`**: Foto revelada con `develop.gdshader` y desglose de `Photo.evaluate()`: nota de 0 a 100, estrellas (0–5) y créditos (0–150). Cuenta la mejor foto del encargo.
+5. **`SUMMARY`**: Tras los 5 encargos: encargos superados (≥ 3 estrellas), créditos totales y la mejor fotografía.
+6. **`HELP`**: Ayuda de controles; pausa la partida.
+7. **`EQUIPMENT`**: Selección de cuerpo, objetivo, modo de foco, exposición y soporte (ver [EQUIPAMIENTO_Y_OPTICAS.md](EQUIPAMIENTO_Y_OPTICAS.md)).
+8. **`SANDBOX_SETTINGS`**: Panel de escena del sandbox: día/noche, nubes y personajes en movimiento o quietos.
 
 ---
 
@@ -115,8 +114,9 @@ El proyecto utiliza el renderizador **`gl_compatibility`** de Godot 4 (basado en
      a) Captura de expediente determinista (posiciones, CoC, EV, trepidación).
      b) Evaluación de 5 rayos de oclusión física contra geometría real.
      c) Captura del Viewport en Image.
-     d) Procesamiento en develop.gdshader (desenfoque CoC, grano, trepidación).
-     e) Calificación matemática (0 - 100) en photography.gd.
+     d) Calificación en photography.gd: nota 0-100, estrellas 0-5 y créditos 0-150.
+     e) Procesamiento en develop.gdshader con los valores de la calificación
+        (desenfoque CoC, arrastre, trepidación, exposición y grano).
 ```
 
 ---
@@ -132,9 +132,9 @@ El proyecto utiliza el renderizador **`gl_compatibility`** de Godot 4 (basado en
 ---
 
 ## 6. Documentos de Referencia Relacionados
-- [docs/NAVEGACION_Y_COLISIONES.md](file:///home/ganso/codigo/afotando/docs/NAVEGACION_Y_COLISIONES.md): Algoritmos 2D de navegación, carriles y evasión.
-- [docs/PERSONAJES_Y_CINEMATICA.md](file:///home/ganso/codigo/afotando/docs/PERSONAJES_Y_CINEMATICA.md): Modelado procedural, rig de 20 huesos y marcha analítica.
-- [docs/SIMULACION_FOTOGRAFICA.md](file:///home/ganso/codigo/afotando/docs/SIMULACION_FOTOGRAFICA.md): Fórmulas ópticas, CoC, fotometría y calificación.
-- [docs/EQUIPAMIENTO_Y_OPTICAS.md](file:///home/ganso/codigo/afotando/docs/EQUIPAMIENTO_Y_OPTICAS.md): Cámaras, objetivos y visor.
-- [docs/ESCENARIO_Y_RENDIMIENTO.md](file:///home/ganso/codigo/afotando/docs/ESCENARIO_Y_RENDIMIENTO.md): Parque cilíndrico, iluminación y presupuestos.
-- [docs/TESTS_Y_VERIFICACION.md](file:///home/ganso/codigo/afotando/docs/TESTS_Y_VERIFICACION.md): Suites de pruebas y verificación de calidad.
+- [docs/NAVEGACION_Y_COLISIONES.md](NAVEGACION_Y_COLISIONES.md): Algoritmos 2D de navegación, carriles y evasión.
+- [docs/PERSONAJES_Y_CINEMATICA.md](PERSONAJES_Y_CINEMATICA.md): Modelado procedural, rig de 20 huesos y marcha analítica.
+- [docs/SIMULACION_FOTOGRAFICA.md](SIMULACION_FOTOGRAFICA.md): Fórmulas ópticas, CoC, fotometría y calificación.
+- [docs/EQUIPAMIENTO_Y_OPTICAS.md](EQUIPAMIENTO_Y_OPTICAS.md): Cámaras, objetivos y visor.
+- [docs/ESCENARIO_Y_RENDIMIENTO.md](ESCENARIO_Y_RENDIMIENTO.md): Parque cilíndrico, iluminación y presupuestos.
+- [docs/TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md): Comandos de prueba y cifras de referencia (fuente única).

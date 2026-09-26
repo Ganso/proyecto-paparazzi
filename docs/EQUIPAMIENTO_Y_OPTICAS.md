@@ -1,113 +1,101 @@
 # Equipamiento, Ópticas e Instrumentación — Proyecto Paparazzi
 
-Este documento detalla los cuerpos de cámara, el catálogo de objetivos, el sistema de película analógica y la instrumentación del visor HUD definidos en [scripts/equipment.gd](file:///home/ganso/codigo/afotando/scripts/equipment.gd) y [scripts/viewfinder.gd](file:///home/ganso/codigo/afotando/scripts/viewfinder.gd).
+Este documento detalla los cuerpos de cámara, el catálogo de objetivos, el sistema de película analógica y la instrumentación del visor HUD definidos en [scripts/equipment.gd](../scripts/equipment.gd) y [scripts/viewfinder.gd](../scripts/viewfinder.gd).
 
 ---
 
 ## 1. Cuerpos de Cámara
 
-El simulador cuenta con 3 tipologías de cámara fotográfica clásica con comportamientos mecánicos y ópticos diferenciados:
+El simulador define 3 cuerpos (`Equipment.CAMERAS`). Todos comparten el mismo sensor de referencia de **36 mm de ancho** (formato completo): las focales se expresan siempre como equivalentes de 35 mm.
 
-```mermaid
-graph TD
-    A[Cuerpos de Cámara] --> B[Compacta Analógica]
-    A --> C[Telemétrica / Rangefinder]
-    A --> D[Réflex Monocular / SLR]
-    
-    B --> B1[Objetivo fijo 35 mm f/2.8<br/>Enfoque por zonas / AF básico<br/>Visor directo sin paralaje corregido]
-    C --> C1[Objetivos intercambiables M-Mount<br/>Enfoque manual por parche telemétrico<br/>Visor óptico con marcos de encuadre]
-    D --> D1[Objetivos intercambiables SLR<br/>Enfoque TTL con pantalla de microprismas<br/>Autofoco de 9 puntos seleccionables]
-```
-
-### Tabla Comparativa de Cuerpos
-
-| Característica | Compacta | Telemétrica | Réflex (SLR) |
+| Característica | Compacta (`body = 0`) | Telemétrica (`body = 1`) | Réflex (`body = 2`) |
 |---|:---:|:---:|:---:|
-| **Visor** | Óptico directo | Óptico directo con marcos colimados | Réflex a través de la lente (TTL) |
-| **Ayuda de Enfoque** | Confirmación LED básica | Parche de doble imagen coincidente | Prisma partido central y anillo microprisma |
-| **Modos de Foco** | AF / Zonas fijas | Exclusivamente Manual (MF) | AF (9 puntos) y Manual (MF) |
-| **Objetivos** | Fijo incorporado | Intercambiables | Intercambiables |
-| **Fotómetro** | Célula exterior | Ponderado central con aguja | Matricial / Ponderado TTL |
+| **Objetivos** | Zoom 24–120 o fijo 35 | Fijos 35 / 50 / 90 | Zoom 24–105, zoom 70–200 o fijo 50 |
+| **Modos de foco** (`focus_modes()`) | AF matricial, AF puntual, MF | **Solo MF** | AF matricial, AF puntual, MF |
+| **Ayuda en MF** (`focus_aid.gdshader`) | Imagen partida circular (ayuda digital) | Parche rectangular de doble imagen superpuesta | Imagen partida circular |
+| **Exposición** | Automática o manual | Automática o manual | Automática o manual |
+
+### Preajustes de la pantalla «Elige tu equipo» (`Equipment.preset()`)
+
+| Preajuste | Cuerpo | Foco | Exposición |
+|---|---|---|---|
+| **Fácil · todo automático** | Compacta | AF matricial | Automática |
+| **Calle · telemétrica manual** | Telemétrica | MF | Manual |
+| **Acción · réflex AF puntual** | Réflex | AF puntual | Manual |
+
+Tras elegir un preajuste, la sección «Selección manual de equipo» permite cambiar por separado cuerpo, objetivo, modo de foco, exposición (manual/automática) y soporte (digital/carrete).
 
 ---
 
-## 2. Catálogo de Objetivos Fotográficos
+## 2. Catálogo de Objetivos (`Equipment.LENSES`)
 
-Todos los objetivos modelan distancias focales y números f reales:
+$\text{HFOV} = 2\arctan(36 / 2f)$ con el ancho de sensor fijo de 36 mm.
 
-| Objetivo | Rango Focal | Apertura Máxima | Apertura Mínima | Ángulo de Visión ($\text{HFOV}$) | Uso Recomendado |
-|---|:---:|:---:|:---:|:---:|---|
-| **28 mm f/2.8** | $28\text{ mm}$ (Fijo) | $f/2.8$ | $f/22$ | $65.5^\circ$ | Paisaje urbano, tomas abiertas con gran profundidad de campo. |
-| **50 mm f/1.8** | $50\text{ mm}$ (Fijo) | $f/1.8$ | $f/16$ | $39.6^\circ$ | Perspectiva natural idéntica al ojo humano, alta luminosidad nocturna. |
-| **105 mm f/2.8** | $105\text{ mm}$ (Fijo) | $f/2.8$ | $f/32$ | $19.5^\circ$ | Retrato clásico, separación suave del sujeto y compresión de fondo. |
-| **135 mm f/3.5** | $135\text{ mm}$ (Fijo) | $f/3.5$ | $f/32$ | $15.2^\circ$ | Tomas lejanas (Carril 3), desenfoque bokeh acusado. |
-| **35–70 mm f/3.5–4.5** | $35 - 70\text{ mm}$ (Zoom) | $f/3.5 - 4.5$ (Variable) | $f/22$ | $54.4^\circ - 28.8^\circ$ | Zoom versátil polivalente para encuadres rápidos. |
+| Cuerpo | Objetivo | Focal | Apertura máx. | Apertura mín. (`stop`) | HFOV |
+|---|---|:---:|:---:|:---:|:---:|
+| Compacta | Zoom 24–120 · f/2.8–5.6 | 24–120 mm | f/2.8 (24 mm) → f/5.6 (120 mm) | f/8 | 73.7° – 17.1° |
+| Compacta | Fijo 35 · f/2.8 | 35 mm | f/2.8 | f/8 | 54.4° |
+| Telemétrica | Fijo 35 · f/2 | 35 mm | f/2 | f/16 | 54.4° |
+| Telemétrica | Fijo 50 · f/1.4 | 50 mm | f/1.4 | f/16 | 39.6° |
+| Telemétrica | Fijo 90 · f/2.8 | 90 mm | f/2.8 | f/22 | 22.6° |
+| Réflex | Zoom 24–105 · f/4 | 24–105 mm | f/4 (constante) | f/22 | 73.7° – 19.5° |
+| Réflex | Zoom 70–200 · f/2.8 | 70–200 mm | f/2.8 (constante) | f/22 | 28.8° – 10.3° |
+| Réflex | Fijo 50 · f/1.8 | 50 mm | f/1.8 | f/22 | 39.6° |
+
+En zooms de apertura variable, la apertura máxima se interpola linealmente con la focal (`Equipment.apertures(focal)`) y solo se ofrecen los pasos de `STOPS` que quedan dentro del rango del objetivo.
 
 ---
 
 ## 3. Escalas de Parámetros Fotográficos
 
-### 3.1 Aperturas de Diafragma
-Escala estándar de pasos completos y medios:
-$$f/1.4 \;\cdot\; f/1.8 \;\cdot\; f/2.0 \;\cdot\; f/2.8 \;\cdot\; f/4.0 \;\cdot\; f/5.6 \;\cdot\; f/8.0 \;\cdot\; f/11 \;\cdot\; f/16 \;\cdot\; f/22 \;\cdot\; f/32$$
+### 3.1 Aperturas de Diafragma (`Equipment.STOPS`)
+$$f/1.4 \;\cdot\; f/1.8 \;\cdot\; f/2 \;\cdot\; f/2.8 \;\cdot\; f/4 \;\cdot\; f/5.6 \;\cdot\; f/8 \;\cdot\; f/11 \;\cdot\; f/16 \;\cdot\; f/22$$
+
+Cada objetivo expone solo el subconjunto comprendido entre su apertura máxima y su `stop`. (`Photo.APERTURES` existe en `photography.gd` pero la interfaz usa `Equipment.STOPS`.)
 
 ### 3.2 Tiempos de Obturación (`Photo.DENOMINATORS`)
-Tiempos discretos en fracciones de segundo:
-$$\frac{1}{1000}\text{ s} \;\cdot\; \frac{1}{500}\text{ s} \;\cdot\; \frac{1}{250}\text{ s} \;\cdot\; \frac{1}{125}\text{ s} \;\cdot\; \frac{1}{60}\text{ s} \;\cdot\; \frac{1}{30}\text{ s} \;\cdot\; \frac{1}{15}\text{ s} \;\cdot\; \frac{1}{8}\text{ s}$$
+$$\tfrac{1}{1000} \;\cdot\; \tfrac{1}{500} \;\cdot\; \tfrac{1}{250} \;\cdot\; \tfrac{1}{125} \;\cdot\; \tfrac{1}{60} \;\cdot\; \tfrac{1}{30} \;\cdot\; \tfrac{1}{15} \;\cdot\; \tfrac{1}{8}\text{ s}$$
 
-### 3.3 Sensibilidad ISO y Carretes Analógicos (`Photo.ISOS`)
-Valores disponibles:
-$$\text{ISO } 100 \;\cdot\; \text{ISO } 200 \;\cdot\; \text{ISO } 400 \;\cdot\; \text{ISO } 800 \;\cdot\; \text{ISO } 1600$$
+### 3.3 Sensibilidad ISO y Carrete (`Photo.ISOS`)
+$$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cdot\; 3200$$
 
-- **Modo Carrete Activo (`equipment.film = true`)**:
-  - Al cargar un carrete físico de una sensibilidad determinada (`film_iso_index`), la opción manual de ISO se **bloquea** en la cámara:
-    ```gdscript
-    game.iso_button.disabled = true
-    ```
-  - La exposición automática y manual debe ajustarse exclusivamente mediante apertura y velocidad de obturación, emulando la realidad analógica.
+- **Soporte digital** (`equipment.film = false`): ISO libre con las teclas `C`/`V`.
+- **Carrete** (`equipment.film = true`): se carga una película de ISO fijo (`film_iso_index`, por defecto ISO 400). El botón de ISO queda deshabilitado (`iso_button.disabled`) y la exposición automática solo ajusta apertura y velocidad, conservando el ISO de la película (`main.gd::auto_expose()`).
+
+### 3.4 Medición y Exposición Automática
+- El exposímetro mide la luz incidente en el punto de la escena bajo el colimador activo (`park.illumination_ev()`); si el rayo no toca nada, usa `park.sky_ev()`.
+- En modo automático, `auto_expose()` recorre todas las combinaciones apertura × velocidad × ISO y minimiza un coste que prioriza el error de EV, luego evitar trepidación ($t > 1/f$), después ISO bajo y por último aperturas abiertas.
 
 ---
 
 ## 4. Instrumentación del Visor HUD (`viewfinder.gd`)
 
-El visor proyecta una interfaz analógica que varía según el cuerpo seleccionado:
-
 ```
 +-------------------------------------------------------------------+
-| [16:9 MASK]                                          [16:9 MASK]  |
-|                                                                   |
-|         +-----------+-----------+-----------+                     |
-|         |           |           |           |                     |
-|         |    [·]    |    [·]    |    [·]    |  <- Fila Sup. AF    |
-|         |           |           |           |                     |
-|         +-----------+-( ( / ) )-+-----------+                     |
-|         |    [·]    |  PRISMA   |    [·]    |  <- Fila Med. AF    |
-|         |           |  PARTIDO  |           |                     |
-|         +-----------+-----------+-----------+                     |
-|         |    [·]    |    [·]    |    [·]    |  <- Fila Inf. AF    |
-|         |           |           |           |                     |
-|         +-----------+-----------+-----------+                     |
-|                                                                   |
-| [ 50mm ] [ f/2.8 ] [ 1/250s ] [ ISO 400 ] [ -2..-1..0..+1..+2 ]   |
+|                  -2   -1    0   +1   +2           [batería]       |
+|                  |||||              (decorativa)   |
+|                            ^ aguja ΔEV                            |
+|   ┌─                                                        ─┐   |
+|                [ ]        [ ]        [ ]                          |
+|                [ ]        [■]        [ ]   <- 9 colimadores      |
+|                [ ]        [ ]        [ ]                          |
+|   └─                                                        ─┘   |
 +-------------------------------------------------------------------+
 ```
 
-### Elementos Gráficos del Visor
-1. **9 Colimadores de Autofoco (AF)**:
-   - Cuadrícula de 3×3 puntos. El colimador activo se ilumina en rojo al confirmar el enfoque.
-   - Enfoque por pulsación directa o selección del punto central.
-2. **Cuadrícula de la Regla de los Tercios**:
-   - Líneas finas colimadas para facilitar la composición estética y el cálculo de la puntuación en `Photo.evaluate()`.
-3. **Escala de Exposición / Exposímetro Analógico**:
-   - Barra graduada de $-2\text{ EV}$ a $+2\text{ EV}$ con índice móvil. Indica en tiempo real si la combinación actual subexpone o sobreexpone la escena.
-4. **Prisma de Imagen Partida y Corona de Microprismas**:
-   - Activos en modo manual (MF) y cuerpo réflex, permitiendo evaluar la nitidez del sujeto sin depender de confirmaciones electrónicas.
+1. **Marcas de esquina**: cuatro escuadras que delimitan el área útil del visor.
+2. **9 colimadores AF/medición** (cuadrícula 3×3, teclas `1`–`9`):
+   - En **AF matricial** se dibujan los 9; en **AF puntual** solo el activo; en **MF** ninguno.
+   - El activo se dibuja en verde. Al enfocar parpadea en **blanco** si el AF confirma y en **naranja** si falla.
+3. **Guías de tercios** (tecla `G`): solo ayuda visual. La bonificación de tercios de la puntuación se calcula aparte en `Photo.evaluate()`.
+4. **Exposímetro**: escala de −2 a +2 EV con aguja. Verde si $|\Delta EV| \le 0.5$ y ámbar en caso contrario.
+5. **Ayuda de enfoque en MF** (`focus_aid.gdshader`, centro del visor):
+   - Réflex y compacta: círculo de imagen partida; las mitades superior e inferior se desplazan en sentidos opuestos según el error de foco.
+   - Telemétrica: parche rectangular teñido con la doble imagen superpuesta.
+   - No hay corona de microprismas.
 
 ---
 
 ## 5. Verificación Automatizada
 
-```bash
-# Verificación de cuerpos, ópticas, modos AF/MF, lectura de EV y oclusión física (543 checks)
-godot-4 --headless --path . --script tests/test_equipment.gd
-```
+Suite `tests/test_equipment.gd` (headless). Comando, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
