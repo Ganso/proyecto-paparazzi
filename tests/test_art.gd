@@ -69,6 +69,12 @@ func garment_checks(casting) -> void:
 				var thigh = max_y(geometry,"muslo.I")
 				if piece.style == "skirt": check(thigh <= .0001,"Thighs stay below a skirt waist: "+piece.recurso)
 				else: check(thigh >= opening,"Thigh fills the seat leg opening: "+piece.recurso)
+			if piece.ranura == "cabeza" and piece.style == "cap":
+				# The peak is the last head mesh; a ring reaching behind the forehead read as a halo.
+				var peak = geometry.filter(func(s): return s.bone == "cabeza" and s.type == "mesh")[-1]
+				var back = -INF
+				for v in peak.vertices: back = maxf(back,v[2])
+				check(back < 0,"Cap peak only projects forwards: "+piece.recurso)
 			if piece.ranura == "torso":
 				for side in ["I","D"]:
 					var sleeve = 0.0

@@ -37,6 +37,49 @@ def loft_mesh(rings, segments=8):
     indices=sum(([indices[i],indices[i+2],indices[i+1]] for i in range(0,len(indices),3)),[])
     return dict(vertices=vertices,normals=normals,indices=indices)
 
+def oriented(vertices, normals, triangles):
+    """Orders each triangle the way loft_mesh does (Godot front faces: cross product against the normal)."""
+    indices=[]
+    for a,b,c in triangles:
+        p,q,r=vertices[a],vertices[b],vertices[c]
+        u=[q[k]-p[k] for k in range(3)];v=[r[k]-p[k] for k in range(3)]
+        cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
+        n=[normals[a][k]+normals[b][k]+normals[c][k] for k in range(3)]
+        indices.extend([a,b,c] if sum(cross[k]*n[k] for k in range(3))<0 else [a,c,b])
+    return indices
+
+def visor_mesh(head, cz, steps=6, spread=math.radians(78)):
+    """Curved cap peak: starts on the scalp over the forehead and only projects forwards,
+    dipping slightly at the tip, with a thin rim so it reads from the side."""
+    rows=[]
+    for i in range(steps+1):
+        a=-spread+2*spread*i/steps
+        sn,cs=math.sin(a),math.cos(a)
+        inner=[head*.385*sn,head*.735,cz-head*.405*cs]
+        reach=head*(.06+.23*cs**1.5)
+        outer=[inner[0]*1.05,head*(.735-.09*cs),inner[2]-reach]
+        rows.append((inner,outer))
+    t=head*.022
+    vertices,normals,tris=[],[],[]
+    for sign in (1,-1):
+        base=len(vertices)
+        for inner,outer in rows:
+            for p in (inner,outer):
+                vertices.append([p[0],p[1]+(t*.5 if sign>0 else -t*.5),p[2]]);normals.append([0,sign,0])
+        for i in range(steps):
+            a,b,c,d=base+2*i,base+2*i+1,base+2*i+2,base+2*i+3
+            tris+=[(a,b,d),(a,d,c)]
+    base=len(vertices)
+    for inner,outer in rows:
+        dx,dz=outer[0]-inner[0],outer[2]-inner[2]
+        length=max(.0001,math.hypot(dx,dz))
+        for dy in (t*.5,-t*.5):
+            vertices.append([outer[0],outer[1]+dy,outer[2]]);normals.append([dx/length,0,dz/length])
+    for i in range(steps):
+        a,b,c,d=base+2*i,base+2*i+1,base+2*i+2,base+2*i+3
+        tris+=[(a,b,d),(a,d,c)]
+    return dict(vertices=vertices,normals=normals,indices=oriented(vertices,normals,tris))
+
 # Street-shoe palette; picked per person from its traits (scripts/person.gd), not a predicate.
 cat.setdefault('tonos_calzado',{'negro':'26282b','marrón':'5b3a26','blanco':'e3dfd4','gris':'62676d'})
 for profile in cat['perfiles']:
@@ -144,10 +187,15 @@ for profile in cat['perfiles']:
                     loft('caderas',[(-nz*.297,shoulder*1.085,shoulder*.777,0),(-nz*.286,shoulder*1.105,shoulder*.790,0)],'tela_b',8,darken=.22)
             elif slot=='cabeza':
                 hair=piece['style'];color='tela_b' if hair in ('cap','hat','beanie') else 'pelo'
-                if hair!='bald':
+                if hair=='cap':
+                    # Smooth crown ending in a clean band at peak height, closed on top.
+                    crown=loft_mesh([(head*y,head*x,head*z,head*.03) for y,x,z in [(.60,.405,.425),(.80,.375,.405),(.95,.255,.295),(1.04,.04,.07)]],10)
+                    crown['indices']=crown['indices'][:-60]+crown['indices'][-30:]
+                    shape('mesh','cabeza',color,**crown)
+                elif hair!='bald':
                     # Scalp follows the skull, with a high forehead and a lower nape.
                     rings=[(.39,.325,.34),(.66,.392,.414),(.85,.33,.365),(.98,.195,.245),(1.025,.035,.065)]
-                    m=loft_mesh([(head*y,head*x,head*z,head*.035) for y,x,z in rings],8)
+                    m=loft_mesh([(head*y,head*x,head*z,head*.035) for y,x,z in rings],10)
                     # Raise the front hairline without covering the faceless oval.
                     for i in range(10):
                         front=max(0,math.cos(math.tau*i/10))
@@ -164,8 +212,8 @@ for profile in cat['perfiles']:
                     loft('cabeza',[(head*y,head*x,head*z,head*cz) for y,x,z,cz in [(-.11,.07,.065,.51),(.07,.16,.12,.55),(.36,.17,.14,.56),(.58,.10,.09,.43)]],color,6)
                     ball('cabeza',[0,head*.55,head*.41],[head*.21,head*.18,head*.19],color,darken=.28)
                 if hair=='cap':
-                    # Curved visor, shallow enough to read as fabric instead of a box.
-                    loft('cabeza',[(head*.727,head*.40,head*.37,-head*.31),(head*.758,head*.42,head*.41,-head*.30)],color,8,darken=.12)
+                    # Peak only in front of the forehead; a full ring read as a halo from the front.
+                    shape('mesh','cabeza',color,**visor_mesh(head,head*.035),darken=.12)
                 if hair=='hat':
                     loft('cabeza',[(head*.82,head*.66,head*.63,0),(head*.86,head*.66,head*.63,0)],color,10)
                     loft('cabeza',[(head*.86,head*.36,head*.37,0),(head*1.28,head*.32,head*.33,0)],color,8)
