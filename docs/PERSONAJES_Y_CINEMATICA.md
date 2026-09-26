@@ -58,13 +58,29 @@ raiz (0)
 Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, calzado, bufanda/sombrero):
 
 1. **Piezas Paramétricas (`data/piezas/`)**:
-   - Geometrías compactas definidas en JSON: cajas, cilindros, conos truncados y elipsoides de bajo número de polígonos.
+   - Geometrías compactas definidas en JSON y generadas por `tools/build_catalog.py`: secciones elípticas unidas (*lofts*) con normales suaves, más algunos elipsoides, cajas y paneles planos (solapas, cremalleras).
+   - Tras editar el generador hay que regenerar con `python3 tools/build_catalog.py`. Aviso: el generador produce diferencias de coma flotante del orden de $10^{-16}$ en piezas no modificadas (según la versión de Python); conviene no incluir esos ficheros en el commit.
 2. **Superficie Única Combinada**:
    - En lugar de crear múltiples nodos `MeshInstance3D`, `person.gd` concatena los vértices, normales, índices y pesos de todas las piezas en un único arreglo para llamar a `Mesh.add_surface_from_arrays()`.
    - **Resultado**: Exactamente **1 draw call por personaje**.
 3. **Coloreado por Vértice (`Mesh.ARRAY_COLOR`)**:
-   - Los colores de piel, ropa superior, ropa inferior, pelo y accesorios se asignan como atributo de color en cada vértice (`ARRAY_COLOR`), sin requerir texturas PNG ni materiales individuales en GPU.
-4. **Presupuesto Geométrico**:
+   - Los colores se asignan como atributo de color en cada vértice (`ARRAY_COLOR`), sin texturas PNG ni materiales individuales en GPU. Cada forma de una pieza declara una **zona de color** que `person.gd::setup()` resuelve:
+
+     | Zona | Origen del color |
+     |---|---|
+     | `piel` | `tonos_piel[t.skin]` |
+     | `pelo` | `tonos_pelo[t.hair_color]` |
+     | `tela_a` / `tela_b` | `tonos_ropa` de la prenda superior / inferior |
+     | `accesorio` | `tonos_ropa[t.accessory_color]` |
+     | `acento` | Blanco roto fijo (zapatillas y franjas deportivas) |
+     | `calzado` | `tonos_calzado` (negro, marrón, blanco, gris) |
+
+   - **Calzado**: el color se deriva de los rasgos con un hash (`Person.shoe_color()`), **sin consumir el generador aleatorio**, para no alterar el reparto de encargos ni la navegación, y para que el retrato del encargo coincida con el viandante. El pantalón de vestir solo lleva negro o marrón. No forma parte de los predicados de los encargos.
+4. **Uniones sin huecos** (verificado en `test_art.gd`, "GARMENT CHECKS"):
+   - **Cadera**: el asiento del pantalón (`caderas`) tiene aberturas laterales elevadas para las piernas; en pantalones y shorts el muslo continúa $0.075 \cdot NZ$ por encima de la articulación para rellenarlas. En falda no se prolonga (asomaría por la cintura) y la falda es más ancha arriba para cubrir los muslos.
+   - **Hombros**: la esfera del hombro no es más ancha que la manga y usa 3 anillos (`person.gd::ellipsoid()`), para que no forme una hombrera ni un pico.
+   - Comparativas antes/después de estas correcciones: [general](evidencias/comparativas/uniones_calzado_1_general.png), [cadera](evidencias/comparativas/uniones_calzado_2_cadera.png), [en movimiento](evidencias/comparativas/uniones_calzado_3_movimiento.png), [hombros](evidencias/comparativas/uniones_calzado_4_hombros.png) y [calzado](evidencias/comparativas/uniones_calzado_5_calzado.png).
+5. **Presupuesto Geométrico**:
    - Límite máximo: **1.900 triángulos por viandante** (`test_art.gd`).
    - Valor medido actual (máximo del catálogo): ver [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md).
 

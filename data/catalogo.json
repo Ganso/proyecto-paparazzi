@@ -1893,5 +1893,11 @@
         "burdeos"
       ]
     }
+  },
+  "tonos_calzado": {
+    "negro": "26282b",
+    "marrón": "5b3a26",
+    "blanco": "e3dfd4",
+    "gris": "62676d"
   }
 }

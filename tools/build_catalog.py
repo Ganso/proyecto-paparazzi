@@ -37,6 +37,8 @@ def loft_mesh(rings, segments=8):
     indices=sum(([indices[i],indices[i+2],indices[i+1]] for i in range(0,len(indices),3)),[])
     return dict(vertices=vertices,normals=normals,indices=indices)
 
+# Street-shoe palette; picked per person from its traits (scripts/person.gd), not a predicate.
+cat.setdefault('tonos_calzado',{'negro':'26282b','marrón':'5b3a26','blanco':'e3dfd4','gris':'62676d'})
 for profile in cat['perfiles']:
     h,w,ratio,j=(profile[k] for k in ('altura','hombros','relacion_cabeza','radio'))
     nz,head=h-h/ratio,h/ratio
@@ -98,7 +100,7 @@ for profile in cat['perfiles']:
                         patch('lumbar',[[sign*shoulder*.3,nz*.025,-shoulder*.54],[sign*shoulder*.64,nz*.035,-shoulder*.47],[sign*shoulder*.64,nz*.05,-shoulder*.47],[sign*shoulder*.3,nz*.04,-shoulder*.54]],'tela_a',darken=.17)
                 for side in ['I','D']:
                     arm,fore,sleeve=nz*.215,nz*.169,piece['sleeve']
-                    ball('brazo.'+side,[0,-j*.13,0],[j*2.18,j*2.0,j*2.22],'tela_a')
+                    ball('brazo.'+side,[0,-j*.25,0],[j*1.95,j*1.7,j*2.0],'tela_a')
                     end=-arm*sleeve
                     loft('brazo.'+side,[(end,j*.85,j*.87,0),(end*.64,j*1.08,j*1.04,0),(-j*.1,j*1.07,j*1.07,0)],'tela_a',6)
                     if sleeve<1:
@@ -123,17 +125,22 @@ for profile in cat['perfiles']:
                     thigh=nz*(.542-.323);calf=nz*(.323-.03)
                     tc='piel' if skirt else 'tela_b'
                     # The concealed hip joint is inside the pelvis. Rounded ends overlap at the knee.
-                    loft('muslo.'+side,[(-thigh,j*.96,j*1.02,0),(-thigh*.55,j*1.27,j*1.26,0),(0,j*1.42,j*1.48,0)],tc,6)
+                    # Trouser thighs continue above the joint into the pelvis, filling the raised
+                    # leg openings at the hips; under a skirt they would poke through its waist.
+                    top=[] if skirt else [(nz*.075,j*1.40,j*1.44,0)]
+                    loft('muslo.'+side,[(-thigh,j*.96,j*1.02,0),(-thigh*.55,j*1.27,j*1.26,0),(0,j*1.42,j*1.48,0)]+top,tc,6)
                     kc='piel' if short else 'tela_b'
                     ball('pierna.'+side,[0,0,0],[j*1.91]*3,kc)
                     loft('pierna.'+side,[(-calf,j*.65,j*.70,0),(-calf*.65,j*.84,j*.95,.006),(-calf*.25,j*1.01,j*1.10,.008),(0,j*.91,j*.96,0)],kc,6)
                     if not skirt and short:
                         loft('muslo.'+side,[(-thigh,j*1.0,j*1.07,0),(-thigh+.012,j*1.03,j*1.09,0)],'tela_b',6,darken=.18)
                     ankle=nz*.03
-                    loft('pie.'+side,[(-ankle,j*.82,j*2.1,-j*.48),(-ankle+.012,j*.97,j*2.32,-j*.5),(ankle*.24,j*.84,j*2.06,-j*.35),(ankle*.70,j*.63,j*1.20,.005)],'acento' if piece.get('sport') else 'tela_b',8,darken=.05 if piece.get('sport') else .25)
-                    loft('pie.'+side,[(-ankle,j*.83,j*2.12,-j*.48),(-ankle+.010,j*.97,j*2.34,-j*.5)],'tela_b',6,darken=.55)
+                    # Footwear has its own colour zone: trainers stay light, street shoes use 'calzado'.
+                    shoe='acento' if piece.get('sport') else 'calzado'
+                    loft('pie.'+side,[(-ankle,j*.82,j*2.1,-j*.48),(-ankle+.012,j*.97,j*2.32,-j*.5),(ankle*.24,j*.84,j*2.06,-j*.35),(ankle*.70,j*.63,j*1.20,.005)],shoe,8,darken=.05)
+                    loft('pie.'+side,[(-ankle,j*.83,j*2.12,-j*.48),(-ankle+.010,j*.97,j*2.34,-j*.5)],shoe,6,darken=.45)
                 if skirt:
-                    loft('caderas',[(nz*y,shoulder*x,shoulder*z,0) for y,x,z in [(-.295,1.08,.77),(-.28,1.11,.79),(-.04,.83,.60),(.10,.76,.55)]],'tela_b',8)
+                    loft('caderas',[(nz*y,shoulder*x,shoulder*z,0) for y,x,z in [(-.295,1.08,.77),(-.28,1.11,.79),(-.04,1.07,.68),(.10,.95,.59)]],'tela_b',8)
                     loft('caderas',[(-nz*.297,shoulder*1.085,shoulder*.777,0),(-nz*.286,shoulder*1.105,shoulder*.790,0)],'tela_b',8,darken=.22)
             elif slot=='cabeza':
                 hair=piece['style'];color='tela_b' if hair in ('cap','hat','beanie') else 'pelo'

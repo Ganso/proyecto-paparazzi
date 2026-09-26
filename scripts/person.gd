@@ -63,7 +63,8 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 		"accesorio":Color(catalog.tonos_ropa[t.get("accessory_color","rojo")].rgb),
 		"tela_a":Color(catalog.tonos_ropa[t.upper_color].rgb),
 		"tela_b":Color(catalog.tonos_ropa[t.lower_color].rgb),
-		"pelo":Color(catalog.tonos_pelo[t.hair_color].rgb)
+		"pelo":Color(catalog.tonos_pelo[t.hair_color].rgb),
+		"calzado":Color(catalog.tonos_calzado[shoe_color(t,catalog)])
 	}
 	var slots = {"cuerpo":0,"torso":t.upper,"piernas":t.lower,"cabeza":t.hair,"accesorio":t.get("accessory",0)}
 	for piece in profile.piezas:
@@ -84,6 +85,15 @@ func bone(id: String, parent: String, world: Vector3) -> void:
 		rig.set_bone_rest(i,rests[p].affine_inverse()*transform)
 	else: rig.set_bone_rest(i,transform)
 	rests.append(transform)
+
+# Derived from the traits instead of the RNG, so casting and navigation sequences stay unchanged
+# and the briefing portrait always matches its target.
+static func shoe_color(t: Dictionary, catalog: Dictionary) -> String:
+	var shoes: Array = catalog.tonos_calzado.keys()
+	if t.has("shoe_color"): return t.shoe_color
+	# Dress trousers only take dark leather tones.
+	if catalog.piezas.piernas[t.lower].get("style","") == "formal": shoes = ["negro","marrón"]
+	return shoes[posmod(hash("%d|%s|%s|%s" % [t.profile,t.upper_color,t.lower_color,t.hair_color]),shoes.size())]
 
 func make_rig() -> void:
 	bone("raiz","",Vector3.ZERO)
@@ -110,7 +120,8 @@ func ellipsoid(id: String, pos: Vector3, size: Vector3, color: Color) -> void:
 	primitive.radius = .5
 	primitive.height = 1
 	primitive.radial_segments = 7 if id == "cabeza" else 8 if id.begins_with("brazo.") else 6
-	primitive.rings = 2
+	# Shoulders get an extra ring: with two they end in a peak above the sleeve.
+	primitive.rings = 3 if id.begins_with("brazo.") else 2
 	append_primitive(primitive,id,Transform3D(Basis.from_scale(size),pos),color)
 
 func box(id: String, pos: Vector3, size: Vector3, color: Color) -> void:

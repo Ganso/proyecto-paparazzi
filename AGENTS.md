@@ -98,4 +98,4 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
 - **¿Cómo añado un nuevo objeto al parque?**  
   En `scripts/park.gd::build()`. Usa las funciones `prop()`, `cylinder()`, `cube()` o `ring()`. Si interactúa con el fotómetro o AF, ponle etiqueta con `Texts.get_text(...)`.
 - **¿Cómo añado una nueva prenda?**  
-  Añade la geometría JSON en `data/piezas/` y regístrala en `data/catalogo.json` indicando su ranura (`torso`, `piernas`, `cabeza`, `accesorio`), colores compatibles, formas morfológicas de género/número y si es `sport: true`.
+  Añade la geometría en `tools/build_catalog.py` (que genera `data/piezas/`) y regístrala en `data/catalogo.json` indicando su ranura (`torso`, `piernas`, `cabeza`, `accesorio`), colores compatibles, formas morfológicas de género/número y si es `sport: true`. Usa las zonas de color existentes (tabla en [docs/PERSONAJES_Y_CINEMATICA.md §3](docs/PERSONAJES_Y_CINEMATICA.md)) y comprueba las uniones con `test_art.gd`.
