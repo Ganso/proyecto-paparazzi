@@ -345,6 +345,7 @@ func phase_2_spritesheets_and_lineup() -> void:
 		studio_root.add_child(person)
 		var t = {"profile":0,"upper":i,"lower":0,"hair":0,"skin":"media","hair_color":"castaño","upper_color":"rojo","lower_color":"azul marino","accessory":0,"accessory_color":"negro","runner":false}
 		person.setup(t, casting.catalog, 100)
+		person.rotation.y = PI # People face -Z; the studio camera sits on +Z.
 		cam.position = Vector3(0, 1.25, 1.4)
 		cam.look_at(Vector3(0, 1.25, 0))
 		await wait_frames(4)
@@ -358,6 +359,7 @@ func phase_2_spritesheets_and_lineup() -> void:
 		studio_root.add_child(person)
 		var t = {"profile":0,"upper":0,"lower":i,"hair":0,"skin":"media","hair_color":"castaño","upper_color":"blanco","lower_color":"vaquero","accessory":0,"accessory_color":"negro","runner":false}
 		person.setup(t, casting.catalog, 100)
+		person.rotation.y = PI # People face -Z; the studio camera sits on +Z.
 		cam.position = Vector3(0, 0.65, 1.5)
 		cam.look_at(Vector3(0, 0.65, 0))
 		await wait_frames(4)
@@ -372,6 +374,7 @@ func phase_2_spritesheets_and_lineup() -> void:
 		studio_root.add_child(person)
 		var t = {"profile":0,"upper":0,"lower":0,"hair":i,"skin":"clara","hair_color":"rubio","upper_color":"verde","lower_color":"vaquero","accessory":0,"accessory_color":"negro","runner":false}
 		person.setup(t, casting.catalog, 100)
+		person.rotation.y = PI # People face -Z; the studio camera sits on +Z.
 		cam.position = Vector3(0, 1.6, 0.8)
 		cam.look_at(Vector3(0, 1.6, 0))
 		await wait_frames(4)
@@ -385,6 +388,7 @@ func phase_2_spritesheets_and_lineup() -> void:
 		studio_root.add_child(person)
 		var t = {"profile":0,"upper":0,"lower":0,"hair":0,"skin":"clara","hair_color":"castaño","upper_color":"blanco","lower_color":"vaquero","accessory":i,"accessory_color":"rojo","runner":false}
 		person.setup(t, casting.catalog, 100)
+		person.rotation.y = PI # People face -Z; the studio camera sits on +Z.
 		cam.position = Vector3(0, 1.35, 1.2)
 		cam.look_at(Vector3(0, 1.35, 0))
 		await wait_frames(4)
@@ -418,11 +422,13 @@ func phase_2_spritesheets_and_lineup() -> void:
 	# 2.6 Lineup de Personajes Representativos
 	print(">> Renderizando lineup panorámico de personajes...")
 	vp.size = Vector2i(1920, 800)
-	cam.position = Vector3(0, 1.05, 4.5)
-	cam.look_at(Vector3(0, 1.0, 0))
+	# Narrow field of view so the figures fill the frame instead of a quarter of it.
+	cam.fov = 30
+	cam.position = Vector3(0, 0.95, 3.95)
+	cam.look_at(Vector3(0, 0.92, 0))
 
 	var lineup_nodes: Array[Node3D] = []
-	var x_positions = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
+	var x_positions = [-2.125, -1.275, -0.425, 0.425, 1.275, 2.125]
 	var char_configs = [
 		{"profile":3, "upper":0, "lower":1, "hair":1, "skin":"clara", "hair_color":"rubio", "upper_color":"rojo", "lower_color":"azul marino", "accessory":0, "runner":false, "rot":-15.0},
 		{"profile":1, "upper":1, "lower":2, "hair":2, "skin":"media", "hair_color":"castaño", "upper_color":"negro", "lower_color":"gris", "accessory":0, "runner":false, "rot":-10.0},
@@ -438,7 +444,7 @@ func phase_2_spritesheets_and_lineup() -> void:
 		studio_root.add_child(person)
 		lineup_nodes.append(person)
 		person.position = Vector3(x_positions[i], 0, 0)
-		person.rotation_degrees.y = cfg.rot
+		person.rotation_degrees.y = 180.0 + cfg.rot
 		var t = {
 			"profile": cfg.profile,
 			"upper": cfg.upper,
@@ -460,6 +466,26 @@ func phase_2_spritesheets_and_lineup() -> void:
 
 	for node in lineup_nodes:
 		node.queue_free()
+	await wait_frames(2)
+
+	# 2.7 Vistas de revisión: frente, 3/4, perfil y espalda de dos personajes.
+	print(">> Renderizando vistas de revisión de personajes...")
+	vp.size = Vector2i(440, 760)
+	cam.position = Vector3(0, 0.95, 4.2)
+	cam.look_at(Vector3(0, 0.92, 0))
+	var view_chars = {"estandar": char_configs[2], "robusto": char_configs[3]}
+	for key in view_chars:
+		var cfg = view_chars[key]
+		for view in [["frente", 0.0], ["tres_cuartos", 40.0], ["perfil", 90.0], ["espalda", 180.0]]:
+			var person = Person.new()
+			studio_root.add_child(person)
+			person.setup({"profile": cfg.profile, "upper": cfg.upper, "lower": cfg.lower, "hair": cfg.hair, "skin": cfg.skin, "hair_color": cfg.hair_color, "upper_color": cfg.upper_color, "lower_color": cfg.lower_color, "accessory": cfg.accessory, "accessory_color": "rojo", "runner": cfg.runner}, casting.catalog, 100)
+			person.rotation_degrees.y = 180.0 + view[1]
+			await wait_frames(6)
+			await capture_viewport_to(vp, scratch_dir + "/vista_" + key + "_" + view[0] + ".png")
+			person.queue_free()
+			await wait_frames(2)
+	print("   [✓] vistas de revisión capturadas")
 
 	vp.queue_free()
 	await wait_frames(3)

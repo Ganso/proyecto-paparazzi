@@ -112,4 +112,15 @@ func garment_checks(casting) -> void:
 		var shoe = Person.shoe_color(t,casting.catalog)
 		check(shoe in colors and shoe == Person.shoe_color(t.duplicate(),casting.catalog),"Shoe colour is a deterministic palette entry")
 		if casting.catalog.piezas.piernas[t.lower].get("style","") == "formal": check(shoe in ["negro","marrón"],"Dress trousers take dark shoes")
+	# Baked occlusion: bounded, leaves lit tops untouched and darkens undersides near the ground.
+	var probe = Person.new()
+	probe.height = 1.75
+	check(is_equal_approx(probe.occlusion(Vector3(0,1.6,0),Vector3.UP),1.0),"Upward faces keep their zone colour")
+	var rng = RandomNumberGenerator.new()
+	rng.seed = 7
+	for i in 200:
+		var shade = probe.occlusion(Vector3(rng.randf_range(-.3,.3),rng.randf_range(0,1.8),rng.randf_range(-.2,.2)),Vector3(rng.randf_range(-1,1),rng.randf_range(-1,1),rng.randf_range(-1,1)).normalized())
+		check(shade >= .6 - .0001 and shade <= 1.0,"Occlusion stays within 40 %")
+	check(probe.occlusion(Vector3(.1,.05,0),Vector3.DOWN) < probe.occlusion(Vector3(.1,1.2,0),Vector3.DOWN),"Lower parts read darker than upper ones")
+	probe.free()
 	print("GARMENT CHECKS: %d checks, %d failures" % [garment_count,garment_failed])

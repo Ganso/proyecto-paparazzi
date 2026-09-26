@@ -41,7 +41,7 @@ Colección completa de torsos (camisetas, polos, chaquetas formales, ropa técni
 ![Sheet Prendas](sheets/sheet_prendas.png)
 
 ### 2.4 Accesorios y Peinados
-Peinados morfológicos masculinos, femeninos e infantiles, sombreros, gorras visera, gorros de lana, mochilas de tirantes, bandoleras y bolsos cruzados.
+Peinados (pelo corto, flequillo, melena, coleta y calvo), gorra, sombrero de ala, gorro de lana, bufanda y bandolera.
 
 ![Sheet Accesorios](sheets/sheet_accesorios.png)
 
@@ -57,6 +57,8 @@ Cuerpos de cámara (compacta digital, telemétrica analógica, réflex monocular
 Comprobación de la coherencia anatómica de los **4 somatotipos base** (Estándar, Delgado, Robusto, Infantil), el rig universal de 20 huesos y las combinaciones de vestimenta formal, de paseo y deportiva exclusiva (`sport: true`).
 
 ![Line-up de Personajes](personajes/personajes_lineup.png)
+
+![Vistas de revisión](personajes/personajes_vistas.png)
 
 ---
 

@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-import os, sys, glob, subprocess
+import os, sys, glob, subprocess, json
 from PIL import Image, ImageDraw, ImageFont
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOCS_EVIDENCIAS = os.path.join(BASE_DIR, "docs", "evidencias")
 SCRATCH_DIR = os.path.join(DOCS_EVIDENCIAS, "scratch")
+
+def catalog_labels(slot):
+    with open(os.path.join(BASE_DIR, "data", "catalogo.json"), encoding="utf-8") as f:
+        pieces = json.load(f)["piezas"][slot]
+    return [p["etiqueta"][:1].upper() + p["etiqueta"][1:] for p in pieces]
 
 def get_font(size, bold=True):
     name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
@@ -130,7 +135,7 @@ Colección completa de torsos (camisetas, polos, chaquetas formales, ropa técni
 ![Sheet Prendas](sheets/sheet_prendas.png)
 
 ### 2.4 Accesorios y Peinados
-Peinados morfológicos masculinos, femeninos e infantiles, sombreros, gorras visera, gorros de lana, mochilas de tirantes, bandoleras y bolsos cruzados.
+Peinados (pelo corto, flequillo, melena, coleta y calvo), gorra, sombrero de ala, gorro de lana, bufanda y bandolera.
 
 ![Sheet Accesorios](sheets/sheet_accesorios.png)
 
@@ -146,6 +151,8 @@ Cuerpos de cámara (compacta digital, telemétrica analógica, réflex monocular
 Comprobación de la coherencia anatómica de los **4 somatotipos base** (Estándar, Delgado, Robusto, Infantil), el rig universal de 20 huesos y las combinaciones de vestimenta formal, de paseo y deportiva exclusiva (`sport: true`).
 
 ![Line-up de Personajes](personajes/personajes_lineup.png)
+
+![Vistas de revisión](personajes/personajes_vistas.png)
 
 ---
 
@@ -196,8 +203,9 @@ def main():
     create_grid(veg_items, 3, 260, 240, "Hoja de Contacto: Flora y Vegetación", "Masa vegetal densa perimetral y sotobosque procedural de bajo coste geométrico", os.path.join(sheets_dir, "sheet_vegetacion.png"))
 
     # 3. Prendas
-    torso_labels = ["Camiseta Básica", "Camisa Formal", "Chaqueta / Americana", "Jersey / Sudadera", "Camiseta Running (Sport)"]
-    legs_labels = ["Pantalón de Vestir", "Vaqueros Rectos", "Falda Clásica", "Bermudas Casual", "Pantalón Chándal", "Short Running (Sport)"]
+    # Labels come from the catalogue in capture order, so they cannot drift from the rendered pieces.
+    torso_labels = catalog_labels("torso")
+    legs_labels = catalog_labels("piernas")
     garment_items = []
     for i, lbl in enumerate(torso_labels):
         garment_items.append({"path": f"{SCRATCH_DIR}/torso_{i}.png", "label": f"Torso: {lbl}"})
@@ -206,8 +214,8 @@ def main():
     create_grid(garment_items, 4, 230, 220, "Hoja de Contacto: Catálogo de Prendas", "Geometría de vestimenta pesada rígidamente sobre el rig universal de 20 huesos", os.path.join(sheets_dir, "sheet_prendas.png"))
 
     # 4. Accesorios y Cabezas
-    head_labels = ["Pelo Corto", "Media Melena", "Melena Larga", "Pelo Ondulado", "Calva", "Gorra Deportiva", "Sombrero Clásico", "Gorro de Lana"]
-    acc_labels = ["Sin Accesorio", "Mochila Espalda", "Bolso Bandolera"]
+    head_labels = catalog_labels("cabeza")
+    acc_labels = catalog_labels("accesorio")
     acc_items = []
     for i, lbl in enumerate(head_labels):
         acc_items.append({"path": f"{SCRATCH_DIR}/head_{i}.png", "label": f"Cabeza: {lbl}"})
@@ -225,6 +233,13 @@ def main():
         {"path": f"{SCRATCH_DIR}/equip_carrete_35mm.png", "label": "Película 35mm ISO 400"}
     ]
     create_grid(equip_items, 3, 260, 240, "Hoja de Contacto: Equipamiento y Ópticas", "Cuerpos de cámara con sus respectivos visores ópticos, aperturas y soportes analógicos", os.path.join(sheets_dir, "sheet_equipamiento.png"))
+
+    # 6. Vistas de revisión de personajes
+    view_items = []
+    for key, name in [("estandar", "Adulto estándar"), ("robusto", "Adulto robusto")]:
+        for view, label in [("frente", "frente"), ("tres_cuartos", "3/4"), ("perfil", "perfil"), ("espalda", "espalda")]:
+            view_items.append({"path": f"{SCRATCH_DIR}/vista_{key}_{view}.png", "label": f"{name} · {label}"})
+    create_grid(view_items, 4, 260, 420, "Vistas de Revisión de Personajes", "Frente, 3/4, perfil y espalda para revisar uniones, siluetas y prendas", os.path.join(DOCS_EVIDENCIAS, "personajes", "personajes_vistas.png"))
 
     # GIFs
     build_gif(f"{SCRATCH_DIR}/walk_*.png", os.path.join(anim_dir, "anim_caminar.gif"), fps=30)

@@ -34,7 +34,7 @@ xvfb-run -a -s "-screen 0 1440x900x24" godot-4 --audio-driver Dummy --path . --s
 | Suite | Comando | Qué valida | Línea de salida |
 |---|---|---|---|
 | **Óptica y determinismo** | `godot-4 --headless --path . --script tests/test_photography.gd` | CoC, profundidad de campo, error de EV, puntuación y determinismo (la misma evidencia da la misma nota) | `TESTS: N checks, N failures` |
-| **Arte y mallas** | `godot-4 --headless --path . --script tests/test_art.gd` | Ensambla todas las combinaciones del catálogo en los 4 perfiles: ≤ 1.900 triángulos por viandante, 20 huesos, pesos rígidos. Además revisa las piezas: calzado con zona de color propia, muslo que rellena el asiento del pantalón (y no asoma bajo la falda), hombro no más ancho que la manga, falda más ancha que los muslos, visera de gorra solo hacia delante y color de zapato determinista | `ART TESTS: N assemblies, maximum N triangles/person, N failures` y `GARMENT CHECKS: N checks, N failures` |
+| **Arte y mallas** | `godot-4 --headless --path . --script tests/test_art.gd` | Ensambla todas las combinaciones del catálogo en los 4 perfiles: ≤ 1.900 triángulos por viandante, 20 huesos, pesos rígidos. Además revisa las piezas: calzado con zona de color propia, muslo que rellena el asiento del pantalón (y no asoma bajo la falda), hombro no más ancho que la manga, falda más ancha que los muslos, visera de gorra solo hacia delante, color de zapato determinista y oclusión de vértices acotada | `ART TESTS: N assemblies, maximum N triangles/person, N failures` y `GARMENT CHECKS: N checks, N failures` |
 | **Equipo** | `godot-4 --headless --path . --script tests/test_equipment.gd` | Cuerpos, objetivos, diafragmas, modos AF/MF, carrete, lectura de EV y rayos de oclusión | `EQUIPMENT TESTS: N checks, N failures` |
 | **Marcha** | `godot-4 --headless --path . --script tests/test_gait.gd` | Pie de apoyo sin deslizamiento y suela a $y = 0$ en marcha y carrera | `GAIT TESTS: N checks, N failures, min sole y …, max contact drift …` |
 
@@ -69,7 +69,7 @@ Se pasan tras `--` (`godot-4 --path . -- <opción>`):
 | Herramienta | Comando | Función |
 |---|---|---|
 | `run_evidence.sh` | `./tools/run_evidence.sh` | Orquesta la suite de evidencias gráficas: ejecuta `capture_evidence.gd` y después `build_sheets.py`. Requiere display. |
-| `capture_evidence.gd` | `godot-4 --path . --script tools/capture_evidence.gd` | Renderiza estados del juego, assets y fotogramas de animación en `docs/evidencias/scratch/`. |
+| `capture_evidence.gd` | `godot-4 --path . --script tools/capture_evidence.gd` | Renderiza estados del juego, assets, el lineup y las vistas de revisión de personajes (frente, 3/4, perfil y espalda) y fotogramas de animación en `docs/evidencias/scratch/`. |
 | `build_sheets.py` | `python3 tools/build_sheets.py` | Monta hojas de assets, GIFs y [`docs/evidencias/GALERIA.md`](evidencias/GALERIA.md). Requiere Pillow y `ffmpeg` en el `PATH` (sin él fallan los GIFs; `pip install imageio-ffmpeg` trae un binario). |
 | `build_catalog.py` | `python3 tools/build_catalog.py` | Regenera `data/catalogo.json` y `data/piezas/`. |
 | `preview_people.gd` | `godot-4 --path . --script tools/preview_people.gd` | Visor interactivo de vestuario y perfiles anatómicos. |
@@ -86,7 +86,7 @@ Medidas el **2026-09-26** con **Godot 4.7-stable** (Linux; suites con display ba
 | Comprobaciones de óptica | 535, 0 fallos | 0 fallos | `test_photography.gd` |
 | Ensamblajes de personajes | 2.880, 0 fallos | 0 fallos | `test_art.gd` |
 | Triángulos por viandante (**máximo** del catálogo) | 1.582 | ≤ 1.900 | `test_art.gd` |
-| Comprobaciones de prendas | 422, 0 fallos | 0 fallos | `test_art.gd` |
+| Comprobaciones de prendas | 624, 0 fallos | 0 fallos | `test_art.gd` |
 | Comprobaciones de equipo | 543, 0 fallos | 0 fallos | `test_equipment.gd` |
 | Comprobaciones de marcha | 8.840, 0 fallos | 0 fallos | `test_gait.gd` |
 | Deriva máxima del pie de apoyo | 0.000000 m/fotograma | 0 | `test_gait.gd` |

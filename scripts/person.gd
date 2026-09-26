@@ -171,6 +171,15 @@ func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color
 		batch.w.append_array(PackedFloat32Array([1,0,0,0]))
 	for index in arrays[Mesh.ARRAY_INDEX]: batch.i.append(index+offset)
 
+# Ambient occlusion baked into the vertex colours (no render cost): undersides, the inner faces
+# of arms and thighs, and the lowest part of the legs read darker, which gives the flat colour
+# zones volume. Uses the rest pose, where y is the height above the ground.
+func occlusion(v: Vector3, n: Vector3) -> float:
+	var down = clampf(-n.y,0,1)*.28
+	var inner = clampf(-n.x*signf(v.x),0,1)*clampf((absf(v.x)-.03)/.08,0,1)*.18
+	var ground = clampf(1-v.y/(.3*height),0,1)*.15
+	return 1-minf(down+inner+ground,.4)
+
 func finish_mesh() -> void:
 	# One draw surface per person: vertex colors preserve the four named color zones.
 	var vertices = PackedVector3Array()
@@ -186,7 +195,9 @@ func finish_mesh() -> void:
 		bone_indices.append_array(batch.b)
 		weights.append_array(batch.w)
 		for index in batch.i: indices.append(index+offset)
-		for vertex in batch.v: colors.append(batch.color)
+		for j in batch.v.size():
+			var shade = occlusion(batch.v[j],batch.n[j])
+			colors.append(Color(batch.color.r*shade,batch.color.g*shade,batch.color.b*shade,batch.color.a))
 	triangle_count = indices.size()/3
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
