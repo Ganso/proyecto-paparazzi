@@ -128,6 +128,146 @@ func ring(inner: float, outer: float, color: Color, y = 0.0) -> void:
 				st.add_vertex(points[j]-center)
 		prop(st.commit(),center,color)
 
+
+func build_tree(species: int, pos: Vector3, tree_seed: int, scale_factor: float = 1.0, parent: Node3D = self) -> Node3D:
+	var tree_rng = RandomNumberGenerator.new()
+	tree_rng.seed = tree_seed
+	
+	var root = Node3D.new()
+	root.position = pos
+	root.rotation.y = tree_rng.randf_range(0.0, TAU)
+	root.rotation.x = tree_rng.randf_range(-0.035, 0.035)
+	root.rotation.z = tree_rng.randf_range(-0.035, 0.035)
+	parent.add_child(root)
+	
+	var h_scale = scale_factor * tree_rng.randf_range(0.88, 1.14)
+	var r_scale = scale_factor * tree_rng.randf_range(0.90, 1.12)
+	
+	match species % 4:
+		0:
+			# Roble / Plátano de sombra (Quercus / Platanus)
+			# Copa ancha en cúpula, tronco robusto con cuello radicular y ramas secundarias
+			var bark_color = Color("5c4837")
+			var foliage_palette = [Color("486b33"), Color("577a3d"), Color("3d5a2a")]
+			var trunk_r = 0.20 * r_scale
+			var trunk_h = 2.4 * h_scale
+			# Cuello radicular y fuste
+			cylinder(trunk_r * 1.45, 0.35 * h_scale, Vector3.UP * (0.175 * h_scale), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 1.05)
+			cylinder(trunk_r, trunk_h, Vector3.UP * (trunk_h * 0.5), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.8)
+			# Ramas secundarias
+			var b1 = cylinder(trunk_r * 0.45, 0.85 * h_scale, Vector3(0.25 * r_scale, trunk_h * 0.82, 0.1 * r_scale), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.3)
+			b1.rotation = Vector3(0.3, 0.2, -0.6)
+			var b2 = cylinder(trunk_r * 0.42, 0.80 * h_scale, Vector3(-0.22 * r_scale, trunk_h * 0.88, -0.15 * r_scale), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.28)
+			b2.rotation = Vector3(-0.4, -0.3, 0.55)
+			# Cúpula central y 4 racimos perimetrales 3D
+			var central_mesh = SphereMesh.new()
+			central_mesh.radius = 1.30 * r_scale
+			central_mesh.height = 1.85 * h_scale
+			central_mesh.radial_segments = 7
+			central_mesh.rings = 3
+			prop(central_mesh, Vector3(0, trunk_h + 0.85 * h_scale, 0), foliage_palette[1], Texts.get_text("una_copa_de_arbol"), root)
+			for k in 4:
+				var angle = k * (PI * 0.5) + tree_rng.randf_range(-0.25, 0.25)
+				var dist = (0.75 + tree_rng.randf_range(-0.1, 0.12)) * r_scale
+				var f_pos = Vector3(cos(angle) * dist, trunk_h + (0.42 + tree_rng.randf_range(-0.1, 0.15)) * h_scale, sin(angle) * dist)
+				var leaf = SphereMesh.new()
+				leaf.radius = (0.95 + tree_rng.randf_range(-0.08, 0.10)) * r_scale
+				leaf.height = (1.40 + tree_rng.randf_range(-0.1, 0.15)) * h_scale
+				leaf.radial_segments = 7
+				leaf.rings = 3
+				var col = foliage_palette[0] if k % 2 == 0 else foliage_palette[2]
+				prop(leaf, f_pos, col, Texts.get_text("una_copa_de_arbol"), root)
+		1:
+			# Ciprés / Álamo piramidal (Cupressus / Populus nigra)
+			# Esbelto, columnar, tono verde oscuro azulado, masas ovoides escalonadas
+			var bark_color = Color("4b3e32")
+			var leaf_dark = Color("274434")
+			var leaf_mid = Color("315340")
+			var leaf_top = Color("3b614b")
+			var trunk_r = 0.15 * r_scale
+			var trunk_h = 3.6 * h_scale
+			cylinder(trunk_r * 1.35, 0.3 * h_scale, Vector3.UP * (0.15 * h_scale), bark_color, Texts.get_text("un_arbol"), root)
+			cylinder(trunk_r, trunk_h, Vector3.UP * (trunk_h * 0.5), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.7)
+			var tiers = [
+				{"y": 1.25, "r": 0.88, "h": 1.5, "c": leaf_dark},
+				{"y": 2.20, "r": 0.82, "h": 1.6, "c": leaf_dark},
+				{"y": 3.15, "r": 0.68, "h": 1.5, "c": leaf_mid},
+				{"y": 4.05, "r": 0.48, "h": 1.4, "c": leaf_top}
+			]
+			for t in tiers:
+				var sm = SphereMesh.new()
+				sm.radius = t["r"] * r_scale
+				sm.height = t["h"] * h_scale
+				sm.radial_segments = 7
+				sm.rings = 3
+				var off_x = tree_rng.randf_range(-0.06, 0.06) * r_scale
+				var off_z = tree_rng.randf_range(-0.06, 0.06) * r_scale
+				prop(sm, Vector3(off_x, t["y"] * h_scale, off_z), t["c"], Texts.get_text("una_copa_de_arbol"), root)
+			cylinder(0.24 * r_scale, 0.85 * h_scale, Vector3.UP * (4.65 * h_scale), leaf_top, Texts.get_text("una_copa_de_arbol"), root, 0.02)
+		2:
+			# Tilo / Castaño (Tilia / Castanea)
+			# Copa globosa densa y equilibrada, verde tilo luminoso
+			var bark_color = Color("634f3c")
+			var fol_light = Color("6fa040")
+			var fol_mid = Color("608e36")
+			var fol_deep = Color("517a2d")
+			var trunk_r = 0.18 * r_scale
+			var trunk_h = 2.1 * h_scale
+			cylinder(trunk_r * 1.4, 0.3 * h_scale, Vector3.UP * (0.15 * h_scale), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 1.05)
+			cylinder(trunk_r, trunk_h, Vector3.UP * (trunk_h * 0.5), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.85)
+			var dome = SphereMesh.new()
+			dome.radius = 1.15 * r_scale
+			dome.height = 1.75 * h_scale
+			dome.radial_segments = 7
+			dome.rings = 3
+			prop(dome, Vector3(0, trunk_h + 0.85 * h_scale, 0), fol_light, Texts.get_text("una_copa_de_arbol"), root)
+			for k in 3:
+				var angle = k * (TAU / 3.0) + tree_rng.randf_range(-0.2, 0.2)
+				var dist = 0.65 * r_scale
+				var f_pos = Vector3(cos(angle) * dist, trunk_h + (0.5 + tree_rng.randf_range(-0.08, 0.1)) * h_scale, sin(angle) * dist)
+				var ball = SphereMesh.new()
+				ball.radius = (0.90 + tree_rng.randf_range(-0.06, 0.08)) * r_scale
+				ball.height = (1.45 + tree_rng.randf_range(-0.08, 0.1)) * h_scale
+				ball.radial_segments = 7
+				ball.rings = 3
+				prop(ball, f_pos, fol_mid if k == 0 else fol_deep, Texts.get_text("una_copa_de_arbol"), root)
+		3:
+			# Arce dorado otoñal (Acer)
+			# Asimetría con rama lateral extendida y nubes horizontales de oro y ámbar
+			var bark_color = Color("564333")
+			var leaf_gold = Color("c48d35")
+			var leaf_amber = Color("af7629")
+			var leaf_sienna = Color("975d20")
+			var trunk_r = 0.16 * r_scale
+			var trunk_h = 2.5 * h_scale
+			cylinder(trunk_r * 1.35, 0.28 * h_scale, Vector3.UP * (0.14 * h_scale), bark_color, Texts.get_text("un_arbol"), root)
+			cylinder(trunk_r, trunk_h, Vector3.UP * (trunk_h * 0.5), bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.75)
+			var b_angle = tree_rng.randf_range(0.0, TAU)
+			var branch_dir = Vector3(cos(b_angle), 0.35, sin(b_angle)).normalized()
+			var b_pos = Vector3.UP * (trunk_h * 0.72) + branch_dir * (0.45 * r_scale)
+			var br = cylinder(trunk_r * 0.45, 0.9 * h_scale, b_pos, bark_color, Texts.get_text("un_arbol"), root, trunk_r * 0.25)
+			br.rotation = Vector3(branch_dir.z * 0.6, b_angle, -branch_dir.x * 0.6)
+			var low_cloud = SphereMesh.new()
+			low_cloud.radius = 0.85 * r_scale
+			low_cloud.height = 1.05 * h_scale
+			low_cloud.radial_segments = 7
+			low_cloud.rings = 3
+			prop(low_cloud, b_pos + branch_dir * (0.45 * r_scale) + Vector3.UP * (0.2 * h_scale), leaf_amber, Texts.get_text("una_copa_de_arbol"), root)
+			var mid_cloud = SphereMesh.new()
+			mid_cloud.radius = 1.15 * r_scale
+			mid_cloud.height = 1.40 * h_scale
+			mid_cloud.radial_segments = 7
+			mid_cloud.rings = 3
+			prop(mid_cloud, Vector3(0, trunk_h + 0.6 * h_scale, 0), leaf_gold, Texts.get_text("una_copa_de_arbol"), root)
+			var top_cloud = SphereMesh.new()
+			top_cloud.radius = 0.80 * r_scale
+			top_cloud.height = 1.10 * h_scale
+			top_cloud.radial_segments = 7
+			top_cloud.rings = 3
+			prop(top_cloud, Vector3(-cos(b_angle) * 0.25 * r_scale, trunk_h + 1.35 * h_scale, -sin(b_angle) * 0.25 * r_scale), leaf_sienna, Texts.get_text("una_copa_de_arbol"), root)
+			
+	return root
+
 func polar(theta: float, radius: float) -> Vector3:
 	return Vector3(sin(deg_to_rad(theta))*radius,0,-cos(deg_to_rad(theta))*radius)
 
@@ -198,22 +338,9 @@ func build() -> void:
 			for col in [-1,0,1]: cube(Vector3(.3,.35,.025),Vector3(col*.65,-h*.5+row*.65,1.32),Color("b8c8cc"),"",block)
 	for i in 30:
 		var theta = i*12.0+4
-		var root = Node3D.new()
-		root.position = polar(theta,14.2)
-		add_child(root)
+		var pos = polar(theta,14.2)
 		var variety = i%4
-		var trunk_height = [2.6,3.8,2.0,3.0][variety]
-		cylinder(.14+variety*.025,trunk_height,Vector3.UP*trunk_height*.5,Color("77604a"),Texts.get_text("un_arbol"),root)
-		if variety == 1:
-			for level in 3: cylinder(1.25-level*.25,1.8,Vector3.UP*(2.8+level*.8),Color("3c674d"),Texts.get_text("una_copa_de_arbol"),root,0)
-			continue
-		for j in 3:
-			var foliage = SphereMesh.new()
-			foliage.radius = [1.1,1.0,.8,1.3][variety]
-			foliage.height = 3.1 if variety == 2 else 1.8
-			foliage.radial_segments = 5
-			foliage.rings = 2
-			prop(foliage,Vector3((j-1)*.7,trunk_height+(.6 if j == 1 else 0),0),[Color("6e8745"),Color("3c674d"),Color("78984e"),Color("a58b47")][variety].lightened(j*.045),Texts.get_text("una_copa_de_arbol"),root)
+		build_tree(variety, pos, 1000 + i * 47, 1.0)
 	for i in 72:
 		var pos = polar(i*5,12.8)
 		cylinder(.024,1.1,pos+Vector3.UP*.55,Color("394844"),Texts.get_text("una_verja"))
@@ -225,38 +352,24 @@ func build() -> void:
 		var foliage = SphereMesh.new()
 		foliage.radius = rng.randf_range(.55,.95)
 		foliage.height = foliage.radius*rng.randf_range(1.6,2.2)
-		foliage.radial_segments = 5
-		foliage.rings = 1
+		foliage.radial_segments = 7
+		foliage.rings = 2
 		var pos = polar(theta,13.4+rng.randf_range(-.25,.35))
 		pos.y = foliage.height*.45
 		var bush_colors = [Color("4d6836"),Color("5c7a3d"),Color("3e5c32"),Color("688047")]
 		prop(foliage,pos,bush_colors[i%4].lightened(snappedf(rng.randf_range(0,.12),.04)),Texts.get_text("un_arbusto"))
 	for i in 36:
 		var theta = i*10.0+9.0+rng.randf_range(-1.5,1.5)
-		var root = Node3D.new()
-		root.position = polar(theta,15.6+rng.randf_range(-.4,.6))
-		add_child(root)
+		var pos = polar(theta,15.6+rng.randf_range(-.4,.6))
 		var variety = (i+2)%4
-		var trunk_height = [3.2,4.4,2.8,3.8][variety]
-		cylinder(.15+variety*.02,trunk_height,Vector3.UP*trunk_height*.5,Color("604d3b"),Texts.get_text("un_arbol"),root)
-		if variety == 1:
-			for level in 3:
-				cylinder(1.4-level*.3,2.0,Vector3.UP*(3.0+level*.9),Color("32563f"),Texts.get_text("una_copa_de_arbol"),root,0)
-			continue
-		for j in 3:
-			var foliage = SphereMesh.new()
-			foliage.radius = [1.2,1.1,.9,1.4][variety]
-			foliage.height = 3.3 if variety == 2 else 2.0
-			foliage.radial_segments = 5
-			foliage.rings = 2
-			prop(foliage,Vector3((j-1)*.75,trunk_height+(.7 if j == 1 else 0),0),[Color("5f7a39"),Color("32563f"),Color("698941"),Color("8e773a")][variety].lightened(j*.04),Texts.get_text("una_copa_de_arbol"),root)
+		build_tree(variety, pos, 2000 + i * 31, 1.15)
 	for i in 60:
 		var theta = i*6.0+2.0+rng.randf_range(-1.0,1.0)
 		var foliage = SphereMesh.new()
 		foliage.radius = rng.randf_range(.6,1.1)
 		foliage.height = foliage.radius*rng.randf_range(1.4,1.9)
-		foliage.radial_segments = 5
-		foliage.rings = 1
+		foliage.radial_segments = 6
+		foliage.rings = 2
 		var pos = polar(theta,15.0+rng.randf_range(-.6,1.4))
 		pos.y = foliage.height*.4
 		var under_colors = [Color("39502b"),Color("4b6435"),Color("58723c")]
@@ -294,8 +407,8 @@ func build() -> void:
 		var foliage = SphereMesh.new()
 		foliage.radius = rng.randf_range(.25,.5)
 		foliage.height = foliage.radius*1.5
-		foliage.radial_segments = 5
-		foliage.rings = 1
+		foliage.radial_segments = 6
+		foliage.rings = 2
 		var pos = polar(i*5.14,9.2+rng.randf_range(-.3,.3))
 		pos.y = foliage.height*.4
 		prop(foliage,pos,Color("617b43").lightened(snappedf(rng.randf_range(0,.15),.05)),Texts.get_text("un_arbusto"))

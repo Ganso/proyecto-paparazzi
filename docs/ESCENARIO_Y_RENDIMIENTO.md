@@ -36,17 +36,45 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
 
 ---
 
-## 2. Masa Vegetal Densa de Fondo
+## 2. Masa Vegetal Densa y Especies Botánicas con Variación Procedural
 
-Para cerrar visualmente el horizonte y proporcionar un fondo natural continuo tras la verja perimetral:
+Para cerrar visualmente el horizonte y dotar al diorama de una riqueza orgánica viva y estilizada:
 
+### 2.1 Catálogo de Especies Botánicas Estilizadas (`build_tree`)
+El parque implementa **4 especies botánicas** diferenciadas estructural y cromáticamente:
+
+1. **Especie 0: Roble / Plátano de Sombra (*Quercus / Platanus*)**:
+   - **Estructura**: Fuste robusto con ensanchamiento/cuello radicular basal ($r = 0.20\text{ m}$), bifurcación en 2 ramas secundarias oblicuas divergentes.
+   - **Follaje**: Cúpula central ancha semiesférica y 4 racimos esféricos perimetrales distribuidos en corona tridimensional 3D (rompiendo cualquier alineación plana).
+   - **Paleta**: Verde bosque denso y frondoso (`#486b33`, `#577a3d`, `#3d5a2a`).
+2. **Especie 1: Ciprés / Álamo Columnar (*Cupressus / Populus nigra*)**:
+   - **Estructura**: Fuste estilizado vertical arropado por el follaje.
+   - **Follaje**: Silueta columnar/fusiforme estrecha escalonada en 4 niveles ovoides superpuestos rematados en ápice cónico sutil.
+   - **Paleta**: Verde ciprés profundo azulado (`#274434`, `#315340`, `#3b614b`).
+3. **Especie 2: Tilo / Castaño (*Tilia / Castanea*)**:
+   - **Estructura**: Tronco limpio y equilibrado con cuello visible ($r = 0.18\text{ m}$).
+   - **Follaje**: Copa globosa compacta (estilo nube diorama suave) compuesta por un domo central superior y 3 racimos esféricos densos en tríada.
+   - **Paleta**: Verde tilo/manzana luminoso y fresco (`#6fa040`, `#608e36`, `#517a2d`).
+4. **Especie 3: Arce Dorado Otoñal (*Acer*)**:
+   - **Estructura**: Tronco esbelto asimétrico con una rama lateral extendida que sostiene una masa de follaje suspendida más baja.
+   - **Follaje**: 3 nubes escalonadas horizontales que generan una silueta asimétrica de inspiración japonesa y señorial.
+   - **Paleta**: Gradiente otoñal cálido de ámbar, oro y siena tostada (`#c48d35`, `#af7629`, `#975d20`).
+
+### 2.2 Sistema de Variación Procedural Individual
+Cada espécimen vegetal se genera mediante una semilla pseudoaleatoria única y determinista (`seed`), garantizando que no existan dos árboles idénticos:
+- **Rotación azimutal libre en 360° (`rotation.y in [0, 2*PI]`)**: Elimina la repetición angular desde cualquier ángulo de visión del fotógrafo.
+- **Inclinación orgánica del fuste (`rotation.x, rotation.z in [-2 deg, +2 deg]`)**: Simula el fototropismo y la asimetría natural del crecimiento en exteriores.
+- **Variación de escala y esbeltez (+-15%)**: Modulación independiente de altura y anchura por espécimen.
+- **Jitter tridimensional en racimos de copa**: Los centros, radios y alturas de las masas esféricas se perturban sutilmente en 3D.
+- **Micro-modulación cromática**: Las copas reciben variaciones tonales según la altura de la masa (luces superiores más claras y masas bajas más densas).
+
+### 2.3 Estratificación en Anillos del Paisaje
 1. **Seto Perimetral Bajo ($r \approx 13.4\text{ m}$)**:
-   - 84 arbustos procedurales (`SphereMesh`, $r \in [0.55, 0.95]\text{ m}$, altura $1.6 - 2.2\text{ m}$) solapados.
-   - Ocultan la base de la verja y la franja desnuda de césped exterior.
+   - 84 arbustos facetados (`SphereMesh` de 7 segmentos y 2 anillos, $r \in [0.55, 0.95]\text{ m}$) solapados que ocultan la base de la verja.
 2. **Arbolado Primario ($r = 14.2\text{ m}$)**:
-   - 30 árboles espaciados cada $12^\circ$ con troncos cilíndricos y 4 variedades botánicas (coníferas escalonadas y copas esféricas frondosas).
+   - 30 árboles botánicos principales distribuidos cada $12^\circ$.
 3. **Arbolado Secundario Intercalado ($r \approx 15.6\text{ m}$)**:
-   - 36 árboles adicionales desfasados $9^\circ$ respecto a la primera fila, situándose exactamente en los huecos visuales para formar un telón boscoso continuo.
+   - 36 árboles botánicos adicionales de mayor escala ($+15\%$), desfasados $9^\circ$ para sellar los huecos visuales con un telón boscoso denso.
 4. **Sotobosque de Conexión ($r \approx 15.0\text{ m}$)**:
    - 60 arbustos medianos bajo las copas para unificar visualmente el suelo con las ramas.
 

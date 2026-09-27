@@ -94,8 +94,8 @@ Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en
 | Viandantes atascados tras 20 s | 0 | 0 | `simulate_jams.gd` |
 | Comprobaciones de expansión | 140, 0 fallos | 0 fallos | `test_expansion.gd` |
 | Comprobaciones de sesión | 34, 0 fallos | 0 fallos | `test_game.gd` |
-| VRAM en sesión completa | 50,06 MiB (texturas 40,93 · buffers 9,13) | < 60 MiB | `test_game.gd` |
-| Triángulos en escena (21 viandantes + parque) | 64.582 | ≤ 100.000 | `--smoke-test` |
+| VRAM en sesión completa | 50,51 MiB (texturas 40,93 · buffers 9,58) | < 60 MiB | `test_game.gd` |
+| Triángulos en escena (21 viandantes + parque) | 82.198 | ≤ 100.000 | `--smoke-test` |
 
 **Nota sobre `test_game.gd`**: bajo Xvfb pasaron 22 de 23 comprobaciones; la que falla es la de latencia de 50 ms (ver §1). Hay que confirmar los 23/23 en una máquina con GPU.
 

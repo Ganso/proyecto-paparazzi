@@ -174,26 +174,10 @@ func build_verja(park: ParkScene, parent: Node3D) -> void:
 	park.cube(Vector3(1.4, .04, .04), Vector3(0, .9, 0), Color("3a403d"), "", v)
 
 func build_arbol_grande(park: ParkScene, parent: Node3D) -> void:
-	var a = Node3D.new()
-	parent.add_child(a)
-	park.cylinder(.3, 2.4, Vector3.UP * 1.2, Color("574332"), "", a)
-	var foliage = SphereMesh.new()
-	foliage.radius = 1.3
-	foliage.height = 2.4
-	foliage.radial_segments = 6
-	foliage.rings = 2
-	park.prop(foliage, Vector3(0, 3.0, 0), Color("476231"), "", a)
+	park.build_tree(0, Vector3.ZERO, 1042, 1.15, parent)
 
 func build_arbol_medio(park: ParkScene, parent: Node3D) -> void:
-	var a = Node3D.new()
-	parent.add_child(a)
-	park.cylinder(.18, 1.8, Vector3.UP * .9, Color("624d3a"), "", a)
-	var foliage = SphereMesh.new()
-	foliage.radius = .9
-	foliage.height = 1.7
-	foliage.radial_segments = 5
-	foliage.rings = 2
-	park.prop(foliage, Vector3(0, 2.2, 0), Color("557739"), "", a)
+	park.build_tree(2, Vector3.ZERO, 2084, 1.0, parent)
 
 func build_seto(park: ParkScene, parent: Node3D) -> void:
 	var s = Node3D.new()
