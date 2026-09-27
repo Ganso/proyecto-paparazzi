@@ -88,7 +88,7 @@ Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa 
   - Los primeros planos ($r < 8.0\text{ m}$) mantienen contraste y saturación íntegros.
   - El fondo vegetal y el horizonte urbano se funden suavemente con el tono del horizonte (`c5d4c9` de día, `192139` de noche).
 - **Mapeo de tonos HDR / ACES (`tonemap_mode = TONE_MAPPER_ACES`, `tonemap_white = 1.4` y ajustes de contraste)**: Curva cinematográfica de compresión de altas luces.
-- **Atenuación adaptativa de tinta (`cel_outline.gdshader`)**: El contorno exterior de los maniquíes disminuye progresivamente su grosor relativo entre 7 m y 17 m para no saturar con líneas negras los planos lejanos.
+- **Atenuación adaptativa de tinta y tintado armónico (`cel_outline.gdshader`)**: El contorno exterior de los maniquíes disminuye progresivamente su grosor mediante una curva cúbica suave (`smoothstep`) entre 6,5 m y 17,5 m para no saturar con líneas negras los planos lejanos, incorporando modulación armónica sobre el color de vértice (`tint_strength`) y sesgo de profundidad anti-intersección (`depth_bias`).
 
 ---
 

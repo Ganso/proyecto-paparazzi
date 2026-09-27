@@ -126,7 +126,7 @@ void light() {
 El delineado exterior de los personajes y props se consigue mediante un segundo pase (`next_pass`) en el material:
 - Modo de renderizado: `cull_front` (solo dibuja las caras traseras).
 - Desplazamiento de vértices: `VERTEX += NORMAL * 0.008;` (extrusión uniforme de 8 mm hacia el exterior o 1,6 px constante).
-- Color del contorno: Gris oscuro o negro translúcido (`vec4(0.12, 0.12, 0.14, 1.0)`), insensible a la luz (`unshaded`).
+- Color del contorno y modulación armónica: Tinta base oscura (`vec4(0.10, 0.10, 0.12, 1.0)`), insensible a la luz (`unshaded`), modulada armónicamente con el color de vértice (`tint_strength = 0.45`) para lograr perfiles cálidos sobre madera noble y tonos profundos en tejidos textiles, con atenuación cúbica adaptativa por distancia y sesgo de profundidad (`depth_bias = 0.0015`) anti-recortes en articulaciones.
 - **Coste**: Renderizado en 1 solo draw call adicional por superficie, 100% compatible con WebGL y OpenGL Core Profile.
 
 ---
