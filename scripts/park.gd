@@ -107,6 +107,10 @@ func build() -> void:
 	sun.rotation_degrees = Vector3(-72,-35,0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 35
+	sun.shadow_blur = 1.5
+	sun.directional_shadow_blend_splits = true
+	sun.shadow_bias = 0.025
+	sun.shadow_normal_bias = 1.2
 	add_child(sun)
 	var ground = StaticBody3D.new()
 	ground.set_meta("label",Texts.get_text("el_suelo"))

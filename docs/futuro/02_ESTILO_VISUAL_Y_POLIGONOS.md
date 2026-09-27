@@ -629,8 +629,8 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Hito 0** | **2.0.2** | Material Toon único compartido en `person.gd` | Bajo (S) | Medio | ⚙️ Base | ✅ **Hecho** | `Person.mannequin_material()` activo |
 | **Hito 0** | **2.0.3** | Mallas base de maniquí con rótulas visibles parciales | Medio (M) | Medio | ⚙️ Base | 🟡 **Parcial** | Catálogo con rótulas en miembros descubiertos |
 | **Hito 1** | **2.1.1** | DoF física macro ($f/1.4 - f/2.0$) con bokeh de 9 palas | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | 📝 Pendiente | `main.gd::setup_macro_camera()` con blur inmediato |
-| **Hito 1** | **2.1.2** | Tone Mapping AgX / ACES y curva de color de estudio | Muy Bajo (XS) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Altas luces de barniz suaves sin quemado |
-| **Hito 1** | **2.1.3** | Viñeteo óptico, aberración cromática y grano ISO analógico | Bajo (S) | Medio-Alto | 🚀 **Quick Win** | 📝 Pendiente | Shaders de revelado con textura fílmica tangible |
+| **Hito 1** | **2.1.2** | Tone Mapping AgX / ACES y curva de color de estudio | Muy Bajo (XS) | Alto | 🚀 **Quick Win** | ✅ **Hecho** | Altas luces de barniz suaves sin quemado con compresión S-curve |
+| **Hito 1** | **2.1.3** | Viñeteo óptico, aberración cromática y grano ISO analógico | Bajo (S) | Medio-Alto | 🚀 **Quick Win** | ✅ **Hecho** | Shaders de revelado con caída cos^4, dispersión radial y grano estocástico |
 | **Hito 2** | **2.2.1** | Configuración de preset `Forward+` y soporte de cluster | Bajo (S) | Medio | ⚙️ Base | 📝 Pendiente | `project.godot` con Forward+ y fallback Compatibility |
 | **Hito 2** | **2.2.2** | Screen-Space Contact Shadows en pies y bancos | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | 📝 Pendiente | Cero *peter-panning*; anclaje físico inmediato |
 | **Hito 2** | **2.2.3** | SSAO macro ($0.35\text{ m}$) en rótulas y pliegues | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras de cavidad profundas en articulaciones |

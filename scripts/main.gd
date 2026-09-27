@@ -1023,18 +1023,47 @@ func point_hit(point: Vector2) -> Dictionary:
 	return ray_to(origin+camera.project_ray_normal(pixel)*90)
 
 func select_matrix_point() -> void:
-	var nearest = INF
-	for i in finder.points().size():
-		var hit = point_hit(finder.points()[i])
-		if not hit.is_empty():
-			var distance = camera.global_position.distance_squared_to(hit.position)
-			if distance < nearest:
-				nearest = distance
-				finder.active = i
+	var pts = finder.points()
+	var best_target_idx = -1
+	var best_person_idx = -1
+	var nearest_person_dist = INF
+	var best_scenery_idx = -1
+	var nearest_scenery_dist = INF
+	for i in pts.size():
+		var hit = point_hit(pts[i])
+		if hit.is_empty(): continue
+		var distance = camera.global_position.distance_squared_to(hit.position)
+		if distance < 1.0: continue
+		if hit.collider.has_meta("person"):
+			var p = hit.collider.get_meta("person")
+			if p == target:
+				best_target_idx = i
+				break
+			if distance < nearest_person_dist:
+				nearest_person_dist = distance
+				best_person_idx = i
+		else:
+			if distance < nearest_scenery_dist:
+				nearest_scenery_dist = distance
+				best_scenery_idx = i
+	if best_target_idx != -1:
+		finder.active = best_target_idx
+	elif best_person_idx != -1:
+		finder.active = best_person_idx
+	elif best_scenery_idx != -1:
+		finder.active = best_scenery_idx
+	else:
+		finder.active = 4
 
 func update_meter() -> void:
 	var hit = point_hit(finder.points()[finder.active])
 	measured_ev = park.sky_ev(night) if hit.is_empty() else park.illumination_ev(hit.position,night,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
+	if equipment.auto_exposure and not sandbox and target != null:
+		var chest = target.control_points()[1]
+		if not camera.is_position_behind(chest):
+			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
+			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
+				measured_ev = park.illumination_ev(chest,night,target)
 	if equipment.focus_mode == "MF":
 		var center_hit = point_hit(ui.size*.5)
 		var distance = INF if center_hit.is_empty() else camera.global_position.distance_to(center_hit.position)
@@ -1042,12 +1071,19 @@ func update_meter() -> void:
 		focus_aid.material.set_shader_parameter("offset",clampf(error*focal*.006,-.06,.06))
 
 func auto_expose() -> void:
+	var target_ev = measured_ev
+	if not sandbox and target != null:
+		var chest = target.control_points()[1]
+		if not camera.is_position_behind(chest):
+			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
+			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
+				target_ev = park.illumination_ev(chest,night,target)
 	var best_cost = INF
 	var stops = apertures()
 	for n in stops.size():
 		for t in Photo.DENOMINATORS.size():
 			for iso in ([equipment.film_iso_index] if equipment.film else range(Photo.ISOS.size())):
-				var delta = absf(Photo.ev(stops[n],1.0/Photo.DENOMINATORS[t],Photo.ISOS[iso],measured_ev))
+				var delta = absf(Photo.ev(stops[n],1.0/Photo.DENOMINATORS[t],Photo.ISOS[iso],target_ev))
 				var cost = delta*10 + maxf(0,focal/Photo.DENOMINATORS[t]-1)*2 + iso*.12 + n*.03
 				if cost < best_cost:
 					best_cost = cost
