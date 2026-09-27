@@ -71,6 +71,10 @@ var touch_start = {}
 var ui_touch_ids = {}
 var had_multitouch = false
 var sound: AudioStreamPlayer
+var graphics_preset: String = "Ultra"
+var graphics_button: Button
+var graphics_button_intro: Button
+var graphics_return: String = "INTRO"
 var sandbox = false
 var sandbox_paused = false
 var shot_serial = 0
@@ -101,6 +105,7 @@ func _ready() -> void:
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
 	update_camera()
+	apply_graphics_preset("Ultra")
 	intro()
 	if smoke or screenshot_path != "" or run_metrics:
 		start_session(false)
@@ -217,6 +222,7 @@ func build_ui() -> void:
 	equipment_label = button(ui,"Equipo",Rect2(950,18,135,38),show_equipment)
 	var job_panel = panel(ui,Rect2(25,96,1230,68),Color(.075,.115,.085,.91))
 	sandbox_button = button(job_panel,"Sandbox · escena",Rect2(16,4,200,26),show_sandbox_controls)
+	graphics_button = button(job_panel,"Gráficos · " + graphics_preset,Rect2(225,4,130,26),show_graphics_settings)
 	counter_label = label(job_panel,Texts.get_text("encargo_01_05"),Rect2(16,9,185,20),12,Color("b8d78c"))
 	briefing = label(job_panel,"",Rect2(16,30,1170,30),20)
 	status_label = label(job_panel,"",Rect2(835,8,375,22),13,Color("b5c3ad"))
@@ -395,6 +401,7 @@ func intro() -> void:
 	var root = create_modal()
 	label(root,Texts.get_text("estudio_de_fotografia_01"),Rect2(75,70,600,28),14,Color("a7c683"))
 	label(root,Texts.get_text("cada_persona_una_oportunidad"),Rect2(70,115,790,160),64,Color("e6ebdb"))
+	graphics_button_intro = button(root,"Gráficos · " + graphics_preset,Rect2(985,55,220,40),show_graphics_settings)
 	var desc = label(root,Texts.get_text("encuentra_a_quien_describe_el_encargo_y_consigue_la_fotografia_t"),Rect2(75,302,780,72),22,Color("b7c5ad"))
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,Texts.get_text("05_encargos_03_disparos_por_encargo_tu_mejor_foto_cuenta"),Rect2(75,413,1100,28),13,Color("a7c683"))
@@ -908,6 +915,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			if mode == "HELP": resume_search() if sandbox or is_instance_valid(target) else intro()
+			elif mode == "GRAPHICS":
+				mode = graphics_return
+				if graphics_return == "INTRO": intro()
+				elif graphics_return == "EQUIPMENT": show_equipment()
+				else: close_modal()
 			elif mode == "SEARCH": show_help()
 			return
 		if event.keycode == KEY_ENTER:
@@ -1061,7 +1073,93 @@ func show_equipment() -> void:
 		label(root,"Cargar película",Rect2(75,525,250,35),20)
 		option(root,Photo.ISOS.map(func(iso): return "ISO %d" % iso),equipment.film_iso_index,Rect2(330,520,700,45),func(i): equipment.film_iso_index = i; apply_equipment(); show_equipment())
 	label(root,"La telemétrica utiliza objetivos fijos y enfoque manual por coincidencia.",Rect2(75,585,1100,35),18)
+	button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
 	button(root,"Usar este equipo",Rect2(880,630,320,55),restore_equipment_screen,true)
+
+
+func apply_mannequin_graphics_preset(preset: String) -> void:
+	var mat = Person.mannequin_material()
+	if mat and mat.next_pass is ShaderMaterial:
+		var outline: ShaderMaterial = mat.next_pass
+		match preset:
+			"Bajo":
+				outline.set_shader_parameter("tint_strength", 0.0)
+				outline.set_shader_parameter("width_px", 1.2)
+			"Medio":
+				outline.set_shader_parameter("tint_strength", 0.25)
+				outline.set_shader_parameter("width_px", 1.4)
+			"Alto":
+				outline.set_shader_parameter("tint_strength", 0.40)
+				outline.set_shader_parameter("width_px", 1.6)
+			"Ultra", _:
+				outline.set_shader_parameter("tint_strength", 0.48)
+				outline.set_shader_parameter("width_px", 1.8)
+				outline.set_shader_parameter("depth_bias", 0.0018)
+
+func apply_graphics_preset(preset: String) -> void:
+	graphics_preset = preset
+	if park: park.apply_graphics_preset(preset)
+	apply_mannequin_graphics_preset(preset)
+	if is_instance_valid(graphics_button):
+		graphics_button.text = "Gráficos · " + graphics_preset
+	if is_instance_valid(graphics_button_intro):
+		graphics_button_intro.text = "Gráficos · " + graphics_preset
+
+func show_graphics_settings() -> void:
+	if mode != "GRAPHICS": graphics_return = mode
+	mode = "GRAPHICS"
+	var root = create_modal()
+	label(root, "Ajustes gráficos del sistema", Rect2(75, 25, 1100, 50), 38)
+	label(root, "Configuración escalonada de rendimiento y fidelidad visual (docs/futuro/02, §10)", Rect2(75, 78, 1100, 28), 15, Color("b8d78c"))
+
+	var preset_names = ["Bajo", "Medio", "Alto", "Ultra"]
+	var preset_descs = [
+		"Bajo: 60 FPS garantizados para móviles de entrada y WebGL. Sombras desactivadas y niebla off.",
+		"Medio: Para tablets y portátiles ligeros. Sombras PCF estándar (1024) y niebla suave.",
+		"Alto: Para PCs de juegos estándar. Sombras nítidas (2048), niebla atmosférica y ACES.",
+		"Ultra (Por defecto): Fidelidad de estudio. Sombras PCSS extendidas (48m), ACES con contraste analógico y contorno ilustrado HD."
+	]
+
+	for i in 4:
+		var pname = preset_names[i]
+		var is_active = (graphics_preset == pname)
+		button(root, ("✓ " if is_active else "") + pname + (" (Activo)" if is_active else ""), Rect2(75 + i * 280, 118, 260, 52), func():
+			apply_graphics_preset(pname)
+			show_graphics_settings()
+		, is_active)
+	
+	var desc_panel = panel(root, Rect2(75, 185, 1100, 420), Color(.075, .115, .085, .91))
+	label(desc_panel, "Perfil seleccionado actualmente: " + graphics_preset, Rect2(25, 18, 1050, 30), 22, Color("b8d78c"))
+	
+	var current_idx = preset_names.find(graphics_preset)
+	if current_idx < 0: current_idx = 3
+	var desc_text = preset_descs[current_idx]
+	var desc_lbl = label(desc_panel, desc_text, Rect2(25, 54, 1050, 44), 16, Color("e6ebdb"))
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	
+	label(desc_panel, "Desglose técnico de parámetros activos:", Rect2(25, 108, 1050, 26), 16, Color("a7c683"))
+	
+	var specs = [
+		"• Sombras direccionales y sol: " + ("Desactivadas (0 draw calls de sombra)" if graphics_preset == "Bajo" else ("Básicas 1024 (alcance 30m)" if graphics_preset == "Medio" else ("Avanzadas PCF 2048 (alcance 38m)" if graphics_preset == "Alto" else "Ultra PCSS con penumbra difusa (alcance 48m, bias 0.015)"))),
+		"• Atmósfera y niebla de profundidad: " + ("Desactivada (fondo plano)" if graphics_preset == "Bajo" else ("Suave (begin 9m, end 25m)" if graphics_preset == "Medio" else ("Atmosférica (begin 8m, end 22m)" if graphics_preset == "Alto" else "Densa cinematográfica de estudio (begin 7m, end 20m, curva 1.1)"))),
+		"• Curva de color y Tone Mapping: " + ("Lineal estándar" if graphics_preset == "Bajo" else ("Reinhard fotométrico" if graphics_preset == "Medio" else ("ACES cinematográfico (contraste 0.98, sat 1.05)" if graphics_preset == "Alto" else "ACES Master Studio (contraste 1.02, sat 1.08, exp 0.90, white 1.45)"))),
+		"• Delineado Toon de maniquíes: " + ("Línea fina 1.2 px (sin tintado)" if graphics_preset == "Bajo" else ("Línea 1.4 px (tintado 25%)" if graphics_preset == "Medio" else ("Línea 1.6 px (tintado 40%)" if graphics_preset == "Alto" else "Línea ilustrada 1.8 px HD (tintado armónico 48%, depth-bias 0.0018)"))),
+		"• Consumo de VRAM aproximado: " + ("< 35 MiB (óptimo móvil)" if graphics_preset == "Bajo" else ("< 45 MiB" if graphics_preset == "Medio" else ("< 50 MiB" if graphics_preset == "Alto" else "< 52 MiB (muy inferior al límite de 60 MiB)")))
+	]
+	
+	for s_idx in specs.size():
+		label(desc_panel, specs[s_idx], Rect2(25, 142 + s_idx * 36, 1050, 28), 15, Color("b7c5ad"))
+	
+	button(root, "Aceptar y volver", Rect2(880, 620, 320, 52), func():
+		mode = graphics_return
+		match graphics_return:
+			"INTRO": intro()
+			"RESULT": show_results()
+			"BRIEFING": show_assignment()
+			"EQUIPMENT": show_equipment()
+			_: close_modal()
+		refresh()
+	, true)
 
 func set_manual_focus(distance: float) -> void:
 	if equipment.focus_mode != "MF": return

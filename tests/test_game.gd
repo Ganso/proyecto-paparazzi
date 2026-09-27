@@ -176,5 +176,26 @@ func run() -> void:
 	game.target.direction = 1
 	for i in 200: game.update_person(game.target,.1)
 	check(game.target.theta >= 0 and game.target.theta < 360 and game.target.visible,"Target remains in circular park")
+	# Graphics presets verification (docs/futuro/02, 2.8.4)
+	check(game.graphics_preset == "Ultra","Default graphics preset is Ultra")
+	check(game.park.sun.shadow_enabled and game.park.sun.directional_shadow_max_distance == 48.0,"Ultra activates extended PCSS shadows")
+	check(game.park.environment.environment.tonemap_mode == Environment.TONE_MAPPER_ACES,"Ultra uses ACES tone mapper")
+	game.apply_graphics_preset("Bajo")
+	check(game.graphics_preset == "Bajo","Switched to Bajo preset")
+	check(not game.park.sun.shadow_enabled,"Bajo disables shadows for maximum performance")
+	check(not game.park.environment.environment.fog_enabled,"Bajo disables distance fog")
+	check(game.park.environment.environment.tonemap_mode == Environment.TONE_MAPPER_LINEAR,"Bajo uses linear tonemap")
+	game.apply_graphics_preset("Ultra")
+	check(game.graphics_preset == "Ultra","Restored to Ultra preset")
+	check(game.park.sun.shadow_enabled and game.park.environment.environment.fog_enabled,"Ultra restores shadows and atmospheric fog")
+	game.show_graphics_settings()
+	await frames(2)
+	check(game.mode == "GRAPHICS","Graphics settings modal opens")
+	var esc = InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.physical_keycode = KEY_ESCAPE
+	esc.pressed = true
+	game._unhandled_input(esc)
+	check(game.mode != "GRAPHICS","ESC exits graphics settings modal")
 	print("GAME TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

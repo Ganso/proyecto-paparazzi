@@ -654,7 +654,7 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Hito 8** | **2.8.1** | Arquitectura escénica de 7 capas concéntricas en `park.gd` | Medio-Alto (M-L) | Alto | 👑 **Prémium** | 📝 Pendiente | Planos desde sauce frontal hasta skyline lejano |
 | **Hito 8** | **2.8.2** | Arbolado botánico denso con hojas translúcidas (SSS) | Alto (L) | Alto | 👑 **Prémium** | 📝 Pendiente | Copas de árboles orgánicas que brillan a contraluz |
 | **Hito 8** | **2.8.3** | Pavimento de adoquines de granito con juntas de arena | Medio-Alto (M-L) | Medio-Alto | 👑 **Prémium** | 📝 Pendiente | Calzada modelada con microdesniveles de maqueta |
-| **Hito 8** | **2.8.4** | Menú de ajustes gráficos estándar (Bajo, Medio, Alto, Ultra) y configuración personalizada granular | Bajo-Medio (S-M) | Alto | ⚙️ Base | 📝 Pendiente | Interfaz de presets de la industria y 9 selectores individuales personalizables |
+| **Hito 8** | **2.8.4** | Menú de ajustes gráficos estándar (Bajo, Medio, Alto, Ultra) y configuración personalizada granular | Bajo-Medio (S-M) | Alto | ⚙️ Base | ✅ **Hecho** | Selector reactivo en `main.gd::show_graphics_settings()`, `park.gd::apply_graphics_preset()` (Ultra por defecto) y captura en `docs/evidencias/estados/08_ajustes_graficos.png` |
 
 ---
 

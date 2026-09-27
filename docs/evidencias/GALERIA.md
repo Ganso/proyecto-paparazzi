@@ -19,6 +19,7 @@ Secuencia de momentos clave que recorre el ciclo de juego desde la interfaz inic
 | **05b. Parque en Hora Dorada** | ![Hora Dorada](estados/05b_hora_dorada.png) | Puesta de sol a baja cota ($-15^\circ$), resplandor ambarino cálido, sombras rasantes dramáticas y reflejos en maniquíes. |
 | **06. Parque en Modo Nocturno** | ![Parque Noche](estados/06_parque_noche.png) | Encendido crepuscular de farolas cálidas, iluminación omnidireccional y sombras proyectadas en tiempo real. |
 | **07. Pantalla de Revelado** | ![Revelado](estados/07_revelado.png) | Procesado de imagen fotográfica con grano químico analógico, bokeh por CoC, desenfoque cinético y desglose de puntos. |
+| **08. Ajustes Gráficos (Ultra por defecto)** | ![Ajustes Gráficos](estados/08_ajustes_graficos.png) | Selector escalonado de perfiles estándar (Bajo, Medio, Alto, Ultra) y desglose técnico granular en tiempo real. |
 
 ---
 

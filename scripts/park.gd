@@ -8,6 +8,7 @@ var lamps: Array[OmniLight3D] = []
 var materials = {}
 var benches: Array[Dictionary] = []
 var triangle_count = 0
+var current_graphics_preset = "Ultra"
 
 func material(color: Color, roughness: float = 0.82, specular: float = 0.25) -> StandardMaterial3D:
 	var key = color.to_html()
@@ -256,6 +257,61 @@ func build() -> void:
 	merge_static_meshes()
 	build_clouds()
 	set_night(false)
+	apply_graphics_preset("Ultra")
+
+
+func apply_graphics_preset(preset: String) -> void:
+	current_graphics_preset = preset
+	if environment == null or sun == null: return
+	match preset:
+		"Bajo":
+			sun.shadow_enabled = false
+			sun.directional_shadow_max_distance = 20.0
+			environment.environment.fog_enabled = false
+			environment.environment.adjustment_enabled = false
+			environment.environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+		"Medio":
+			sun.shadow_enabled = true
+			sun.shadow_blur = 1.0
+			sun.directional_shadow_max_distance = 30.0
+			sun.directional_shadow_blend_splits = false
+			environment.environment.fog_enabled = true
+			environment.environment.fog_depth_begin = 9.0
+			environment.environment.fog_depth_end = 25.0
+			environment.environment.adjustment_enabled = false
+			environment.environment.tonemap_mode = Environment.TONE_MAPPER_REINHARDT
+		"Alto":
+			sun.shadow_enabled = true
+			sun.shadow_blur = 1.5
+			sun.directional_shadow_max_distance = 38.0
+			sun.directional_shadow_blend_splits = true
+			sun.shadow_bias = 0.025
+			sun.shadow_normal_bias = 1.2
+			environment.environment.fog_enabled = true
+			environment.environment.fog_depth_begin = 8.0
+			environment.environment.fog_depth_end = 22.0
+			environment.environment.adjustment_enabled = true
+			environment.environment.adjustment_contrast = 0.98
+			environment.environment.adjustment_saturation = 1.05
+			environment.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
+		"Ultra", _:
+			sun.shadow_enabled = true
+			sun.shadow_blur = 2.0
+			sun.directional_shadow_max_distance = 48.0
+			sun.directional_shadow_blend_splits = true
+			sun.shadow_bias = 0.015
+			sun.shadow_normal_bias = 1.4
+			environment.environment.fog_enabled = true
+			environment.environment.fog_depth_begin = 7.0
+			environment.environment.fog_depth_end = 20.0
+			environment.environment.fog_depth_curve = 1.1
+			environment.environment.fog_sky_affect = 0.55
+			environment.environment.adjustment_enabled = true
+			environment.environment.adjustment_contrast = 1.02
+			environment.environment.adjustment_saturation = 1.08
+			environment.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
+			environment.environment.tonemap_exposure = 0.90
+			environment.environment.tonemap_white = 1.45
 
 func set_time_of_day(tod: String) -> void:
 	time_of_day = tod
@@ -319,6 +375,7 @@ func set_time_of_day(tod: String) -> void:
 		sky_mat.ground_bottom_color = Color("738064")
 		for light in lamps: light.light_energy = 0
 	update_weather(0)
+	apply_graphics_preset(current_graphics_preset)
 
 func set_night(night: bool) -> void:
 	set_time_of_day("night" if night else "day")

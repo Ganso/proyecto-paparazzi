@@ -116,6 +116,13 @@ func phase_1_game_states() -> void:
 	await capture_viewport_to(root, docs_dir + "/estados/07_revelado.png")
 	print("   [✓] 07_revelado.png capturado")
 
+	# 08. Menú de ajustes gráficos estándar (Tarea 2.8.4)
+	game.show_graphics_settings()
+	await wait_frames(4)
+	await capture_viewport_to(root, docs_dir + "/estados/08_ajustes_graficos.png")
+	print("   [✓] 08_ajustes_graficos.png capturado")
+	game.close_modal()
+
 	game.queue_free()
 	await wait_frames(4)
 
