@@ -89,5 +89,8 @@
   "un_arbusto": "un arbusto",
   "pantalon_de_vestir": "pantalón de vestir",
   "pantalon_s_de_vestir": "pantalón %s de vestir",
-  "cabeza_calva": "cabeza calva"
+  "cabeza_calva": "cabeza calva",
+  "control_hint_mf": "Mirar: arrastrar · Foco: rueda / R-T / clic der. · Foto: Espacio",
+  "foco_alineado": "MF · foco alineado",
+  "alinear_imagen": "MF · alinear imagen"
 }

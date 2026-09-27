@@ -89,10 +89,13 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
    - El activo se dibuja en verde. Al enfocar parpadea en **blanco** si el AF confirma y en **naranja** si falla.
 3. **Guías de tercios** (tecla `G`): solo ayuda visual. La bonificación de tercios de la puntuación se calcula aparte en `Photo.evaluate()`.
 4. **Exposímetro**: escala de −2 a +2 EV con aguja. Verde si $|\Delta EV| \le 0.5$ y ámbar en caso contrario.
-5. **Ayuda de enfoque en MF** (`focus_aid.gdshader`, centro del visor):
-   - Réflex y compacta: círculo de imagen partida; las mitades superior e inferior se desplazan en sentidos opuestos según el error de foco.
+5. **Enfoque manual táctil y gradual (MF)** (`focus_aid.gdshader`, centro del visor):
+   - **Controles continuos y micro-pasos**: Rueda del ratón con paso fino (~0.0035 dioptrías, ~8 micro-pasos dentro de la profundidad de campo de un 90 mm a f/2.8), `Shift + rueda` para micro-enfoque quirúrgico (0.0012 dioptrías), `Ctrl + rueda` para barrido rápido, pulsación continua mantenida de teclas `R` y `T`, y **arrastre con botón derecho del ratón** para girar físicamente el anillo de enfoque de forma 1:1 analógica y continua.
+   - **Estabilización de muestreo de parche**: El telémetro evalúa el área del parche central a 60 fps con amortiguamiento exponencial continuo, priorizando sujetos humanos y eliminando saltos bruscos o parpadeos al rotar la cámara.
+   - **Bloqueo de colimador en MF**: En enfoque manual, el clic de paneo no altera el punto de enfoque activo ni descalibra el exposímetro.
+   - **Confirmación óptica de coincidencia**: Al alinear las dos imágenes dentro de la profundidad de campo, el marco del parche se ilumina en verde dorado (`#b8d78c`) y el indicador confirma `MF · foco alineado` con un sutil clic mecánico de retén.
+   - Réflex y compacta: círculo de imagen partida; las mitades superior e inferior se desplazan en sentidos opuestos.
    - Telemétrica: parche rectangular teñido con la doble imagen superpuesta.
-   - No hay corona de microprismas.
 
 ---
 

@@ -58,6 +58,8 @@ var shooting = false
 var touches = {}
 var mouse_origin = Vector2.ZERO
 var mouse_last = Vector2.ZERO
+var focus_dragging = false
+var smoothed_focus_aid_offset = 0.0
 var dragging = false
 var dragged = false
 var active_parameter = ""
@@ -243,7 +245,7 @@ func build_ui() -> void:
 	focus_slider.size = Vector2(215,24)
 	focus_slider.min_value = 0
 	focus_slider.max_value = 1
-	focus_slider.step = .001
+	focus_slider.step = .0005
 	focus_slider.value_changed.connect(func(v): set_manual_focus(INF if v >= .999 else .8/(1-v)))
 	ui.add_child(focus_slider)
 	dof_label = label(ui,"",Rect2(531,638,285,27),14,Color("c8d0bb"))
@@ -326,7 +328,7 @@ func refresh() -> void:
 	equipment_label.text = equipment.CAMERAS[equipment.body]
 	exposure_label.text = "AUTO" if equipment.auto_exposure else "M"
 	if equipment.focus_mode == "MF":
-		control_hint.text = "Mirar: arrastrar · Foto: Espacio · H: ayuda\n"+("MF: Shift + rueda" if equipment.zoom() else "MF: rueda / Shift + rueda")
+		control_hint.text = Texts.get_text("control_hint_mf")
 	else:
 		control_hint.text = "Mirar: arrastrar · Foto: Espacio · H: ayuda\nClic: AF"+(" · Rueda: zoom" if equipment.zoom() else " · Objetivo fijo")
 	finder.af_mode = equipment.focus_mode
@@ -452,6 +454,13 @@ func _process(dt: float) -> void:
 			angle = 120.0
 			focal = 24.0
 		update_camera()
+		update_focus_aid(dt)
+		if equipment.focus_mode == "MF":
+			var key_dir = float(Input.is_physical_key_pressed(KEY_T)) - float(Input.is_physical_key_pressed(KEY_R))
+			if key_dir != 0.0:
+				var rate = 0.22 if not Input.is_physical_key_pressed(KEY_SHIFT) else 0.07
+				if Input.is_physical_key_pressed(KEY_CTRL): rate = 0.65
+				adjust_focus_delta(-key_dir * rate * dt)
 		park.update_weather(dt)
 		if not (sandbox and sandbox_paused):
 			for p in people: update_person(p,dt)
@@ -659,6 +668,7 @@ func image_position(point: Vector2) -> Vector2:
 	return point*Vector2(viewport.size)/ui.size
 
 func nearest_af(point: Vector2) -> void:
+	if equipment.focus_mode == "MF": return
 	var nearest = 0
 	var distance = INF
 	var points = finder.points()
@@ -891,7 +901,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 			var step = 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
-			if event.shift_pressed or not equipment.zoom(): adjust_focus(step)
+			if event.shift_pressed or not equipment.zoom():
+				var delta = step * (0.0012 if event.shift_pressed else (0.012 if (event.ctrl_pressed or event.alt_pressed) else 0.0035))
+				adjust_focus_delta(-delta)
 			else: focal += step*3; update_camera()
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -903,14 +915,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				if dragging and not dragged: nearest_af(event.position)
 				dragging = false
-	elif event is InputEventMouseMotion and dragging:
-		if event.position.distance_to(mouse_origin) > 6: dragged = true
-		if dragged:
-			var pan_delta = -event.relative.x*.065*24/focal
-			angle = fposmod(angle+pan_delta,360)
-			pitch -= event.relative.y*.065*24/focal
-			pan_velocity = clampf(pan_delta*40,-80,80)
-			update_camera()
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.pressed:
+				focus_dragging = true
+				pan_velocity = 0
+			else:
+				focus_dragging = false
+	elif event is InputEventMouseMotion:
+		if focus_dragging and equipment.focus_mode == "MF":
+			var rate = 0.0006 if not event.shift_pressed else 0.0002
+			adjust_focus_delta(-event.relative.x * rate)
+		elif dragging:
+			if event.position.distance_to(mouse_origin) > 6: dragged = true
+			if dragged:
+				var pan_delta = -event.relative.x*.065*24/focal
+				angle = fposmod(angle+pan_delta,360)
+				pitch -= event.relative.y*.065*24/focal
+				pan_velocity = clampf(pan_delta*40,-80,80)
+				update_camera()
 	elif event is InputEventScreenTouch:
 		if event.pressed:
 			touches[event.index] = event.position
@@ -1011,11 +1033,51 @@ func set_manual_focus(distance: float) -> void:
 	focus_distance = maxf(.8,distance)
 	refresh()
 
+func adjust_focus_delta(delta_diopters: float) -> void:
+	if equipment.focus_mode != "MF": return
+	var current_diop = 0.0 if is_inf(focus_distance) else 1.0/focus_distance
+	var new_diop = clampf(current_diop + delta_diopters, 0.0, 1.25)
+	if absf(new_diop - current_diop) > 0.00005:
+		if int(new_diop / 0.025) != int(current_diop / 0.025):
+			play_tone(1800, 0.015)
+		set_manual_focus(INF if new_diop <= 0.0005 else 1.0/new_diop)
+
 func adjust_focus(step: int) -> void:
-	# Linear diopters include infinity without an unreachable slider endpoint.
-	var diopters = 0.0 if is_inf(focus_distance) else 1.0/focus_distance
-	diopters = clampf(diopters-step*.02,0,1.25)
-	set_manual_focus(INF if diopters == 0 else 1.0/diopters)
+	adjust_focus_delta(-step * 0.004)
+
+func update_focus_aid(dt: float) -> void:
+	if equipment.focus_mode != "MF" or mode != "SEARCH":
+		focus_aid.visible = false
+		if is_instance_valid(finder): finder.mf_coincidence = false
+		return
+	focus_aid.visible = true
+	var center_pixel = ui.size * 0.5
+	var best_dist = INF
+	var person_dist = INF
+	var patch_samples = [
+		center_pixel,
+		center_pixel + Vector2(-24, 0),
+		center_pixel + Vector2(24, 0),
+		center_pixel + Vector2(0, -16),
+		center_pixel + Vector2(0, 16)
+	]
+	for p in patch_samples:
+		var hit = point_hit(p)
+		if hit.is_empty(): continue
+		var d = camera.global_position.distance_to(hit.position)
+		if d < 0.8: continue
+		if hit.collider.has_meta("person"):
+			if d < person_dist: person_dist = d
+		elif d < best_dist:
+			best_dist = d
+	var patch_distance = person_dist if person_dist < INF else best_dist
+	var target_error = (0.0 if is_inf(focus_distance) else 1.0/focus_distance) - (0.0 if is_inf(patch_distance) else 1.0/patch_distance)
+	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
+	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
+	focus_aid.material.set_shader_parameter("offset", smoothed_focus_aid_offset)
+	var depth = Photo.dof(focal, apertures()[n_index], focus_distance)
+	var in_dof = patch_distance >= depth.x and (is_inf(depth.y) or patch_distance <= depth.y)
+	finder.mf_coincidence = in_dof or absf(smoothed_focus_aid_offset) < 0.003
 
 func point_hit(point: Vector2) -> Dictionary:
 	var pixel = image_position(point)
@@ -1064,11 +1126,6 @@ func update_meter() -> void:
 			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
 			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
 				measured_ev = park.illumination_ev(chest,night,target)
-	if equipment.focus_mode == "MF":
-		var center_hit = point_hit(ui.size*.5)
-		var distance = INF if center_hit.is_empty() else camera.global_position.distance_to(center_hit.position)
-		var error = (0.0 if is_inf(focus_distance) else 1.0/focus_distance)-(0.0 if is_inf(distance) else 1.0/distance)
-		focus_aid.material.set_shader_parameter("offset",clampf(error*focal*.006,-.06,.06))
 
 func auto_expose() -> void:
 	var target_ev = measured_ev

@@ -1,5 +1,7 @@
 extends Control
+const Texts = preload("res://scripts/texts.gd")
 var af_mode = "AF matricial"
+var mf_coincidence = false
 var body = 0
 var active = 4
 var flash = 0.0
@@ -48,9 +50,15 @@ func _draw() -> void:
 		if i == active: draw_circle(pts[i],2,color)
 	if af_mode == "MF":
 		var c = size*.5
-		if body == 1: draw_rect(Rect2(c-Vector2(size.y*.095,size.y*.048),Vector2(size.y*.19,size.y*.096)),ink,false,1)
-		else: draw_arc(c,size.y*.078,0,TAU,64,ink,1)
-		draw_string(font,c+Vector2(-60,85),"MF · alinear imagen",HORIZONTAL_ALIGNMENT_LEFT,-1,14,green)
+		var patch_color = Color("b8d78c") if mf_coincidence else ink
+		var patch_width = 2 if mf_coincidence else 1
+		if body == 1:
+			draw_rect(Rect2(c-Vector2(size.y*.095,size.y*.048),Vector2(size.y*.19,size.y*.096)),patch_color,false,patch_width)
+		else:
+			draw_arc(c,size.y*.078,0,TAU,64,patch_color,patch_width)
+		var label_text = Texts.get_text("foco_alineado") if mf_coincidence else Texts.get_text("alinear_imagen")
+		var label_color = Color("b8d78c") if mf_coincidence else Color("809276")
+		draw_string(font,c+Vector2(-60,85),label_text,HORIZONTAL_ALIGNMENT_LEFT,-1,14,label_color)
 	var center = Vector2(size.x*.505,46)
 	for i in range(-8,9):
 		var x = center.x+i*12
