@@ -14,7 +14,8 @@ var meter_timer = 0.0
 var af_button: Button
 var equipment_label: Button
 var control_hint: Label
-var exposure_label: Label
+var exposure_label: Control
+var exposure_button: Button
 var focus_aid: TextureRect
 var casting = Cast.new()
 var people: Array = []
@@ -208,10 +209,11 @@ func build_ui() -> void:
 	shutter_button = button(ui,"",Rect2(205,13,116,50),func(): parameter_click("t"))
 	aperture_button = button(ui,"",Rect2(332,13,111,50),func(): parameter_click("n"))
 	iso_button = button(ui,"",Rect2(804,13,128,50),func(): parameter_click("iso"))
-	for entry in [[shutter_button,"t"],[aperture_button,"n"],[iso_button,"iso"]]:
+	exposure_button = button(ui,"AUTO",Rect2(1095,13,165,50),func(): parameter_click("ev_comp"))
+	exposure_label = exposure_button
+	for entry in [[shutter_button,"t"],[aperture_button,"n"],[iso_button,"iso"],[exposure_button,"ev_comp"]]:
 		entry[0].gui_input.connect(func(event): parameter_input(event,entry[1]))
 	equipment_label = button(ui,"Equipo",Rect2(950,18,135,38),show_equipment)
-	exposure_label = label(ui,"AUTO",Rect2(1095,20,90,34),22,Color("b8d78c"))
 	var job_panel = panel(ui,Rect2(25,96,1230,68),Color(.075,.115,.085,.91))
 	sandbox_button = button(job_panel,"Sandbox · escena",Rect2(16,4,200,26),show_sandbox_controls)
 	counter_label = label(job_panel,Texts.get_text("encargo_01_05"),Rect2(16,9,185,20),12,Color("b8d78c"))
@@ -263,6 +265,8 @@ func build_ui() -> void:
 func parameter_input(event: InputEvent, parameter: String) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed: change_parameter(parameter,-1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed: change_parameter(parameter,1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed: change_parameter(parameter,-1)
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			active_parameter = parameter if event.pressed else ""
 			if event.pressed: skip_parameter_click = false
@@ -307,7 +311,14 @@ func end_touch(index: int) -> void:
 	if touches.is_empty(): had_multitouch = false
 
 func change_parameter(parameter: String, direction: int) -> void:
-	if mode != "SEARCH" or equipment.auto_exposure: return
+	if mode != "SEARCH": return
+	if parameter == "ev_comp":
+		if equipment.auto_exposure:
+			equipment.change_exposure_compensation(direction)
+			auto_expose()
+			refresh()
+		return
+	if equipment.auto_exposure: return
 	match parameter:
 		"n": n_index = posmod(n_index+direction,apertures().size())
 		"t": t_index = posmod(t_index+direction,Photo.DENOMINATORS.size())
@@ -326,7 +337,13 @@ func refresh() -> void:
 	focus_slider.editable = equipment.focus_mode == "MF"
 	af_button.disabled = equipment.focus_mode == "MF"
 	equipment_label.text = equipment.CAMERAS[equipment.body]
-	exposure_label.text = "AUTO" if equipment.auto_exposure else "M"
+	if equipment.auto_exposure:
+		var ev_c = equipment.exposure_compensation()
+		exposure_button.text = "AUTO ±0.0" if is_zero_approx(ev_c) else ("AUTO %+.1f" % ev_c)
+		exposure_button.disabled = false
+	else:
+		exposure_button.text = "M"
+		exposure_button.disabled = true
 	if equipment.focus_mode == "MF":
 		control_hint.text = Texts.get_text("control_hint_mf")
 	else:
@@ -342,7 +359,7 @@ func refresh() -> void:
 	focus_label.text = Texts.get_text("foco")+(Texts.get_text("infinito") if is_inf(focus_distance) else Texts.get_text("2f_m") % focus_distance)
 	var depth = Photo.dof(focal,apertures()[n_index],focus_distance)
 	dof_label.text = Texts.get_text("nitido_2f_m_s") % [depth.x,Texts.get_text("infinito") if is_inf(depth.y) else Texts.get_text("2f_m") % depth.y]
-	finder.delta_ev = Photo.ev(apertures()[n_index],1.0/Photo.DENOMINATORS[t_index],Photo.ISOS[iso_index],measured_ev)
+	finder.delta_ev = -Photo.ev(apertures()[n_index],1.0/Photo.DENOMINATORS[t_index],Photo.ISOS[iso_index],measured_ev)
 	focus_slider.set_value_no_signal(1 if is_inf(focus_distance) else 1-.8/focus_distance)
 	lens_slider.set_value_no_signal(focal)
 	counter_label.text = Texts.get_text("encargo_02d_05") % (assignment+1)
@@ -866,7 +883,7 @@ func show_help() -> void:
 	mode = "HELP"
 	var root = create_modal()
 	label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
-	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO ajusta la exposición al punto seleccionado; en carrete conserva el ISO de la película.\n1–9: punto de medición/AF. G: tercios. Espacio: disparar.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento."
+	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento."
 	label(root,text_value,Rect2(65,128,1130,490),18)
 	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = previous; intro() if previous == "INTRO" else close_modal(),true)
 
@@ -892,6 +909,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_X: change_parameter("t",1)
 			KEY_C: change_parameter("iso",-1)
 			KEY_V: change_parameter("iso",1)
+			KEY_BRACKETLEFT, KEY_MINUS, KEY_KP_SUBTRACT: change_parameter("ev_comp",-1)
+			KEY_BRACKETRIGHT, KEY_EQUAL, KEY_KP_ADD: change_parameter("ev_comp",1)
 			KEY_R: adjust_focus(-1)
 			KEY_T: adjust_focus(1)
 			KEY_G: finder.thirds = not finder.thirds
@@ -1135,6 +1154,7 @@ func auto_expose() -> void:
 			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
 			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
 				target_ev = park.illumination_ev(chest,night,target)
+	target_ev -= equipment.exposure_compensation()
 	var best_cost = INF
 	var stops = apertures()
 	for n in stops.size():

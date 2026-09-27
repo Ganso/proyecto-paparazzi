@@ -12,6 +12,8 @@ const LENSES = [
 	 {"name":"Fijo 50 · f/1.8", "min":50.0,"max":50.0,"wide":1.8,"long":1.8,"stop":22.0}]
 ]
 const STOPS = [1.4,1.8,2.0,2.8,4.0,5.6,8.0,11.0,16.0,22.0]
+const EV_COMPENSATIONS = [-2.0, -1.7, -1.3, -1.0, -0.7, -0.3, 0.0, 0.3, 0.7, 1.0, 1.3, 1.7, 2.0]
+var ev_comp_index = 6 # 0.0 EV
 var film = false
 var film_iso_index = 2 # ISO 400 loaded film; changed only in equipment selector.
 var body = 0
@@ -28,9 +30,14 @@ func apertures(focal: float) -> Array:
 	var l = lens()
 	var minimum = lerpf(l.wide,l.long,inverse_lerp(l.min,l.max,focal)) if zoom() else float(l.wide)
 	return STOPS.filter(func(n): return n >= minimum-.001 and n <= l.stop)
+func exposure_compensation() -> float:
+	return EV_COMPENSATIONS[ev_comp_index]
+func change_exposure_compensation(direction: int) -> void:
+	ev_comp_index = clampi(ev_comp_index + direction, 0, EV_COMPENSATIONS.size() - 1)
 func preset(index: int) -> void:
 	film = false
 	body = index
 	lens_index = 0
+	ev_comp_index = 6
 	focus_mode = ["AF matricial","MF","AF puntual"][index]
 	auto_exposure = index == 0

@@ -62,9 +62,14 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
 - **Soporte digital** (`equipment.film = false`): ISO libre con las teclas `C`/`V`.
 - **Carrete** (`equipment.film = true`): se carga una película de ISO fijo (`film_iso_index`, por defecto ISO 400). El botón de ISO queda deshabilitado (`iso_button.disabled`) y la exposición automática solo ajusta apertura y velocidad, conservando el ISO de la película (`main.gd::auto_expose()`).
 
-### 3.4 Medición y Exposición Automática
-- El exposímetro mide la luz incidente en el punto de la escena bajo el colimador activo (`park.illumination_ev()`); si el rayo no toca nada, usa `park.sky_ev()`.
-- En modo automático, `auto_expose()` recorre todas las combinaciones apertura × velocidad × ISO y minimiza un coste que prioriza el error de EV, luego evitar trepidación ($t > 1/f$), después ISO bajo y por último aperturas abiertas.
+### 3.4 Medición, Exposición Automática y Compensación (±EV)
+- **Medición TTL**: El exposímetro mide la luz incidente en el punto de la escena bajo el colimador activo (`park.illumination_ev()`); si el rayo no toca nada, usa `park.sky_ev()`.
+- **Compensación de Exposición (±EV)**: En exposición automática, el usuario dispone de un control interactivo de compensación en el HUD superior (`exposure_button`), con un rango de $\pm 2.0\text{ EV}$ en pasos de $1/3$ de paso (`Equipment.EV_COMPENSATIONS`):
+  $$\text{Compensación } \in \{-2.0, -1.7, -1.3, -1.0, -0.7, -0.3, 0.0, +0.3, +0.7, +1.0, +1.3, +1.7, +2.0\}\text{ EV}$$
+  - **Interacción**: Clic izquierdo (subir) / clic derecho (bajar), rueda del ratón (`WHEEL_UP` / `WHEEL_DOWN`), arrastre horizontal o atajos de teclado (`[` / `]` y `-` / `+`).
+  - **Efecto Óptico y Revelado**: La compensación modifica el valor objetivo (`target_ev = measured_ev - compensation`), obligando al resolvedor simplex a escoger exposiciones intencionadamente más claras o más oscuras. La aguja `delta_ev` del visor refleja la desviación exacta y el shader de revelado químico (`develop.gdshader`) escala la luminancia de los píxeles proporcionalmente con $\exp2(\text{compensación})$.
+- **Optimizador Simplex**: En modo automático, `auto_expose()` recorre todas las combinaciones apertura × velocidad × ISO y minimiza una función de coste que prioriza el error respecto al EV objetivo compensado, luego evitar trepidación ($t > 1/f$), después ISO bajo y finalmente aperturas abiertas.
+- **Modos Futuros de Fotometría y AF**: La especificación técnica completa de medición matricial/evaluativa, puntual ligada al colimador, ponderada al centro, y modos AF-S, AF-C predictivo y seguimiento inteligente se encuentra en [docs/futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md).
 
 ---
 

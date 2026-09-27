@@ -26,6 +26,7 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 | **Exportación Automatizada a Android (.apk)** | 📝 *Propuesta futura* | [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) |
 | **Modo Historia Dual: El Legado del Paparazzi** | 📝 *Propuesta futura* | [10_MODO_HISTORIA_DUAL_LEGADO.md](10_MODO_HISTORIA_DUAL_LEGADO.md) |
 | **Mecánicas de Barrido (Panning) y Previsualización DoF** | 📝 *Propuesta futura* | [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) |
+| **Modos de Fotometría Avanzada y Autofoco (AF-C / AF-S)** | 🟡 **Parcialmente hecho** | Compensación de exposición $\pm\text{EV}$ activa y funcional en `main.gd` y `equipment.gd`. Modos matricial, puntual, AF-C y AF-S especificados en [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md). |
 
 ---
 
@@ -46,6 +47,7 @@ Evaluación técnica de la dificultad de implementación, riesgo de regresión y
 | [09. Exportación Automatizada a Android](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) | **Baja (S)** | Configuración de preset en `export_presets.cfg` y script bash con llamada headless a Godot y ADB; el motor ya usa `gl_compatibility` y presupuestos óptimos para móvil. | Toolchain externo e infraestructura de build. | SDK de Android |
 | [10. Modo Historia Dual: El Legado](10_MODO_HISTORIA_DUAL_LEGADO.md) | **Media-Alta (M-L)** | Campaña por actos en dos líneas temporales (Abuelo 1950 vs Nieto moderno), shader de emulsión B&W química y reglas estrictas de carrete analógico. | Máquina de estados (`campaign.gd`) y shaders. | [03](03_NUEVAS_CAMARAS_Y_TLR.md) |
 | [11. Barrido (Panning) y Previsualización DoF](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) | **Media (M)** | Evaluación angular de arrastre en `photography.gd`, shader de estriado horizontal en `develop.gdshader` y botón de apertura de trabajo en visor. | Pipeline fotográfico y shader de revelado. | Ninguna |
+| [12. Modos de Fotometría Avanzada y Autofoco](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) | **Media (M)** | Lógica de fotometría multizona/spot, cálculo predictivo de distancia para corredores en AF-C, bloqueo AF-L/AE-L y controles de conmutación en HUD. | Módulo de exposición (`auto_expose`), buscador AF (`viewfinder.gd`) y controles. | Ninguna |
 
 ### Criterios de Calificación de Complejidad
 - **Baja (S)**: Tarea autocontenida de 1 a 2 días de desarrollo; sin riesgo de regresión en la física, óptica o navegación existente.
@@ -68,3 +70,4 @@ Evaluación técnica de la dificultad de implementación, riesgo de regresión y
 9. [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) — Pipeline de compilación y empaquetado desatendido a APK de depuración para pruebas en hardware móvil real vía CLI y ADB.
 10. [10_MODO_HISTORIA_DUAL_LEGADO.md](10_MODO_HISTORIA_DUAL_LEGADO.md) — Campaña narrativa en dos líneas temporales alternas (el fotorreportero clásico de 1950 vs. el paparazzi moderno), dilemas éticos y restricciones de época.
 11. [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) — Algoritmo de arrastre angular y trepidación diferencial para barrido (*panning*) y previsualización de profundidad de campo en tiempo real.
+12. [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) — Modos de medición TTL (matricial, puntual, ponderada al centro), compensación de exposición $\pm\text{EV}$, modos de autofoco (AF-S, AF-C predictivo, AF-A) y seguimiento de sujetos.
