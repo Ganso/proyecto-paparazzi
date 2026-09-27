@@ -72,6 +72,17 @@ El parque cuenta con un sistema de nubes procedurales cúbicas de baja altura:
 
 ---
 
+### 3.3 Perspectiva Aérea y Niebla de Profundidad (Atmospheric Depth Fog)
+Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa vegetal de fondo:
+- **Niebla de profundidad (`Environment.fog_mode = FOG_MODE_DEPTH`)**:
+  - Comienzo a $r = 8.0\text{ m}$ (tras el carril intermedio 2) y cota máxima a $22.0\text{ m}$.
+  - Los primeros planos ($r < 8.0\text{ m}$) mantienen contraste y saturación íntegros.
+  - El fondo vegetal y el horizonte urbano se funden suavemente con el tono del horizonte (`c5d4c9` de día, `192139` de noche).
+- **Mapeo de tonos HDR / ACES (`tonemap_mode = TONE_MAPPER_ACES`, `tonemap_white = 1.4` y ajustes de contraste)**: Curva cinematográfica de compresión de altas luces.
+- **Atenuación adaptativa de tinta (`cel_outline.gdshader`)**: El contorno exterior de los maniquíes disminuye progresivamente su grosor relativo entre 7 m y 17 m para no saturar con líneas negras los planos lejanos.
+
+---
+
 ## 4. Fusión de Malla Estática (`merge_static_meshes`)
 
 Para mantener el máximo rendimiento en `gl_compatibility`:

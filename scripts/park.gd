@@ -88,6 +88,21 @@ func build() -> void:
 	environment.environment.sky = sky
 	environment.environment.background_mode = Environment.BG_SKY
 	environment.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	# Perspectiva aérea y profundidad de planos (Distance Fog & Tonemapping)
+	environment.environment.fog_enabled = true
+	environment.environment.fog_mode = Environment.FOG_MODE_DEPTH
+	environment.environment.fog_light_color = Color("c5d4c9")
+	environment.environment.fog_depth_begin = 8.0
+	environment.environment.fog_depth_end = 22.0
+	environment.environment.fog_depth_curve = 1.0
+	environment.environment.fog_sky_affect = 0.5
+	environment.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
+	environment.environment.tonemap_exposure = 0.88
+	environment.environment.tonemap_white = 1.4
+	# Ajustes HDR de compresión de rango y contraste suave
+	environment.environment.adjustment_enabled = true
+	environment.environment.adjustment_contrast = 0.98
+	environment.environment.adjustment_saturation = 1.05
 	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-72,-35,0)
 	sun.shadow_enabled = true
@@ -240,6 +255,9 @@ func set_night(night: bool) -> void:
 	sun.light_color = Color("9caed4") if night else Color("fff0d7")
 	environment.environment.ambient_light_color = Color("394568") if night else Color("c6d6df")
 	environment.environment.ambient_light_energy = .14 if night else .16
+	environment.environment.fog_light_color = Color("192139") if night else Color("c5d4c9")
+	environment.environment.fog_depth_begin = 7.0 if night else 8.0
+	environment.environment.fog_depth_end = 20.0 if night else 22.0
 	var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
 	sky_mat.sky_top_color = Color("060d21") if night else Color("87b2c5")
 	sky_mat.sky_horizon_color = Color("192139") if night else Color("d4e1dc")
