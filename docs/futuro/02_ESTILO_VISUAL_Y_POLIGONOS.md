@@ -1,16 +1,18 @@
-# Especificación Futura: Estilo Visual Canónico (Maniquíes + Cell Shading), Biblioteca Universal de Animaciones (Quaternius), Profundidad Multi-Plano (7+ Capas) y Fondo Escénico
+# Especificación Futura: Estilo Visual Canónico (Toon) y Modo Diorama Físico (PBR Realista + Render Avanzado Godot 4)
 
-Este documento establece la **dirección artística y técnica canónica** para la evolución gráfica de **Proyecto Paparazzi**, tomando como guía maestra la imagen conceptual de referencia [referencia.jpg](referencia.jpg), expandiendo la composición del parque a una arquitectura de **profundidad multi-plano de 7+ capas** e integrando un **banco universal de animaciones 3D de código abierto (CC0)** para dotar de vida orgánica, variedad de locomoción y actitudes urbanas a los personajes.
+Este documento establece la **dirección artística y técnica integral** para la evolución gráfica de **Proyecto Paparazzi**, articulando dos vertientes visuales coherentes sobre la misma base lúdica y ética:
+1. **Estilo Canónico Toon / Ilustración (Base y WebGL)**: Guiado por la imagen conceptual [referencia.jpg](referencia.jpg), con estética de dibujo/animación, sombreado cell-shading en bandas, contornos de tinta (*inverted hull*), arquitectura de **profundidad multi-plano de 7+ capas** y la **biblioteca universal de animaciones CC0 (Quaternius UAL 1 & 2)** retargeteada al rig universal de 20 huesos.
+2. **Modo Diorama Físico de Estudio (Alta Fidelidad / Next-Gen)**: Evolución fotorrealista donde la escena se percibe inequívocamente como una **maqueta física artesanal de escala 1:12 o 1:18** montada en un set fotográfico o taller de modelismo. Los personajes son **maniquíes de madera noble torneada y barnizada** vestidos con **ropa textil real** (tramas de hilo, microfibras y costuras a escala macro), en un parque rico con mobiliario de forja y madera, pavimentos de adoquín detallados y el despliegue del arsenal moderno de **Godot 4 Forward+** (iluminación global SDFGI/VoxelGI/LightmapGI, sombras suaves PCSS, oclusión SSAO, niebla volumétrica y postprocesado óptico de diafragma macro/tilt-shift).
 
 ---
 
-## 1. Imagen Conceptual de Referencia
+## 1. Imagen Conceptual de Referencia y Doble Dirección Visual
 
-La siguiente imagen representa el objetivo visual definitivo (*target render*) para la estética del juego, la composición de planos, la vida del escenario y la interfaz del visor:
+La siguiente imagen representa el punto de partida artístico (*target render*) para la estética del juego, la composición de planos, la vida del escenario y la interfaz del visor:
 
 ![Referencia Conceptual de Estilo Visual](referencia.jpg)
 
-### 1.1 Desglose del Lenguaje Visual de la Referencia
+### 1.1 Desglose del Lenguaje Visual de la Referencia (Estilo Toon)
 1. **Personajes de Maniquí Artístico**:
    - Cuerpos de maniquí de dibujo anatómico en madera clara pulida, con **rótulas esféricas visibles** en cuello, hombros, codos, muñecas, caderas y rodillas.
    - Cabezas ovoides lisas y estilizadas sin rasgos faciales individuales, garantizando neutralidad absoluta y reforzando la ética de casting.
@@ -28,30 +30,53 @@ La siguiente imagen representa el objetivo visual definitivo (*target render*) p
    - Locomoción rica y diferenciada (andares elegantes, apresurados, cansados, trote deportivo).
    - Actitudes vivas y creíbles: personas sentadas en bancos charlando, consultando el móvil, leyendo la prensa, tomando fotos como turistas o descansando.
 
+### 1.2 La Evolución Hacia el Diorama Físico de Estudio (Next-Gen)
+Como alternativa de máxima fidelidad técnica para hardware de escritorio y consolas, se define el **Modo Diorama Físico**:
+- La imagen se transforma en la **fotografía macro de una maqueta real de taller**: los maniquíes lucen vetas de madera noble con barniz brillante `clearcoat`, la ropa muestra hilos y microfibras reales con efecto `sheen`, los bancos son de teca con herrajes de fundición martillada, y la cámara exhibe una profundidad de campo superficial (*tilt-shift*) con bokeh cremoso que vende instantáneamente la ilusión de escala en miniatura.
+
 ---
 
 ## 2. Diagnóstico Técnico: ¿A qué distancia estamos del estado objetivo?
 
-A continuación se evalúa la distancia entre el estado actual del código/motor y la visión marcada por la referencia:
+A continuación se evalúa la distancia entre el estado actual del código/motor y la visión integral (Toon y Diorama PBR):
 
-| Dimensión Técnica | Estado Actual en el Repositorio | Objetivo según `referencia.jpg` | Distancia / Brecha Técnica | Esfuerzo Estimado |
-|---|---|---|:---:|:---:|
-| **Modelado de Personajes** | 4 anatomías con secciones elípticas unidas (*lofts*) de normales suaves y pesaje rígido (`tools/build_catalog.py`). Uniones de cadera y hombro sin huecos, calzado con zona de color propia (ver [PERSONAJES_Y_CINEMATICA.md §3](../PERSONAJES_Y_CINEMATICA.md)). Cabezas algo mayores (1:7 en el adulto estándar) y piernas con más volumen; las extremidades siguen facetadas (6 lados). Acabado de madera y rótulas visibles en codos, rodillas, muñecas y cuello cuando no hay ropa encima. | Maniquíes de madera articulados con rótulas esféricas visibles, torso torneado y prendas de ropa modeladas sobre el maniquí. | **Media-Alta** | Sustituir las mallas base en `data/piezas/` por geometrías de maniquí de madera con esferas de articulación. |
-| **Sombreado y Render** | **Personajes**: shader toon de 3 bandas y contorno de tinta (*inverted hull*, `next_pass`), con oclusión ambiental precalculada en los colores de vértice. **Parque**: sigue con `StandardMaterial3D` Lambert, sin bordes. | **Cell Shading / Toon Shading** con cuantización de luz en 2 bandas y delineado exterior (*ink outline*). | **Media** | Crear un shader de material con función `light()` toon y pase de contorno `next_pass` (*inverted hull*). Compatible con WebGL/GLES3. |
-| **Animación y Actitudes** | Solo locomoción cíclica procedural analítica básica (`gait.gd`), sin pausas, sin variedad de marcha, bancos vacíos. | **Locomoción orgánica multicapa** (varios estilos de marcha/carrera) y **banco rico de actitudes urbanas** (bancos habitados, charlas, móvil, fotos) con **Quaternius UAL 1 & 2**. | **Media** | Retargetear el banco libre CC0 de Quaternius al rig universal de 20 huesos y combinarlo en capas con `gait.gd` (cero deslizamiento). |
-| **Planos de Profundidad** | 4 carriles concéntricos básicos ($r \in [1.8, 11.5]\text{ m}$) sin capas intermedias ni primer plano de enmarcado. | **7+ capas continuas de profundidad**: de enmarcado frontal a skyline atmosférico lejano. | **Media** | Reorganizar las cotas radiales en `park.gd` y segmentar los carriles en capas de atrezo, acción y fondo. |
-| **Población y Multitudes** | 21 viandantes exactos (`counts = [3, 7, 6, 5]`). **Todos son 100% jugables** y reciben raycasts fotográficos en cada disparo. | Población dividida en **dos capas**: (1) Peatones jugables (objetivos) y (2) **Multitud de fondo / ambientación** no jugable (estudiantes, personas sentadas). | **Media** | Desacoplar la lista de personajes en `main.gd`: viandantes jugables en calzada vs actores estáticos/ambientales en bancos y parque interior. |
-| **Escenario y Atmósfera** | Parque procedural básico: cubos para edificios, esferas para arbustos, cilindros de farolas simples (`park.gd`). | Parque rico y agradable: acera con bordillos, bancos clásicos de listones de madera, verja con pilares de sillería blanca, quiosco octogonal, estanque y árboles facetados armónicos. | **Media** | Enriquecer las funciones de ensamblado en `park.gd` añadiendo el estanque, la pérgola y pilares de piedra blanca. |
-| **Visor HUD Réflex** | Visor funcional con 9 colimadores en cuadrícula, display inferior con textos y modos de cámara (`viewfinder.gd`). | Visor profesional réflex con retícula de 15 puntos en diamante, marcos de esquina y doble barra LCD verde de 7 segmentos. | **Baja-Media** | Rediseñar la retícula y tipografía de `viewfinder.gd` para aproximarla al estándar gráfico de la referencia. |
+| Dimensión Técnica | Estado Actual en el Repositorio | Objetivo Toon Canónico | Objetivo Modo Diorama Físico | Brecha Técnica |
+|---|---|---|---|:---:|
+| **Modelado de Personajes** | 4 anatomías con *lofts* elípticos rígidos (`tools/build_catalog.py`), rótulas visibles en extremidades descubiertas y mallas facetadas (6 lados). | Maniquíes estilizados de 8-10 lados con rótulas esféricas continuas en todas las juntas. | Maniquíes torneados ultra-suaves (16-24 lados, 8k-14k tris) con pernos de latón/acero y pliegues reales. | **Media** (Toon) / **Alta** (Diorama) |
+| **Materiales y Texturas** | Colores de vértice planos (`ARRAY_COLOR`) con oclusión precalculada (`person.gd::occlusion()`). | Shaders Toon en 3 bandas con contorno *inverted hull* (1,6 px) sin texturas. | **Texturas PBR 1K/2K**: vetas de madera noble con `Clearcoat`, telas con `Sheen`, forja martillada y adoquines ORM. | **Media** (Toon) / **Alta** (Diorama) |
+| **Sombreado e Iluminación** | Luz directa direccional y hemisferio plano en `gl_compatibility`. Parque con `StandardMaterial3D`. | Toon cuantizado con sombras PCF estándar en parque y personajes. | **Forward+ Clustered**: Iluminación Global (`VoxelGI`/`SDFGI`), sombras PCSS con penumbra suave y Contact Shadows. | **Media** (Toon) / **Media-Alta** (Diorama) |
+| **Óptica y Postprocesado** | Revelado por shader monocromo/color (`develop.gdshader`), visor con 9 colimadores (`viewfinder.gd`). | Visor de 15 puntos en diamante y displays LCD verde de 7 segmentos. | **DoF Macro Tilt-Shift física** ($f/1.4-f/2.8$), bokeh de 9 palas, Tone Mapping AgX/ACES, viñeteo óptico y grano analógico. | **Baja-Media** (¡Bajo coste / Alto impacto!) |
+| **Entorno y Mobiliario** | Parque procedural básico: cubos para edificios, esferas facetadas para arbustos, cilindros de farolas (`park.gd`). | Parque armónico: acera con bordillos, bancos de madera, verja con pilares, estanque y quiosco. | **Mobiliario de modelismo de precisión**: bancos de 7 listones de teca con tornillería, farolas de vidrio, estanque PBR y peana perimetral. | **Media** (Toon) / **Alta** (Diorama) |
+| **Animación y Actitudes** | Locomoción analítica pura (`gait.gd`), sin pausas, sin variedad de marcha, bancos vacíos. | Cinemática híbrida (`gait.gd` analítico + blend Quaternius UAL 1 & 2 a 30 Hz). | Cinemática híbrida completa + micro-vibraciones mecánicas + multitud ambiental (Tier 2) en bancos y verja. | **Media** (Ambos) |
+| **Planos de Profundidad** | 4 carriles concéntricos básicos ($r \in [1.8, 11.5]\text{ m}$) sin capas intermedias. | 7 capas escénicas continuas (enmarcado frontal a skyline brumoso). | 7 capas completas con peana perimetral de caoba en el límite y props de alta densidad. | **Media** (Ambos) |
 
 ---
 
-## 3. Especificación del Estilo Canónico: Maniquí de Madera + Cell Shading
+## 3. Especificación de los Dos Estilos Visuales: Toon Canónico y Diorama Físico de Estudio
 
-### 3.1 Justificación Conceptual y Ética
+```
++---------------------------------------------------------------------------------------------------+
+|                        ARQUITECTURA DE ESTILOS VISUALES COMPLEMENTARIOS                           |
++---------------------------------------------------------------------------------------------------+
+                                  PROYECTO PAPARAZZI
+                                          |
+          +-------------------------------+-------------------------------+
+          |                                                               |
+          v                                                               v
+  [ ESTILO CANÓNICO TOON ]                                    [ MODO DIORAMA FÍSICO ]
+  - Backend: gl_compatibility                                 - Backend: Forward+ (Clustered Vulkan)
+  - Estética: Ilustración / Cómic limpio                      - Estética: Maqueta de Estudio / Escala 1:18
+  - Shaders: Cel-Shading 3 bandas + Inverted Hull Outlines    - Shaders: PBR StandardMaterial3D (Clearcoat, Sheen)
+  - Geometría: 1.800 tris/maniquí, 95k tris escena            - Geometría: 8.000-14.000 tris/maniquí, 550k tris
+  - Texturas: Ninguna (ARRAY_COLOR en vértices)               - Texturas: PBR 1K/2K (Albedo, Normal, ORM)
+  - Iluminación: Sombras directas PCF                         - Iluminación: VoxelGI/SDFGI, PCSS, Contact Shadows
+  - Objetivo: WebGL, Móviles, 60 FPS universales              - Objetivo: Desktop PC, Consolas, Efecto WOW
+```
+
+### 3.1 Justificación Conceptual y Ética (Común a Ambos Estilos)
 - **Metáfora artística perfecta**: En un juego centrado en la fotografía y la composición artística, que los personajes sean maniquíes de dibujo articulados es una decisión diegética impecable que refuerza el tono del proyecto.
 - **Solución definitiva a la ética de casting**: Los maniquíes de madera neutra eliminan cualquier ambigüedad en el tono de piel (todos comparten el acabado de madera noble natural: haya, arce, roble o nogal), concentrando las descripciones fotográficas exclusivamente en la indumentaria, accesorios y actitudes.
-- **Eficiencia matemática de render**: Cada junta esférica o cilindro torneado tiene normales analíticas perfectas que se renderizan limpiamente con muy pocos polígonos (~2.200 a 2.600 triángulos por personaje completo).
+- **Eficiencia matemática de render**: Cada junta esférica o cilindro torneado tiene normales analíticas perfectas que se renderizan limpiamente con muy pocos polígonos (~2.200 a 2.600 triángulos por personaje completo en Toon, escalable a 8.000-14.000 en Diorama).
 
 ```
 +-------------------------------------------------------------------------------+
@@ -100,9 +125,93 @@ void light() {
 #### B) Líneas de Contorno Limpias (*Inverted Hull Outlines*)
 El delineado exterior de los personajes y props se consigue mediante un segundo pase (`next_pass`) en el material:
 - Modo de renderizado: `cull_front` (solo dibuja las caras traseras).
-- Desplazamiento de vértices: `VERTEX += NORMAL * 0.008;` (extrusión uniforme de 8 mm hacia el exterior).
+- Desplazamiento de vértices: `VERTEX += NORMAL * 0.008;` (extrusión uniforme de 8 mm hacia el exterior o 1,6 px constante).
 - Color del contorno: Gris oscuro o negro translúcido (`vec4(0.12, 0.12, 0.14, 1.0)`), insensible a la luz (`unshaded`).
 - **Coste**: Renderizado en 1 solo draw call adicional por superficie, 100% compatible con WebGL y OpenGL Core Profile.
+
+---
+
+### 3.3 Especificación del Modo Diorama Físico de Estudio (PBR y Entorno de Alta Fidelidad)
+
+El **Modo Diorama Físico** persigue la reproducción fotorrealista y tangible de una **maqueta artesanal física a escala 1:18**, ensamblada con materiales auténticos y fotografiada bajo iluminación de estudio:
+
+#### A) La "Piel" de Madera Noble de los Maniquíes
+- **Maderas Nobles según Atributo de Acabado**:
+  - `tono_0` (Claro): **Madera de Arce Blanco / Fresno** (albedo beige muy claro `vec3(0.92, 0.86, 0.76)`, veta lineal recta y sutil).
+  - `tono_1` (Medio claro): **Haya Europea Pulida** (albedo melocotón suave `vec3(0.86, 0.72, 0.58)`, punteado característico de radios medulares).
+  - `tono_2` (Medio tostado): **Roble Dorado Americano** (albedo tostado cálido `vec3(0.74, 0.58, 0.42)`, veta flamígera ancha y relieve marcado).
+  - `tono_3` (Oscuro): **Nogal Español / Caoba** (albedo pardo oscuro profundo `vec3(0.48, 0.35, 0.26)`, veta ondulada con contrastes de tono).
+- **Mapa de Normales y Microrrugosidad**:
+  - Normal map de 2048×2048 con micro-poro leñoso orientado a lo largo del eje longitudinal de las extremidades y torso.
+  - Roughness base de la madera entre $0.40$ y $0.60$, con ligeras variaciones a lo largo de las vetas.
+- **Capa de Barniz / Laca con `Clearcoat`**:
+  - Activación de `clearcoat = 0.85` y `clearcoat_roughness = 0.12` en `StandardMaterial3D`.
+  - Genera una doble respuesta especular idéntica a la de una figura de colección barnizada a mano: un reflejo especular nítido y brillante en la capa externa de laca sobre el brillo sordo y cálido de la madera interior.
+- **Rótulas y Mecánica Interna**:
+  - En las superficies de corte y juntas esféricas visibles (cuello, hombros, codos, muñecas, caderas, rodillas), la textura simula el **corte a testa de la madera** (anillos concéntricos de crecimiento) o incorpora un núcleo de perno axial con acabado metálico satinado de latón envejecido (`metallic = 0.9`, `roughness = 0.35`).
+
+#### B) Telas e Indumentaria Textil Realista (Micro-tramas y Efecto Sheen)
+- **Tramas Textiles Físicas por Prenda**:
+  - **Pantalones vaqueros (Denim)**: Tejido de sarga diagonal en relieve (*twill pattern*), con hilos longitudinales de urdimbre azul índigo y trama transversal de algodón blanco crudo. Mapa de normales con inclinación a 45° visible con teleobjetivo.
+  - **Camisetas y sudaderas**: Tejido de punto liso (*jersey*) o piqué de algodón con textura de celda microscópica, rugosidad alta ($0.85 - 0.95$) y reflectancia metálica cero.
+  - **Chaquetas deportivas y ropa de running**: Tejido sintético de micro-ripstop con leve brillo satinado (`roughness = 0.45`), cuadrícula de refuerzo antidesgarro y cremalleras metálicas modeladas con pernos funcionales.
+  - **Faldas y vestidos**: Caída de tela de lino o crepé con micro-arrugas orgánicas en zonas de flexión.
+  - **Calzado**: Piel curtida satinada (`roughness = 0.38`) en zapatos formales con veta de cuero legítimo; lona gruesa y goma vulcanizada micro-estriada con ribete blanco en zapatillas deportivas.
+- **Canal Sheen (Lustre de Fibras Textiles)**:
+  - En Godot 4 `StandardMaterial3D`, el parámetro `sheen = 0.75` con tinte blanco roto emula físicamente el halo de luz retrodispersada por las micro-fibras del tejido en ángulos rasantes (*Fresnel retro-reflection*), eliminando el aspecto "plástico" de los materiales tradicionales y dotando a la ropa de tacto cálido de tela real.
+
+#### C) Mobiliario Urbano de Maqueta de Estudio
+- **Bancos Clásicos del Parque**:
+  - Listones independientes de madera de teca o pino tratado: veta erosionada por la intemperie, pequeños arañazos, micro-fisuras en los extremos de los tablones y tornillos de hierro embutidos en la madera con hendidura ranurada.
+  - Patas y brazos de soporte: hierro fundido con textura rugosa de forja martillada (*hammered cast iron*), esmalte verde carruaje clásico o negro forja satinado, con micro-desgastes en aristas que revelan el metal grisáceo subyacente.
+- **Farolas y Verjas**:
+  - Estructura de fundición de hierro oscura con sutiles imperfecciones de moldeado en miniatura.
+  - Faroles con 4 paneles de vidrio transparente con refracción física, sutil suciedad en las esquinas y una bombilla interior cálida con filamento LED incandescente modelado.
+- **Papeleras y Fuentes**:
+  - Papeleras con chapa perforada esmaltada al horno o cubiertas de madera noble; fuentes de piedra con grifo de latón dorado patinado con cardenillo verdoso microscópico.
+
+#### D) Pavimento, Vegetación y Estanque de Alta Fidelidad
+- **Adoquinado de Granito y Aceras**:
+  - Calzada principal modelada con adoquines de granito con mapas de normales y oclusión ambiental de alta resolución: juntas de arena fina de sílice, micro-desniveles entre piezas adyacentes y pequeños parches de musgo seco en las hendiduras más umbrías.
+  - Aceras con losas biseladas de piedra caliza y bordillos continuos con aristas ligeramente melladas.
+- **Arbolado y Follaje**:
+  - Troncos con mallas orgánicas de alta densidad y texturas de corteza botánica (plátano de sombra con placas descascarilladas, arce con estrías longitudinales).
+  - Hojas modeladas en ramilletes con textura fotográfica de alta definición y canal de **translucidez / Subsurface Scattering** activo: cuando el sol se sitúa tras las copas de los árboles, las hojas se iluminan interiormente con un brillo dorado-esmeralda natural.
+- **Estanque de Diorama**:
+  - Lecho con cantos rodados de río, sedimentos de limo y plantas acuáticas de modelismo (nenúfares).
+  - Superficie líquida con shader de agua PBR: refracción basada en profundidad, normales de ondas suaves en movimiento, espuma sutil en las orillas de piedra y reflejos especulares en tiempo real.
+
+#### E) Superación Radical del "Low-Poly" y Peana Perimetral de Maqueta
+- **Mallas de Alta Densidad**:
+  - De 1.900 tris a **8.000 - 14.000 triángulos por maniquí**, eliminando aristas facetadas visibles incluso en primeros planos con el teleobjetivo de 200 mm.
+  - Bancos de 7 listones independientes curvados con pernos avellanados ($pprox 2.400\text{ tris}$).
+  - Farolas con coronas ornamentales y vidrio transparente ($pprox 1.800\text{ tris}$).
+  - Árboles con ramificación fractal y copas de hojas poligonales densas ($pprox 4.500 - 8.000\text{ tris}$).
+- **Peana Perimetral de Madera Noble**:
+  - El límite exterior del parque remata en una base circular de caoba oscura pulida con moldura de ebanistería y una **placa de latón envejecido grabada** con la leyenda *"Parque de la Alameda — Estudio Escénico a Escala 1:18"*, vendiendo definitivamente la metáfora artesanal.
+
+---
+
+### 3.4 Batería de Tecnologías Godot 4 Forward+ para el Diorama
+
+1. **Backend Clustered Forward+**: Permite gestionar decenas de luces de estudio y farolas agrupadas en celdas espaciales 3D sin coste multiplicativo de draw calls.
+2. **Iluminación Global (GI)**:
+   - **`VoxelGI`**: Volumen de $256^3$ vóxeles que cubre el parque ($45 	imes 12 	imes 45\text{ m}$). Ofrece rebotes indirectos de alta fidelidad y oclusión especular indirecta sobre el barniz de los maniquíes.
+   - **`SDFGI`**: Iluminación global dinámica en tiempo real que produce sangrado de color (*color bleeding*) difuso del césped sobre los bancos y las piernas de los maniquíes.
+   - **`LightmapGI`**: Horneado estático con denoiser GPU; sombras de contacto perfectas y rebotes fotorrealistas con **0 ms de coste en runtime** (ideal para equipos de gama media).
+   - **`SSIL`**: Rebotes locales de espacio de pantalla entre personajes y vestimenta cercana.
+3. **Sombras Físicas y Oclusión**:
+   - **PCSS Soft Shadows**: Penumbra física suave proporcional a la distancia del objeto que proyecta la sombra.
+   - **Screen-Space Contact Shadows**: Micro-rayos de oclusión que anclan con peso físico los pies y las patas de los bancos al suelo (eliminando el *peter-panning*).
+   - **SSAO a Escala Macro**: Oclusión ambiental en rótulas esféricas, hendiduras de bancos y dobladillos.
+4. **Atmósfera Volumétrica e Iluminación de Set**:
+   - **Niebla Volumétrica (Volumetric Fog)**: Haces de luz solar (*god rays*) atravesando las ramas de los árboles.
+   - **Partículas GPU de Polvo**: Motas microscópicas flotando lentamente a contraluz, evocando una maqueta en un taller.
+5. **Postprocesado Óptico de Maqueta (Tilt-Shift & Macro)**:
+   - **DoF Física Extrema**: Diafragma $f/1.4 - f/2.8$ con bokeh cremoso de 9 palas que confiere la sensación óptica inconfundible de maqueta a escala reducida (*miniature faking*).
+   - **Tone Mapping AgX / ACES**: Gestión de altas luces que preserva los reflejos especulares del barniz sin quemar en blancos planos.
+   - **Viñeteo Óptico y Aberración Cromática**: Desfase espectral sutil en las esquinas del encuadre.
+   - **Grano Analógico Físico**: Emulación ISO 100/400 que unifica las texturas y elimina la esterilidad digital.
 
 ---
 
@@ -265,6 +374,8 @@ Para cumplir rigurosamente con los límites de hardware del proyecto (VRAM < 60 
 
 ---
 
+---
+
 ## 5. Arquitectura Escénica de Profundidad Multi-Plano (7+ Capas)
 
 Para recrear la riqueza espacial de `referencia.jpg`, el escenario cilíndrico del parque se divide en **7 capas concéntricas con funciones visuales bien diferenciadas**:
@@ -355,6 +466,8 @@ La presencia de 7 capas reales introduce mecánicas de composición profesional 
 
 ---
 
+---
+
 ## 6. Catálogo de Elementos para las 7 Capas Escénicas
 
 Siguiendo el diseño armónico de `referencia.jpg`, el parque distribuye sus elementos arquitectónicos y vegetales a lo largo de las capas:
@@ -374,6 +487,8 @@ Siguiendo el diseño armónico de `referencia.jpg`, el parque distribuye sus ele
 
 ---
 
+---
+
 ## 7. Banco de Nuevos Accesorios e Interacciones
 
 Para enriquecer la narrativa visual y las combinaciones de encargos, se especifican nuevos accesorios e interacciones de pose vinculadas al catálogo de Quaternius:
@@ -390,203 +505,289 @@ Para enriquecer la narrativa visual y las combinaciones de encargos, se especifi
 
 ---
 
-## 8. Plan de Implementación Detallado: Subfases, Tareas Atómicas y Controles
+---
 
-Para acometer esta transformación estética sin introducir regresiones en los invariantes del proyecto (rendimiento en `gl_compatibility`, VRAM < 60 MiB, cinemática de pie fijo `gait.gd` y determinismo fotográfico), el trabajo se estructura en **6 subfases atómicas progresivas**:
+## 8. Plan de Implementación Estratégico y Priorizado (Coste vs Impacto Visual)
 
-```mermaid
-graph TD
-    S1[Subfase 2.1: Shaders Cel-Shading y Delineado] --> S2[Subfase 2.2: Remodelado a Maniquí de Madera]
-    S2 --> S3[Subfase 2.3: Arquitectura Escénica de 7 Capas]
-    S3 --> S4[Subfase 2.4: Integración Quaternius UAL & Cinemática Híbrida]
-    S4 --> S5[Subfase 2.5: Multitud Ambiental Tier 2 y Poses de Parque]
-    S5 --> S6[Subfase 2.6: Retícula HUD Réflex y Banco de Accesorios]
-    
-    S1 -. Control 1 .-> S1_Test[test_art & test_photography]
-    S2 -. Control 2 .-> S2_Test[test_gait & test_art]
-    S3 -. Control 3 .-> S3_Test[simulate_jams & test_navigation]
-    S4 -. Control 4 .-> S4_Test[test_gait & test_art & retarget_check]
-    S5 -. Control 5 .-> S5_Test[smoke_test & test_game]
-    S6 -. Hito Final .-> S6_Test[run_evidence.sh & GALERIA.md]
+### 8.1 Filosofía del Plan: De los "Quick Wins" Ópticos a la Riqueza Escénica
+Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado sin percibir mejoras visibles en pantalla, el plan de trabajo se reordena bajo el principio de **máxima gratificación visual iterativa**:
+- **Se acometen primero las intervenciones de bajo coste que transforman radicalmente la imagen** (postprocesado óptico de maqueta, sombras de contacto, SSAO y peana de diorama). En cuestión de 2 a 4 días, el juego ya luce como una miniatura cinematográfica reconocible.
+- **A continuación se introducen los grandes hitos de materialidad física** (maniquíes con maderas barnizadas PBR, telas con efecto Sheen y mobiliario detallado).
+- **Por último se abordan las tareas de mayor carga de modelado y rigging** (arbolado denso de 7 capas y retargeting de animaciones Quaternius), con la base estética ya validada y deslumbrante.
+
+---
+
+### 8.2 Matriz de Priorización: Cuadrantes de Coste vs Impacto Visual
+
+```
+       IMPACTO VISUAL EN PANTALLA ("EFECTO WOW")
+          ^
+     Alto |   [ 🚀 CUADRANTE 1: QUICK WINS ]           [ 💎 CUADRANTE 2: GRANDES HITOS ]
+          |   - Hito 1: DoF Macro Tilt-Shift & AgX     - Hito 3: Mobiliario Diorama & Peana
+          |   - Hito 2: Contact Shadows & SSAO         - Hito 4: Maniquí Madera PBR Clearcoat
+          |                                            - Hito 5: Confección Textil PBR Sheen
+          |                                            - Hito 6: GI VoxelGI & Estanque PBR
+          |--------------------------------------------+-----------------------------------
+          |   [ ⚙️ CUADRANTE 4: INFRAESTRUCTURA ]      [ 👑 CUADRANTE 3: INVERSIONES PRÉMIUM ]
+          |   - Pipeline UVs analíticas                - Hito 7: Animaciones Quaternius UAL
+          |   - Desacoplamiento Tier 2 de personajes   - Hito 8: Arbolado Botánico & 7 Capas
+     Bajo |   - Presets de exportación Forward+
+          +-------------------------------------------------------------------------------->
+             Bajo                                                                     Alto
+                                COSTE / ESFUERZO DE DESARROLLO
 ```
 
 ---
 
-### Subfase 2.1: Pipeline de Shaders (Cel-Shading y Contorno Inverted Hull)
-**Objetivo**: Implementar el sombreado estilo cómic/animación mediante cuantización de luz en bandas y delineado exterior limpio sin alterar la geometría de mallas actual.
+### 8.3 Hoja de Ruta Secuencial en 8 Hitos: Resultados Parciales Llamativos
 
-- [x] **Tarea 2.1.1 (Atómica)** ✅ *Completado* ([`shaders/cel_shading.gdshader`](../../shaders/cel_shading.gdshader) y [`shaders/cel_outline.gdshader`](../../shaders/cel_outline.gdshader)). Diferencias con lo previsto: 3 bandas (iluminada 0,85, media 0,5 y sombra); los colores de vértice se usan sin convertir de sRGB, porque el renderizador Compatibility ya sombrea en ese espacio; el contorno tiene grosor constante en píxeles (1,6 px, máx. 12 mm) en lugar de 8 mm fijos, con el valor absoluto de `PROJECTION_MATRIX[1][1]` porque al renderizar a textura Godot invierte el eje Y; y los paneles de doble cara (solapas, bolsillos) se excluyen del contorno con alfa 0 en sus vértices, porque el casco los tapaba. Especificación original:
-  - Función `light()` que cuantiza la luz difusa en 2 bandas (`smoothstep(threshold - smoothness, threshold + smoothness, NdotL)`).
-  - Soporte completo para `COLOR` de vértices (`ARRAY_COLOR`).
-  - Delineado `next_pass` mediante extrusión de normales con descarte de caras frontales (`cull_front`, `VERTEX += NORMAL * 0.008`).
-- [x] **Tarea 2.1.2 (Atómica)** ✅ *Completado*: `Person.mannequin_material()` crea un único `ShaderMaterial` compartido por todos los viandantes, con el contorno como `next_pass`. Crear el material `ShaderMaterial` en `scripts/person.gd` en sustitución del `StandardMaterial3D` plano.
-- [ ] **Tarea 2.1.3 (Atómica)** *Pendiente* (el parque sigue con materiales estándar): Aplicar una variante del shader toon con tinte vegetal a los elementos del parque en `scripts/park.gd`.
+#### 🚀 HITO 1: El Despertar Óptico de la Maqueta (Postprocesado Macro Tilt-Shift & Tone Mapping AgX)
+- **Clasificación**: `Bajo Coste (S) / Muy Alto Impacto Visual` | **Duración estimada**: 1 a 2 días.
+- **Intervención**:
+  - Configurar `CameraAttributesPhysical` en la cámara principal del jugador (`scripts/main.gd`).
+  - Activar **Profundidad de Campo (DoF) física macro** con apertura amplia ($f/1.4 - f/2.0$), distancia de enfoque a los carriles peatonales ($r pprox 3.5 - 5.0\text{ m}$) y bokeh poligonal de 9 palas con reborde suave.
+  - Implementar **Tone Mapping AgX o ACES** en el entorno (`WorldEnvironment`), preservando las altas luces y degradados suaves.
+  - Añadir viñeteo óptico sutil, aberración cromática marginal y grano de emulsión analógica ISO 100 en [`shaders/develop.gdshader`](../../shaders/develop.gdshader).
+- **🎉 Resultado Parcial Llamativo**:
+  - *Sin modificar un solo vértice ni textura*, la escena actual adquiere instantáneamente la estética cinematográfica de una maqueta en miniatura fotografiada en estudio con una lente macro de alta gama. El efecto tilt-shift engaña al cerebro desde el primer segundo.
 
-> **Control Intermedio 1**:
-> - Ejecutar pruebas headless: `godot-4 --headless --path . --script tests/test_photography.gd` y `godot-4 --headless --path . --script tests/test_art.gd`.
-> - Verificar visualmente con captura rápida que no hay artefactos en `gl_compatibility`.
+#### 🚀 HITO 2: Iluminación de Estudio, Contact Shadows y Volumen Físico (SSAO & PCSS)
+- **Clasificación**: `Bajo-Medio Coste (S-M) / Alto Impacto Visual` | **Duración estimada**: 2 a 3 días.
+- **Intervención**:
+  - Configurar el backend `Forward+` en `project.godot` para habilitar el pipeline de sombras avanzadas.
+  - Activar **Screen-Space Contact Shadows**: traza micro-rayos de oclusión que anclan con firmeza los zapatos de los viandantes y las patas de los bancos al pavimento.
+  - Activar **SSAO (Screen Space Ambient Occlusion)** con radio corto ($0.35\text{ m}$) y filtrado bilateral para sombrear las cavidades de las rótulas esféricas, los cuellos y las hendiduras.
+  - Configurar sombras direccionales con filtro **PCSS (Percentage-Closer Soft Shadows)** para penumbras suaves naturales.
+  - Activar niebla volumétrica homogénea muy tenue con motas microscópicas de polvo (`GPUParticles3D`) flotando en el haz de luz solar.
+- **🎉 Resultado Parcial Llamativo**:
+  - Desaparece por completo el efecto de "personajes flotantes" (*peter-panning*). La escena adquiere peso físico, volumen tridimensional y la atmósfera tangible de un taller de modelismo iluminado por un foco cenital.
 
----
+#### 💎 HITO 3: Mobiliario de Diorama de Alta Definición y Peana Perimetral
+- **Clasificación**: `Medio Coste (M) / Alto Impacto Visual` | **Duración estimada**: 3 a 4 días.
+- **Intervención**:
+  - Sustituir los bancos cúbicos por modelos de modelismo artesanal: 7 listones de teca curvados independientes con cabezas de tornillos avellanados y patas ornamentadas de forja martillada (`park.gd::prop()`).
+  - Modelar farolas ornamentales de hierro fundido con tulipa acristalada de refracción física y filamento cálido interior.
+  - Construir en el perímetro exterior ($r = 13.5\text{ m}$ o límite escénico) una **peana circular de caoba oscura pulida** con moldura de ebanistería y una **placa de latón envejecido grabada** (*"Parque de la Alameda — Escala 1:18"*).
+  - Instanciar todo el mobiliario mediante `MultiMeshInstance3D` para mantener los draw calls estáticos en 1 por categoría.
+- **🎉 Resultado Parcial Llamativo**:
+  - El parque deja de parecer un escenario de pruebas y se revela formalmente como una maqueta de exposición artesanal de coleccionista. Los bancos en primer plano invitan a encuadrar tomas fotográficas memorables.
 
-### Subfase 2.2: Remodelado Procedural del Maniquí de Madera Articulado
-**Objetivo**: Transformar los cuerpos geométricos duros en figuras de maniquí de dibujo con rótulas esféricas visibles y torso torneado, preservando el pesaje rígido de 20 huesos.
+#### 💎 HITO 4: El Maniquí de Colección PBR (Mallas Redondeadas, UVs y Madera con Clearcoat)
+- **Clasificación**: `Medio Coste (M) / Muy Alto Impacto Visual` | **Duración estimada**: 4 a 5 días.
+- **Intervención**:
+  - Actualizar `tools/build_catalog.py` para generar coordenadas UV cilíndricas y esféricas continuas (`ARRAY_TEX_UV`) en todas las piezas corporales.
+  - Aumentar la densidad geométrica a 16-20 segmentos radiales para conseguir cilindros y esferas perfectamente lisos.
+  - Crear materiales PBR para los 4 tonos de madera noble (arce, haya, roble, nogal) con mapas de poro leñoso, rugosidad calibrada y **`clearcoat = 0.85`** activo para simular la laca barnizada a mano.
+  - Diseñar rótulas esféricas con textura de madera a testa y pernos axiales de latón envejecido.
+- **🎉 Resultado Parcial Llamativo**:
+  - Los personajes se transforman en auténticas figuras de maniquí de madera barnizada, con reflejos satinados vivos en las curvaturas del torso y rótulas mecánicas visibles de extraordinaria artesanía.
 
-- [ ] **Tarea 2.2.1 (Atómica)** 🟡 *Parcial*: hay rótulas visibles, un tono más oscuras y más gruesas que el miembro, en codos, rodillas, muñecas y base del cuello, pero solo donde no hay ropa. Hombros, cintura, caderas y tobillos van siempre cubiertos por las prendas actuales, y no hay soporte multi-perfil de segmentos. Acabado de madera (arce, haya, roble y nogal; `tonos_madera` y `madera_por_tono` en `catalogo.json`). Especificación original: Parametrizar `tools/build_catalog.py` con soporte multi-perfil (segmentos $6, 8, 14$) y generar la anatomía base del maniquí con:
-  - Cabeza ovoide torneada pulida.
-  - Rótulas esféricas visibles en hombros, codos, muñecas, cintura lumbar, caderas, rodillas y tobillos.
-  - Normales elipsoidales analíticas continuas.
-- [ ] **Tarea 2.2.2 (Atómica)** *Pendiente* (las prendas dejan a la vista las rótulas de codo y rodilla en manga corta, falda y bermudas, pero no se han rediseñado): Adaptar los moldes de las prendas (`torso`, `piernas`, `cabeza`, `accesorio`) en `tools/build_catalog.py` para que se ajusten sobre la silueta del maniquí dejando las juntas esféricas parcialmente a la vista.
-- [x] **Tarea 2.2.3 (Atómica)** ✅ *Completado* (catálogo regenerado y validado con `test_art.gd`): Recompilar el catálogo completo (`python3 tools/build_catalog.py`) y validar la integridad de los 92 archivos JSON en `data/piezas/`.
+#### 💎 HITO 5: Confección Textil PBR (Canal Sheen, Tramas Denim/Algodón y Calzado Real)
+- **Clasificación**: `Bajo-Medio Coste (S-M) / Alto Impacto Visual` | **Duración estimada**: 3 a 4 días.
+- **Intervención**:
+  - Crear un atlas de texturas textiles PBR compartido: sarga diagonal denim con hilos azules y blancos para pantalones vaqueros, punto piqué para camisetas, micro-ripstop sintético para chaquetas y cuero curtido para calzado.
+  - Activar el parámetro **`sheen = 0.75`** en `StandardMaterial3D` para emular el halo aterciopelado de microfibras en ángulos rasantes.
+  - Incorporar mapas de normales de costuras, dobladillos y bolsillos en relieve.
+- **🎉 Resultado Parcial Llamativo**:
+  - Al hacer zoom o disparar con teleobjetivos (70–200 mm), la vestimenta muestra microtextura de tela real confeccionada a medida sobre la madera, eliminando cualquier sensación de muñeco de plástico.
 
-> **Control Intermedio 2**:
-> - `godot-4 --headless --path . --script tests/test_gait.gd` (8.840 checks de cero deslizamiento de pie).
-> - `godot-4 --headless --path . --script tests/test_art.gd` (2.880 verificaciones de mallas y 20 huesos).
-> - VRAM check: verificar que la memoria de mallas permanece por debajo de 50 MiB.
+#### 💎 HITO 6: Iluminación Global (GI VoxelGI / SDFGI) y Agua del Estanque PBR
+- **Clasificación**: `Medio Coste (M) / Alto Impacto Visual` | **Duración estimada**: 3 a 4 días.
+- **Intervención**:
+  - Configurar un nodo `VoxelGI` horneado o `SDFGI` en tiempo real que abarque el parque ($45 	imes 12 	imes 45\text{ m}$).
+  - Calibrar el rebote indirecto de luz difusa: la hierba verde brillante tiñe con un suave halo esmeralda el vientre de los bancos y las piernas de madera de los maniquíes (*color bleeding*).
+  - Desarrollar un shader PBR de agua para el estanque: lecho con guijarros de río, refracción en base a la profundidad, micro-ondas en movimiento y reflejos en tiempo real de los paseantes vía SSR.
+- **🎉 Resultado Parcial Llamativo**:
+  - Fotorrealismo lumínico completo y coherencia óptica absoluta; el estanque refleja el entorno como resina transparente de modelismo de alta gama.
 
----
+#### 👑 HITO 7: Vida Orgánica y Actitudes Urbanas (Quaternius UAL & Tier 2 en Bancos)
+- **Clasificación**: `Medio-Alto Coste (M-L) / Alto Impacto Visual y Jugable` | **Duración estimada**: 5 a 6 días.
+- **Intervención**:
+  - Crear la herramienta `tools/import_quaternius_anims.py` para mapear las animaciones CC0 Humanoid de Quaternius UAL 1 & 2 a los 20 huesos del rig universal de Proyecto Paparazzi.
+  - Implementar la cinemática híbrida en `person.gd`: tren inferior gobernado por `gait.gd` analítico (garantía de cero deslizamiento de pie $drift = 0$) y tren superior modulado por clips de Quaternius (andares variados, paradas, miradas al entorno).
+  - Instanciar multitud ambiental desacoplada (Tier 2) en los bancos y cenador: personajes sentados charlando, leyendo el periódico o consultando el móvil.
+- **🎉 Resultado Parcial Llamativo**:
+  - El diorama deja de ser una maqueta estática para convertirse en un micromundo urbano vivo, orgánico y lleno de dinamismo humano creíble.
 
-### Subfase 2.3: Reestructuración Escénica del Parque en 7 Capas
-**Objetivo**: Expandir el espacio cilíndrico desde los 4 planos actuales hasta un diorama de 7 capas concéntricas con hitos visuales de composición (estanque, cenador, verja con pilares y ramas de enmarcado frontal).
-
-- [ ] **Tarea 2.3.1 (Atómica)**: Redefinir la zonificación radial en `scripts/park.gd`:
-  - Capa -1 ($r \approx 0.8\text{ m}$): Ramas de sauce y hojas colgantes en margen superior (bokeh frontal).
-  - Capa 0 ($r \approx 1.8\text{ m}$): Acera biselada y bancos de listones de madera.
-  - Capas 1 y 2 ($r \approx 3.5 - 5.5\text{ m}$): Calzada peatonal bitonal activa (los 21 viandantes jugables).
-  - Capa 3 ($r \approx 7.5 - 9.5\text{ m}$): Estanque reflectante azul y cenador/pérgola octogonal de madera.
-  - Capa 4 ($r \approx 12.5\text{ m}$): Verja clásica de hierro negro con pilares de sillería piramidales.
-  - Capa 5 ($r \approx 15.0 - 20.0\text{ m}$): Arbolado facetado denso.
-  - Capa 6 ($r \approx 35.0 - 50.0\text{ m}$): Skyline de siluetas urbanas lejanas con bruma atmosférica.
-- [ ] **Tarea 2.3.2 (Atómica)**: Preservar la fusión de todo el parque estático en **1 único draw call** (`Mesh.ARRAY_VERTEX`, `ARRAY_COLOR`) en `scripts/park.gd::build()`.
-- [ ] **Tarea 2.3.3 (Atómica)**: Ajustar los límites de calzada peatonal `LANE_BOUNDS` en `scripts/person.gd` y `scripts/main.gd` para que los 21 viandantes circulen sin atascos en las nuevas cotas.
-
-> **Control Intermedio 3**:
-> - `godot-4 --path . --script tests/test_navigation.gd` (10 checks de carriles).
-> - `godot-4 --path . --script tests/simulate_jams.gd` (20 segundos sin un solo deadlock peatonal).
-> - Triángulos totales en escena $\le 100.000$ (verificado en runtime).
-
----
-
-### Subfase 2.4: Integración de la Biblioteca de Animaciones Quaternius (UAL 1 & 2), Retargeting y Cinemática Híbrida
-**Objetivo**: Dotar a los personajes de movimiento orgánico, andares variados y actitudes expresivas utilizando los proyectos gratuitos CC0 de Quaternius, asegurando la cinemática de cero deslizamiento de pie.
-
-- [ ] **Tarea 2.4.1 (Atómica)**: Crear la herramienta de extracción y compresión en `tools/import_quaternius_anims.py`:
-  - Mapear el esqueleto Humanoid estándar de Quaternius a los 20 huesos del rig universal de Proyecto Paparazzi vía `BoneMap`.
-  - Descartar pistas de escala constantes y comprimir rotaciones cuaterniónicas a 30 Hz.
-  - Generar el recurso unificado `data/animaciones/quaternius_parque.res` (< 2.5 MiB).
-- [ ] **Tarea 2.4.2 (Atómica)**: Implementar la arquitectura híbrida en `scripts/person.gd` y `scripts/gait.gd`:
-  - `AnimationTree` con nodo de mezcla por capas (`AnimationNodeBlend2`): tren inferior gobernado por la cinemática analítica de `gait.gd` (suela horizontal y cero drift) y tren superior modulado por clips de Quaternius (`filter_enabled = true`).
-  - Sincronización de velocidad de reproducción en locomoción: $\text{time\_scale} = v / v_{\text{clip}}$.
-- [ ] **Tarea 2.4.3 (Atómica)**: Integrar transiciones de parada y reposo (`cross_fade(0.25)`):
-  - Cambio fluido entre marcha y estados de reposo (`Idle_CheckPhone`, `Idle_LookAround`, etc.).
-- [ ] **Tarea 2.4.4 (Atómica)**: Crear test unitario automatizado `tests/test_quaternius_retarget.gd`:
-  - Validar que los 20 huesos reciben las transformaciones correctas y que la cinemática de pie mantiene `drift == 0.000000 m/frame`.
-
-> **Control Intermedio 4**:
-> - `godot-4 --headless --path . --script tests/test_gait.gd` (8.840 checks de cero deslizamiento).
-> - `godot-4 --headless --path . --script tests/test_art.gd` (2.880 mallas).
-> - `godot-4 --headless --path . --script tests/test_quaternius_retarget.gd` (verificación de tracks óseos).
-
----
-
-### Subfase 2.5: Multitud Ambiental Desacoplada (Tier 2) y Poses Dinámicas de Parque
-**Objetivo**: Dar vida al parque habitando los bancos, el cenador y la verja de fondo utilizando las animaciones de reposo y conversación de Quaternius UAL sin sobrecargar la CPU de evaluación fotográfica ni la lógica de navegación.
-
-- [ ] **Tarea 2.5.1 (Atómica)**: Implementar en `scripts/person.gd` el modo `ambient = true` (Tier 2):
-  - Excluido de listas de objetivos en `main.gd` y libre de cálculos de oclusión por raycasts en `photography.gd`.
-- [ ] **Tarea 2.5.2 (Atómica)**: Asignar clips de Quaternius para personajes ambientales:
-  - Bancos Capa 0 y cenador: `Sitting_Idle`, `Sitting_LegCrossed`, `Sitting_Reading`, `Sitting_Phone`.
-  - Parejas charlando: `Talking_Gesture_01` acoplado con `Listening_Nod`.
-  - Verja Capa 4: `Idle_Relaxed` e `Idle_LeanRail`.
-- [ ] **Tarea 2.5.3 (Atómica)**: Instanciar 8-12 personajes ambientales en los bancos y 6-8 figuras secundarias en la verja de fondo (Capa 4), compartiendo la biblioteca de animaciones en memoria.
-
-> **Control Intermedio 5**:
-> - `godot-4 --path . -- --smoke-test` (triángulos $\le 100\text{k}$, 21 viandantes jugables intactos).
-> - `godot-4 --path . --script tests/test_game.gd` (sesión completa de 5 encargos con fluidez absoluta a 60 FPS).
+#### 👑 HITO 8: Entorno Botánico Denso y Arquitectura de 7 Capas Escénicas
+- **Clasificación**: `Alto Coste (L) / Medio-Alto Impacto Visual` | **Duración estimada**: 6 a 8 días.
+- **Intervención**:
+  - Reorganizar la zonificación radial en `park.gd` en 7 capas de profundidad (de ramas de enmarcado frontal a $r = 0.8\text{ m}$ hasta skyline urbano lejano a $r = 45\text{ m}$).
+  - Modelar arbolado botánico de alta densidad con troncos de corteza rugosa y ramilletes de hojas con **translucidez / Subsurface Scattering (SSS)**.
+  - Modelar pavimento de adoquines de granito con juntas de arena fina y alcorques de tierra vegetal compactada.
+  - Incorporar quiosco/pérgola octogonal de madera en Capa 3 y verja perimetral de hierro forjado con pilares de sillería en Capa 4.
+- **🎉 Resultado Parcial Llamativo**:
+  - Profundidad escénica infinita, riqueza botánica orgánica y acabado de producto comercial prémium de máxima categoría.
 
 ---
 
-### Subfase 2.6: Retícula Réflex en Diamante (15 Puntos) y Nuevos Accesorios
-**Objetivo**: Pulir la interfaz óptica profesional y ampliar el banco de accesorios con atrezo temático y fotográfico.
+### 8.4 Matriz Integral de Tareas Atómicas Priorizadas
 
-- [ ] **Tarea 2.6.1 (Atómica)**: Rediseñar la retícula del visor en `scripts/viewfinder.gd`:
-  - Distribución de 15 colimadores AF en patrón de diamante (según `referencia.jpg`).
-  - Marcos de esquina y visualización LCD verde de 7 segmentos en display inferior.
-- [ ] **Tarea 2.6.2 (Atómica)**: Modelar nuevos accesorios en `tools/build_catalog.py` y `data/catalogo.json`:
-  - Mochila urbana/escolar (accesorio de espalda/tórax).
-  - Periódico/revista en mano (accesorio para personajes sentados).
-  - Teléfono móvil o cámara compacta para peatones turistas en pose de disparo.
-- [ ] **Tarea 2.6.3 (Atómica)**: Registrar los nuevos textos descriptivos de accesorios y actitudes en `data/textos.es.json` y `scripts/texts.gd`.
-
-> **Control Intermedio 6 (Hito Final)**:
-> - Ejecutar la suite completa de pruebas: `test_photography.gd`, `test_art.gd`, `test_equipment.gd`, `test_gait.gd`, `test_navigation.gd`, `test_expansion.gd`, `test_game.gd`.
-> - Regenerar automáticamente la suite visual con `./tools/run_evidence.sh` y comprobar que [`docs/evidencias/GALERIA.md`](../evidencias/GALERIA.md) refleja la nueva estética con total fidelidad.
-> - Actualizar matrices y documentos técnicos en `docs/` y `AGENTS.md`.
+| Hito | ID Tarea | Descripción Técnica | Coste / Esfuerzo | Impacto Visual | Cuadrante | Estado | Entregable / Hito Verificable |
+|---|:---:|---|:---:|:---:|:---:|:---:|---|
+| **Hito 0** | **2.0.1** | Shaders Toon en 3 bandas y contorno *inverted hull* | Bajo (S) | Alto | 🚀 Quick Win | ✅ **Hecho** | [`cel_shading.gdshader`](../../shaders/cel_shading.gdshader), [`cel_outline.gdshader`](../../shaders/cel_outline.gdshader) |
+| **Hito 0** | **2.0.2** | Material Toon único compartido en `person.gd` | Bajo (S) | Medio | ⚙️ Base | ✅ **Hecho** | `Person.mannequin_material()` activo |
+| **Hito 0** | **2.0.3** | Mallas base de maniquí con rótulas visibles parciales | Medio (M) | Medio | ⚙️ Base | 🟡 **Parcial** | Catálogo con rótulas en miembros descubiertos |
+| **Hito 1** | **2.1.1** | DoF física macro ($f/1.4 - f/2.0$) con bokeh de 9 palas | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | 📝 Pendiente | `main.gd::setup_macro_camera()` con blur inmediato |
+| **Hito 1** | **2.1.2** | Tone Mapping AgX / ACES y curva de color de estudio | Muy Bajo (XS) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Altas luces de barniz suaves sin quemado |
+| **Hito 1** | **2.1.3** | Viñeteo óptico, aberración cromática y grano ISO analógico | Bajo (S) | Medio-Alto | 🚀 **Quick Win** | 📝 Pendiente | Shaders de revelado con textura fílmica tangible |
+| **Hito 2** | **2.2.1** | Configuración de preset `Forward+` y soporte de cluster | Bajo (S) | Medio | ⚙️ Base | 📝 Pendiente | `project.godot` con Forward+ y fallback Compatibility |
+| **Hito 2** | **2.2.2** | Screen-Space Contact Shadows en pies y bancos | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | 📝 Pendiente | Cero *peter-panning*; anclaje físico inmediato |
+| **Hito 2** | **2.2.3** | SSAO macro ($0.35\text{ m}$) en rótulas y pliegues | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras de cavidad profundas en articulaciones |
+| **Hito 2** | **2.2.4** | Sombras direccionales PCSS con penumbra suave | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras borrosas según distancia del foco |
+| **Hito 2** | **2.2.5** | Volumetric Fog y motas de polvo flotando en contraluz | Bajo-Medio (S-M) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Atmósfera de taller de modelismo con haz de luz |
+| **Hito 3** | **2.3.1** | Bancos de 7 listones de teca biselados y patas de forja | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Sustitución de bancos cúbicos por modelos de maqueta |
+| **Hito 3** | **2.3.2** | Farolas de fundición de hierro con cristal y filamento | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Farolas transparentes con iluminación interior cálida |
+| **Hito 3** | **2.3.3** | Peana circular de caoba perimetral con placa de latón | Bajo-Medio (S-M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Marco formal de diorama artesanal a escala 1:18 |
+| **Hito 4** | **2.4.1** | Generador de UVs analíticas cilíndricas en `build_catalog.py` | Medio (M) | Medio | ⚙️ Base | 📝 Pendiente | Coordenadas UV uniformes sin costuras visibles |
+| **Hito 4** | **2.4.2** | Remodelado a 16-20 segmentos radiales ultra-suaves | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Maniquíes perfectamente redondeados en teleobjetivo |
+| **Hito 4** | **2.4.3** | Material PBR de 4 maderas nobles con `Clearcoat` activo | Medio (M) | **Muy Alto** | 💎 **Gran Hito** | 📝 Pendiente | Brillo satinado de barniz sobre madera de haya/nogal |
+| **Hito 4** | **2.4.4** | Rótulas esféricas con textura a testa y pernos de latón | Bajo-Medio (S-M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Articulaciones mecánicas visibles hiperrealistas |
+| **Hito 5** | **2.5.1** | Atlas de texturas textiles PBR (denim, piqué, ripstop) | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Ropa con hilado de tejido visible a 45° en zoom |
+| **Hito 5** | **2.5.2** | Activación del canal `Sheen` para lustre de microfibras | Bajo (S) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Halo aterciopelado en hombros y bordes de ropa |
+| **Hito 5** | **2.5.3** | Normal maps de costuras, dobladillos y calzado de cuero | Bajo-Medio (S-M) | Medio-Alto | 💎 **Gran Hito** | 📝 Pendiente | Calzado con suela estriada y pespuntes de hilo |
+| **Hito 6** | **2.6.1** | Configuración de `VoxelGI` o `SDFGI` en `park.gd` | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Rebote verde del césped sobre los maniquíes |
+| **Hito 6** | **2.6.2** | Shader PBR de agua para el estanque con refracción y SSR | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Estanque reflectante con lecho de grava sumergido |
+| **Hito 7** | **2.7.1** | Herramienta de retargeting de Quaternius UAL 1 & 2 | Medio (M) | Medio | ⚙️ Base | 📝 Pendiente | `tools/import_quaternius_anims.py` y `BoneMap` |
+| **Hito 7** | **2.7.2** | Cinemática híbrida en `person.gd` (analítico + blend) | Medio-Alto (M-L) | **Muy Alto** | 👑 **Prémium** | 📝 Pendiente | Cero drift en pies ($drift=0$) con andares orgánicos |
+| **Hito 7** | **2.7.3** | Multitud ambiental Tier 2 en bancos y cenador | Medio (M) | Alto | 👑 **Prémium** | 📝 Pendiente | 12-20 personajes sentados charlando y leyendo |
+| **Hito 8** | **2.8.1** | Arquitectura escénica de 7 capas concéntricas en `park.gd` | Medio-Alto (M-L) | Alto | 👑 **Prémium** | 📝 Pendiente | Planos desde sauce frontal hasta skyline lejano |
+| **Hito 8** | **2.8.2** | Arbolado botánico denso con hojas translúcidas (SSS) | Alto (L) | Alto | 👑 **Prémium** | 📝 Pendiente | Copas de árboles orgánicas que brillan a contraluz |
+| **Hito 8** | **2.8.3** | Pavimento de adoquines de granito con juntas de arena | Medio-Alto (M-L) | Medio-Alto | 👑 **Prémium** | 📝 Pendiente | Calzada modelada con microdesniveles de maqueta |
+| **Hito 8** | **2.8.4** | Menú de ajustes gráficos estándar (Bajo, Medio, Alto, Ultra) y configuración personalizada granular | Bajo-Medio (S-M) | Alto | ⚙️ Base | 📝 Pendiente | Interfaz de presets de la industria y 9 selectores individuales personalizables |
 
 ---
 
 ## 9. Matriz de Riesgos Técnicos y Mitigaciones
 
-| Riesgo Técnico | Impacto | Estrategia de Mitigación |
+| Riesgo Técnico Identificado | Nivel de Riesgo | Estrategia de Mitigación y Control Arquitectónico |
 |---|:---:|---|
-| Aumento de triángulos por las juntas esféricas del maniquí | Medio | Emplear cilindros y esferas de bajo conteo (8 segmentos por anillo en `loft_mesh`). Presupuesto: máx. 2.600 tris/personaje. |
-| Incompatibilidad del shader Toon en WebGL/GLES3 | Alto | Usar exclusivamente directivas estándar `render_mode diffuse_toon, specular_toon` y cálculos vectoriales básicos sin pases post-procesado pesados. |
-| Deslizamiento de pie (*foot sliding*) por clips de animación | Crítico | **Arquitectura híbrida multicapa**: el tren inferior se mantiene estrictamente conducido por `gait.gd` analítico ($drift = 0$), usando los clips de Quaternius para el tren superior. |
-| Retargeting impreciso en los 4 perfiles anatómicos (niño, robusto, etc.) | Medio | Los 4 perfiles comparten la misma jerarquía de 20 huesos; las traslaciones de caderas se normalizan por la altura sin cabeza $NZ$. |
-| Sobrecarga de CPU por evaluación de múltiples `AnimationTree` | Medio | Desacoplamiento Tier 2: los personajes ambientales en bancos ejecutan clips cíclicos estáticos simples (`AnimationPlayer`) evaluados a menor tasa de refresco si están lejos. |
-| Crecimiento desmedido de memoria por tracks de animación | Bajo-Medio | Empaquetado compartido en un único recurso `.res` (< 2.5 MiB), descartando canales de escala y comprimiendo rotaciones. Cero duplicación por instancia. |
-| Caída de FPS por añadir personajes de fondo | Medio | Desacoplamiento estricto Tier 2: los personajes ambientales no ejecutan raycasts fotográficos ni colisiones dinámicas continuas. |
+| **Disparo del consumo de VRAM por texturas PBR** | Alto | **Empaquetado ORM y Atlas Compartidos**: Combinar Oclusión, Rugosidad y Metálico en un solo mapa de 3 canales. Utilizar atlas de texturas reutilizables para maderas y telas en lugar de texturas únicas por personaje. |
+| **Aumento de Draw Calls por materiales PBR múltiples** | Alto | **MultiMeshInstance3D y Texture Arrays**: Mobiliario urbano instanciado por MultiMesh (1 draw call por familia). Maniquíes agrupados en shaders compartidos indexando arrays de texturas. |
+| **Deslizamiento de pie (*foot sliding*) por clips Quaternius** | Crítico | **Cinemática híbrida multicapa**: El tren inferior se mantiene estrictamente conducido por `gait.gd` analítico ($drift = 0.000000\text{ m/frame}$), aplicando Quaternius únicamente al tren superior mediante máscara de huesos. |
+| **Incompatibilidad de Forward+ en WebGL / navegadores** | Crítico | **Arquitectura Multi-Perfil Escalonada**: El motor mantiene `gl_compatibility` como base para los Perfiles 1, 2 y 3. El Modo Diorama Forward+ se reserva como Perfil 4 exclusivo de escritorio. |
+| **Deformación y costuras aberrantes en texturas de maderas** | Medio | **UVs Cilíndricas Analíticas**: Cálculo matemático de coordenadas UV en `build_catalog.py` alineadas con el eje óseo de cada pieza de maniquí, garantizando continuidad de veta leñosa. |
+| **Caída de rendimiento por evaluación de AnimationTree en multitudes** | Medio | **Desacoplamiento Tier 2**: Los personajes ambientales de fondo ejecutan clips cíclicos estáticos (`AnimationPlayer`) evaluados a menor tasa de refresco, sin raycasts fotográficos. |
+| **Regresión en tests fotográficos y determinismo** | Crítico | **Aislamiento de la lógica de evaluación**: `photography.gd` y la física de rayos se mantienen estrictamente independientes del pipeline de sombreado y postprocesado. |
 
 ---
 
-## 10. Sistema Multi-Perfil de Carga Gráfica (Scalable Graphics Profiles)
+## 10. Sistema de Perfiles Gráficos Estándar (Bajo, Medio, Alto, Ultra) y Configuración Personalizada
 
-Para garantizar una experiencia visual óptima tanto en **dispositivos móviles de gama baja y WebGL en navegadores**, como en **escritorios potentes con pantallas de alta tasa de refresco**, se especifica una arquitectura de **3 Perfiles Gráficos Escalonados**.
+Para garantizar que **Proyecto Paparazzi** ofrezca una experiencia visual impecable en todo el espectro de plataformas —desde **dispositivos móviles modestos (Android / iOS) donde debe ser jugable con detalle moderado y 60 FPS**, hasta **PCs de escritorio modernos de gama entusiasta (con GPUs de última generación como la serie NVIDIA RTX 5000)** donde debe lucir a la altura de las mayores producciones gráficas—, se adopta el estándar de la industria estructurado en **4 Perfiles Escalonados Graduales** respaldados por un **Menú de Configuración Granular Personalizada**.
 
-A diferencia de los ajustes gráficos tradicionales que solo reducen la resolución de texturas, en Proyecto Paparazzi la carga geométrica, procedural y de animación se adapta dinámicamente tanto en el **generador de mallas** (`build_catalog.py`) como en los **shaders de contorno**, el **árbol escénico de capas**, la **densidad de población** y el **sistema de animación**.
-
-### 10.1 Tabla Comparativa de Perfiles Gráficos
-
-| Parámetro Técnico | Perfil 1: Rendimiento Móvil / WebGL (*Low*) | Perfil 2: Equilibrado Estándar (*Medium / Default*) | Perfil 3: Fidelidad Alta / Desktop (*Ultra*) |
-|---|---|---|---|
-| **Dispositivos Objetivo** | Móviles antiguos, WebGL ligero, Raspberry Pi. | Móviles de gama media, portátiles, WebGL estándar. | PCs de escritorio, monitores 1440p/4K, hardware dedicado. |
-| **Segmentos Radiales Mallas (`segments`)** | **6 segmentos** (estética facetada/origami limpia). | **8 segmentos** (maniquí estilizado suave estándar). | **12-16 segmentos** (esferas y cilindros de madera torneada pura). |
-| **Triángulos por Maniquí** | $\approx 950 - 1.200\text{ tris}$ | $\approx 1.800 - 2.400\text{ tris}$ | $\approx 3.800 - 5.200\text{ tris}$ |
-| **Delineado de Contorno (*Outlines*)** | **Desactivado** (Toon puro en 1 draw call) o edge-detection ligero. | **Inverted Hull básico** (`next_pass` a 8 mm). | **Inverted Hull suavizado** con grosor adaptativo según distancia. |
-| **Sistema de Animaciones (Quaternius UAL)** | **`gait.gd` analítico puro** + poses estáticas simples en bancos (sin `AnimationTree` activo). | **Cinemática Híbrida** (`gait.gd` inferior + blend superior con Quaternius UAL a 30 Hz). | **Animación Completa** con `AnimationTree`, transiciones ricas, micro-gestos y miradas al entorno. |
-| **Población en Escena** | **21 viandantes** (Tier 1 jugable únicamente, sin Tier 2). | **21 viandantes jugables + 12 ambientales** (Tier 1 + Tier 2 moderado). | **21 viandantes jugables + 28 ambientales** (Tier 1 + Tier 2 denso y banco habitado). |
-| **Arquitectura de Capas** | **4 capas simplificadas** (sin Capa -1 de follaje ni Capa 6 de bruma). | **7 capas completas** (enmarcado frontal, acera, calzada, estanque, verja, árboles, bruma). | **7 capas completas + props dinámicos** (hojas mecidas por viento, reflejos en agua). |
-| **Sombra Direccional** | Atlas de 1024 / Sombras duras. | Atlas de 2048 / Filtro de sombra suave PCF. | Atlas de 4096 / Sombras de alta definición con penumbra gradual. |
-| **Triángulos Totales en Escena** | $\le 45.000\text{ tris}$ | $\le 95.000\text{ tris}$ | $\approx 160.000 - 200.000\text{ tris}$ |
-| **Consumo de VRAM Objetivo** | $< 35\text{ MiB}$ | $< 55\text{ MiB}$ | $< 90\text{ MiB}$ |
+```
++---------------------------------------------------------------------------------------------------+
+|                     ESPECTRO DE HARDWARE Y ESCALABILIDAD TÉCNICA                                  |
++---------------------------------------------------------------------------------------------------+
+  [ MÓVILES GAMA MEDIA / ANDROID ]             [ PC MODERNO / NVIDIA SERIE 5000 / BLACKWELL ]
+  - Backend: gl_compatibility / mobile         - Backend: Forward+ (Clustered Vulkan)
+  - Resolución: 720p / 1080p nativo            - Resolución: 1440p / 4K nativo a 120+ FPS
+  - Toon 3 bandas / PBR ligero 1K              - Diorama PBR 2K/4K sin compresión
+  - Sombras PCF filtradas (2048)               - Sombras PCSS ultra suaves con penumbra física (4096)
+  - 21 jugables + 12 ambientales bancos        - 21 jugables + 36 ambientales de maqueta viva
+  - Mallas 8-10 segmentos suaves               - Mallas de ebanistería 20-24 segmentos (curvas puras)
+  - Consumo VRAM: < 55 MiB                     - VoxelGI (512³) + SDFGI + SSIL + Subsurface Scattering
+  - Batería y temperatura optimizadas          - DoF macro física con bokeh cinematográfico y AgX
+```
 
 ---
 
-### 10.2 Impacto en el Pipeline de Modelado Procedural (`tools/build_catalog.py`)
+### 10.1 Tabla Comparativa de Perfiles Gráficos Estándar
 
-El generador paramétrico `loft_mesh` y las primitivas esféricas se parametrizan mediante un flag de resolución o multiplicador de densidad:
+| Parámetro Técnico | Perfil 1: Bajo (*Low*) | Perfil 2: Medio (*Medium / Default*) | Perfil 3: Alto (*High*) | Perfil 4: Ultra / Master (*Ultra*) |
+|---|---|---|---|---|
+| **Dispositivos Objetivo** | Móviles de gama de entrada, WebGL ligero en navegador, hardware antiguo. | Móviles de gama media-alta, tablets, Steam Deck, portátiles ultraligeros. | PCs estándar de juegos (RTX 3060/4060, RX 6700/7600), consolas. | **PCs modernos y entusiastas (NVIDIA RTX serie 5000 / 4080 / 4090)**. |
+| **Backend de Render Godot 4** | `gl_compatibility` (OpenGL 3.3 / WebGL 2) | `mobile` / `gl_compatibility` optimizado | `Forward+` (Clustered Vulkan) | **`Forward+` al límite técnico (Vulkan compute)** |
+| **Estilo y Materialidad** | Toon Cell-Shading limpio en colores de vértice (`ARRAY_COLOR`) | Toon suave de 3 bandas con oclusión ambiental precalculada o PBR ligero 1K | **Diorama PBR 1K/2K**: vetas de madera noble con Clearcoat y telas con Sheen | **Diorama Físico Master 2K/4K**: maderas nobles con Clearcoat, telas Sheen, forja y SSS |
+| **Segmentos Radiales Mallas** | **6 segmentos** (estética facetada/origami) | **8-10 segmentos** (maniquí estilizado suave) | **14-16 segmentos** (torneado continuo sin aristas) | **20-24 segmentos** (curvaturas orgánicas perfectas para planos cerrados en 4K) |
+| **Triángulos por Maniquí** | $\approx 950 - 1.200\text{ tris}$ | $\approx 1.800 - 2.400\text{ tris}$ | $\approx 4.500 - 6.500\text{ tris}$ | **$\approx 10.000 - 14.000\text{ tris}$** (acabado artesanal de alta ebanistería) |
+| **Delineado de Contorno** | Desactivado (1 draw call por figura) | Inverted Hull básico ligero (1,6 px) | Desactivado (micro-geometría y SSAO) | **Desactivado** (sustituido por micro-geometría real y oclusión de contacto física) |
+| **Animación (Quaternius UAL)** | `gait.gd` analítico puro + poses básicas | Cinemática Híbrida (`gait.gd` + blend UAL a 30 Hz) | Animación Completa con micro-gestos y miradas | **Animación Completa a 60 Hz** + micro-vibraciones de soporte mecánico en muñecas |
+| **Población en Escena** | 21 viandantes (Tier 1 jugable únicamente) | 21 jugables + 12 ambientales en bancos (Tier 2) | 21 jugables + 24 ambientales (bancos y cenador) | **21 jugables + 36 ambientales de maqueta viva** (bancos habitados, verja y paseantes) |
+| **Iluminación Global (GI)** | Desactivada (luz directa + hemisferio plano) | Hemisferio ambiental + AO precalculada en vértices | **SDFGI o VoxelGI equilibrado** ($128^3$) | **VoxelGI Ultra ($256^3-512^3$) + SDFGI + SSIL** (sangrado de color dinámico completo) |
+| **Sombras y Penumbra** | Atlas 1024 / Sombras duras | Atlas 2048 / Filtro PCF suavizado estándar | Atlas 4096 / Sombras PCSS + Contact Shadows | **Atlas 4096-8192 / PCSS suave con penumbra variable física + Contact Shadows full-rate** |
+| **Oclusión Ambiental (SSAO)** | Desactivada | SSAO ligera de bajo radio (half-rate) | SSAO completa a escala macro | **SSAO Ultra bilateral full-rate** (sombras oscuras en hendiduras de rótulas y ropa) |
+| **Efectos Volumétricos** | Desactivados | Niebla de distancia exponencial estática | Niebla volumétrica suave | **Volumetric Fog densa (God rays físicos) + Partículas GPU de polvo en suspensión** |
+| **Simulación Óptica de Cámara** | Básico (revelado monocromo/color) | Revelado + DoF fotográfica suave básica | DoF Macro Tilt-Shift física ($f/1.8$, 9 palas) + AgX | **DoF Macro Tilt-Shift ($f/1.4$) con bokeh físico + Aberración + AgX + Grano analógico** |
+| **Subsurface Scattering (SSS)** | Desactivado | Desactivado | Transmitancia sutil en hojas | **SSS completo en hojas botánicas y cantos finos de madera noble a contraluz** |
+| **Anti-Aliasing y Escalado** | FXAA básico / 100% nativo | TAA básico / FSR 1.0 equilibrado | TAA full / FSR 2.2 Calidad | **TAA de alta fidelidad / FSR 3.0 / DLSS nativo en 1440p y 4K con refresco 120-240 Hz** |
+| **Triángulos Totales en Escena** | $\le 45.000\text{ tris}$ | $\le 95.000\text{ tris}$ | $\approx 220.000 - 320.000\text{ tris}$ | **$\approx 550.000 - 850.000\text{ tris}$** (parque detallado, arbolado y multitud) |
+| **Consumo de VRAM Objetivo** | $< 35\text{ MiB}$ | $< 55\text{ MiB}$ | $< 220\text{ MiB}$ | **$\approx 350 - 550\text{ MiB}$** (perfectamente holgado en GPUs modernas de 8 a 24 GB) |
+
+---
+
+### 10.2 Menú de Configuración Granular Personalizada (Custom Settings)
+
+Siguiendo el estándar de las producciones comerciales de PC, el jugador puede elegir un preset global (`[ Bajo | Medio | Alto | Ultra ]`) o ajustar individualmente cada parámetro, pasando el selector automáticamente al modo **`Personalizado`**:
+
+```
++-----------------------------------------------------------------------------------------------+
+|                       MENÚ DE AJUSTES GRÁFICOS PERSONALIZADOS                                 |
++-----------------------------------------------------------------------------------------------+
+  Perfil Global:               [ <  PERSONALIZADO  > ]  (Bajo / Medio / Alto / Ultra)
+
+  [ CALIDAD GEOMÉTRICA Y ENTORNOS ]
+  - Nivel de Detalle de Mallas (LOD):    [ <  Ultra (20+ seg)  > ] (Bajo / Medio / Alto / Ultra)
+  - Calidad del Mobiliario y Parque:     [ <  Modelismo Artesanal  > ] (Básico / Detallado / Maqueta)
+  - Densidad de Población Ambiental:     [ <  Alta (+24 en Bancos)  > ] (21 Jugables / +12 / +24 / +36)
+
+  [ MATERIALES Y SOMBREADO ]
+  - Calidad de Texturas y Shaders:       [ <  PBR Completo 2K/4K  > ] (Toon Vértice / PBR 1K / PBR 2K / Ultra)
+  - Capa de Barniz en Madera (Clearcoat):[ [X] Activado ]
+  - Lustre Textil en Ropa (Sheen):       [ [X] Activado ]
+  - Translucidez Botánica (SSS):         [ [X] Activado ]
+
+  [ ILUMINACIÓN Y SOMBRAS ]
+  - Backend de Render:                   [ <  Forward+ (Clustered)  > ] (Compatibility / Forward+)
+  - Iluminación Global (GI):             [ <  VoxelGI + SSIL  > ] (Desactivada / SDFGI / VoxelGI / Ultra)
+  - Calidad de Sombras:                  [ <  PCSS Ultra Suave  > ] (Duras / Filtradas / PCSS / Ultra PCSS)
+  - Sombras de Contacto (Contact Shadows):[ [X] Activado (Elimina flotación) ]
+  - Oclusión Ambiental (SSAO):           [ <  Macro Full-Rate  > ] (Desactivada / Media / Alta / Ultra)
+
+  [ ATMÓSFERA Y POSTPROCESADO ]
+  - Niebla Volumétrica y Focos:          [ <  Densa + Motas de Polvo  > ] (Desactivada / Simple / Volumétrica)
+  - Profundidad de Campo (DoF Macro):    [ <  Física Tilt-Shift (9 Palas)  > ] (Desactivada / Suave / Macro)
+  - Tone Mapping Fílmico:                [ <  AgX Fílmico  > ] (Lineal / Reinhard / ACES / AgX)
+  - Grano Fotográfico Analógico:         [ <  ISO 100 Fino  > ] (Desactivado / ISO 100 / ISO 400)
+
+  [ RENDIMIENTO Y PANTALLA ]
+  - Resolución de Renderizado:           [ 3840 x 2160 (4K) ]
+  - Escalado y Reconstrucción:           [ <  FSR 2.2 / TAA Nativo  > ] (Bilineal / TAA / FSR Calidad)
+  - Límite de Fotogramas (FPS):          [ <  144 FPS / Ilimitado  > ] (30 / 60 / 120 / 144 / Ilimitado)
++-----------------------------------------------------------------------------------------------+
+```
+
+---
+
+### 10.3 Pipeline de Modelado Procedural Multi-LOD (`tools/build_catalog.py`)
+
+Para dar soporte limpio a los 4 perfiles sin duplicar archivos en disco, el generador paramétrico se parametriza mediante un diccionario de niveles de detalle:
 
 ```python
 # tools/build_catalog.py
-# Generación paramétrica multi-LOD para los 3 perfiles
+# Generación paramétrica multi-LOD para los 4 perfiles estándar
 LOD_PROFILES = {
-    "low":    {"segments": 6,  "sphere_rings": 4, "subdivisions": 1},
-    "medium": {"segments": 8,  "sphere_rings": 6, "subdivisions": 2},
-    "high":   {"segments": 14, "sphere_rings": 10, "subdivisions": 3},
+    "low":     {"segments": 6,  "sphere_rings": 4,  "uvs": False, "subdivisions": 1},
+    "medium":  {"segments": 8,  "sphere_rings": 6,  "uvs": False, "subdivisions": 2},
+    "high":    {"segments": 14, "sphere_rings": 10, "uvs": True,  "subdivisions": 2},
+    "ultra":   {"segments": 20, "sphere_rings": 16, "uvs": True,  "subdivisions": 3},
 }
 ```
 
-1. **Estructura de Almacenamiento en Datos**:
-   - Para no duplicar innecesariamente el peso del repositorio, se puede:
-     - **Opción A (Recomendada - Tiempo de Carga/Generación)**: Mantener las especificaciones geométricas en JSON como descriptores de curvas guía (radios y alturas) y compilar la malla en runtime según el perfil elegido en las opciones del juego.
-     - **Opción B (Pre-generación en carpetas)**: Generar carpetas `data/piezas/low/`, `data/piezas/medium/` y `data/piezas/high/`, cargando la ruta correspondiente en el inicio del juego.
-2. **Preservación Incondicional del Rigging**:
-   - Sea cual sea el número de segmentos radiales ($6$, $8$ o $14$), **los 20 huesos y los índices de asignación ósea se mantienen estrictamente idénticos**.
-   - Cada vértice sigue perteneciendo con peso `1.0` a su hueso padre. `gait.gd` y el retargeting de Quaternius garantizan exactamente la misma cinemática sin deslizamiento en cualquiera de los perfiles.
+1. **Garantía Inquebrantable de Rigging**:
+   - Sea cual sea el nivel de detalle seleccionado ($6, 8, 14$ o $20$ segmentos), **la jerarquía de 20 huesos, sus orientaciones y la asignación rígida de peso único ($1.0$) se mantienen estrictamente idénticas**.
+   - `gait.gd` analítico y el retargeting de Quaternius garantizan exactamente la misma cinemática sin deslizamiento ($drift = 0.000000\text{ m/frame}$) tanto en un móvil a perfil Bajo como en un PC con RTX 5000 a perfil Ultra.
+2. **Generación de UVs y Texturas**:
+   - En perfiles `low` y `medium`, el sistema puede prescindir de las coordenadas UV si opera en modo Toon con colores de vértice (`ARRAY_COLOR`).
+   - En perfiles `high` y `ultra`, se activan las coordenadas UV cilíndricas y esféricas para proyectar los mapas PBR de vetas leñosas y micro-tejidos.
 
 ---
 
-### 10.3 Selector de Perfil y Escalabilidad Dinámica en Runtime
+### 10.4 Detección Automática y Escalabilidad en Runtime
 
-El menú de configuración y el visor técnico incorporan el selector de perfil gráfico:
-- **Ajuste Automático**: Al arrancar en navegador WebGL o dispositivos identificados como Android de gama baja, el juego selecciona por defecto el **Perfil Rendimiento (*Low*)**.
-- **Ajuste Manual**: Desde el menú de pausa / sandbox, el jugador puede conmutar entre los perfiles; el escenario reajusta dinámicamente la visibilidad de las capas periféricas, el shader de los maniquíes y la complejidad del árbol de animación sin necesidad de reiniciar la sesión.
+1. **Perfil Recomendado Automático**:
+   - **WebGL en navegador o dispositivo Android identificado con GPU modesta**: selecciona por defecto el perfil **Medio** (o **Bajo** si la memoria GPU es inferior a 2 GB).
+   - **PC de escritorio con GPU dedicada (Vulkan 1.3 / Forward+)**: selecciona automáticamente el perfil **Alto** (si la GPU tiene 4-8 GB de VRAM) o **Ultra** (si detecta GPUs modernas como RTX serie 4000/5000 o AMD equivalentes con $\ge 12\text{ GB}$ de VRAM).
+2. **Conmutación Fluida en Caliente**:
+   - Desde el menú de pausa del juego, el usuario puede alternar entre presets o ajustar controles individuales. Godot 4 reasigna dinámicamente los materiales (`StandardMaterial3D` vs `ShaderMaterial`), recalibra las cascadas de sombras y adapta el postprocesado de cámara en tiempo real sin requerir recargar la escena.
