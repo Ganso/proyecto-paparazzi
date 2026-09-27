@@ -54,15 +54,23 @@ Para cerrar visualmente el horizonte y proporcionar un fondo natural continuo tr
 
 ## 3. Iluminación y Clima Procedural
 
-### 3.1 Ciclo Día / Noche (`park.set_night()`)
+### 3.1 Iluminación y Horas del Día: Día, Hora Dorada y Noche (`park.set_time_of_day()`)
 - **Día**:
-  - Sol direccional (`DirectionalLight3D`): `light_energy = 1.4`, color cálido `fff0d7`.
+  - Sol cenital (`DirectionalLight3D`, pitch $-72^\circ$): `light_energy = 1.4`, color cálido `fff0d7`.
   - Sombras dinámicas ortogonales activadas con atlas de 2048.
   - Cielo celeste y luz ambiental difusa (`c6d6df`, energía 0.16).
   - Luz incidente: **$EV \approx 14.8$** al sol y **$EV = 11.0$** en sombra (detalle en [SIMULACION_FOTOGRAFICA.md §2.2](SIMULACION_FOTOGRAFICA.md)).
+- **Hora Dorada (Golden Hour)**:
+  - **Sol rasante bajo en el horizonte** (pitch $-15^\circ$, azimut $-48^\circ$): proyecta sombras largas, dramáticas y oblicuas que atraviesan los paseos circulares y acentúan el volumen y relieve de los maniquíes.
+  - **Luz solar ámbar dorado intensa**: `light_color = Color("ffa544")`, `light_energy = 2.2`, penumbra suave `shadow_blur = 2.2`.
+  - **Gradiente de cielo crepuscular**: cenit azul índigo profundo (`18355e`), horizonte naranja resplandeciente (`ed8234`) y suelo reflectante ambarino (`b55e24`).
+  - **Ambiente y niebla dorada**: contraste cromático con ambiente crepuscular azulado (`4a5e7e`, energía 0.24) y neblina de profundidad dorada difusa (`e58b3e`).
+  - **Encendido crepuscular de farolas**: filamentos incandescentes encendiéndose con luz cálida suave (`light_energy = 0.90`, `ffcb74`).
+  - **Nubes melocotón dorado**: cúmulos al atardecer (`f09e60`).
+  - Luz incidente: **$EV \approx 14.0$** a pleno sol rasante y **$EV \approx 9.6$** en las sombras proyectadas.
 - **Noche**:
   - Sol desactivado / atenuado (`light_energy = 0.035`, tinte nocturno `9caed4`).
-  - 12 farolas cilíndricas con luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas.
+  - 12 farolas cilíndricas con luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas (`light_energy = 2.2`).
   - Luz incidente: **$EV = 2.0$** lejos de farolas; bajo farola $\approx 8.4$ a 1 m, $5.2$ a 3 m y $2.9$ a 5 m.
 
 ### 3.2 Sistema Meteorológico de Nubes

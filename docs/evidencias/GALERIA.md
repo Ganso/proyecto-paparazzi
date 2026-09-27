@@ -16,6 +16,7 @@ Secuencia de momentos clave que recorre el ciclo de juego desde la interfaz inic
 | **03. Visor Réflex** | ![Visor Réflex](estados/03_visor_reflex.png) | Visor óptico clásico con cuadrícula áurea, 9 colimadores AF, prisma esmerilado y aguja del exposímetro analógico. |
 | **04. Parque en Día Despejado** | ![Parque Día](estados/04_parque_dia.png) | Plaza central abierta a $28\text{ mm}$, 21 viandantes simultáneos y fondo vegetal denso sin caídas de frame. |
 | **05. Atenuación Lumínica por Nubes** | ![Nubes y EV](estados/05_nubes_ev.png) | Nube procedural ocultando el sol con atenuación de 3 EV, modificando el exposímetro y la exposición requerida. |
+| **05b. Parque en Hora Dorada** | ![Hora Dorada](estados/05b_hora_dorada.png) | Puesta de sol a baja cota ($-15^\circ$), resplandor ambarino cálido, sombras rasantes dramáticas y reflejos en maniquíes. |
 | **06. Parque en Modo Nocturno** | ![Parque Noche](estados/06_parque_noche.png) | Encendido crepuscular de farolas cálidas, iluminación omnidireccional y sombras proyectadas en tiempo real. |
 | **07. Pantalla de Revelado** | ![Revelado](estados/07_revelado.png) | Procesado de imagen fotográfica con grano químico analógico, bokeh por CoC, desenfoque cinético y desglose de puntos. |
 

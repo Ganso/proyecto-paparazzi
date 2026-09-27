@@ -90,6 +90,16 @@ func phase_1_game_states() -> void:
 	await capture_viewport_to(root, docs_dir + "/estados/05_nubes_ev.png")
 	print("   [✓] 05_nubes_ev.png capturado")
 
+	# 05b. Parque en hora dorada con sol bajo y contraluz
+	game.park.clouds_enabled = false
+	game.time_of_day = "golden"
+	game.night = false
+	game.park.set_time_of_day("golden")
+	game.update_meter()
+	await wait_frames(6)
+	await capture_viewport_to(root, docs_dir + "/estados/05b_hora_dorada.png")
+	print("   [✓] 05b_hora_dorada.png capturado")
+
 	# 06. Parque de noche con farolas encendidas
 	game.park.set_night(true)
 	game.night = true

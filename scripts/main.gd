@@ -46,6 +46,7 @@ var angle: float = 120.0
 var pan_velocity = 0.0
 var target: Pedestrian
 var night = false
+var time_of_day = "day"
 var mode = "INTRO"
 var shots = 3
 var assignment = 0
@@ -365,7 +366,8 @@ func refresh() -> void:
 	counter_label.text = Texts.get_text("encargo_02d_05") % (assignment+1)
 	counter_label.visible = not sandbox
 	sandbox_button.visible = sandbox
-	status_label.text = ("NOCHE" if night else "NUBES" if park.cloud_cover > .4 else "SOL")+" · EV %.1f · " % measured_ev+("sin límite" if sandbox else "%d disparos" % shots)
+	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("NUBES" if park.cloud_cover > .4 else "SOL"))
+	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + ("sin límite" if sandbox else "%d disparos" % shots)
 
 func update_camera() -> void:
 	if not is_instance_valid(camera): return
@@ -396,29 +398,43 @@ func intro() -> void:
 	var desc = label(root,Texts.get_text("encuentra_a_quien_describe_el_encargo_y_consigue_la_fotografia_t"),Rect2(75,302,780,72),22,Color("b7c5ad"))
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,Texts.get_text("05_encargos_03_disparos_por_encargo_tu_mejor_foto_cuenta"),Rect2(75,413,1100,28),13,Color("a7c683"))
-	button(root,Texts.get_text("parque_dia"),Rect2(75,477,250,65),func(): start_session(false),true)
-	button(root,Texts.get_text("parque_noche"),Rect2(340,477,250,65),func(): start_session(true))
-	button(root,"Equipo / modos",Rect2(605,477,220,65),show_equipment)
-	button(root,"Sandbox",Rect2(845,477,250,65),func(): start_session(false,true))
+	button(root,Texts.get_text("parque_dia"),Rect2(75,477,210,65),func(): start_session("day"),true)
+	button(root,Texts.get_text("parque_dorada"),Rect2(295,477,240,65),func(): start_session("golden"))
+	button(root,Texts.get_text("parque_noche"),Rect2(545,477,210,65),func(): start_session("night"))
+	button(root,"Equipo / modos",Rect2(765,477,210,65),show_equipment)
+	button(root,"Sandbox",Rect2(985,477,220,65),func(): start_session("day",true))
 	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,590,1070,60),16,Color("8f9f86"))
 	label(root,Texts.get_text("m"),Rect2(950,161,245,130),95,Color("b8d78c"))
 	label(root,"PROYECTO\nPAPARAZZI",Rect2(955,305,230,70),26,Color("a7b897"))
 
-func start_session(is_night: bool, free_play = false) -> void:
+func start_session(time_mode = "day", free_play = false) -> void:
 	close_modal()
 	sandbox = free_play
 	sandbox_paused = false
 	shot_serial = 0
 	park.weather_time = 0
 	if not free_play: park.clouds_enabled = true
-	night = is_night
-	park.set_night(night)
+	if time_mode is bool:
+		time_of_day = "night" if time_mode else "day"
+	else:
+		time_of_day = str(time_mode)
+	night = (time_of_day == "night")
+	park.set_time_of_day(time_of_day)
 	records.clear()
 	assignment = 0
 	best_photo = null
-	n_index = 0 if night else 3
-	t_index = 4 if night else 2
-	iso_index = 5 if night else 0
+	if time_of_day == "night":
+		n_index = 0
+		t_index = 4
+		iso_index = 5
+	elif time_of_day == "golden":
+		n_index = 2
+		t_index = 3
+		iso_index = 1
+	else:
+		n_index = 3
+		t_index = 2
+		iso_index = 0
 	focal = equipment.lens().min
 	pitch = 0
 	apply_equipment()
@@ -756,7 +772,7 @@ func capture_evidence() -> Dictionary:
 	var velocity = target.actual_velocity if target.state == "CAMINANDO" else Vector3.ZERO
 	var view_axis = -camera.global_basis.z
 	var perpendicular = (velocity-view_axis*velocity.dot(view_axis)).length()
-	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],night,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
+	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],time_of_day,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
 
 func take_photo() -> void:
 	if mode != "SEARCH" or (not sandbox and shots <= 0) or shooting: return
@@ -1138,13 +1154,13 @@ func select_matrix_point() -> void:
 
 func update_meter() -> void:
 	var hit = point_hit(finder.points()[finder.active])
-	measured_ev = park.sky_ev(night) if hit.is_empty() else park.illumination_ev(hit.position,night,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
+	measured_ev = park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
 	if equipment.auto_exposure and not sandbox and target != null:
 		var chest = target.control_points()[1]
 		if not camera.is_position_behind(chest):
 			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
 			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
-				measured_ev = park.illumination_ev(chest,night,target)
+				measured_ev = park.illumination_ev(chest,time_of_day,target)
 
 func auto_expose() -> void:
 	var target_ev = measured_ev
@@ -1153,7 +1169,7 @@ func auto_expose() -> void:
 		if not camera.is_position_behind(chest):
 			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
 			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
-				target_ev = park.illumination_ev(chest,night,target)
+				target_ev = park.illumination_ev(chest,time_of_day,target)
 	target_ev -= equipment.exposure_compensation()
 	var best_cost = INF
 	var stops = apertures()
@@ -1293,7 +1309,13 @@ func show_sandbox_controls() -> void:
 	label(root,"Sandbox · prepara la escena",Rect2(75,65,1100,60),38)
 	label(root,"Sin encargos, sin puntuación y sin límite de disparos.",Rect2(75,145,1100,40),23)
 	label(root,"Iluminación",Rect2(75,250,250,40),22)
-	option(root,["Día","Noche"],1 if night else 0,Rect2(350,245,650,48),func(i): night = i == 1; park.set_night(night))
+	option(root,["Día","Hora dorada","Noche"],1 if time_of_day == "golden" else (2 if night else 0),Rect2(350,245,650,48),func(i):
+		time_of_day = ["day","golden","night"][i]
+		night = (time_of_day == "night")
+		park.set_time_of_day(time_of_day)
+		update_meter()
+		refresh()
+	)
 	label(root,"Nubes",Rect2(75,335,250,40),22)
 	option(root,["Cielo despejado","Nubes en movimiento"],1 if park.clouds_enabled else 0,Rect2(350,330,650,48),func(i): park.clouds_enabled = i == 1; park.update_weather(0))
 	label(root,"Personajes",Rect2(75,420,250,40),22)
@@ -1316,7 +1338,7 @@ func capture_sandbox_evidence() -> Dictionary:
 		velocity = person.actual_velocity
 	var axis = -camera.global_basis.z
 	var perpendicular = (velocity-axis*velocity.dot(axis)).length()
-	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(night) if hit.is_empty() else park.illumination_ev(hit.position,night,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
+	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
 
 func show_sandbox_result() -> void:
 	var root = create_modal()

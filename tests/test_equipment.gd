@@ -82,6 +82,14 @@ func run() -> void:
 	await physics_frame
 	check(day_lit-game.park.illumination_ev(ground,false)>2,"Noon sun and shadow differ in EV")
 	shade.queue_free()
+	game.park.set_time_of_day("golden")
+	var golden_sun = game.park.illumination_ev(Vector3(0, 3.0, 0), "golden")
+	check(golden_sun > 13.0 and golden_sun < day_lit, "Golden hour sun EV is warm and softer than noon")
+	check(absf(game.park.sun.rotation_degrees.x - (-15.0)) < 2.0, "Golden hour sun is low on horizon")
+	game.start_session("golden")
+	check(game.time_of_day == "golden" and not game.night, "Golden hour session initialized")
+	check(game.status_label.text.begins_with("HORA DORADA"), "Status label shows HORA DORADA")
+	game.start_session("day")
 	for p in game.people: p.visible = false
 	var person = game.people[0]
 	person.visible = true

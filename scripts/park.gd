@@ -257,22 +257,71 @@ func build() -> void:
 	build_clouds()
 	set_night(false)
 
-func set_night(night: bool) -> void:
-	is_night = night
-	sun.light_energy = .035 if night else 1.4
-	sun.light_color = Color("9caed4") if night else Color("fff0d7")
-	environment.environment.ambient_light_color = Color("394568") if night else Color("c6d6df")
-	environment.environment.ambient_light_energy = .14 if night else .16
-	environment.environment.fog_light_color = Color("192139") if night else Color("c5d4c9")
-	environment.environment.fog_depth_begin = 7.0 if night else 8.0
-	environment.environment.fog_depth_end = 20.0 if night else 22.0
-	var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
-	sky_mat.sky_top_color = Color("060d21") if night else Color("87b2c5")
-	sky_mat.sky_horizon_color = Color("192139") if night else Color("d4e1dc")
-	sky_mat.ground_horizon_color = Color("192139") if night else Color("c5d4c9")
-	sky_mat.ground_bottom_color = Color("060d15") if night else Color("738064")
-	for light in lamps: light.light_energy = 2.2 if night else 0
+func set_time_of_day(tod: String) -> void:
+	time_of_day = tod
+	is_night = (tod == "night")
+	var is_golden = (tod == "golden")
+	if is_night:
+		sun.rotation_degrees = Vector3(-72,-35,0)
+		sun.light_energy = .035
+		sun.light_color = Color("9caed4")
+		sun.shadow_blur = 1.5
+		environment.environment.ambient_light_color = Color("394568")
+		environment.environment.ambient_light_energy = .14
+		environment.environment.fog_light_color = Color("192139")
+		environment.environment.fog_depth_begin = 7.0
+		environment.environment.fog_depth_end = 20.0
+		environment.environment.tonemap_exposure = 0.95
+		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
+		sky_mat.sky_top_color = Color("060d21")
+		sky_mat.sky_horizon_color = Color("192139")
+		sky_mat.ground_horizon_color = Color("192139")
+		sky_mat.ground_bottom_color = Color("060d15")
+		for light in lamps:
+			light.light_energy = 2.2
+			light.light_color = Color("ffcd82")
+	elif is_golden:
+		# Spectacular low-angle golden hour lighting (pitch -15 deg, azimuth -48 deg)
+		sun.rotation_degrees = Vector3(-15,-48,0)
+		sun.light_energy = 2.2
+		sun.light_color = Color("ffa544")
+		sun.shadow_blur = 2.2
+		environment.environment.ambient_light_color = Color("4a5e7e")
+		environment.environment.ambient_light_energy = .24
+		environment.environment.fog_light_color = Color("e58b3e")
+		environment.environment.fog_depth_begin = 10.0
+		environment.environment.fog_depth_end = 28.0
+		environment.environment.tonemap_exposure = 0.94
+		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
+		sky_mat.sky_top_color = Color("18355e")
+		sky_mat.sky_horizon_color = Color("ed8234")
+		sky_mat.ground_horizon_color = Color("b55e24")
+		sky_mat.ground_bottom_color = Color("2e1c12")
+		# Incipient twilight illumination on park lampposts
+		for light in lamps:
+			light.light_energy = 0.90
+			light.light_color = Color("ffcb74")
+	else:
+		sun.rotation_degrees = Vector3(-72,-35,0)
+		sun.light_energy = 1.4
+		sun.light_color = Color("fff0d7")
+		sun.shadow_blur = 1.5
+		environment.environment.ambient_light_color = Color("c6d6df")
+		environment.environment.ambient_light_energy = .16
+		environment.environment.fog_light_color = Color("c5d4c9")
+		environment.environment.fog_depth_begin = 8.0
+		environment.environment.fog_depth_end = 22.0
+		environment.environment.tonemap_exposure = 0.88
+		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
+		sky_mat.sky_top_color = Color("87b2c5")
+		sky_mat.sky_horizon_color = Color("d4e1dc")
+		sky_mat.ground_horizon_color = Color("c5d4c9")
+		sky_mat.ground_bottom_color = Color("738064")
+		for light in lamps: light.light_energy = 0
 	update_weather(0)
+
+func set_night(night: bool) -> void:
+	set_time_of_day("night" if night else "day")
 
 func merge_static_meshes() -> void:
 	var groups = {}
@@ -305,17 +354,21 @@ func light_visible(point: Vector3, toward: Vector3, person = null) -> bool:
 		query.exclude = excluded
 	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
-func illumination_ev(point: Vector3, night: bool, person = null) -> float:
-	var intensity = pow(2.0,2.0 if night else 11.0)
-	var toward_sun = point+sun.global_basis.z*80
-	if not night and light_visible(point,toward_sun,person): intensity += pow(2.0,14.7)*sun_transmission()
-	if night:
+func illumination_ev(point: Vector3, tod_or_night: Variant, person = null) -> float:
+	var mode_str = str(tod_or_night)
+	var mode_name = "night" if (mode_str == "true" or mode_str == "night") else ("golden" if mode_str == "golden" else "day")
+	var intensity = pow(2.0, 2.0 if mode_name == "night" else (9.5 if mode_name == "golden" else 11.0))
+	var toward_sun = point + sun.global_basis.z * 80
+	if mode_name != "night" and light_visible(point, toward_sun, person):
+		var sun_ev = 13.9 if mode_name == "golden" else 14.7
+		intensity += pow(2.0, sun_ev) * sun_transmission()
+	if mode_name == "night" or mode_name == "golden":
 		for light in lamps:
 			var distance = point.distance_to(light.global_position)
-			if distance < light.omni_range and light_visible(point,light.global_position,person):
-				var falloff = pow(maxf(0,1-pow(distance/light.omni_range,4)),2)/maxf(.25,distance*distance)
-				intensity += 150*light.light_energy*falloff
-	return log(intensity)/log(2.0)
+			if distance < light.omni_range and light_visible(point, light.global_position, person):
+				var falloff = pow(maxf(0, 1 - pow(distance / light.omni_range, 4)), 2) / maxf(.25, distance * distance)
+				intensity += 150 * light.light_energy * falloff
+	return log(intensity) / log(2.0)
 
 var clouds: Node3D
 var cloud_material: StandardMaterial3D
@@ -323,6 +376,7 @@ var weather_time = 0.0
 var cloud_cover = 0.0
 var clouds_enabled = true
 var is_night = false
+var time_of_day: String = "day"
 
 func build_clouds() -> void:
 	clouds = Node3D.new()
@@ -353,17 +407,31 @@ func update_weather(dt: float) -> void:
 	var phase = fposmod(weather_time,18.0)
 	# A cloud front crosses the sun in ~1 second, stays, then clears again.
 	cloud_cover = smoothstep(6.0,7.2,phase)*(1-smoothstep(11.0,12.2,phase)) if clouds_enabled else 0.0
-	sun.light_energy = .035 if is_night else 1.4*sun_transmission()
+	if is_night:
+		sun.light_energy = .035
+	elif time_of_day == "golden":
+		sun.light_energy = 2.2 * sun_transmission()
+	else:
+		sun.light_energy = 1.4 * sun_transmission()
 	if is_instance_valid(clouds):
 		clouds.visible = clouds_enabled
 		clouds.position.x = (phase-9.0)*4.5
-		cloud_material.albedo_color = Color("202c45") if is_night else Color("edf0ed").darkened(cloud_cover*.22)
+		if is_night:
+			cloud_material.albedo_color = Color("202c45")
+		elif time_of_day == "golden":
+			cloud_material.albedo_color = Color("f09e60").darkened(cloud_cover*.18)
+		else:
+			cloud_material.albedo_color = Color("edf0ed").darkened(cloud_cover*.22)
 
 func sun_transmission() -> float:
 	return lerpf(1.0,.09,cloud_cover)
 
-func sky_ev(night: bool) -> float:
-	return 3.0 if night else 15.0+log(sun_transmission())/log(2.0)
+func sky_ev(tod_or_night: Variant) -> float:
+	var mode_str = str(tod_or_night)
+	var mode_name = "night" if (mode_str == "true" or mode_str == "night") else ("golden" if mode_str == "golden" else "day")
+	if mode_name == "night": return 3.0
+	elif mode_name == "golden": return 12.8 + log(sun_transmission()) / log(2.0)
+	return 15.0 + log(sun_transmission()) / log(2.0)
 
 func build_diorama_base() -> void:
 	# Circular mahogany wooden plinth with stepped moulding and engraved brass plaque
