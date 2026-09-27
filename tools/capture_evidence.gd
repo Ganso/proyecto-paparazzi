@@ -142,10 +142,7 @@ func build_banco(park: ParkScene, parent: Node3D) -> void:
 func build_farola(park: ParkScene, parent: Node3D) -> void:
 	var f = Node3D.new()
 	parent.add_child(f)
-	park.cylinder(.055, 2.55, Vector3.UP * 1.275, Color("4d5552"), "", f)
-	park.cylinder(.12, .15, Vector3.UP * .075, Color("575c55"), "", f)
-	park.cylinder(.19, .38, Vector3.UP * 2.55, Color("efdeaf"), "", f, .12)
-	park.cylinder(.24, .11, Vector3.UP * 2.79, Color("505753"), "", f, .03)
+	park.build_farola_mesh(f, false)
 
 func build_papelera(park: ParkScene, parent: Node3D) -> void:
 	var p = Node3D.new()
@@ -575,7 +572,7 @@ func phase_3_animations() -> void:
 	farola_node.position = Vector3(0, 0, 0)
 
 	var lamp_light = OmniLight3D.new()
-	lamp_light.position = Vector3(0, 2.3, 0.24)
+	lamp_light.position = Vector3(0, 2.69, 0)
 	lamp_light.light_color = Color("ffcd82")
 	lamp_light.light_energy = 0.0
 	studio.add_child(lamp_light)

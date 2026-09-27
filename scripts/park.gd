@@ -9,6 +9,61 @@ var materials = {}
 var benches: Array[Dictionary] = []
 var triangle_count = 0
 var current_graphics_preset = "Ultra"
+var glass_color = Color(0.82, 0.92, 0.95, 0.32)
+var bulb_color = Color("fff5c0")
+var glass_material: StandardMaterial3D
+var bulb_material: StandardMaterial3D
+
+func init_lantern_materials() -> void:
+	if glass_material == null:
+		glass_material = StandardMaterial3D.new()
+		glass_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		glass_material.albedo_color = glass_color
+		glass_material.roughness = 0.08
+		glass_material.metallic_specular = 0.95
+		glass_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		materials[glass_color.to_html()] = glass_material
+
+	if bulb_material == null:
+		bulb_material = StandardMaterial3D.new()
+		bulb_material.albedo_color = bulb_color
+		bulb_material.roughness = 0.20
+		bulb_material.metallic_specular = 0.5
+		materials[bulb_color.to_html()] = bulb_material
+
+func build_farola_mesh(parent: Node3D, with_collider: bool = true) -> void:
+	init_lantern_materials()
+	var col_label = Texts.get_text("una_farola") if with_collider else ""
+	# 1. Base escalonada de fundición de hierro con moldura
+	cylinder(.15, .16, Vector3.UP * .08, Color("28302d"), col_label, parent)
+	cylinder(.11, .14, Vector3.UP * .23, Color("2e3633"), "", parent, .068)
+	
+	# 2. Fuste estriado esbelto con collarines ornamentales
+	cylinder(.052, 2.15, Vector3.UP * 1.34, Color("323a37"), col_label, parent, .042)
+	cylinder(.072, .04, Vector3.UP * 1.75, Color("3d4642"), "", parent)
+	cylinder(.055, .08, Vector3.UP * 2.45, Color("2e3633"), "", parent, .11)
+	
+	# 3. Jaula del farol: repisa inferior cuadrangular y 4 pilastras de forja
+	cube(Vector3(.34, .04, .34), Vector3.UP * 2.50, Color("262e2b"), "", parent)
+	for x in [-1.0, 1.0]:
+		for z in [-1.0, 1.0]:
+			cube(Vector3(.022, .34, .022), Vector3(x * .13, 2.68, z * .13), Color("262e2b"), "", parent)
+	
+	# 4. Cuatro paneles de cristal transparente biselado
+	cube(Vector3(.25, .31, .012), Vector3(0, 2.68, .13), glass_color, "", parent)
+	cube(Vector3(.25, .31, .012), Vector3(0, 2.68, -.13), glass_color, "", parent)
+	cube(Vector3(.012, .31, .25), Vector3(.13, 2.68, 0), glass_color, "", parent)
+	cube(Vector3(.012, .31, .25), Vector3(-.13, 2.68, 0), glass_color, "", parent)
+	
+	# 5. Bombilla interior cálida y casquillo
+	cylinder(.032, .05, Vector3.UP * 2.81, Color("76653f"), "", parent)
+	cylinder(.038, .09, Vector3.UP * 2.69, bulb_color, "", parent, .02)
+	
+	# 6. Tejadillo piramidal y aguja superior
+	cylinder(.20, .14, Vector3.UP * 2.92, Color("262e2b"), "", parent, .035)
+	cylinder(.038, .07, Vector3.UP * 3.01, Color("343d39"), "", parent)
+	cylinder(.014, .08, Vector3.UP * 3.07, Color("343d39"), "", parent)
+
 
 func material(color: Color, roughness: float = 0.82, specular: float = 0.25) -> StandardMaterial3D:
 	var key = color.to_html()
@@ -211,15 +266,13 @@ func build() -> void:
 		var root = Node3D.new()
 		root.position = polar(theta,0.8 if i%3 == 0 else 8.6)
 		add_child(root)
-		cylinder(.055,2.55,Vector3.UP*1.275,Color("4d5552"),Texts.get_text("una_farola"),root)
-		cylinder(.12,.15,Vector3.UP*.075,Color("575c55"),Texts.get_text("una_farola"),root)
-		cylinder(.19,.38,Vector3.UP*2.55,Color("efdeaf"),Texts.get_text("una_farola"),root,.12)
-		cylinder(.24,.11,Vector3.UP*2.79,Color("505753"),Texts.get_text("una_farola"),root,.03)
+		build_farola_mesh(root, true)
 		var light = OmniLight3D.new()
-		light.position = Vector3(0,2.30,.24)
+		light.position = Vector3(0, 2.69, 0)
 		light.shadow_enabled = true
-		light.omni_range = 6
+		light.omni_range = 6.0
 		light.light_color = Color("ffcd82")
+		light.light_energy = 0.0
 		root.add_child(light)
 		lamps.append(light)
 	for i in 4:
@@ -336,6 +389,10 @@ func set_time_of_day(tod: String) -> void:
 		for light in lamps:
 			light.light_energy = 2.2
 			light.light_color = Color("ffcd82")
+		if bulb_material:
+			bulb_material.emission_enabled = true
+			bulb_material.emission = Color("ffcd82")
+			bulb_material.emission_energy_multiplier = 4.5
 	elif is_golden:
 		# Spectacular low-angle golden hour lighting (pitch -15 deg, azimuth -48 deg)
 		sun.rotation_degrees = Vector3(-15,-48,0)
@@ -357,6 +414,10 @@ func set_time_of_day(tod: String) -> void:
 		for light in lamps:
 			light.light_energy = 0.90
 			light.light_color = Color("ffcb74")
+		if bulb_material:
+			bulb_material.emission_enabled = true
+			bulb_material.emission = Color("ffcb74")
+			bulb_material.emission_energy_multiplier = 2.0
 	else:
 		sun.rotation_degrees = Vector3(-72,-35,0)
 		sun.light_energy = 1.4
@@ -374,6 +435,7 @@ func set_time_of_day(tod: String) -> void:
 		sky_mat.ground_horizon_color = Color("c5d4c9")
 		sky_mat.ground_bottom_color = Color("738064")
 		for light in lamps: light.light_energy = 0
+		if bulb_material: bulb_material.emission_enabled = false
 	update_weather(0)
 	apply_graphics_preset(current_graphics_preset)
 

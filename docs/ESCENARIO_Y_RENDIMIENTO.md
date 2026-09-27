@@ -70,7 +70,7 @@ Para cerrar visualmente el horizonte y proporcionar un fondo natural continuo tr
   - Luz incidente: **$EV \approx 14.0$** a pleno sol rasante y **$EV \approx 9.6$** en las sombras proyectadas.
 - **Noche**:
   - Sol desactivado / atenuado (`light_energy = 0.035`, tinte nocturno `9caed4`).
-  - 12 farolas cilíndricas con luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas (`light_energy = 2.2`).
+  - 12 farolas ornamentales de fundición de hierro con pedestal moldurado, 4 paneles de cristal transparente (`TRANSPARENCY_ALPHA`), bombilla con filamento incandescente de emisión activa y luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas (`light_energy = 2.2`).
   - Luz incidente: **$EV = 2.0$** lejos de farolas; bajo farola $\approx 8.4$ a 1 m, $5.2$ a 3 m y $2.9$ a 5 m.
 
 ### 3.2 Sistema Meteorológico de Nubes
