@@ -636,12 +636,12 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Hito 2** | **2.2.3** | SSAO macro ($0.35\text{ m}$) en rótulas y pliegues | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras de cavidad profundas en articulaciones |
 | **Hito 2** | **2.2.4** | Sombras direccionales PCSS con penumbra suave | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras borrosas según distancia del foco |
 | **Hito 2** | **2.2.5** | Volumetric Fog y motas de polvo flotando en contraluz | Bajo-Medio (S-M) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Atmósfera de taller de modelismo con haz de luz |
-| **Hito 3** | **2.3.1** | Bancos de 7 listones de teca biselados y patas de forja | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Sustitución de bancos cúbicos por modelos de maqueta |
+| **Hito 3** | **2.3.1** | Bancos de 7 listones de teca biselados y patas de forja | Bajo (S) | Alto | 🚀 **Quick Win** | ✅ **Hecho** | Acabado físico de forja y teca satinada en `park.gd` |
 | **Hito 3** | **2.3.2** | Farolas de fundición de hierro con cristal y filamento | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Farolas transparentes con iluminación interior cálida |
-| **Hito 3** | **2.3.3** | Peana circular de caoba perimetral con placa de latón | Bajo-Medio (S-M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Marco formal de diorama artesanal a escala 1:18 |
+| **Hito 3** | **2.3.3** | Peana circular de caoba perimetral con placa de latón | Bajo (S) | Alto | 🚀 **Quick Win** | ✅ **Hecho** | Zócalo perimetral de caoba y placa a escala en `park.gd` |
 | **Hito 4** | **2.4.1** | Generador de UVs analíticas cilíndricas en `build_catalog.py` | Medio (M) | Medio | ⚙️ Base | 📝 Pendiente | Coordenadas UV uniformes sin costuras visibles |
 | **Hito 4** | **2.4.2** | Remodelado a 16-20 segmentos radiales ultra-suaves | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Maniquíes perfectamente redondeados en teleobjetivo |
-| **Hito 4** | **2.4.3** | Material PBR de 4 maderas nobles con `Clearcoat` activo | Medio (M) | **Muy Alto** | 💎 **Gran Hito** | 📝 Pendiente | Brillo satinado de barniz sobre madera de haya/nogal |
+| **Hito 4** | **2.4.3** | Material de maderas nobles con `Clearcoat` y barniz satinado | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | ✅ **Hecho** | Brillo satinado y rim light en `cel_shading.gdshader` |
 | **Hito 4** | **2.4.4** | Rótulas esféricas con textura a testa y pernos de latón | Bajo-Medio (S-M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Articulaciones mecánicas visibles hiperrealistas |
 | **Hito 5** | **2.5.1** | Atlas de texturas textiles PBR (denim, piqué, ripstop) | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Ropa con hilado de tejido visible a 45° en zoom |
 | **Hito 5** | **2.5.2** | Activación del canal `Sheen` para lustre de microfibras | Bajo (S) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Halo aterciopelado en hombros y bordes de ropa |

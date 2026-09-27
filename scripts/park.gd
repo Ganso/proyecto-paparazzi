@@ -9,12 +9,13 @@ var materials = {}
 var benches: Array[Dictionary] = []
 var triangle_count = 0
 
-func material(color: Color) -> StandardMaterial3D:
+func material(color: Color, roughness: float = 0.82, specular: float = 0.25) -> StandardMaterial3D:
 	var key = color.to_html()
 	if not materials.has(key):
 		var m = StandardMaterial3D.new()
 		m.albedo_color = color
-		m.roughness = 1
+		m.roughness = roughness
+		m.metallic_specular = specular
 		materials[key] = m
 	return materials[key]
 
@@ -228,11 +229,13 @@ func build() -> void:
 		root.rotation.y = PI-deg_to_rad(theta)
 		add_child(root)
 		benches.append({"theta":theta,"radius":bench_radius,"occupied":false,"root":root})
+		material(Color("2a3230"), 0.55, 0.45) # Cast iron legs
+		material(Color("8f6136"), 0.42, 0.45) # Varnished teak slats
 		for x in [-.65,.65]:
-			cube(Vector3(.07,.46,.48),Vector3(x,.23,.15),Color("48514a"),Texts.get_text("un_banco"),root)
+			cube(Vector3(.07,.46,.48),Vector3(x,.23,.15),Color("2a3230"),Texts.get_text("un_banco"),root)
 		for j in 3:
-			cube(Vector3(1.65,.045,.13),Vector3(0,.47,j*.14),Color("ac8250"),Texts.get_text("un_banco"),root)
-			cube(Vector3(1.65,.105,.045),Vector3(0,.66+j*.13,.4),Color("ac8250"),Texts.get_text("un_banco"),root)
+			cube(Vector3(1.65,.045,.11),Vector3(0,.47,j*.15),Color("8f6136"),Texts.get_text("un_banco"),root)
+			cube(Vector3(1.65,.095,.045),Vector3(0,.66+j*.13,.4),Color("8f6136"),Texts.get_text("un_banco"),root)
 	for i in 70:
 		var foliage = SphereMesh.new()
 		foliage.radius = rng.randf_range(.25,.5)
@@ -249,6 +252,7 @@ func build() -> void:
 		cube(Vector3(.9,.35,.7),planter+Vector3.UP*.175,Color("a78366"),"una jardinera")
 		for j in 5:
 			cylinder(.09,.14,planter+Vector3((j-2)*.15,.43,0),[Color("d6ac4b"),Color("b45c78"),Color("e8dac0")][i%3])
+	build_diorama_base()
 	merge_static_meshes()
 	build_clouds()
 	set_night(false)
@@ -360,3 +364,57 @@ func sun_transmission() -> float:
 
 func sky_ev(night: bool) -> float:
 	return 3.0 if night else 15.0+log(sun_transmission())/log(2.0)
+
+func build_diorama_base() -> void:
+	# Circular mahogany wooden plinth with stepped moulding and engraved brass plaque
+	# Emulates a handcrafted 1:18 architectural studio model (docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md §3.3 E & 8.4 Tarea 2.3.3)
+	var mahogany = Color("231209")
+	material(mahogany, 0.36, 0.60)
+	material(Color("d4af37"), 0.26, 0.85) # Brass plaque
+	material(Color("b89628"), 0.35, 0.70) # Brass inner recess
+	material(Color("f0d368"), 0.20, 0.90) # Brass rivets
+	var rim_segments = 48
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var profile = [
+		Vector2(17.8, -0.01),
+		Vector2(17.9, 0.08),
+		Vector2(18.2, 0.16),
+		Vector2(18.7, 0.14),
+		Vector2(19.2, -0.25)
+	]
+	for seg in rim_segments:
+		var a1 = deg_to_rad(seg * (360.0 / rim_segments))
+		var a2 = deg_to_rad((seg + 1) * (360.0 / rim_segments))
+		for p in profile.size() - 1:
+			var r1 = profile[p].x
+			var y1 = profile[p].y
+			var r2 = profile[p + 1].x
+			var y2 = profile[p + 1].y
+			var v1 = Vector3(sin(a1) * r1, y1, -cos(a1) * r1)
+			var v2 = Vector3(sin(a2) * r1, y1, -cos(a2) * r1)
+			var v3 = Vector3(sin(a2) * r2, y2, -cos(a2) * r2)
+			var v4 = Vector3(sin(a1) * r2, y2, -cos(a1) * r2)
+			var norm = ((v2 - v1).cross(v4 - v1)).normalized()
+			st.set_normal(norm)
+			st.add_vertex(v1)
+			st.add_vertex(v2)
+			st.add_vertex(v3)
+			st.add_vertex(v1)
+			st.add_vertex(v3)
+			st.add_vertex(v4)
+	prop(st.commit(), Vector3.ZERO, mahogany, "", self)
+
+	# Brass exhibition plaque at the primary entrance azimuth (theta = 120 deg)
+	var plaque_theta = 120.0
+	var plaque_pos = polar(plaque_theta, 18.9) + Vector3.UP * -0.04
+	var plaque_root = Node3D.new()
+	plaque_root.position = plaque_pos
+	plaque_root.rotation.y = PI - deg_to_rad(plaque_theta)
+	add_child(plaque_root)
+	cube(Vector3(1.20, 0.32, 0.025), Vector3(0, 0, 0), Color("d4af37"), Texts.get_text("un_elemento_del_parque"), plaque_root)
+	cube(Vector3(1.10, 0.24, 0.030), Vector3(0, 0, 0.005), Color("b89628"), "", plaque_root)
+	for sx in [-0.52, 0.52]:
+		for sy in [-0.11, 0.11]:
+			cylinder(0.016, 0.038, Vector3(sx, sy, 0.01), Color("f0d368"), "", plaque_root)
+

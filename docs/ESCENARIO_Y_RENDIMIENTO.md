@@ -29,6 +29,7 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
   r = 14.2 m         Fila primaria de arbolado (30 árboles)
   r = 15.0 - 16.4 m  Sotobosque y arbustos bajo copas (60 arbustos)
   r = 15.2 - 16.2 m  Fila secundaria de árboles intercalados (36 árboles)
+  r = 17.8 - 19.2 m  Peana perimetral de caoba con moldura de diorama y placa de latón (Escala 1:18)
   r = 21.0 - 27.0 m  Bloques de edificios del horizonte urbano (36 edificios)
   r = 45.0 m         Límite exterior del césped
 ```
