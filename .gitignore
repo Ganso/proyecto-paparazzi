@@ -1,5 +1,6 @@
 .godot/
 .DS_Store
-build/
+build/*
+!build/paparazzi-debug.apk
 *.log
 Godot*.exe

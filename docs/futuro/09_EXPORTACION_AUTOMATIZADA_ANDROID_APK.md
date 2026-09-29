@@ -2,6 +2,13 @@
 
 Este documento detalla la arquitectura, el toolchain y los scripts necesarios para la compilación, empaquetado y despliegue automatizado de archivos APK de prueba en terminales Android para **Proyecto Paparazzi**.
 
+> [!NOTE]
+> **Estado: 🟡 Fases 1 y 2 implementadas.** El preset real está en [`export_presets.cfg`](../../export_presets.cfg), el script en [`tools/export_android.sh`](../../tools/export_android.sh) y la prueba en [`tests/test_export.gd`](../../tests/test_export.gd). Comandos, requisitos y cifras: [docs/TESTS_Y_VERIFICACION.md §4.2](../TESTS_Y_VERIFICACION.md). Diferencias respecto a la propuesta original:
+> - **El APK se versiona**: `build/paparazzi-debug.apk` tiene una excepción en `.gitignore` (`build/*` + `!build/paparazzi-debug.apk`) y se sube al repositorio tras cada compilación (28 MB en arm64-v8a).
+> - **Claves de Godot 4.7**: `architectures/arm64-v8a`, `gradle_build/use_gradle_build=false`, `screen/immersive_mode`. La orientación y la compresión de texturas son ajustes de proyecto (`display/window/handheld/orientation=4` y `rendering/textures/vram_compression/import_etc2_astc=true`), y `include_filter` empaqueta `data/*.json` y `data/piezas/*.json`.
+> - **Firma**: el script genera `~/.android/debug.keystore` si falta y se lo pasa a Godot con `GODOT_ANDROID_KEYSTORE_DEBUG_*`. La instalación con `adb` solo se hace con `INSTALL=1`.
+> - **Toolchain**: JDK 17, `platform-tools`, `build-tools;35.0.1` y `platforms;android-35`; en Windows se busca por defecto en `D:/Android-toolchain`.
+
 ---
 
 ## 1. Justificación y Objetivos de la Plataforma Móvil
@@ -160,7 +167,7 @@ Las decisiones arquitectónicas del proyecto benefician directamente la ejecuci�
 
 ## 6. Hoja de Ruta de Implementación
 
-1. **Fase 1: Configuración de Plantillas y Preset**: Registrar `export_presets.cfg` con el identificador `org.ganso.proyectopaparazzi`.
-2. **Fase 2: Script `export_android.sh`**: Implementar y validar el script con comprobación automática de `debug.keystore`.
+1. ✅ **Fase 1: Configuración de Plantillas y Preset**: Registrar `export_presets.cfg` con el identificador `org.ganso.proyectopaparazzi`.
+2. ✅ **Fase 2: Script `export_android.sh`**: Implementar y validar el script con comprobación automática de `debug.keystore`.
 3. **Fase 3: Controles Táctiles en Pantalla**: Integrar la capa de UI táctil descrita en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) condicionada a `OS.has_feature("mobile")`.
 4. **Fase 4: Integración CI/CD (GitHub Actions)**: Flujo de trabajo automatizado que genera el APK firmado con clave de debug en cada commit etiquetado y lo adjunta como artefacto descargable.

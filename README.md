@@ -28,6 +28,7 @@ godot --path .
 - **En macOS**: También puedes hacer doble clic en `Jugar.command`.
 - **En Windows**: Doble clic en `Jugar.bat`. Si hay un `Godot*_win64.exe` en la raíz del proyecto (ignorado por git), se usa ese; si no, `godot-4`/`godot` del `PATH`.
 - Ambos lanzadores respetan la variable `GODOT_BIN` y, a continuación, dan prioridad a los ejecutables `Godot*_win64.exe` locales (si hay varios, el último por orden alfabético).
+- **En Android**: Instala `build/paparazzi-debug.apk` (arm64, firmado con clave de depuración; activa la instalación desde orígenes desconocidos). Para regenerarlo: `./tools/export_android.sh` (requisitos en [docs/TESTS_Y_VERIFICACION.md §4.2](docs/TESTS_Y_VERIFICACION.md)).
 - **Desde el editor de Godot**: Abre la carpeta en el Project Manager y pulsa **F5**.
 
 ---

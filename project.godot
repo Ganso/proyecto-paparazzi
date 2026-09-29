@@ -25,6 +25,7 @@ window/size/viewport_height=720
 window/size/window_width_override=1440
 window/size/window_height_override=810
 window/stretch/mode="canvas_items"
+window/handheld/orientation=4
 
 [environment]
 
@@ -35,6 +36,7 @@ defaults/default_clear_color=Color(0.72, 0.82, 0.83, 1)
 rendering_device/staging_buffer/max_size_mb=8
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
 lights_and_shadows/directional_shadow/size=2048
 lights_and_shadows/directional_shadow/size.mobile=1024
 2d/shadow_atlas/size=256
