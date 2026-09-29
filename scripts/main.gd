@@ -1102,6 +1102,8 @@ func apply_mannequin_graphics_preset(preset: String) -> void:
 func apply_graphics_preset(preset: String) -> void:
 	graphics_preset = preset
 	if park: park.apply_graphics_preset(preset)
+	# FXAA smooths the mannequins' ink lines and the scene edges without the memory of MSAA (VRAM < 60 MiB).
+	if is_instance_valid(viewport): viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if preset == "Bajo" else Viewport.SCREEN_SPACE_AA_FXAA
 	apply_mannequin_graphics_preset(preset)
 	if is_instance_valid(graphics_button):
 		graphics_button.text = "Gráficos · " + graphics_preset

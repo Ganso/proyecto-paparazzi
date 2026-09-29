@@ -1,81 +1,96 @@
-# Paso 1 · Parque Ilustrado (Mejora Gráfica de Bajo Coste y Gran Impacto)
+# Paso 1 · Parque Fusionado, Oclusión Horneada y Atmósfera
 
-**Estado: 📝 Siguiente tarea a realizar.** Es el primer punto de la hoja de ruta ([README §4](README.md)) y la mejora G1 de [02 §11](02_ESTILO_VISUAL_Y_POLIGONOS.md).
+**Estado: ✅ Completado (29-09-2026).** Primer punto de la hoja de ruta ([README §4](README.md)) y mejora G1 de [02 §11](02_ESTILO_VISUAL_Y_POLIGONOS.md). Comparativas antes/después en `docs/evidencias/comparativas/parque_ilustrado_*.png` (día, hora dorada y noche, dos encuadres cada una).
 
----
-
-## 1. Por qué esta mejora primero
-
-Al comparar la [imagen de referencia](referencia.jpg) con la captura actual del parque ([docs/evidencias/estados/04_parque_dia.png](../evidencias/estados/04_parque_dia.png)), la mayor diferencia no está en los personajes, sino en **todo lo demás**:
-
-| Aspecto | Referencia | Juego actual |
-|---|---|---|
-| Estilo | Toon con contorno de tinta en **todo**: árboles, bancos, farolas, verja | Toon y contorno solo en los maniquíes; el parque usa `StandardMaterial3D` con sombreado continuo, así que los personajes parecen recortados sobre otro juego |
-| Contraste y color | Verdes saturados, cielo claro, planos nítidos hasta el fondo | La niebla de profundidad empieza a 7 m en Ultra (`park.gd::apply_graphics_preset`) y blanquea el parque desde el carril 2 |
-| Volumen | Base de objetos y copas oscurecidas | Sin oclusión en el parque: arbustos y bancos «flotan» sobre el césped |
-
-Además, el parque **no** está fusionado como dice la documentación: `merge_static_meshes()` agrupa por color y celda de 6 m (692 nodos, 78 materiales), y el visor dibuja **~1.800 draw calls** con una mediana de **20 ms** por fotograma en una Intel Iris Xe ([TESTS §5](../TESTS_Y_VERIFICACION.md)). La misma intervención que da el aspecto ilustrado (colores de vértice y un material compartido) resuelve también el rendimiento, en escritorio y sobre todo en móvil.
-
-**Coste estimado: bajo-medio (S-M), 2–3 días.** Reutiliza los shaders existentes (`cel_shading.gdshader`, `cel_outline.gdshader`), no añade texturas ni geometría y no toca la lógica fotográfica.
+> [!NOTE]
+> El plan original era un «parque ilustrado»: toon y contorno de tinta en todo el parque, como en la referencia. Se implementó y **se descartó tras revisarlo**: el parque perdía el aspecto propio del juego y, sin niebla, la imagen quedaba plana (§4). Se conservan la fusión, la oclusión horneada, las correcciones de luz y la atmósfera. El toon y el contorno siguen reservados a los maniquíes.
 
 ---
 
-## 2. Intervenciones
+## 1. Motivación
 
-### 2.1 Fusión real del parque con colores de vértice
-`park.gd::merge_static_meshes()` se reescribe:
-1. Recorre los `MeshInstance3D` opacos, transforma sus vértices a coordenadas de mundo y escribe `ARRAY_COLOR = albedo_color` del material de cada nodo, con la oclusión de §2.3.
-2. Agrupa por **sector**: 12 sectores angulares de 30° × 3 bandas radiales (0–9 m, 9–17 m, 17–45 m). Así el parque queda en unas 36 superficies y se conserva el recorte por frustum: al mirar en una dirección solo se dibujan los sectores visibles.
-3. **Excepciones con material propio**: el vidrio de las farolas (`glass_material`, transparente) y las bombillas (`bulb_material`, emisión variable de día y de noche) se agrupan aparte, en dos superficies.
-4. Los `StaticBody3D` con etiqueta (oclusión fotográfica, AF, fotómetro) **no se tocan**: siguen siendo hijos de los nodos originales, cuya malla ya se anula hoy.
-
-### 2.2 Material toon compartido con contorno
-- Un único `ShaderMaterial` para todo el parque con `cel_shading.gdshader`. Se añaden uniformes para desactivar el barniz (`varnish_specular = 0`) y suavizar el *rim* en superficies que no son de madera; o bien una variante `cel_shading_park.gdshader` si el código queda más claro.
-- `next_pass` con `cel_outline.gdshader`: línea algo más fina que la de los maniquíes (1,2 px), con la misma atenuación por distancia, para que el fondo no se llene de trazos.
-- **Suelo sin contorno**: los anillos de `ring()` escriben alfa 0 en `ARRAY_COLOR`. `cel_outline.gdshader` ya colapsa esos vértices, así que el suelo no genera casco.
-- **Perfil Bajo**: sin `next_pass` (contorno desactivado), como hoy con los maniquíes.
-
-### 2.3 Oclusión horneada en vértices
-Multiplicador de color calculado al fusionar, sin coste en tiempo de ejecución:
-- **Base de objetos**: ×0,72 a ras de suelo, subiendo hasta ×1,0 a 0,4 m de altura (bancos, papeleras, farolas, jardineras, troncos).
-- **Copas y arbustos**: ×0,80 en las caras orientadas hacia abajo (`normal.y < 0`) y ×1,0 en las superiores.
-- **Césped bajo las copas**: los vértices del anillo de suelo a menos de 1,5 m de un tronco se oscurecen ×0,85. Hace falta subdividir lo justo el anillo exterior; la mejora G2 de [02 §11](02_ESTILO_VISUAL_Y_POLIGONOS.md) aprovecha esa misma subdivisión.
-
-### 2.4 Atmósfera reajustada
-- **Niebla**: empieza tras la zona jugable (`fog_depth_begin` ≈ 13 m, fin ≈ 45 m) en lugar de a 7–9 m. Primer plano y carriles quedan con contraste pleno y solo el arbolado y el skyline se funden, como en la referencia.
-- **Color**: cielo cenital más azul, horizonte claro y una ligera subida de saturación en Alto y Ultra.
-- Ajustes por perfil en `park.gd::apply_graphics_preset()` y por hora del día en `set_time_of_day()`.
-
----
-
-## 3. Lo que no cambia
-- `photography.gd`, los 5 rayos de oclusión, `park.illumination_ev()` y la puntuación: el aspecto cambia, la física y la luz medida no.
-- Los personajes, su material y sus presupuestos.
-- Los triángulos de la escena: el contorno es un segundo pase, no geometría nueva.
-
----
-
-## 4. Criterios de Aceptación
-
-| # | Criterio | Cómo se comprueba |
-|---|---|---|
-| 1 | Draw calls del visor ≤ **150** en Ultra de día (hoy ~1.800), y medidos también de noche | `--metrics` (`draw_calls=`) y nueva comprobación en `test_game.gd` con `RenderingServer.viewport_get_render_info` |
-| 2 | Mediana de fotograma mejor que la actual en la misma máquina | `--metrics`; la cifra nueva va a [TESTS §5](../TESTS_Y_VERIFICACION.md) |
-| 3 | Todas las superficies opacas del parque llevan `ARRAY_COLOR` y comparten el material toon; el suelo tiene alfa 0 | Nueva comprobación en `test_art.gd` o `test_game.gd` |
-| 4 | Triángulos ≤ 100.000 y VRAM < 60 MiB (perfiles móviles) | `--smoke-test`, `test_game.gd` |
-| 5 | Puntuación idéntica: las mismas evidencias dan la misma nota | `test_photography.gd`, `test_equipment.gd` (oclusión y fotómetro) |
-| 6 | Oclusión y etiquetas intactas: los rayos siguen chocando con bancos, farolas y árboles con su etiqueta | `test_expansion.gd`, `test_game.gd` |
-| 7 | Navegación sin cambios | `test_navigation.gd`, `simulate_jams.gd` |
-| 8 | Evidencias gráficas regeneradas, con una comparativa antes/después de día, hora dorada y noche | `./tools/run_evidence.sh` → `docs/evidencias/comparativas/parque_ilustrado_*.png` |
-
----
-
-## 5. Riesgos y Mitigaciones
-
-| Riesgo | Mitigación |
+| Aspecto | Antes de este paso |
 |---|---|
-| Contorno con artefactos en piezas finas (barrotes de la verja, cristales, patas) | `max_width_m` del contorno más pequeño en el parque; alfa 0 en piezas de menos de 3 cm de grosor (barrotes) |
-| Pérdida del recorte por frustum con superficies grandes | Sectorización 12 × 3 (§2.1) |
-| Pases de luz extra por farola en `gl_compatibility` de noche | Medir `draw_calls` de noche (criterio 1); si se disparan, reducir el tamaño de sector en las bandas con farolas |
-| Bandas toon demasiado duras en el césped | El suelo usa `band_softness` mayor o sombreado lambertiano (uniforme del shader) |
-| Cambio de lectura del exposímetro | No hay riesgo: `illumination_ev()` se calcula con rayos y parámetros de luz, no con el render. El criterio 5 lo verifica |
+| Rendimiento | El parque no estaba fusionado como decía la documentación: 692 nodos y 78 materiales, ~1.790 draw calls por fotograma y mediana de 20,2 ms (Intel Iris Xe) |
+| Profundidad | Niebla de profundidad desde 7 m (Ultra) que blanqueaba el parque desde el carril 2 |
+| Volumen | Sin oclusión: arbustos y bancos «flotaban» sobre el césped |
+
+---
+
+## 2. Lo que se ha implementado
+
+### 2.1 Fusión real del parque con colores de vértice (`park.gd::merge_static_meshes()`)
+- Los props opacos se transforman a coordenadas de mundo y escriben su color en `ARRAY_COLOR`, multiplicado por la oclusión de §2.2. El color se escribe **en sRGB, sin convertir**, igual que los maniquíes: el motor ya lo convierte. Convertirlo antes con `srgb_to_linear()` lo linealizaba dos veces y oscurecía y saturaba el parque.
+- Se agrupan en **12 sectores de 30° × 3 bandas radiales** (0–9, 9–17 y 17–45 m): 36 superficies con recorte por frustum. El vidrio de las farolas y las bombillas conservan su material propio: **38 superficies en total**, frente a 692.
+- Material único `StandardMaterial3D` con `vertex_color_use_as_albedo` (`park.gd::vertex_color_material()`), sombreado suave como antes, sin bandas ni contorno.
+- Los `StaticBody3D` con etiqueta (oclusión fotográfica, AF, fotómetro) siguen colgando de los nodos originales, cuya malla se anula. Ni los rayos ni las etiquetas cambian.
+- Los anillos del suelo (`ring()`) se subdividen (120 segmentos y pasos radiales de 0,6 m hasta 19 m) y se indexan con `SurfaceTool.index()`, para que la oclusión de contacto tenga vértices sin multiplicar el coste.
+
+### 2.2 Oclusión horneada en vértices (sin coste por fotograma)
+- **Pie de los objetos**: ×0,72 a ras de suelo, subiendo hasta ×1,0 a 0,4 m.
+- **Volumen de copas y arbustos**: las caras que miran hacia el eje del tronco (o el centro del arbusto) o hacia abajo bajan hasta ×0,72.
+- **Contacto en el suelo** (`ground_occlusion()`): cada prop bajo (arbustos, bancos, papeleras, jardineras, troncos y copas hasta 4,5 m) oscurece el suelo bajo su huella y a su alrededor (radio ×1,6, intensidad 0,35), hasta un mínimo de ×0,55. Los oclusores se reparten en una rejilla de 3 m para que el horneado sea rápido.
+
+### 2.3 Atmósfera y luz
+- **Niebla moderada**: de 8 a 40 m en Alto y Ultra, de 9 a 48 m en Medio y sin niebla en Bajo. Deja los carriles casi limpios y da bruma al arbolado y al skyline. Antes era un muro de 7 a 20 m; una versión intermedia de 4 a 110 m dejaba la imagen plana.
+- Las distancias de niebla viven solo en los perfiles (`apply_preset_values()`): `set_time_of_day()` las fijaba, pero los perfiles las sobrescribían siempre. Lo mismo ocurría con el desenfoque de las sombras.
+- `fog_sky_affect = 0,3`, cielo diurno más azul (`6fa3cf` / `dce8ea`), skyline pálido azulado y ambiente de día 0,22 (antes 0,16).
+- **Sombras del sol nítidas y pegadas a los pies**: `shadow_blur` 0,6 (Medio) y 0,8 (Alto y Ultra), antes 1,0–2,0; `shadow_normal_bias` 0,7 (Alto) y 0,6 (Ultra), antes 1,2 y 1,4.
+- **Hora dorada**: ambiente de cielo azul claro tomado de su color (`9aaed0`, energía 0,55, `ambient_light_sky_contribution = 0`), para que las sombras largas se lean.
+- **Noche**: luna fría (`MOONLIGHT = 0,32`, antes 0,035), ambiente `394568` a 0,42, bruma azul cercana (4–34 m), exposición ×1,25 y `tonemap_white = 4` aplicados tras el perfil: el parque se lee fuera del cono de las farolas sin reventar los blancos bajo ellas. `park.illumination_ev()` ignora el sol de noche, así que el exposímetro no cambia.
+- **Antialiasing FXAA** en el visor (`Viewport.screen_space_aa`, `main.gd::apply_graphics_preset()`) en todos los perfiles salvo Bajo. No añade memoria; MSAA 4× costaría unos 30 MB.
+- **Contorno de los maniquíes** con un mínimo de 1 px (`cel_outline.gdshader::min_width_px`), para que no se rompa en trazos a distancia.
+
+### 2.4 Farolas
+En `gl_compatibility`, cada luz que toca un objeto le añade un pase de dibujo, aunque tenga energía 0. Por eso:
+- **De día** las farolas se ocultan (`visible = false`).
+- **En hora dorada** se encienden sin sombras.
+- **De noche**, las sombras dependen del perfil (`update_lamp_shadows()`): Ultra las 12, Alto las 4 interiores (carriles 0–1), Medio y Bajo ninguna. Cada sombra de farola cuesta ~100 draw calls, porque se vuelve a renderizar en cada fotograma.
+
+`illumination_ev()` usa `light_energy` y sus propios rayos, así que visibilidad y sombras del render no alteran la lectura del fotómetro ni la puntuación.
+
+---
+
+## 3. Resultados medidos
+
+Windows, Intel Iris Xe, perfil Ultra (cifras de referencia en [TESTS §5](../TESTS_Y_VERIFICACION.md)):
+
+| Cifra | Antes | Después |
+|---|---:|---:|
+| Nodos de malla del parque | 692 (78 materiales) | 38 (3 materiales) |
+| Draw calls del visor, día (`--metrics`) | 1.790 | **119** |
+| Mediana de fotograma (`--metrics`) | 20,22 ms | **16,67 ms** (60 FPS, limitado por sincronía vertical) |
+| Triángulos en escena (`--smoke-test`) | 82.198 | 90.646 (suelo subdividido; límite 100.000) |
+| VRAM en sesión completa (`test_game.gd`) | 56,60 MiB | 56,54 MiB (con picos puntuales de búferes transitorios; ver §5) |
+| Construcción del parque (`park.build()`) | 349 ms | ~645 ms (horneado de colores y oclusión) |
+
+---
+
+## 4. Intentos descartados
+
+| Intento | Problema | Decisión |
+|---|---|---|
+| Toon + contorno de tinta en todo el parque | Cambiaba el estilo propio del juego; los bordes del casco se rompían a distancia y el toon dejaba negras las caras a contraluz | Revertido: el parque vuelve al sombreado suave. Se retiraron los uniformes `shadow_tone` y `smooth_normal_from_uv2` que solo lo servían |
+| Niebla casi eliminada (4–110 m) | Sin bruma, todos los planos pesaban igual y la imagen quedaba plana | Niebla moderada de 8 a 40 m |
+| Relleno mínimo de luz también dentro de las sombras | Dejaba las sombras de los personajes a medio contraste: parecían flotar | Retirado junto al toon del parque |
+| Exposición nocturna ×1,7 | Reventaba los blancos de los maniquíes bajo las farolas | ×1,25 con `tonemap_white = 4`, más luna y ambiente |
+
+---
+
+## 5. Verificación
+
+| Criterio | Resultado |
+|---|---|
+| Superficies fusionadas (≤ 40), material de colores de vértice sin contorno, colores por vértice, oclusión de contacto en el suelo, colisionadores y etiquetas intactos, FXAA según perfil, farolas por hora y perfil, draw calls de día ≤ 300 | Comprobaciones en `test_game.gd`: 47 checks, 0 fallos |
+| Puntuación idéntica | `test_photography.gd` y `test_equipment.gd` sin cambios (535 y 561, 0 fallos) |
+| Triángulos ≤ 100.000 | `--smoke-test`: 90.646 |
+| VRAM | `test_game.gd` compara con 60.000.000 bytes (57,2 MiB, no 60 MiB). Hoy da 56,54 MiB, con 0,7 MiB de margen; en 2 de 6 ejecuciones un pico de búferes transitorios lo superó. El margen ya era igual de estrecho antes de este paso (56,60 MiB) |
+| Navegación | `test_navigation.gd` 10/10. `simulate_jams.gd` da 1 viandante atascado en este equipo **también con el código anterior**, así que no lo causa este paso |
+| Evidencias | `./tools/run_evidence.sh` regenerado. `build_sheets.py` usa el *demuxer* `concat` de ffmpeg, porque `-pattern_type glob` no existe en Windows |
+
+---
+
+## 6. Pendiente
+- **Margen de VRAM**: estabilizar la medición (o reducir memoria) para que los picos transitorios no rompan `test_game.gd`, y alinear el límite documentado (60 MiB) con el que se comprueba (60 MB).
+- **Coste de noche en Ultra** (~1.470 draw calls): limitar las sombras a las farolas del sector visible si pesa en equipos modestos.
+- **Tiempo de construcción** (~645 ms en escritorio): cachear las mallas horneadas en `user://` si pesa en móvil ([15 §5](15_VARIEDAD_PROCEDURAL.md)).

@@ -114,19 +114,30 @@ func cylinder(radius: float, height: float, pos: Vector3, color: Color, label = 
 	return prop(mesh,pos,color,label,parent)
 
 func ring(inner: float, outer: float, color: Color, y = 0.0) -> void:
+	# 120 segments and radial steps of 0.6 m up to 19 m: the baked contact occlusion
+	# (ground_occlusion) needs vertices under bushes, benches and trees. Coarser beyond.
+	var radii = [inner]
+	while radii[-1] < outer-.001:
+		var r: float = radii[-1]
+		radii.append(minf(outer,r+(.6 if r < 19.0 else 4.0+(r-19.0)*.3)))
 	for sector in 12:
 		var st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var mid = (sector*8+4)*TAU/96
+		var mid = (sector*10+5)*TAU/120
 		var center = Vector3(sin(mid)*(inner+outer)*.5,0,cos(mid)*(inner+outer)*.5)
-		for i in range(sector*8,(sector+1)*8):
-			var a = i*TAU/96
-			var b = (i+1)*TAU/96
-			var points = [Vector3(sin(a)*inner,y,cos(a)*inner),Vector3(sin(a)*outer,y,cos(a)*outer),Vector3(sin(b)*outer,y,cos(b)*outer),Vector3(sin(b)*inner,y,cos(b)*inner)]
-			for j in [0,2,1,0,3,2]:
-				st.set_normal(Vector3.UP)
-				st.add_vertex(points[j]-center)
-		prop(st.commit(),center,color)
+		for i in range(sector*10,(sector+1)*10):
+			var a = i*TAU/120
+			var b = (i+1)*TAU/120
+			for k in radii.size()-1:
+				var r0: float = radii[k]
+				var r1: float = radii[k+1]
+				var points = [Vector3(sin(a)*r0,y,cos(a)*r0),Vector3(sin(a)*r1,y,cos(a)*r1),Vector3(sin(b)*r1,y,cos(b)*r1),Vector3(sin(b)*r0,y,cos(b)*r0)]
+				for j in [0,2,1,0,3,2]:
+					st.set_normal(Vector3.UP)
+					st.add_vertex(points[j]-center)
+		# Shared vertices: same triangles, ~6 times fewer vertices to shade in merge_static_meshes().
+		st.index()
+		prop(st.commit(),center,color).set_meta("ground",true)
 
 
 func build_tree(species: int, pos: Vector3, tree_seed: int, scale_factor: float = 1.0, parent: Node3D = self) -> Node3D:
@@ -292,7 +303,7 @@ func build() -> void:
 	environment.environment.fog_depth_begin = 8.0
 	environment.environment.fog_depth_end = 22.0
 	environment.environment.fog_depth_curve = 1.0
-	environment.environment.fog_sky_affect = 0.5
+	environment.environment.fog_sky_affect = 0.3
 	environment.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
 	environment.environment.tonemap_exposure = 0.88
 	environment.environment.tonemap_white = 1.4
@@ -332,10 +343,10 @@ func build() -> void:
 		var theta = i*10.0
 		var pos = polar(theta,21+rng.randf_range(0,6))
 		var h = rng.randf_range(5,12)
-		var block = cube(Vector3(rng.randf_range(2,4),h,2.6),pos+Vector3.UP*h*.5,Color("94a5ac").lightened(snappedf(rng.randf_range(0,.2),.05)))
+		var block = cube(Vector3(rng.randf_range(2,4),h,2.6),pos+Vector3.UP*h*.5,Color("a3b7c7").lightened(snappedf(rng.randf_range(0,.2),.05)))
 		block.rotation.y = -deg_to_rad(theta)
 		for row in range(1,int(h/.65)):
-			for col in [-1,0,1]: cube(Vector3(.3,.35,.025),Vector3(col*.65,-h*.5+row*.65,1.32),Color("b8c8cc"),"",block)
+			for col in [-1,0,1]: cube(Vector3(.3,.35,.025),Vector3(col*.65,-h*.5+row*.65,1.32),Color("d3e0e6"),"",block)
 	for i in 30:
 		var theta = i*12.0+4
 		var pos = polar(theta,14.2)
@@ -429,6 +440,26 @@ func build() -> void:
 func apply_graphics_preset(preset: String) -> void:
 	current_graphics_preset = preset
 	if environment == null or sun == null: return
+	apply_preset_values(preset)
+	update_lamp_shadows()
+	# Night: presets overwrite the time-of-day exposure and fog, so night adjusts after them.
+	# Brighter exposure and a closer blue haze keep the park readable around the lamps.
+	if is_night:
+		environment.environment.tonemap_exposure *= 1.25
+		environment.environment.tonemap_white = 4.0
+		if environment.environment.fog_enabled:
+			environment.environment.fog_depth_begin = 4.0
+			environment.environment.fog_depth_end = 34.0
+
+# Night lamp shadows are re-rendered every frame (people move) and cost ~100 draw calls each in
+# gl_compatibility, so the profile decides how many cast them: Ultra all 12, Alto the 4 inner ones
+# (lanes 0-1), Medio and Bajo none. Golden-hour lamps never do: the low sun dominates.
+func update_lamp_shadows() -> void:
+	for i in lamps.size():
+		var inner = i % 3 == 0
+		lamps[i].shadow_enabled = is_night and (current_graphics_preset == "Ultra" or (current_graphics_preset == "Alto" and inner))
+
+func apply_preset_values(preset: String) -> void:
 	match preset:
 		"Bajo":
 			sun.shadow_enabled = false
@@ -438,43 +469,43 @@ func apply_graphics_preset(preset: String) -> void:
 			environment.environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 		"Medio":
 			sun.shadow_enabled = true
-			sun.shadow_blur = 1.0
+			sun.shadow_blur = .6
 			sun.directional_shadow_max_distance = 30.0
 			sun.directional_shadow_blend_splits = false
 			environment.environment.fog_enabled = true
 			environment.environment.fog_depth_begin = 9.0
-			environment.environment.fog_depth_end = 25.0
+			environment.environment.fog_depth_end = 48.0
 			environment.environment.adjustment_enabled = false
 			environment.environment.tonemap_mode = Environment.TONE_MAPPER_REINHARDT
 		"Alto":
 			sun.shadow_enabled = true
-			sun.shadow_blur = 1.5
+			sun.shadow_blur = .8
 			sun.directional_shadow_max_distance = 38.0
 			sun.directional_shadow_blend_splits = true
-			sun.shadow_bias = 0.025
-			sun.shadow_normal_bias = 1.2
+			sun.shadow_bias = 0.02
+			sun.shadow_normal_bias = .7
 			environment.environment.fog_enabled = true
 			environment.environment.fog_depth_begin = 8.0
-			environment.environment.fog_depth_end = 22.0
+			environment.environment.fog_depth_end = 40.0
 			environment.environment.adjustment_enabled = true
-			environment.environment.adjustment_contrast = 0.98
-			environment.environment.adjustment_saturation = 1.05
+			environment.environment.adjustment_contrast = 1.0
+			environment.environment.adjustment_saturation = 1.1
 			environment.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
 		"Ultra", _:
 			sun.shadow_enabled = true
-			sun.shadow_blur = 2.0
+			sun.shadow_blur = .8
 			sun.directional_shadow_max_distance = 48.0
 			sun.directional_shadow_blend_splits = true
 			sun.shadow_bias = 0.015
-			sun.shadow_normal_bias = 1.4
+			sun.shadow_normal_bias = .6
 			environment.environment.fog_enabled = true
-			environment.environment.fog_depth_begin = 7.0
-			environment.environment.fog_depth_end = 20.0
-			environment.environment.fog_depth_curve = 1.1
-			environment.environment.fog_sky_affect = 0.55
+			environment.environment.fog_depth_begin = 8.0
+			environment.environment.fog_depth_end = 40.0
+			environment.environment.fog_depth_curve = 1.0
+			environment.environment.fog_sky_affect = 0.3
 			environment.environment.adjustment_enabled = true
-			environment.environment.adjustment_contrast = 1.02
-			environment.environment.adjustment_saturation = 1.08
+			environment.environment.adjustment_contrast = 1.03
+			environment.environment.adjustment_saturation = 1.14
 			environment.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
 			environment.environment.tonemap_exposure = 0.90
 			environment.environment.tonemap_white = 1.45
@@ -485,14 +516,13 @@ func set_time_of_day(tod: String) -> void:
 	var is_golden = (tod == "golden")
 	if is_night:
 		sun.rotation_degrees = Vector3(-72,-35,0)
-		sun.light_energy = .035
+		sun.light_energy = MOONLIGHT
 		sun.light_color = Color("9caed4")
-		sun.shadow_blur = 1.5
 		environment.environment.ambient_light_color = Color("394568")
-		environment.environment.ambient_light_energy = .14
+		environment.environment.ambient_light_energy = .42
+		# The night sky is almost black: take the ambient from its colour, not from the sky.
+		environment.environment.ambient_light_sky_contribution = 0.0
 		environment.environment.fog_light_color = Color("192139")
-		environment.environment.fog_depth_begin = 7.0
-		environment.environment.fog_depth_end = 20.0
 		environment.environment.tonemap_exposure = 0.95
 		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
 		sky_mat.sky_top_color = Color("060d21")
@@ -502,6 +532,7 @@ func set_time_of_day(tod: String) -> void:
 		for light in lamps:
 			light.light_energy = 2.2
 			light.light_color = Color("ffcd82")
+			light.visible = true
 		if bulb_material:
 			bulb_material.emission_enabled = true
 			bulb_material.emission = Color("ffcd82")
@@ -511,12 +542,11 @@ func set_time_of_day(tod: String) -> void:
 		sun.rotation_degrees = Vector3(-15,-48,0)
 		sun.light_energy = 2.2
 		sun.light_color = Color("ffa544")
-		sun.shadow_blur = 2.2
-		environment.environment.ambient_light_color = Color("4a5e7e")
-		environment.environment.ambient_light_energy = .24
+		# Shadows at sunset are lit by the blue sky: a clear ambient keeps the long shadows readable.
+		environment.environment.ambient_light_color = Color("9aaed0")
+		environment.environment.ambient_light_energy = .55
+		environment.environment.ambient_light_sky_contribution = 0.0
 		environment.environment.fog_light_color = Color("e58b3e")
-		environment.environment.fog_depth_begin = 10.0
-		environment.environment.fog_depth_end = 28.0
 		environment.environment.tonemap_exposure = 0.94
 		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
 		sky_mat.sky_top_color = Color("18355e")
@@ -524,9 +554,11 @@ func set_time_of_day(tod: String) -> void:
 		sky_mat.ground_horizon_color = Color("b55e24")
 		sky_mat.ground_bottom_color = Color("2e1c12")
 		# Incipient twilight illumination on park lampposts
+		# Twilight lamps cast no shadows (see update_lamp_shadows()).
 		for light in lamps:
 			light.light_energy = 0.90
 			light.light_color = Color("ffcb74")
+			light.visible = true
 		if bulb_material:
 			bulb_material.emission_enabled = true
 			bulb_material.emission = Color("ffcb74")
@@ -535,19 +567,21 @@ func set_time_of_day(tod: String) -> void:
 		sun.rotation_degrees = Vector3(-72,-35,0)
 		sun.light_energy = 1.4
 		sun.light_color = Color("fff0d7")
-		sun.shadow_blur = 1.5
 		environment.environment.ambient_light_color = Color("c6d6df")
-		environment.environment.ambient_light_energy = .16
-		environment.environment.fog_light_color = Color("c5d4c9")
-		environment.environment.fog_depth_begin = 8.0
-		environment.environment.fog_depth_end = 22.0
+		environment.environment.ambient_light_energy = .22
+		environment.environment.ambient_light_sky_contribution = 1.0
+		environment.environment.fog_light_color = Color("cddcdd")
 		environment.environment.tonemap_exposure = 0.88
 		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
-		sky_mat.sky_top_color = Color("87b2c5")
-		sky_mat.sky_horizon_color = Color("d4e1dc")
+		sky_mat.sky_top_color = Color("6fa3cf")
+		sky_mat.sky_horizon_color = Color("dce8ea")
 		sky_mat.ground_horizon_color = Color("c5d4c9")
 		sky_mat.ground_bottom_color = Color("738064")
-		for light in lamps: light.light_energy = 0
+		# Hidden, not just at zero energy: gl_compatibility still draws a pass per lit object.
+		# illumination_ev() reads light_energy and its own rays, so the meter is unaffected.
+		for light in lamps:
+			light.light_energy = 0
+			light.visible = false
 		if bulb_material: bulb_material.emission_enabled = false
 	update_weather(0)
 	apply_graphics_preset(current_graphics_preset)
@@ -555,24 +589,126 @@ func set_time_of_day(tod: String) -> void:
 func set_night(night: bool) -> void:
 	set_time_of_day("night" if night else "day")
 
+# Opaque props become vertex colours of a few merged surfaces (docs/futuro/16), split into
+# 12 sectors × 3 radial bands so frustum culling still skips what the camera is not facing.
+# The park keeps smooth shading: toon bands and ink lines are reserved for the mannequins.
+const SECTOR_DEGREES = 30.0
+const BAND_LIMITS = [9.0, 17.0]
+# Thinner pieces (ground, glass, grilles) get no foot darkening and cast no ground occlusion.
+const THIN_LIMIT = .03
+var park_material: StandardMaterial3D
+
+func vertex_color_material() -> StandardMaterial3D:
+	if park_material == null:
+		park_material = StandardMaterial3D.new()
+		park_material.vertex_color_use_as_albedo = true
+		# Colours are written already converted to linear in append_node().
+		park_material.vertex_color_is_srgb = false
+		park_material.roughness = .82
+		park_material.metallic_specular = .25
+	return park_material
+
+func sector_key(pos: Vector3) -> String:
+	var radius = Vector2(pos.x,pos.z).length()
+	var band = 0 if radius < BAND_LIMITS[0] else (1 if radius < BAND_LIMITS[1] else 2)
+	return "%d:%d" % [band,int(fposmod(rad_to_deg(atan2(pos.x,-pos.z)),360.0)/SECTOR_DEGREES)]
+
+# Baked contact occlusion on the ground: every prop standing low darkens the ground under and
+# around its footprint (trees also under their crowns). Occluders are bucketed in a 3 m grid.
+const OCCLUSION_CELL = 3.0
+var occluders = {}
+
+func label_of(node: Node) -> String:
+	for child in node.get_children():
+		if child is StaticBody3D: return str(child.get_meta("label",""))
+	return ""
+
+func add_occluder(node: MeshInstance3D) -> void:
+	var box: AABB = node.global_transform*node.mesh.get_aabb()
+	var half = maxf(box.size.x,box.size.z)*.5
+	# Skip the flat ground, anything high above it and huge pieces (buildings, diorama plinth).
+	if box.size.y < THIN_LIMIT or half > 3.0 or box.position.y > 4.5: return
+	var center = box.get_center()
+	var occluder = Vector4(center.x,center.z,half*1.6+.15,.35*(1.0-clampf(box.position.y/4.5,0.0,1.0)))
+	var r = occluder.z
+	for cx in range(floori((center.x-r)/OCCLUSION_CELL),floori((center.x+r)/OCCLUSION_CELL)+1):
+		for cz in range(floori((center.z-r)/OCCLUSION_CELL),floori((center.z+r)/OCCLUSION_CELL)+1):
+			var cell = Vector2i(cx,cz)
+			if not occluders.has(cell): occluders[cell] = []
+			occluders[cell].append(occluder)
+
+func ground_occlusion(p: Vector3) -> float:
+	var shade = 1.0
+	for o in occluders.get(Vector2i(floori(p.x/OCCLUSION_CELL),floori(p.z/OCCLUSION_CELL)),[]):
+		var t = Vector2(p.x-o.x,p.z-o.y).length()/o.z
+		if t < 1.0: shade *= 1.0-o.w*(1.0-smoothstep(.35,1.0,t))
+	return maxf(shade,.55)
+
+func append_node(group: Dictionary, node: MeshInstance3D) -> void:
+	var xf: Transform3D = node.global_transform
+	var normal_basis = xf.basis.inverse().transposed()
+	var extent = node.mesh.get_aabb().size*xf.basis.get_scale()
+	var thin = minf(extent.x,minf(extent.y,extent.z)) < THIN_LIMIT
+	var base: Color = node.material_override.albedo_color
+	var ground = node.has_meta("ground")
+	var label = label_of(node)
+	var foliage = label == Texts.get_text("una_copa_de_arbol") or label == Texts.get_text("un_arbusto")
+	# Crown volume: faces looking in towards the trunk axis (or the bush centre) or down are darker.
+	var axis: Vector3 = node.get_parent().global_position if node.get_parent() != self else (node.global_transform*node.mesh.get_aabb()).get_center()
+	for surface in node.mesh.get_surface_count():
+		var arrays = node.mesh.surface_get_arrays(surface)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var offset = group.v.size()
+		for k in vertices.size():
+			var world = xf*vertices[k]
+			var normal = (normal_basis*normals[k]).normalized()
+			# Baked occlusion: darker at the foot of props and on faces looking down.
+			var shade = 1.0
+			if ground:
+				shade = ground_occlusion(world)
+			elif foliage:
+				var out = Vector2(world.x-axis.x,world.z-axis.z).normalized()
+				var facing = .55*normal.y+.45*(normal.x*out.x+normal.z*out.y)
+				shade = lerpf(.72,1.0,smoothstep(-.7,.5,facing))
+			else:
+				shade = 1.0-.2*maxf(0.0,-normal.y)
+			if not thin: shade *= lerpf(.72,1.0,clampf(world.y/.4,0.0,1.0))
+			group.v.append(world)
+			group.n.append(normal)
+			group.c.append(Color(base.r*shade,base.g*shade,base.b*shade))
+		var indices = arrays[Mesh.ARRAY_INDEX]
+		if indices == null or indices.is_empty():
+			for k in vertices.size(): group.i.append(offset+k)
+		else:
+			for k in indices: group.i.append(offset+k)
+
 func merge_static_meshes() -> void:
 	var groups = {}
-	var nodes = find_children("*","MeshInstance3D",true,false)
-	for node in nodes:
-		var color_key = node.material_override.albedo_color.to_html()
-		var cell = Vector2i(floori(node.global_position.x/6),floori(node.global_position.z/6))
-		var key = color_key+":"+str(cell)
-		if not groups.has(key):
-			var st = SurfaceTool.new()
-			st.begin(Mesh.PRIMITIVE_TRIANGLES)
-			groups[key] = st
-		for surface in node.mesh.get_surface_count():
-			groups[key].append_from(node.mesh,surface,node.global_transform)
-	for node in nodes: node.mesh = null
+	for node in find_children("*","MeshInstance3D",true,false):
+		if node.mesh != null and not node.has_meta("ground") and node.material_override != glass_material and node.material_override != bulb_material:
+			add_occluder(node)
+	for node in find_children("*","MeshInstance3D",true,false):
+		if node.mesh == null: continue
+		# Lantern glass (transparent) and bulbs (night emission) keep their own materials.
+		var key = "glass" if node.material_override == glass_material else ("bulb" if node.material_override == bulb_material else sector_key(node.global_position))
+		if not groups.has(key): groups[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"c":PackedColorArray(),"i":PackedInt32Array()}
+		append_node(groups[key],node)
+		# Colliders stay as children of the emptied node, so photo rays and labels are unchanged.
+		node.mesh = null
 	for key in groups:
+		var arrays = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = groups[key].v
+		arrays[Mesh.ARRAY_NORMAL] = groups[key].n
+		arrays[Mesh.ARRAY_COLOR] = groups[key].c
+		arrays[Mesh.ARRAY_INDEX] = groups[key].i
+		var mesh = ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
 		var node = MeshInstance3D.new()
-		node.mesh = groups[key].commit()
-		node.material_override = materials[key.split(":")[0]]
+		node.name = "Parque_"+key.replace(":","_")
+		node.mesh = mesh
+		node.material_override = glass_material if key == "glass" else (bulb_material if key == "bulb" else vertex_color_material())
 		add_child(node)
 
 # Incident light in EV, calibrated for the same sun/range/energy as the render.
@@ -607,6 +743,9 @@ var cloud_material: StandardMaterial3D
 var weather_time = 0.0
 var cloud_cover = 0.0
 var clouds_enabled = true
+# Cold moonlight keeps the night park readable in toon shading (dark albedos times ambient
+# alone render black). illumination_ev() ignores the sun at night, so the meter is unaffected.
+const MOONLIGHT = .32
 var is_night = false
 var time_of_day: String = "day"
 
@@ -640,7 +779,7 @@ func update_weather(dt: float) -> void:
 	# A cloud front crosses the sun in ~1 second, stays, then clears again.
 	cloud_cover = smoothstep(6.0,7.2,phase)*(1-smoothstep(11.0,12.2,phase)) if clouds_enabled else 0.0
 	if is_night:
-		sun.light_energy = .035
+		sun.light_energy = MOONLIGHT
 	elif time_of_day == "golden":
 		sun.light_energy = 2.2 * sun_transmission()
 	else:

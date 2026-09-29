@@ -3,7 +3,7 @@
 Este directorio contiene las especificaciones de diseño, análisis de viabilidad técnica y propuestas arquitectónicas para futuras expansiones de **Proyecto Paparazzi**.
 
 > [!IMPORTANT]
-> **Siguiente tarea: [16 · Parque ilustrado](16_PARQUE_ILUSTRADO_QUICK_WIN.md)**, una mejora gráfica de bajo coste y gran impacto que además reduce los draw calls de ~1.800 a unas decenas. El orden completo está en la [hoja de ruta (§4)](#4-hoja-de-ruta-recomendada).
+> **Paso 1 completado: [16 · Parque fusionado, oclusión horneada y atmósfera](16_PARQUE_ILUSTRADO_QUICK_WIN.md)** (draw calls de día de 1.790 a 119 y 60 FPS; el toon en el parque se probó y se descartó). **Siguiente: paso 2**, la migración a `InputMap` ([14](14_SOPORTE_GAMEPAD.md) fase 1) y el AF/AE que no conoce al objetivo ([12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0). El orden completo está en la [hoja de ruta (§4)](#4-hoja-de-ruta-recomendada).
 
 ---
 
@@ -13,7 +13,7 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 
 | Propuesta | Estado | Documento de Especificación / Dónde vive |
 |---|:---:|---|
-| **Parque Ilustrado (toon + contorno en todo el parque, fusión real, oclusión horneada)** | 📝 **Siguiente tarea (paso 1)** | [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md) |
+| **Parque Fusionado, Oclusión Horneada y Atmósfera** | ✅ **Completado** | [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md): `park.gd::merge_static_meshes()`, `vertex_color_material()`, `ground_occlusion()` y `update_lamp_shadows()`; comprobado en `tests/test_game.gd`; comparativas en `docs/evidencias/comparativas/parque_ilustrado_*.png`. El toon y el contorno en el parque se probaron y se descartaron. |
 | **Protagonista Controlable y Mapa Abierto** | 📝 *Propuesta futura* (solo Alternativa A a corto plazo) | [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) |
 | **Mejora Gráfica Canónica (Toon), Perfiles Gráficos y Modo Diorama (Ultra)** | 🟡 **Parcialmente hecho** | Personajes con anatomía de maniquí de madera, rótulas visibles, sombreado toon y contorno de tinta (`shaders/cel_shading.gdshader`, `shaders/cel_outline.gdshader`) y menú de perfiles (Bajo, Medio, Alto, Ultra) en `scripts/main.gd` y `scripts/park.gd`, todos en `gl_compatibility`. Pendiente: toon en el parque ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)), perfiles con presupuestos propios y Ultra en Forward+ (§10), banco ampliado de mejoras (§11), animaciones Quaternius y 7 capas. Doc: [02_ESTILO_VISUAL_Y_POLIGONOS.md](02_ESTILO_VISUAL_Y_POLIGONOS.md). |
 | **Variedad Procedural de Vegetación y Personajes** | 📝 *Propuesta futura* | [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md) |
@@ -43,7 +43,7 @@ Estimaciones revisadas contra el código. Las dependencias son las reales: una e
 
 | Especificación / Futurible | Complejidad | Factores Clave de Esfuerzo | Impacto Arquitectónico | Dependencias |
 |---|:---:|---|---|---|
-| [16. Parque Ilustrado](16_PARQUE_ILUSTRADO_QUICK_WIN.md) | **Baja-Media (S-M)** | Fusión del parque en ~36 superficies con colores de vértice, material toon compartido con contorno, oclusión horneada y reajuste de niebla y cielo. | `park.gd` (`merge_static_meshes`, `apply_graphics_preset`). Sin cambios en la lógica fotográfica. | Ninguna |
+| [16. Parque Fusionado y Oclusión](16_PARQUE_ILUSTRADO_QUICK_WIN.md) | ✅ **Completado** | Parque fusionado en 38 superficies con colores de vértice y sombreado suave, oclusión horneada (pie, copas y contacto en el suelo), niebla moderada, sombras nítidas, luna, FXAA y farolas por hora y perfil. | `park.gd`, `main.gd`, `cel_outline.gdshader` (grosor mínimo). | Ninguna |
 | [01. Mapa Abierto y Protagonista Controlable](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) | A: **S** · B: **M** · C: **XL** | A: 6 puestos fijos con transición. C: `CharacterBody3D`, navegación por grafo y reacciones sociales. | A: cámara. C: modificación nuclear de `main.gd` y de la navegación. | [13](13_INTERFAZ_MOVIL_UTILIZABLE.md), [14](14_SOPORTE_GAMEPAD.md). C comparte la navegación de 04 |
 | [02. Estilo Toon, Perfiles Gráficos y Diorama](02_ESTILO_VISUAL_Y_POLIGONOS.md) | Toon: **M** · Perfiles/Ultra: **M** · Diorama: **XL** | Presupuestos por perfil, Ultra en Forward+ con reinicio, reglas para que ningún perfil altere la puntuación, banco de 16 mejoras (§11), multi-LOD y Diorama PBR. | Shaders, `park.gd`, `build_catalog.py`, `override.cfg`. | [16](16_PARQUE_ILUSTRADO_QUICK_WIN.md) antes del resto del toon; [15](15_VARIEDAD_PROCEDURAL.md) fase 3 para el multi-LOD |
 | [03. Nuevas Cámaras y TLR](03_NUEVAS_CAMARAS_Y_TLR.md) | **Media (M)** | Inversión especular de imagen y controles, evaluación en formato 1:1, rollo de 12 y ampliación del catálogo. | Cámara, `photography.gd` (máscara 1:1) y revelado. | [14](14_SOPORTE_GAMEPAD.md) fase 1 (inversión de controles) |
@@ -85,7 +85,7 @@ Estimaciones revisadas contra el código. Las dependencias son las reales: una e
 13. [13_INTERFAZ_MOVIL_UTILIZABLE.md](13_INTERFAZ_MOVIL_UTILIZABLE.md) — HUD a dos pulgares, rueda de foco relativa a la profundidad de campo, enfoque por zonas, gestos sin conflictos y disparador táctil de dos fases, con cifras medidas en un móvil de 6,1".
 14. [14_SOPORTE_GAMEPAD.md](14_SOPORTE_GAMEPAD.md) — Mapa de acciones `InputMap` único, sticks con escala por focal, gatillo analógico de dos fases, menús navegables e iconos por dispositivo.
 15. [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md) — Árboles por gramática de especies y estaciones, arbustos, césped, paleta ampliada con estampados, morfología continua y prendas paramétricas nombrables.
-16. [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md) — **Paso 1**: el parque entero en estilo toon con contorno, fusionado con colores de vértice y oclusión horneada, y atmósfera reajustada.
+16. [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md) — **Paso 1 (completado)**: parque fusionado con colores de vértice y oclusión horneada, niebla moderada, sombras nítidas y luz nocturna corregida. Incluye el intento descartado de toon en todo el parque.
 
 ---
 
@@ -95,7 +95,7 @@ Orden de trabajo derivado de la revisión del banco contra el código (29-09-202
 
 ```mermaid
 graph TD
-    P1["1 · Parque ilustrado (16)<br/>toon + contorno, fusión, oclusión, atmósfera"] --> P4
+    P1["1 ✅ · Parque fusionado (16)<br/>fusión, oclusión horneada, atmósfera"] --> P4
     P2["2 · Correcciones de base<br/>InputMap (14 fase 1) · AF/AE sin conocer al objetivo (12 fase 0)"] --> P3
     P3["3 · Interfaz móvil (13) y mando (14 fases 2-3)"] --> P5
     P4["4 · Mejoras gráficas rápidas<br/>02 §11 G2-G5, G7 · variedad 15 fase 1"] --> P7
@@ -108,7 +108,7 @@ graph TD
 
 | Paso | Contenido | Por qué en este orden |
 |:---:|---|---|
-| **1** | [16 · Parque ilustrado](16_PARQUE_ILUSTRADO_QUICK_WIN.md) | El mayor salto visual por coste. Además arregla el cuello de botella de draw calls que lastra a todos los perfiles, sobre todo en móvil. |
+| **1 ✅** | [16 · Parque fusionado y oclusión](16_PARQUE_ILUSTRADO_QUICK_WIN.md) | El mayor salto visual por coste. Además arregla el cuello de botella de draw calls que lastra a todos los perfiles, sobre todo en móvil. |
 | 2 | [14](14_SOPORTE_GAMEPAD.md) fase 1 y [12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0 | El mapa único de controles evita que cada especificación invente teclas. El AF matricial que delata al objetivo es un atajo del juego actual. |
 | 3 | [13](13_INTERFAZ_MOVIL_UTILIZABLE.md) y [14](14_SOPORTE_GAMEPAD.md) fases 2-3 | Hay un APK en el repositorio, pero el enfoque manual es inviable en móvil. Móvil y mando comparten el disparador de dos fases. |
 | 4 | [02 §11](02_ESTILO_VISUAL_Y_POLIGONOS.md) G2–G5 y G7, y [15](15_VARIEDAD_PROCEDURAL.md) fase 1 | Mejoras de coste S que se apoyan en los colores de vértice del paso 1. |

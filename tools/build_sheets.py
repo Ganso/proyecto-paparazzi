@@ -78,13 +78,19 @@ def build_gif(pattern, output_path, fps=30):
     if not files:
         print(f"[WARN] No se encontraron archivos para {pattern}")
         return
+    # Frame list for the concat demuxer: "-pattern_type glob" is not available in Windows builds.
+    list_path = output_path + ".frames.txt"
+    with open(list_path, "w", encoding="utf-8") as frames:
+        for f in files:
+            frames.write("file '%s'\nduration %f\n" % (os.path.abspath(f).replace("\\", "/"), 1.0 / fps))
+        frames.write("file '%s'\n" % os.path.abspath(files[-1]).replace("\\", "/"))
     cmd = [
-        "ffmpeg", "-y", "-framerate", str(fps),
-        "-pattern_type", "glob", "-i", pattern,
-        "-vf", "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer",
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path,
+        "-vf", "fps=%d,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer" % fps,
         output_path
     ]
     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    os.remove(list_path)
     if res.returncode == 0:
         print(f"[OK] Generado GIF: {output_path}")
     else:

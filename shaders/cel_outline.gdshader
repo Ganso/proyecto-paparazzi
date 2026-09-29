@@ -12,6 +12,8 @@ uniform float tint_strength : hint_range(0.0, 1.0) = 0.45;
 uniform float width_px : hint_range(0.5, 4.0) = 1.6;
 uniform float max_width_m : hint_range(0.005, 0.03) = 0.012;
 uniform float depth_bias : hint_range(0.0, 0.01) = 0.0015;
+// Lines thinner than a pixel break into dashes: never draw them below this width.
+uniform float min_width_px : hint_range(0.0, 2.0) = 1.0;
 
 void vertex() {
 	vec3 view_pos = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -24,7 +26,7 @@ void vertex() {
 	float dist_factor = clamp((dist_to_cam - 6.5) / 11.0, 0.0, 1.0);
 	float dist_atten = mix(1.0, 0.35, smoothstep(0.0, 1.0, dist_factor));
 
-	float offset = min(width_px * metres_per_px, max_width_m) * dist_atten;
+	float offset = max(min(width_px * metres_per_px, max_width_m) * dist_atten, min_width_px * metres_per_px);
 	VERTEX += NORMAL * offset;
 
 	// View-space depth bias: pushes inverted back-faces slightly away from the camera along the view ray.

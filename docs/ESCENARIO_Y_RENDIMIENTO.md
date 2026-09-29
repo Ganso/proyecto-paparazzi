@@ -85,19 +85,22 @@ Cada espécimen vegetal se genera mediante una semilla pseudoaleatoria única y 
 ### 3.1 Iluminación y Horas del Día: Día, Hora Dorada y Noche (`park.set_time_of_day()`)
 - **Día**:
   - Sol cenital (`DirectionalLight3D`, pitch $-72^\circ$): `light_energy = 1.4`, color cálido `fff0d7`.
-  - Sombras dinámicas ortogonales activadas con atlas de 2048.
-  - Cielo celeste y luz ambiental difusa (`c6d6df`, energía 0.16).
+  - Sombras dinámicas ortogonales activadas con atlas de 2048, nítidas y pegadas a los pies: `shadow_blur` 0,6–0,8 y `shadow_normal_bias` 0,6–0,7 según el perfil (`apply_preset_values()`).
+  - Cielo celeste (`6fa3cf` en el cenit, `dce8ea` en el horizonte) y luz ambiental difusa (`c6d6df`, energía 0.22, tomada del cielo).
+  - Farolas ocultas (`visible = false`): en `gl_compatibility`, una luz a energía 0 seguiría costando un pase de dibujo por objeto.
   - Luz incidente: **$EV \approx 14.8$** al sol y **$EV = 11.0$** en sombra (detalle en [SIMULACION_FOTOGRAFICA.md §2.2](SIMULACION_FOTOGRAFICA.md)).
 - **Hora Dorada (Golden Hour)**:
   - **Sol rasante bajo en el horizonte** (pitch $-15^\circ$, azimut $-48^\circ$): proyecta sombras largas, dramáticas y oblicuas que atraviesan los paseos circulares y acentúan el volumen y relieve de los maniquíes.
-  - **Luz solar ámbar dorado intensa**: `light_color = Color("ffa544")`, `light_energy = 2.2`, penumbra suave `shadow_blur = 2.2`.
+  - **Luz solar ámbar dorado intensa**: `light_color = Color("ffa544")`, `light_energy = 2.2`, con la misma penumbra del perfil.
   - **Gradiente de cielo crepuscular**: cenit azul índigo profundo (`18355e`), horizonte naranja resplandeciente (`ed8234`) y suelo reflectante ambarino (`b55e24`).
-  - **Ambiente y niebla dorada**: contraste cromático con ambiente crepuscular azulado (`4a5e7e`, energía 0.24) y neblina de profundidad dorada difusa (`e58b3e`).
-  - **Encendido crepuscular de farolas**: filamentos incandescentes encendiéndose con luz cálida suave (`light_energy = 0.90`, `ffcb74`).
+  - **Ambiente y niebla dorada**: contraste cromático con ambiente de cielo azul claro (`9aaed0`, energía 0.55, tomado de su color y no del cielo) y neblina de profundidad dorada difusa (`e58b3e`).
+  - **Encendido crepuscular de farolas**: filamentos incandescentes encendiéndose con luz cálida suave (`light_energy = 0.90`, `ffcb74`), sin sombras.
   - **Nubes melocotón dorado**: cúmulos al atardecer (`f09e60`).
   - Luz incidente: **$EV \approx 14.0$** a pleno sol rasante y **$EV \approx 9.6$** en las sombras proyectadas.
 - **Noche**:
-  - Sol desactivado / atenuado (`light_energy = 0.035`, tinte nocturno `9caed4`).
+  - Luna fría: el sol queda como luz lunar (`MOONLIGHT = 0.32`, tinte `9caed4`). `illumination_ev()` no lo usa de noche, así que no altera el fotómetro.
+  - Ambiente de su color (`394568`, energía 0.42), bruma azul cercana (4–34 m), exposición ×1,25 y `tonemap_white = 4` aplicados tras el perfil gráfico: el parque se lee fuera del cono de las farolas sin reventar los blancos bajo ellas.
+  - Sombras de farola según el perfil (`update_lamp_shadows()`): Ultra las 12, Alto las 4 interiores y Medio y Bajo ninguna. Cada una cuesta unos 100 draw calls por fotograma.
   - 12 farolas ornamentales de fundición de hierro con pedestal moldurado, 4 paneles de cristal transparente (`TRANSPARENCY_ALPHA`), bombilla con filamento incandescente de emisión activa y luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas (`light_energy = 2.2`).
   - Luz incidente: **$EV = 2.0$** lejos de farolas; bajo farola $\approx 8.4$ a 1 m, $5.2$ a 3 m y $2.9$ a 5 m.
 
@@ -111,21 +114,23 @@ El parque cuenta con un sistema de nubes procedurales cúbicas de baja altura:
 
 ### 3.3 Perspectiva Aérea y Niebla de Profundidad (Atmospheric Depth Fog)
 Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa vegetal de fondo:
-- **Niebla de profundidad (`Environment.fog_mode = FOG_MODE_DEPTH`)**:
-  - Comienzo a $r = 8.0\text{ m}$ (tras el carril intermedio 2) y cota máxima a $22.0\text{ m}$.
-  - Los primeros planos ($r < 8.0\text{ m}$) mantienen contraste y saturación íntegros.
-  - El fondo vegetal y el horizonte urbano se funden suavemente con el tono del horizonte (`c5d4c9` de día, `192139` de noche).
+- **Niebla de profundidad moderada (`Environment.fog_mode = FOG_MODE_DEPTH`)**, fijada solo por el perfil gráfico (`park.gd::apply_preset_values()`):
+  - Alto y Ultra: de 8 a 40 m; Medio: de 9 a 48 m; Bajo: sin niebla. `fog_sky_affect = 0.3` para que el cielo siga azul.
+  - Los carriles conservan contraste y color casi íntegros, y el arbolado y el skyline ganan bruma. Antes era un muro de 7 a 20 m que blanqueaba el parque desde el carril 2; una versión casi sin niebla (4–110 m) dejaba la imagen plana.
+  - Tono del horizonte: `cddcdd` de día, `e58b3e` en hora dorada y `192139` de noche (de noche, bruma de 4 a 34 m).
 - **Mapeo de tonos HDR / ACES (`tonemap_mode = TONE_MAPPER_ACES`, `tonemap_white = 1.4` y ajustes de contraste)**: Curva cinematográfica de compresión de altas luces.
 - **Atenuación adaptativa de tinta y tintado armónico (`cel_outline.gdshader`)**: El contorno exterior de los maniquíes disminuye progresivamente su grosor mediante una curva cúbica suave (`smoothstep`) entre 6,5 m y 17,5 m para no saturar con líneas negras los planos lejanos, incorporando modulación armónica sobre el color de vértice (`tint_strength`) y sesgo de profundidad anti-intersección (`depth_bias`).
 
 ---
 
-## 4. Fusión de Malla Estática (`merge_static_meshes`)
+## 4. Parque Fusionado y Oclusión Horneada (`merge_static_meshes`)
 
-Para mantener el máximo rendimiento en `gl_compatibility`:
-- Al arrancar, la arquitectura del parque (anillos de suelo, verjas, farolas, bancos, jardineras, edificios y los **280 elementos vegetales**) se agrupa **por color de material y por celda de 6 × 6 m**: cada grupo se combina con `SurfaceTool.append_from()` en un `MeshInstance3D` con su `StandardMaterial3D` (uno por color, 78 en total).
-- **Estado real**: 692 nodos de malla estática y unos **1.800 draw calls** por fotograma en el visor (perfil Ultra), no 1. La cifra medida está en [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md) (`--metrics`).
-- **Pendiente**: fusionar en pocas superficies con colores de vértice (`ARRAY_COLOR`) y un único material toon, sectorizadas para conservar el recorte por frustum. Está especificado como paso 1 de la hoja de ruta en [futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md).
+Implementado en el paso 1 de la hoja de ruta ([futuro/16](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que detalla parámetros, resultados y comparativas.
+- **Fusión**: al arrancar, los props opacos (suelo, verjas, farolas, bancos, jardineras, edificios y los **280 elementos vegetales**) se transforman a coordenadas de mundo y se combinan en **36 superficies** (12 sectores de 30° × 3 bandas radiales: 0–9, 9–17 y 17–45 m), que conservan el recorte por frustum. El vidrio y las bombillas de las farolas mantienen su material: **38 superficies en total** (antes 692).
+- **Material**: un único `StandardMaterial3D` con `vertex_color_use_as_albedo` (`park.gd::vertex_color_material()`), con el mismo sombreado suave de antes: el parque no lleva toon ni contorno, que son propios de los maniquíes.
+- **Color**: el albedo de cada prop se escribe en `ARRAY_COLOR` en sRGB (el motor lo convierte, igual que con los maniquíes), multiplicado por la **oclusión horneada**: pie de los objetos (×0,72 a ras de suelo), volumen de copas y arbustos (caras hacia el tronco o hacia abajo, hasta ×0,72) y **contacto en el suelo** bajo cada prop bajo (hasta ×0,55, `ground_occlusion()` con una rejilla de oclusores de 3 m). Para ello el suelo está subdividido (120 segmentos, pasos de 0,6 m hasta 19 m) e indexado.
+- **Colisionadores**: los `StaticBody3D` con etiqueta siguen colgando de los nodos originales, cuya malla se anula, así que rayos de oclusión, AF y fotómetro no cambian.
+- **Coste**: unos 645 ms de horneado al construir el parque en escritorio (349 ms antes). Por fotograma no hay coste extra.
 
 ---
 
@@ -138,7 +143,7 @@ Límites actuales, que son los de los perfiles Bajo y Medio. Los presupuestos am
 | **Triángulos en escena** | $\le 100.000$ | `--smoke-test` |
 | **Triángulos por viandante** | $\le 1.900$ | `tests/test_art.gd` |
 | **Memoria de vídeo (VRAM)** | $< 60\text{ MiB}$ | `tests/test_game.gd` |
-| **Draw calls** | Objetivo: pocas superficies de parque + 2 por viandante (superficie única dibujada con toon + contorno de tinta). Hoy se cumple en los viandantes pero no en el parque (unos 1.800 en total) | `--metrics` imprime `draw_calls`; `test_art.gd` comprueba el material de 2 pases. Ningún test impone todavía un límite |
+| **Draw calls** | Día ≤ 300 en el visor (38 superficies de parque + 2 por viandante + pases de sombra del sol). De noche depende de las farolas con sombra del perfil | `--metrics` imprime `draw_calls`; `test_game.gd` impone el límite de día y comprueba las sombras de farola por perfil |
 | **Tiempo de fotograma** | Objetivo 60 FPS | `godot-4 --path . -- --metrics` imprime mediana, p95 y máximo; no hay umbral automatizado |
 | **Relación de aspecto** | 16:9 estricto ($1280 \times 720$) | `project.godot` |
 

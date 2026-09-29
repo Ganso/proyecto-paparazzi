@@ -8,7 +8,7 @@ Este documento establece la **dirección artística y técnica integral** para l
 
 > [!IMPORTANT]
 > **Guía de lectura (revisión del 29-09-2026)**
-> - **Hoja de ruta real**: el estilo **Toon canónico** (§3.1–3.2, capas de §5, animación de §4) en todos los perfiles, empezando por el **parque ilustrado** ([16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que es el paso 1 del proyecto.
+> - **Hoja de ruta real**: el estilo **Toon canónico de los maniquíes** (§3.1–3.2, capas de §5, animación de §4). El paso 1 ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)) probó a extender el toon y el contorno a todo el parque y **se descartó**: el parque conserva su sombreado suave, ahora fusionado y con oclusión horneada. Cualquier propuesta de este documento que pida toon o contorno en el escenario queda en suspenso.
 > - **Perfil Ultra**: aprovecha una GPU de escritorio potente con Forward+ y presupuestos ampliados, pero **justificados** (§10). El banco ampliado de mejoras está en §11 y la variedad procedural en [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md).
 > - **Modo Diorama PBR** (§1.2, §3.3–3.4): estilo alternativo exclusivo de Ultra, con sus cifras limitadas por la tabla de §10.2. Donde este documento cite 14.000 triángulos por maniquí o 550.000 en escena, manda §10.2 (8.000 y 1.500.000).
 > - Ningún perfil puede cambiar la puntuación fotográfica (§10.3).
@@ -695,7 +695,7 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 ### 10.1 Estado actual
 - Los cuatro perfiles (`Bajo`, `Medio`, `Alto`, `Ultra`) existen en `main.gd::show_graphics_settings()` y `park.gd::apply_graphics_preset()`. Hoy todos usan `gl_compatibility` y solo cambian sombras, niebla, curva de color y grosor del contorno.
 - `Ultra` es el perfil por defecto en **todas** las plataformas, también en el APK Android.
-- Medidas actuales en [TESTS_Y_VERIFICACION.md §5](../TESTS_Y_VERIFICACION.md): en Ultra, unos 1.800 draw calls y una mediana de 20 ms por fotograma en una Intel Iris Xe. El cuello de botella son los draw calls del parque, no los triángulos ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)).
+- Medidas en [TESTS_Y_VERIFICACION.md §5](../TESTS_Y_VERIFICACION.md): tras el parque ilustrado ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)), 189 draw calls de día en Ultra (antes 1.790) y 60 FPS en una Intel Iris Xe. De noche el coste lo marcan las sombras de farola, que ya dependen del perfil (Ultra 12, Alto 4, Medio y Bajo 0).
 
 ### 10.2 Tabla de perfiles objetivo
 
@@ -707,13 +707,13 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Triángulos en escena** | ≤ 100.000 | ≤ 100.000 | ≤ 300.000 | **≤ 1.500.000** (la mayoría en hierba instanciada) |
 | **VRAM** | < 60 MiB | < 60 MiB | < 256 MiB | **< 1 GiB** |
 | **Draw calls (objetivo)** | ≤ 100 | ≤ 150 | ≤ 300 | ≤ 1.000 |
-| **Parque** | Toon + contorno fusionado ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)) | Igual + oclusión horneada en vértices | Igual + hierba y flores instanciadas (densidad 0,3) con viento | Densidad 1,0, hojas sueltas, copas con más lóbulos ([15](15_VARIEDAD_PROCEDURAL.md)) |
+| **Parque** | Fusionado con colores de vértice y oclusión horneada ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)) | Igual | Igual + hierba y flores instanciadas (densidad 0,3) con viento | Densidad 1,0, hojas sueltas, copas con más lóbulos ([15](15_VARIEDAD_PROCEDURAL.md)) |
 | **Sombras del sol** | Desactivadas (mancha de contacto bajo cada viandante) | Atlas 1024 | Atlas 2048 filtradas | Atlas 4096 con penumbra física (`light_angular_distance`, PCSS de Forward+) |
 | **Iluminación indirecta** | Ambiente plano | Hemisferio cielo/suelo | Hemisferio + oclusión horneada | **SDFGI** (dinámica, compatible con día, hora dorada y noche) + **SSIL** |
 | **Oclusión ambiental** | Horneada en vértices | Horneada | Horneada | Horneada + **SSAO** |
 | **Atmósfera** | Niebla de profundidad | Niebla de profundidad | Profundidad + altura | **Niebla volumétrica**: haces de sol entre copas en hora dorada, halos de farola de noche |
 | **Brillo (glow)** | No | No | Farolas y cielo de noche | Glow HDR completo |
-| **Antialiasing** | Ninguno | MSAA 2× | MSAA 4× | TAA o FSR 2.2, con MSAA |
+| **Antialiasing** | Ninguno | FXAA (ya activo) | FXAA (ya activo); MSAA 4× cuando el presupuesto de VRAM del perfil lo permita | TAA o FSR 2.2, con MSAA |
 | **DoF en el visor** | No | No | Shader propio calibrado ([11 §4](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)) | `CameraAttributesPractical` calibrado con `Photography.dof()` |
 | **Población ambiental** | 0 | 0 | +12 fuera de la zona jugable | +36 fuera de la zona jugable |
 
@@ -756,7 +756,7 @@ Ordenado por relación impacto/coste. La columna **Perfiles** indica dónde se a
 
 | # | Mejora | Perfiles | Coste | Impacto | Notas |
 |---|---|---|:---:|:---:|---|
-| G1 | **Parque ilustrado**: parque fusionado en pocas superficies con colores de vértice, material toon y contorno de tinta, oclusión horneada y atmósfera reajustada | Todos | **S-M** | **Muy alto** | **Paso 1 de la hoja de ruta**: [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md). Unifica el estilo con la referencia y reduce los draw calls de ~1.800 a unas decenas. |
+| G1 | ✅ **Parque fusionado y oclusión horneada** (hecho) | Todos | S-M | Muy alto | [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md): 38 superficies con colores de vértice, oclusión de contacto, niebla moderada y luz corregida; draw calls de día de ~1.790 a 119. El toon y el contorno en el parque se probaron y se descartaron. |
 | G2 | Césped con variación cromática por ruido de baja frecuencia y bordillos claros en los paseos | Todos | S | Alto | Colores de vértice en los anillos de suelo; subdividirlos lo justo para que el ruido se vea. |
 | G3 | Cielo pintado: gradiente de tres tonos, disco solar estilizado y skyline con perspectiva aérea | Todos | S | Alto | Parte de [07 §3](07_VISORES_REALISTAS_Y_MOVIL.md); en la referencia el cielo claro y el skyline dan la profundidad. |
 | G4 | Viento en copas y arbustos (vaivén en el shader de vértices, ponderado por altura) | Medio+ | S | Medio-alto | El peso va en un canal de vértice; sin coste de CPU. No afecta a colisionadores. |
