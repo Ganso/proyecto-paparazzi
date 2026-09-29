@@ -26,6 +26,8 @@ godot --path .
 ```
 
 - **En macOS**: También puedes hacer doble clic en `Jugar.command`.
+- **En Windows**: Doble clic en `Jugar.bat`. Si hay un `Godot*_win64.exe` en la raíz del proyecto (ignorado por git), se usa ese; si no, `godot-4`/`godot` del `PATH`.
+- Ambos lanzadores respetan la variable `GODOT_BIN` y, a continuación, dan prioridad a los ejecutables `Godot*_win64.exe` locales (si hay varios, el último por orden alfabético).
 - **Desde el editor de Godot**: Abre la carpeta en el Project Manager y pulsa **F5**.
 
 ---

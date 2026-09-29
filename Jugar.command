@@ -3,6 +3,12 @@ cd -- "$(dirname -- "$0")"
 if [[ -n "$GODOT_BIN" && -x "$GODOT_BIN" ]]; then
   exec "$GODOT_BIN" --path "$PWD"
 fi
+# Ejecutables de Godot para Windows copiados en la raíz del proyecto (orden alfabético inverso).
+if [[ "$OSTYPE" == (msys|cygwin|win32)* ]]; then
+  for paparazzi_engine in ./Godot*_win64.exe(N.On); do
+    exec "$paparazzi_engine" --path "$PWD"
+  done
+fi
 for paparazzi_engine in '/Applications/Godot copia.app/Contents/MacOS/Godot' '/Applications/Godot.app/Contents/MacOS/Godot'; do
   if [[ -x "$paparazzi_engine" ]]; then
     exec "$paparazzi_engine" --path "$PWD"
