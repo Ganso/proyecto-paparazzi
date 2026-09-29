@@ -26,7 +26,7 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 | **Equipamiento y Ópticas** | [docs/EQUIPAMIENTO_Y_OPTICAS.md](docs/EQUIPAMIENTO_Y_OPTICAS.md) | Cuerpos (compacta, telemétrica, réflex), catálogo de objetivos (24 mm a 200 mm), diafragmas, compensación de exposición (±EV), carretes analógicos y visor HUD de 9 colimadores. |
 | **Escenario y Rendimiento** | [docs/ESCENARIO_Y_RENDIMIENTO.md](docs/ESCENARIO_Y_RENDIMIENTO.md) | Disposición del parque, peana de diorama, masa vegetal de fondo, iluminación (día, hora dorada, noche), sombras dinámicas, sistema de nubes y presupuestos de hardware. |
 | **Pruebas y Verificación** | [docs/TESTS_Y_VERIFICACION.md](docs/TESTS_Y_VERIFICACION.md) | **Fuente única** de comandos de prueba, opciones de arranque, herramientas de `tools/` y cifras de referencia medidas. Headless vs. Display y uso con Xvfb. |
-| **Banco de Futuras Mejoras** | [docs/futuro/README.md](docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí (toon y diorama físico PBR realista), animación universal (Quaternius), modos de fotometría (matricial/spot) y autofoco avanzado (AF-C/AF-S). |
+| **Banco de Futuras Mejoras** | [docs/futuro/README.md](docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí (toon y diorama físico PBR realista), animación universal (Quaternius), modos de fotometría (matricial/spot) y autofoco avanzado (AF-C/AF-S), interfaz móvil utilizable, soporte de gamepad, variedad procedural de vegetación y personajes, y perfiles gráficos con Ultra para GPUs potentes. Empieza por la **hoja de ruta** ([docs/futuro/README.md §4](docs/futuro/README.md)); la siguiente tarea es el [parque ilustrado](docs/futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md). |
 
 ---
 
@@ -36,11 +36,18 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 
 ### 3.1 Presupuestos de Geometría y Memoria
 - **Población en escena**: Exactamente **21 viandantes** (`counts = [3, 7, 6, 5]`).
-- **Triángulos por viandante**: Máximo **1.900 triángulos**.
-- **Triángulos totales en escena**: Máximo **100.000 triángulos** (parque, vegetación de fondo y 21 personas).
-- **Memoria de vídeo (VRAM)**: Mantener siempre por debajo de **60 MiB** (atlas de sombras de 2048 incluido).
+- **Presupuestos por perfil gráfico** (tabla completa y justificación en [docs/futuro/02 §10.2](docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md)):
+
+  | Perfil | Triángulos por viandante | Triángulos en escena | VRAM | Renderizador |
+  |---|---:|---:|---:|---|
+  | Bajo / Medio (móvil) | ≤ 1.900 | ≤ 100.000 | < 60 MiB | `gl_compatibility` |
+  | Alto (escritorio) | ≤ 4.000 | ≤ 300.000 | < 256 MiB | `gl_compatibility` |
+  | Ultra (GPU potente) | ≤ 8.000 | ≤ 1.500.000 | < 1 GiB | `forward_plus` (con reinicio) |
+
+  **Hasta que se implementen los perfiles ampliados, todo el juego debe cumplir la fila Bajo/Medio**, que es la que comprueban hoy `test_art.gd`, `--smoke-test` y `test_game.gd`. Cualquier ampliación debe justificarse por calidad visual visible, no por tener margen.
+- **Coherencia entre perfiles**: ningún perfil cambia la puntuación. Colisionadores y puntos de control usan siempre la geometría base, y lo que un perfil añade solo puede colocarse fuera de la zona jugable ($r > 12.8	ext{ m}$) o por debajo de 0,3 m ([02 §10.3](docs/futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md)).
 - Los valores medidos actuales de estos presupuestos están en [docs/TESTS_Y_VERIFICACION.md §5](docs/TESTS_Y_VERIFICACION.md).
-- **Draw Calls**: Cada personaje consta de **1 única superficie combinada** con colores de vértice (`Mesh.ARRAY_COLOR`), sin texturas individuales, dibujada con un material de 2 pases (toon `shaders/cel_shading.gdshader` + contorno `shaders/cel_outline.gdshader`). El parque estático se fusiona en **1 único draw call**.
+- **Draw Calls**: Cada personaje consta de **1 única superficie combinada** con colores de vértice (`Mesh.ARRAY_COLOR`), sin texturas individuales, dibujada con un material de 2 pases (toon `shaders/cel_shading.gdshader` + contorno `shaders/cel_outline.gdshader`). El parque estático **debería** fusionarse en muy pocas superficies con colores de vértice; hoy `park.gd::merge_static_meshes()` agrupa por color y celda de 6 m (692 nodos, 78 materiales) y el visor dibuja unos 1.800 draw calls por fotograma (cifra en [docs/TESTS_Y_VERIFICACION.md §5](docs/TESTS_Y_VERIFICACION.md)). Restaurar este invariante es parte del paso 1 de la hoja de ruta ([docs/futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md](docs/futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)).
 
 ### 3.2 Rigging y Locomoción
 - **Esqueleto**: Exactamente **20 huesos** idénticos para los 4 perfiles anatómicos.

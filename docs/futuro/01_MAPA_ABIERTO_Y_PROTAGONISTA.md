@@ -7,14 +7,14 @@ Este documento detalla el diseño conceptual, la arquitectura técnica y el esqu
 ## 1. Justificación de Diseño y Dilema de Jugabilidad
 
 ### 1.1 El Reto Actual (Observador Estático)
-En la versión actual, el jugador permanece en el centro exacto del parque $(0, 1.60\text{ m}, 0)$. El reto se basa en la **anticipación temporal y la elección de óptica**: predecir cuándo pasará el objetivo por una zona iluminada y qué objetivo ($28\text{ mm}$, $50\text{ mm}$, $105\text{ mm}$ o $135\text{ mm}$) permite encuadrarlo con la escala adecuada.
+En la versión actual, el jugador permanece en el centro exacto del parque $(0, 1.60\text{ m}, 0)$. El reto se basa en la **anticipación temporal y la elección de óptica**: predecir cuándo pasará el objetivo por una zona iluminada y qué objetivo del catálogo (de $24\text{ mm}$ a $200\text{ mm}$: zooms 24–120, 24–105 y 70–200, fijos de 35, 50 y 90 mm; ver `scripts/equipment.gd::LENSES`) permite encuadrarlo con la escala adecuada.
 
 ### 1.2 Oportunidades y Riesgos del Movimiento Libre
 - **Oportunidades**:
   - Libertad para buscar líneas de fuga interesantes, contraluces espectaculares o encuadres a través de ramas y esculturas.
   - Mayor inmersión y sensación de presencia física en el mundo.
 - **Riesgos de Diseño**:
-  - **Devaluación de teleobjetivos**: Si el jugador puede correr hacia el objetivo, tenderá a ponerse a 2 metros con cualquier lente barata, arruinando el valor táctico de objetivos largos como el 105 mm o 135 mm.
+  - **Devaluación de teleobjetivos**: Si el jugador puede correr hacia el objetivo, tenderá a ponerse a 2 metros con cualquier lente barata, arruinando el valor táctico de objetivos largos como el fijo de 90 mm o el zoom 70–200 mm.
   - **Pérdida de realismo social**: Acercarse a 50 cm de un desconocido apuntándole con una réflex sin que reaccione rompe la inmersión. Requeriría implementar estados de alerta peatonal ("incomodidad", "apartar la cara", "huir").
 
 ---
@@ -47,12 +47,15 @@ stateDiagram-v2
 
 | Acción | Pantalla Táctil (Móvil) | Teclado + Ratón (PC) | Gamepad (Consola/Mando) |
 |---|---|---|---|
-| **Mover personaje** | Joystick virtual izquierdo | Teclas `W`, `A`, `S`, `D` | Stick analógico izquierdo |
-| **Girar cabeza (Mirar)** | Deslizar dedo derecho | Movimiento del ratón | Stick analógico derecho |
-| **Transición a Modo Visor** | Botón flotante "Apuntar" | Clic derecho mantenido | Gatillo izquierdo ($L2$) |
-| **Enfoque manual / Zoom** | Ruedas táctiles en bordes | Rueda del ratón / Teclas `Q`, `E` | Botones superiores ($L1$ / $R1$) |
-| **Disparo del obturador** | Botón virtual de disparador | Clic izquierdo / Barra espaciadora | Gatillo derecho ($R2$) |
-| **Ajuste de parámetros** | Rueda de apertura y velocidad | Teclas numéricas `1`, `2`, `3` | Cruceta digital ($D\text{-Pad}$) |
+| **Mover personaje** | Joystick virtual izquierdo | Teclas `W`, `A`, `S`, `D` | Stick izquierdo (solo en Modo Paseo) |
+| **Girar cabeza (Mirar)** | Deslizar dedo sobre el visor | Movimiento del ratón | Stick derecho en Modo Paseo; stick izquierdo en Modo Visor (acción `mirar_*`) |
+| **Transición a Modo Visor** | Botón flotante "Apuntar" | Clic derecho mantenido | Y / △ (conmutar) |
+| **Enfoque manual / Zoom** | Rueda de foco y zonas de [13 §3](13_INTERFAZ_MOVIL_UTILIZABLE.md); pellizco para zoom | Rueda del ratón / Teclas `R`, `T` y `W`, `S` | Stick derecho: ←/→ foco, ↑/↓ zoom |
+| **Disparo del obturador** | Disparador táctil de dos fases ([13 §4.1](13_INTERFAZ_MOVIL_UTILIZABLE.md)) | Barra espaciadora | Gatillo derecho de dos fases ([14 §3](14_SOPORTE_GAMEPAD.md)) |
+| **Ajuste de parámetros** | Arrastre con tope sobre cada parámetro | Teclas `Q`/`E`, `Z`/`X`, `C`/`V` | Cruceta: ←/→ elige parámetro, ↑/↓ lo cambia |
+
+> [!NOTE]
+> Todas estas entradas se declaran como acciones de `InputMap` en el mapa único de [14 §2](14_SOPORTE_GAMEPAD.md). Las acciones nuevas de este documento (`mover_*`, `modo_visor`) se añaden allí, no como teclas sueltas.
 
 ---
 
@@ -76,3 +79,16 @@ Se proponen tres alternativas según la profundidad del cambio deseado:
 - **Grafo de Peatones**: Los viandantes sustituyen la ecuación angular $\Delta\theta = (v/r)\Delta t$ por un grafo de waypoints interconectados con bifurcaciones probabilísticas y evasión local vectorial (algoritmo RVO2 / ORCA).
 - **Físicas del Jugador**: Instanciación de un `CharacterBody3D` con cápsula de colisión contra el terreno y los personajes.
 - **Coste técnico**: Alto (~2-3 semanas de desarrollo y ajuste de IA).
+
+---
+
+## 4. Recomendación y Criterios de Aceptación
+
+- **Implementar solo la Alternativa A**, y después de la interfaz móvil ([13](13_INTERFAZ_MOVIL_UTILIZABLE.md)) y el mando ([14](14_SOPORTE_GAMEPAD.md)), que fijan cómo se controla la cámara.
+- **B y C rompen supuestos centrales**: los carriles son círculos centrados en el jugador (AGENTS.md §3.3), lo que hace que la distancia a cada carril sea casi constante. Esa propiedad sostiene el enfoque por zonas de [13 §3.2](13_INTERFAZ_MOVIL_UTILIZABLE.md) y resta valor al AF-C ([12 §4.2](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)). Moverse libremente, además, devalúa los teleobjetivos, como se indica en §1.2.
+- **La Alternativa C es la misma navegación por grafo que necesitan los escenarios de [04](04_DIVERSIDAD_ESCENARIOS.md)**; si se aborda, hay que hacerlo una sola vez para ambos.
+- **Criterios de aceptación de A**:
+  1. La cámara solo ocupa los 6 puestos definidos y la transición entre ellos dura ≤ 1 s, sin atravesar colisionadores.
+  2. La evidencia usa la posición real de la cámara (`d` en `capture_evidence()`), y la puntuación es determinista con el puesto incluido en la entrada.
+  3. Aforos y carriles intactos: `test_navigation.gd` y `simulate_jams.gd` pasan sin cambios.
+  4. `test_game.gd` añade un cambio de puesto y comprueba `camera.global_position` y el encuadre del encargo siguiente.

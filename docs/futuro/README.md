@@ -2,6 +2,9 @@
 
 Este directorio contiene las especificaciones de diseño, análisis de viabilidad técnica y propuestas arquitectónicas para futuras expansiones de **Proyecto Paparazzi**.
 
+> [!IMPORTANT]
+> **Siguiente tarea: [16 · Parque ilustrado](16_PARQUE_ILUSTRADO_QUICK_WIN.md)**, una mejora gráfica de bajo coste y gran impacto que además reduce los draw calls de ~1.800 a unas decenas. El orden completo está en la [hoja de ruta (§4)](#4-hoja-de-ruta-recomendada).
+
 ---
 
 ## 1. Matriz de Estado de Funcionalidades Solicitadas
@@ -10,44 +13,52 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 
 | Propuesta | Estado | Documento de Especificación / Dónde vive |
 |---|:---:|---|
-| **Protagonista Controlable y Mapa Abierto** | 📝 *Propuesta futura* | [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) |
-| **Mejora Gráfica Canónica (Toon) y Modo Diorama Físico (PBR Realista + Render Avanzado)** | 🟡 **Parcialmente hecho** | Personajes ya con anatomía de maniquí de madera, rótulas visibles, sombreado toon y contorno de tinta (subfases 2.1 y 2.2; `shaders/cel_shading.gdshader`, `shaders/cel_outline.gdshader`) y menú reactivo de perfiles gráficos estándar (Bajo, Medio, Alto, Ultra por defecto) en `scripts/main.gd` y `scripts/park.gd`. Pendiente: cell shading en parque, animaciones Quaternius UAL, arquitectura 7 capas, y especificación completa del **Modo Diorama Físico de Estudio** (texturas realistas PBR de madera barnizada y telas, entorno de alta fidelidad, y arsenal de render Godot 4 Forward+: VoxelGI/SDFGI, sombras PCSS, SSAO, volumetría y postprocesado macro tilt-shift) en [02_ESTILO_VISUAL_Y_POLIGONOS.md](02_ESTILO_VISUAL_Y_POLIGONOS.md). |
-| **Nuevas Cámaras: TLR (Visor invertido), Móvil, Gran Formato** | 📝 *Propuesta futura* | [03_NUEVAS_CAMARAS_Y_TLR.md](03_NUEVAS_CAMARAS_Y_TLR.md) |
-| **Mayor Diversidad de Escenarios Urbanos** | 📝 *Propuesta futura* | [04_DIVERSIDAD_ESCENARIOS.md](04_DIVERSIDAD_ESCENARIOS.md) |
+| **Parque Ilustrado (toon + contorno en todo el parque, fusión real, oclusión horneada)** | 📝 **Siguiente tarea (paso 1)** | [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md) |
+| **Protagonista Controlable y Mapa Abierto** | 📝 *Propuesta futura* (solo Alternativa A a corto plazo) | [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) |
+| **Mejora Gráfica Canónica (Toon), Perfiles Gráficos y Modo Diorama (Ultra)** | 🟡 **Parcialmente hecho** | Personajes con anatomía de maniquí de madera, rótulas visibles, sombreado toon y contorno de tinta (`shaders/cel_shading.gdshader`, `shaders/cel_outline.gdshader`) y menú de perfiles (Bajo, Medio, Alto, Ultra) en `scripts/main.gd` y `scripts/park.gd`, todos en `gl_compatibility`. Pendiente: toon en el parque ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)), perfiles con presupuestos propios y Ultra en Forward+ (§10), banco ampliado de mejoras (§11), animaciones Quaternius y 7 capas. Doc: [02_ESTILO_VISUAL_Y_POLIGONOS.md](02_ESTILO_VISUAL_Y_POLIGONOS.md). |
+| **Variedad Procedural de Vegetación y Personajes** | 📝 *Propuesta futura* | [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md) |
+| **Nuevas Cámaras: TLR (Visor invertido), Móvil, Gran Formato** | 📝 *Propuesta futura* (TLR primero) | [03_NUEVAS_CAMARAS_Y_TLR.md](03_NUEVAS_CAMARAS_Y_TLR.md) |
+| **Mayor Diversidad de Escenarios Urbanos** | 📝 *Propuesta futura* (aplazada) | [04_DIVERSIDAD_ESCENARIOS.md](04_DIVERSIDAD_ESCENARIOS.md) |
 | **Desafíos Específicos y Modos de Juego** | 📝 *Propuesta futura* | [05_DESAFIOS_Y_MODOS_JUEGO.md](05_DESAFIOS_Y_MODOS_JUEGO.md) |
 | **Modo "Tutor de Fotografía" y Academia** | 📝 *Propuesta futura* | [06_MODO_TUTOR_ACADEMIA.md](06_MODO_TUTOR_ACADEMIA.md) |
-| **Visores Realistas de Carcasa y Ergonomía Móvil** | 📝 *Propuesta futura* | [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) |
+| **Visores Realistas de Carcasa y Efectos de Cielo** | 📝 *Propuesta futura* | [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md). Su §2 (ergonomía táctil) queda sustituida por [13](13_INTERFAZ_MOVIL_UTILIZABLE.md). |
 | **Cámaras de Carrete con ISO Fijo** | ✅ **Ya implementado** | Activo en `scripts/equipment.gd:15` (`film`), bloquea ISO manual. Documentado en [docs/EQUIPAMIENTO_Y_OPTICAS.md](../EQUIPAMIENTO_Y_OPTICAS.md). |
 | **Ropa Deportiva Exclusiva para Corredores** | ✅ **Ya implementado** | Validado en `scripts/casting.gd:18` y `tests/test_expansion.gd:38` (sin accesorios sueltos). Documentado en [docs/PERSONAJES_Y_CINEMATICA.md](../PERSONAJES_Y_CINEMATICA.md). |
-| **Nubes y Sol Visibles con Atenuación Lumínica** | 🟡 **Parcialmente hecho** | Mallas de nubes dinámicas y reducción de ~3,5 EV en la luz solar directa activas (`park.gd:301` `build_clouds()`, `park.gd:325` `update_weather()`). Mejoras visuales en sol/cielo documentadas en [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md). |
-| **Variedad de Árboles y Elementos en el Escenario** | ✅ **Completado** | 4 especies botánicas estilizadas (roble, ciprés, tilo, arce dorado) con variación procedural orgánica individual (rotación 360°, inclinación natural, jitter 3D, cuello radicular, escala y micro-modulación cromática) y arbustos facetados en `park.gd`. |
-| **Ampliación de Accesorios de Vestimenta** | 📝 *Propuesta futura* | Incluido en [02_ESTILO_VISUAL_Y_POLIGONOS.md](02_ESTILO_VISUAL_Y_POLIGONOS.md) (paraguas, mochilas, periódicos, gafas). |
+| **Nubes y Sol Visibles con Atenuación Lumínica** | 🟡 **Parcialmente hecho** | Mallas de nubes dinámicas y reducción de ~3,5 EV en la luz solar directa activas (`park.gd:301` `build_clouds()`, `park.gd:325` `update_weather()`). Mejoras visuales en sol y cielo en [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) §3. |
+| **Variedad de Árboles y Elementos en el Escenario** | ✅ **Completado** (primera fase) | 4 especies botánicas estilizadas (roble, ciprés, tilo, arce dorado) con variación procedural individual (rotación 360°, inclinación, jitter 3D, cuello radicular, escala y micro-modulación cromática) y arbustos facetados en `park.gd`. La ampliación a unas 10 especies por gramática y estaciones está en [15 §3](15_VARIEDAD_PROCEDURAL.md). |
+| **Ampliación de Accesorios de Vestimenta** | 📝 *Propuesta futura* | [02 §7](02_ESTILO_VISUAL_Y_POLIGONOS.md) (paraguas, mochilas, periódicos, gafas) y [15 §4 P4](15_VARIEDAD_PROCEDURAL.md). |
 | **Captura Automática de Evidencias Gráficas** | ✅ **Ya implementado** | Suite completa en `tools/run_evidence.sh` y `tools/capture_evidence.gd`. Galería viva en [docs/evidencias/GALERIA.md](../evidencias/GALERIA.md). Doc: [08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md](08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md). |
-| **Exportación Automatizada a Android (.apk)** | 🟡 **Parcialmente hecho** | Fases 1 y 2 completadas: preset `Android` en `export_presets.cfg`, script `tools/export_android.sh` y APK versionado en `build/paparazzi-debug.apk`, validado por `tests/test_export.gd`. Pendientes los controles táctiles dedicados y la CI. Doc: [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md). |
-| **Modo Historia Dual: El Legado del Paparazzi** | 📝 *Propuesta futura* | [10_MODO_HISTORIA_DUAL_LEGADO.md](10_MODO_HISTORIA_DUAL_LEGADO.md) |
-| **Mecánicas de Barrido (Panning) y Previsualización DoF** | 📝 *Propuesta futura* | [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) |
-| **Modos de Fotometría Avanzada y Autofoco (AF-C / AF-S)** | 🟡 **Parcialmente hecho** | Compensación de exposición $\pm\text{EV}$ activa y funcional en `main.gd` y `equipment.gd`. Modos matricial, puntual, AF-C y AF-S especificados en [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md). |
+| **Exportación Automatizada a Android (.apk)** | 🟡 **Parcialmente hecho** | Fases 1 y 2 completadas: preset `Android` en `export_presets.cfg`, script `tools/export_android.sh` y APK versionado en `build/paparazzi-debug.apk`, validado por `tests/test_export.gd`. La fase 3 (controles táctiles) pasa a [13](13_INTERFAZ_MOVIL_UTILIZABLE.md); queda la CI. Doc: [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md). |
+| **Modo Historia Dual: El Legado del Paparazzi** | 📝 *Propuesta futura* (aplazada; reglas de tono en §5) | [10_MODO_HISTORIA_DUAL_LEGADO.md](10_MODO_HISTORIA_DUAL_LEGADO.md) |
+| **Mecánicas de Barrido (Panning) y Previsualización DoF** | 📝 *Propuesta futura* | [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md). Requiere simular el movimiento de cámara durante la exposición (§1.2.1). |
+| **Modos de Fotometría Avanzada y Autofoco (AF-C / AF-S)** | 🟡 **Parcialmente hecho** | Compensación de exposición $\pm\text{EV}$ activa en `main.gd` y `equipment.gd`. **Fase 0 prioritaria**: el AF matricial y la exposición automática conocen al objetivo y lo delatan ([12 §2.1](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)). §4.4 descartado. Doc: [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md). |
+| **Interfaz Móvil Utilizable (enfoque manual táctil, controles a dos pulgares)** | 📝 *Propuesta futura* · **prioritaria** | [13_INTERFAZ_MOVIL_UTILIZABLE.md](13_INTERFAZ_MOVIL_UTILIZABLE.md) |
+| **Soporte de Gamepad (InputMap, gatillo de dos fases, menús navegables)** | 📝 *Propuesta futura* · **prioritaria** | [14_SOPORTE_GAMEPAD.md](14_SOPORTE_GAMEPAD.md) |
 
 ---
 
 ## 2. Estimación Comparativa de Complejidad y Esfuerzo
 
-Evaluación técnica de la dificultad de implementación, riesgo de regresión y alcance arquitectónico de cada futurible:
+Estimaciones revisadas contra el código. Las dependencias son las reales: una especificación no puede empezarse antes que las que cita.
 
-| Especificación / Futurible | Complejidad Estimada | Factores Clave de Esfuerzo | Impacto Arquitectónico | Dependencias |
+| Especificación / Futurible | Complejidad | Factores Clave de Esfuerzo | Impacto Arquitectónico | Dependencias |
 |---|:---:|---|---|---|
-| [01. Mapa Abierto y Protagonista Controlable](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) | **Muy Alta (XL)** | Reescritura del bucle de cámara, físicas de movimiento 3D del personaje, navegación libre por el parque, replanteamiento de la IA de evasión de peatones y controles simultáneos (movimiento + cámara). | Modificación nuclear de `main.gd` y del modelo de control. | Ninguna |
-| [02. Mejora Gráfica, Animación Universal y Modo Diorama Físico](02_ESTILO_VISUAL_Y_POLIGONOS.md) | **Alta (L)** | Toon canónico y Modo Diorama Físico PBR; arquitectura escalonada estándar (Bajo, Medio, Alto, Ultra) con menú personalizable desde móviles (60 FPS fluidos) hasta PCs modernos (NVIDIA serie 5000 con Forward+, VoxelGI, sombras PCSS y DoF macro). | Mallas procedurales multi-LOD, shaders Toon/PBR, AnimationTree y pipeline Forward+. | Ninguna |
-| [03. Nuevas Cámaras y TLR](03_NUEVAS_CAMARAS_Y_TLR.md) | **Media (M)** | Inversión horizontal en shader/viewport para emular visor de cintura, simulación de procesado computacional móvil y ampliación del catálogo en `equipment.gd`. | Módulo de cámara y renderizado en espejo. | Ninguna |
-| [04. Diversidad de Escenarios Urbanos](04_DIVERSIDAD_ESCENARIOS.md) | **Alta (L)** | Creación de geometrías de bulevares, estaciones y terrazas, adaptación del sistema de carriles a recorridos lineales/irregulares y mantenimiento de 1 draw call estático. | Escenarios (`park.gd`), navegación y POIs. | Ninguna |
-| [05. Desafíos y Modos de Juego](05_DESAFIOS_Y_MODOS_JUEGO.md) | **Baja-Media (S-M)** | Temporizadores, filtros de encargos fotográficos, condiciones de puntuación y menús adicionales; no requiere cambios gráficos ni de motor físico. | Capa de juego (`gameplay.gd`), aislada y modular. | Ninguna |
-| [06. Academia y Tutor de Fotografía](06_MODO_TUTOR_ACADEMIA.md) | **Media (M)** | Lógica pedagógica de diagnóstico interactivo de errores (sub/sobreexposición, desenfoque, trepidación), textos en `textos.es.json` y UI de retroalimentación. | Interfaz y máquina de estados del juego. | Ninguna |
-| [07. Visores Realistas y Ergonomía Móvil](07_VISORES_REALISTAS_Y_MOVIL.md) | **Media (M)** | Shaders de viñeteo óptico y LCD retro en visor, diseño de interfaz táctil a dos pulgares con `TouchScreenButton` y disparador de 2 fases (*half-press*). | Capa de visor (`viewfinder.gd`) y controles. | Ninguna |
-| [08. Captura Automática de Evidencias](08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) | ✅ **Completado** | Implementado en `tools/capture_evidence.gd`, `tools/build_sheets.py` y orquestador `tools/run_evidence.sh`. Galería activa en `docs/evidencias/`. | Aislado en `tools/`, riesgo cero de regresión en el juego. | Ninguna |
-| [09. Exportación Automatizada a Android](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) | 🟡 **Fases 1-2 completadas** | Preset en `export_presets.cfg` y `tools/export_android.sh` (headless + ADB opcional) implementados; quedan la capa táctil dedicada (fase 3) y la CI (fase 4). | Toolchain externo e infraestructura de build. | SDK de Android |
-| [10. Modo Historia Dual: El Legado](10_MODO_HISTORIA_DUAL_LEGADO.md) | **Media-Alta (M-L)** | Campaña por actos en dos líneas temporales (Abuelo 1950 vs Nieto moderno), shader de emulsión B&W química y reglas estrictas de carrete analógico. | Máquina de estados (`campaign.gd`) y shaders. | [03](03_NUEVAS_CAMARAS_Y_TLR.md) |
-| [11. Barrido (Panning) y Previsualización DoF](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) | **Media (M)** | Evaluación angular de arrastre en `photography.gd`, shader de estriado horizontal en `develop.gdshader` y botón de apertura de trabajo en visor. | Pipeline fotográfico y shader de revelado. | Ninguna |
-| [12. Modos de Fotometría Avanzada y Autofoco](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) | **Media (M)** | Lógica de fotometría multizona/spot, cálculo predictivo de distancia para corredores en AF-C, bloqueo AF-L/AE-L y controles de conmutación en HUD. | Módulo de exposición (`auto_expose`), buscador AF (`viewfinder.gd`) y controles. | Ninguna |
+| [16. Parque Ilustrado](16_PARQUE_ILUSTRADO_QUICK_WIN.md) | **Baja-Media (S-M)** | Fusión del parque en ~36 superficies con colores de vértice, material toon compartido con contorno, oclusión horneada y reajuste de niebla y cielo. | `park.gd` (`merge_static_meshes`, `apply_graphics_preset`). Sin cambios en la lógica fotográfica. | Ninguna |
+| [01. Mapa Abierto y Protagonista Controlable](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) | A: **S** · B: **M** · C: **XL** | A: 6 puestos fijos con transición. C: `CharacterBody3D`, navegación por grafo y reacciones sociales. | A: cámara. C: modificación nuclear de `main.gd` y de la navegación. | [13](13_INTERFAZ_MOVIL_UTILIZABLE.md), [14](14_SOPORTE_GAMEPAD.md). C comparte la navegación de 04 |
+| [02. Estilo Toon, Perfiles Gráficos y Diorama](02_ESTILO_VISUAL_Y_POLIGONOS.md) | Toon: **M** · Perfiles/Ultra: **M** · Diorama: **XL** | Presupuestos por perfil, Ultra en Forward+ con reinicio, reglas para que ningún perfil altere la puntuación, banco de 16 mejoras (§11), multi-LOD y Diorama PBR. | Shaders, `park.gd`, `build_catalog.py`, `override.cfg`. | [16](16_PARQUE_ILUSTRADO_QUICK_WIN.md) antes del resto del toon; [15](15_VARIEDAD_PROCEDURAL.md) fase 3 para el multi-LOD |
+| [03. Nuevas Cámaras y TLR](03_NUEVAS_CAMARAS_Y_TLR.md) | **Media (M)** | Inversión especular de imagen y controles, evaluación en formato 1:1, rollo de 12 y ampliación del catálogo. | Cámara, `photography.gd` (máscara 1:1) y revelado. | [14](14_SOPORTE_GAMEPAD.md) fase 1 (inversión de controles) |
+| [04. Diversidad de Escenarios Urbanos](04_DIVERSIDAD_ESCENARIOS.md) | **Muy Alta (XL)** | Recorridos lineales, sala y elipse en lugar de carriles circulares; distancias de zona por escenario; presupuestos por perfil. | Sustituye `LANES`/`LANE_BOUNDS` y el steering cilíndrico. | Navegación por grafo de [01 §3 C](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) |
+| [05. Desafíos y Modos de Juego](05_DESAFIOS_Y_MODOS_JUEGO.md) | **Baja-Media (S-M)** | Temporizadores, restricciones de equipo, condiciones de puntuación e insignias deterministas. | Capa de juego aislada. | 2.2 → [13](13_INTERFAZ_MOVIL_UTILIZABLE.md) en móvil; 2.4 → [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) |
+| [06. Academia y Tutor de Fotografía](06_MODO_TUTOR_ACADEMIA.md) | **Baja-Media (S-M)** | Reutiliza los diagnósticos `lines` de `Photography.evaluate()` y el sandbox; añade lecciones, umbrales y textos. | Interfaz y máquina de estados. | Ninguna |
+| [07. Visores Realistas y Efectos de Cielo](07_VISORES_REALISTAS_Y_MOVIL.md) | **Media (M)** | Ocular, cristal esmerilado, LCD de 7 segmentos, marcos de paralaje, disco solar, sombras de nube y hora dorada continua. | Capa de visor (`viewfinder.gd`) y `park.gd`. | Ninguna |
+| [08. Captura Automática de Evidencias](08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) | ✅ **Completado** | Implementado en `tools/capture_evidence.gd`, `tools/build_sheets.py` y orquestador `tools/run_evidence.sh`. Galería activa en `docs/evidencias/`. | Aislado en `tools/`. | Ninguna |
+| [09. Exportación Automatizada a Android](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) | 🟡 **Fases 1-2 completadas** | Queda la CI (fase 4), con caché de plantillas de 1,2 GB y, preferiblemente, publicación del APK como artefacto o *release*. | Infraestructura de build. | SDK de Android |
+| [10. Modo Historia Dual: El Legado](10_MODO_HISTORIA_DUAL_LEGADO.md) | **Alta (L)** | Campaña por actos, restricciones de época, shader de emulsión B&W y reglas de tono que impiden premiar el acoso. | Máquina de estados (`campaign.gd`) y shaders. | [03](03_NUEVAS_CAMARAS_Y_TLR.md), [04](04_DIVERSIDAD_ESCENARIOS.md), [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) |
+| [11. Barrido (Panning) y Previsualización DoF](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) | **Media-Alta (M-L)** | Historial de velocidad angular de cámara en la evidencia, evaluación diferencial, estriado sintetizado en el revelado y DoF en vivo calibrado por perfil. | `take_photo()`, `photography.gd`, `develop.gdshader`. | [14](14_SOPORTE_GAMEPAD.md) fase 1 (acción `previsualizar_dof`) |
+| [12. Modos de Fotometría Avanzada y Autofoco](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) | **Media (M)** | Fase 0: AF/AE sin conocer al objetivo. Después: medición puntual, ponderada y matricial, AF-S con bloqueo y AF-C opcional. | `select_matrix_point()`, `update_meter()`, `auto_expose()`. | Fase 1 → [13](13_INTERFAZ_MOVIL_UTILIZABLE.md)/[14](14_SOPORTE_GAMEPAD.md) (disparador de dos fases) |
+| [13. Interfaz Móvil Utilizable](13_INTERFAZ_MOVIL_UTILIZABLE.md) | **Media (M)** | Visor fijo 16:9 con carriles laterales, controles ≥ 84 px, rueda de foco relativa a la profundidad de campo, enfoque por zonas, pellizco solo para zoom y disparador táctil de dos fases. | HUD (`build_ui()`), gestos y `SubViewportContainer`. | Recomendable [14](14_SOPORTE_GAMEPAD.md) fase 1 |
+| [14. Soporte de Gamepad](14_SOPORTE_GAMEPAD.md) | **Media (M)** | Migración a `InputMap`, sticks con curva y escala por focal, gatillo analógico de dos fases, menús navegables e iconos por dispositivo. | Toda la capa de entrada de `main.gd`. | Ninguna |
+| [15. Variedad Procedural](15_VARIEDAD_PROCEDURAL.md) | **Media-Alta (M-L)** en 5 fases | Paleta ampliada y rayas por anillos, árboles por gramática con estaciones, morfología continua, prendas paramétricas y hierba instanciada. | `park.gd`, `casting.gd`, generador de piezas en GDScript. | [16](16_PARQUE_ILUSTRADO_QUICK_WIN.md) |
 
 ### Criterios de Calificación de Complejidad
 - **Baja (S)**: Tarea autocontenida de 1 a 2 días de desarrollo; sin riesgo de regresión en la física, óptica o navegación existente.
@@ -59,15 +70,57 @@ Evaluación técnica de la dificultad de implementación, riesgo de regresión y
 
 ## 3. Índice de Especificaciones Técnicas
 
-1. [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) — Protagonista controlable, navegación libre, alternativas de raíles/bancos y esquema de controles.
-2. [02_ESTILO_VISUAL_Y_POLIGONOS.md](02_ESTILO_VISUAL_Y_POLIGONOS.md) — Estilo visual canónico Toon (Maniquíes + Cell Shading) y **Modo Diorama Físico de Estudio** (PBR realista de madera, telas y forja, peana perimetral, arsenal Forward+: VoxelGI, SDFGI, PCSS, SSAO, volumetría y DoF tilt-shift macro); arquitectura multi-perfil estándar (Bajo, Medio, Alto, Ultra) y configuración personalizada granular para móviles y PCs modernos (NVIDIA serie 5000).
+1. [01_MAPA_ABIERTO_Y_PROTAGONISTA.md](01_MAPA_ABIERTO_Y_PROTAGONISTA.md) — Protagonista controlable, navegación libre, alternativas de raíles/bancos, esquema de controles alineado con `InputMap` y criterios de aceptación de la Alternativa A.
+2. [02_ESTILO_VISUAL_Y_POLIGONOS.md](02_ESTILO_VISUAL_Y_POLIGONOS.md) — Estilo visual canónico Toon, **perfiles gráficos con presupuestos por perfil** (Ultra en Forward+ para GPUs potentes, con límites justificados), reglas de coherencia para que ningún perfil altere la puntuación, **banco ampliado de mejoras gráficas** (§11) y Modo Diorama PBR como estilo alternativo de Ultra.
 3. [03_NUEVAS_CAMARAS_Y_TLR.md](03_NUEVAS_CAMARAS_Y_TLR.md) — Cámaras de formato medio TLR con visor de cintura invertido horizontalmente, smartphones computacionales y banco óptico 4×5.
-4. [04_DIVERSIDAD_ESCENARIOS.md](04_DIVERSIDAD_ESCENARIOS.md) — Nuevas localizaciones (Bulevar comercial, Estación de tren, Terraza nocturna, Pista deportiva).
-5. [05_DESAFIOS_Y_MODOS_JUEGO.md](05_DESAFIOS_Y_MODOS_JUEGO.md) — Modos de juego reglados (Reto de focal fija, Paparazzi contrarreloj, Multitud maratón, Fotoperiodismo puro).
+4. [04_DIVERSIDAD_ESCENARIOS.md](04_DIVERSIDAD_ESCENARIOS.md) — Nuevas localizaciones (Bulevar comercial, Estación de tren, Museo, Pista deportiva) y su dependencia de una navegación generalizada.
+5. [05_DESAFIOS_Y_MODOS_JUEGO.md](05_DESAFIOS_Y_MODOS_JUEGO.md) — Modos de juego reglados (Reto de focal fija, Paparazzi contrarreloj, Cazador nocturno, Barrido, Regla de Magnum) e insignias.
 6. [06_MODO_TUTOR_ACADEMIA.md](06_MODO_TUTOR_ACADEMIA.md) — Academia interactiva de fotografía, lecciones pedagógicas con ejercicios prácticos y evaluación por examen.
-7. [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) — Ocular de visor fotorrealista, pantallas LCD de datos, paralelaje en compactas y ergonomía táctil móvil.
+7. [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) — Ocular de visor fotorrealista, pantallas LCD de datos, paralaje en compactas y mejoras de cielo, sol y nubes.
 8. [08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md](08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) — Suite de capturas automáticas de hitos, spritesheets de assets por categoría, muestrario de personajes representativos, GIFs animados de cinemática y prevención de `.import` mediante `.gdignore`.
 9. [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) — Pipeline de compilación y empaquetado desatendido a APK de depuración para pruebas en hardware móvil real vía CLI y ADB.
-10. [10_MODO_HISTORIA_DUAL_LEGADO.md](10_MODO_HISTORIA_DUAL_LEGADO.md) — Campaña narrativa en dos líneas temporales alternas (el fotorreportero clásico de 1950 vs. el paparazzi moderno), dilemas éticos y restricciones de época.
-11. [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) — Algoritmo de arrastre angular y trepidación diferencial para barrido (*panning*) y previsualización de profundidad de campo en tiempo real.
-12. [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) — Modos de medición TTL (matricial, puntual, ponderada al centro), compensación de exposición $\pm\text{EV}$, modos de autofoco (AF-S, AF-C predictivo, AF-A) y seguimiento de sujetos.
+10. [10_MODO_HISTORIA_DUAL_LEGADO.md](10_MODO_HISTORIA_DUAL_LEGADO.md) — Campaña narrativa en dos líneas temporales alternas (el fotorreportero clásico de 1950 vs. el paparazzi moderno), dilemas éticos, reglas de tono y restricciones de época.
+11. [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) — Algoritmo de arrastre angular y trepidación diferencial para barrido (*panning*), prerrequisito de simulación temporal de la exposición y previsualización de profundidad de campo calibrada.
+12. [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) — Corrección de los automatismos que conocen al objetivo, modos de medición TTL (matricial, puntual, ponderada al centro), compensación de exposición $\pm\text{EV}$ y modos de autofoco (AF-S, AF-C, AF-A).
+13. [13_INTERFAZ_MOVIL_UTILIZABLE.md](13_INTERFAZ_MOVIL_UTILIZABLE.md) — HUD a dos pulgares, rueda de foco relativa a la profundidad de campo, enfoque por zonas, gestos sin conflictos y disparador táctil de dos fases, con cifras medidas en un móvil de 6,1".
+14. [14_SOPORTE_GAMEPAD.md](14_SOPORTE_GAMEPAD.md) — Mapa de acciones `InputMap` único, sticks con escala por focal, gatillo analógico de dos fases, menús navegables e iconos por dispositivo.
+15. [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md) — Árboles por gramática de especies y estaciones, arbustos, césped, paleta ampliada con estampados, morfología continua y prendas paramétricas nombrables.
+16. [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md) — **Paso 1**: el parque entero en estilo toon con contorno, fusionado con colores de vértice y oclusión horneada, y atmósfera reajustada.
+
+---
+
+## 4. Hoja de Ruta Recomendada
+
+Orden de trabajo derivado de la revisión del banco contra el código (29-09-2026). Cada paso respeta las dependencias de §2.
+
+```mermaid
+graph TD
+    P1["1 · Parque ilustrado (16)<br/>toon + contorno, fusión, oclusión, atmósfera"] --> P4
+    P2["2 · Correcciones de base<br/>InputMap (14 fase 1) · AF/AE sin conocer al objetivo (12 fase 0)"] --> P3
+    P3["3 · Interfaz móvil (13) y mando (14 fases 2-3)"] --> P5
+    P4["4 · Mejoras gráficas rápidas<br/>02 §11 G2-G5, G7 · variedad 15 fase 1"] --> P7
+    P5["5 · Academia (06) y desafíos (05 sin barrido)"] --> P6
+    P6["6 · Barrido y DoF calibrado (11) → desafío de barrido (05 §2.4)"] --> P8
+    P7["7 · Perfiles ampliados: Alto y Ultra en Forward+ (02 §10)<br/>variedad procedural 15 fases 2-5"] --> P8
+    P8["8 · Fotometría y AF avanzados (12 fases 1-2) · puestos de observación (01-A) · TLR (03) · visores (07)"] --> P9
+    P9["9 · Navegación generalizada: escenarios (04) y mapa abierto (01-C)"] --> P10["10 · Modo historia (10)"]
+```
+
+| Paso | Contenido | Por qué en este orden |
+|:---:|---|---|
+| **1** | [16 · Parque ilustrado](16_PARQUE_ILUSTRADO_QUICK_WIN.md) | El mayor salto visual por coste. Además arregla el cuello de botella de draw calls que lastra a todos los perfiles, sobre todo en móvil. |
+| 2 | [14](14_SOPORTE_GAMEPAD.md) fase 1 y [12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0 | El mapa único de controles evita que cada especificación invente teclas. El AF matricial que delata al objetivo es un atajo del juego actual. |
+| 3 | [13](13_INTERFAZ_MOVIL_UTILIZABLE.md) y [14](14_SOPORTE_GAMEPAD.md) fases 2-3 | Hay un APK en el repositorio, pero el enfoque manual es inviable en móvil. Móvil y mando comparten el disparador de dos fases. |
+| 4 | [02 §11](02_ESTILO_VISUAL_Y_POLIGONOS.md) G2–G5 y G7, y [15](15_VARIEDAD_PROCEDURAL.md) fase 1 | Mejoras de coste S que se apoyan en los colores de vértice del paso 1. |
+| 5 | [06](06_MODO_TUTOR_ACADEMIA.md) y [05](05_DESAFIOS_Y_MODOS_JUEGO.md) (salvo 2.4) | Mucho valor de juego con bajo riesgo; la base (`lines`, sandbox) ya existe. |
+| 6 | [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md), después [05 §2.4](05_DESAFIOS_Y_MODOS_JUEGO.md) | El barrido necesita simular la exposición en el tiempo. |
+| 7 | [02 §10](02_ESTILO_VISUAL_Y_POLIGONOS.md) y [15](15_VARIEDAD_PROCEDURAL.md) fases 2-5 | Ultra para GPUs potentes, con la base toon y la variedad ya asentadas. |
+| 8 | [12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fases 1-2, [01](01_MAPA_ABIERTO_Y_PROTAGONISTA.md)-A, [03](03_NUEVAS_CAMARAS_Y_TLR.md) (TLR) y [07](07_VISORES_REALISTAS_Y_MOVIL.md) | Profundizan en la fotografía sobre controles ya estables. |
+| 9 | [04](04_DIVERSIDAD_ESCENARIOS.md) y [01](01_MAPA_ABIERTO_Y_PROTAGONISTA.md)-C | Comparten la sustitución de la navegación cilíndrica: se hacen juntos. |
+| 10 | [10](10_MODO_HISTORIA_DUAL_LEGADO.md) | Depende de 03, 04 y 11, y de sus reglas de tono. |
+
+### Reglas para toda especificación nueva
+- Incluir una sección de **criterios de aceptación y pruebas**, porque AGENTS.md §3.4 obliga a ampliar `tests/`.
+- Declarar sus controles como acciones del mapa único de [14 §2](14_SOPORTE_GAMEPAD.md).
+- Indicar en qué perfiles gráficos se activa y cumplir las reglas de coherencia de [02 §10.3](02_ESTILO_VISUAL_Y_POLIGONOS.md).
+- Las cifras medidas viven en [TESTS_Y_VERIFICACION.md §5](../TESTS_Y_VERIFICACION.md). Si una especificación las cita para justificarse, debe enlazar ahí y no mantener una copia propia como fuente.

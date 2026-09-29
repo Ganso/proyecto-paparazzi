@@ -178,7 +178,7 @@ func run() -> void:
 	check(game.target.theta >= 0 and game.target.theta < 360 and game.target.visible,"Target remains in circular park")
 	# Graphics presets verification (docs/futuro/02, 2.8.4)
 	check(game.graphics_preset == "Ultra","Default graphics preset is Ultra")
-	check(game.park.sun.shadow_enabled and game.park.sun.directional_shadow_max_distance == 48.0,"Ultra activates extended PCSS shadows")
+	check(game.park.sun.shadow_enabled and game.park.sun.directional_shadow_max_distance == 48.0,"Ultra activates extended soft filtered shadows")
 	check(game.park.environment.environment.tonemap_mode == Environment.TONE_MAPPER_ACES,"Ultra uses ACES tone mapper")
 	game.apply_graphics_preset("Bajo")
 	check(game.graphics_preset == "Bajo","Switched to Bajo preset")

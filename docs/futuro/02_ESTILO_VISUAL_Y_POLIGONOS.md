@@ -6,6 +6,13 @@ Este documento establece la **dirección artística y técnica integral** para l
 
 ---
 
+> [!IMPORTANT]
+> **Guía de lectura (revisión del 29-09-2026)**
+> - **Hoja de ruta real**: el estilo **Toon canónico** (§3.1–3.2, capas de §5, animación de §4) en todos los perfiles, empezando por el **parque ilustrado** ([16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que es el paso 1 del proyecto.
+> - **Perfil Ultra**: aprovecha una GPU de escritorio potente con Forward+ y presupuestos ampliados, pero **justificados** (§10). El banco ampliado de mejoras está en §11 y la variedad procedural en [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md).
+> - **Modo Diorama PBR** (§1.2, §3.3–3.4): estilo alternativo exclusivo de Ultra, con sus cifras limitadas por la tabla de §10.2. Donde este documento cite 14.000 triángulos por maniquí o 550.000 en escena, manda §10.2 (8.000 y 1.500.000).
+> - Ningún perfil puede cambiar la puntuación fotográfica (§10.3).
+
 ## 1. Imagen Conceptual de Referencia y Doble Dirección Visual
 
 La siguiente imagen representa el punto de partida artístico (*target render*) para la estética del juego, la composición de planos, la vida del escenario y la interfaz del visor:
@@ -67,7 +74,7 @@ A continuación se evalúa la distancia entre el estado actual del código/motor
   - Backend: gl_compatibility                                 - Backend: Forward+ (Clustered Vulkan)
   - Estética: Ilustración / Cómic limpio                      - Estética: Maqueta de Estudio / Escala 1:18
   - Shaders: Cel-Shading 3 bandas + Inverted Hull Outlines    - Shaders: PBR StandardMaterial3D (Clearcoat, Sheen)
-  - Geometría: 1.800 tris/maniquí, 95k tris escena            - Geometría: 8.000-14.000 tris/maniquí, 550k tris
+  - Geometría: 1.800 tris/maniquí, 95k tris escena            - Geometría: ≤ 8.000 tris/maniquí, ≤ 1,5 M tris
   - Texturas: Ninguna (ARRAY_COLOR en vértices)               - Texturas: PBR 1K/2K (Albedo, Normal, ORM)
   - Iluminación: Sombras directas PCF                         - Iluminación: VoxelGI/SDFGI, PCSS, Contact Shadows
   - Objetivo: WebGL, Móviles, 60 FPS universales              - Objetivo: Desktop PC, Consolas, Efecto WOW
@@ -76,7 +83,7 @@ A continuación se evalúa la distancia entre el estado actual del código/motor
 ### 3.1 Justificación Conceptual y Ética (Común a Ambos Estilos)
 - **Metáfora artística perfecta**: En un juego centrado en la fotografía y la composición artística, que los personajes sean maniquíes de dibujo articulados es una decisión diegética impecable que refuerza el tono del proyecto.
 - **Solución definitiva a la ética de casting**: Los maniquíes de madera neutra eliminan cualquier ambigüedad en el tono de piel (todos comparten el acabado de madera noble natural: haya, arce, roble o nogal), concentrando las descripciones fotográficas exclusivamente en la indumentaria, accesorios y actitudes.
-- **Eficiencia matemática de render**: Cada junta esférica o cilindro torneado tiene normales analíticas perfectas que se renderizan limpiamente con muy pocos polígonos (~2.200 a 2.600 triángulos por personaje completo en Toon, escalable a 8.000-14.000 en Diorama).
+- **Eficiencia matemática de render**: Cada junta esférica o cilindro torneado tiene normales analíticas perfectas que se renderizan limpiamente con muy pocos polígonos (hasta 1.900 triángulos por personaje en los perfiles móviles, 4.000 en Alto y 8.000 en Ultra; ver §10.2).
 
 ```
 +-------------------------------------------------------------------------------+
@@ -183,7 +190,7 @@ El **Modo Diorama Físico** persigue la reproducción fotorrealista y tangible d
 
 #### E) Superación Radical del "Low-Poly" y Peana Perimetral de Maqueta
 - **Mallas de Alta Densidad**:
-  - De 1.900 tris a **8.000 - 14.000 triángulos por maniquí**, eliminando aristas facetadas visibles incluso en primeros planos con el teleobjetivo de 200 mm.
+  - De 1.900 tris a **hasta 8.000 triángulos por maniquí** (límite de Ultra, §10.2), eliminando aristas facetadas visibles incluso en primeros planos con el teleobjetivo de 200 mm.
   - Bancos de 7 listones independientes curvados con pernos avellanados ($pprox 2.400\text{ tris}$).
   - Farolas con coronas ornamentales y vidrio transparente ($pprox 1.800\text{ tris}$).
   - Árboles con ramificación fractal y copas de hojas poligonales densas ($pprox 4.500 - 8.000\text{ tris}$).
@@ -439,6 +446,7 @@ Para sostener 7 capas con múltiples personajes y elementos escénicos sin degra
   -----------------------------------------------------------------------------
   TIER 2: POBLACIÓN AMBIENTAL DESACOPLADA (Capas 0, 3 y 4)
     * 14 a 20 personajes secundarios (familias en bancos, estudiantes al fondo)
+    * REGLA §10.3.2: los de las capas 0 y 3 están dentro de la zona jugable y pueden tapar al objetivo, así que deben existir en TODOS los perfiles, con colisionadores y rayos de oclusión. Solo la capa 4 (tras la verja) puede variar por perfil
     * Cero coste en `photography.gd`: excluidos de listas de objetivos y raycasts
     * Animaciones directas de Quaternius: sentado en banco, charlando, móvil, etc.
     * Mallas combinadas compartidas con el mismo shader Toon
@@ -542,6 +550,8 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 ### 8.3 Hoja de Ruta Secuencial en 8 Hitos: Resultados Parciales Llamativos
 
 #### 🚀 HITO 1: El Despertar Óptico de la Maqueta (Postprocesado Macro Tilt-Shift & Tone Mapping AgX)
+> [!WARNING]
+> **Revisado.** Un DoF macro decorativo en el visor contradice la mecánica: el jugador elige la apertura y la puntuación usa su profundidad de campo real. El DoF del visor debe estar calibrado con `Photography.dof()` para el objetivo y el diafragma elegidos ([11 §4](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md), mejora G14 de §11). `gl_compatibility` no trae DoF integrado, así que en Bajo, Medio y Alto requiere un shader propio.
 - **Clasificación**: `Bajo Coste (S) / Muy Alto Impacto Visual` | **Duración estimada**: 1 a 2 días.
 - **Intervención**:
   - Configurar `CameraAttributesPhysical` en la cámara principal del jugador (`scripts/main.gd`).
@@ -552,6 +562,8 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
   - *Sin modificar un solo vértice ni textura*, la escena actual adquiere instantáneamente la estética cinematográfica de una maqueta en miniatura fotografiada en estudio con una lente macro de alta gama. El efecto tilt-shift engaña al cerebro desde el primer segundo.
 
 #### 🚀 HITO 2: Iluminación de Estudio, Contact Shadows y Volumen Físico (SSAO & PCSS)
+> [!WARNING]
+> **Revisado.** Todo este hito exige `forward_plus`, así que solo se aplica al perfil **Ultra** (§10.2), con reinicio al cambiar de renderizador (§10.3.3). Las sombras de contacto en espacio de pantalla no forman parte del entorno estándar de Godot 4 (ver §11). El «quick win» real de bajo coste para todos los perfiles es el **parque ilustrado** ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)).
 - **Clasificación**: `Bajo-Medio Coste (S-M) / Alto Impacto Visual` | **Duración estimada**: 2 a 3 días.
 - **Intervención**:
   - Configurar el backend `Forward+` en `project.godot` para habilitar el pipeline de sombras avanzadas.
@@ -592,6 +604,8 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
   - Al hacer zoom o disparar con teleobjetivos (70–200 mm), la vestimenta muestra microtextura de tela real confeccionada a medida sobre la madera, eliminando cualquier sensación de muñeco de plástico.
 
 #### 💎 HITO 6: Iluminación Global (GI VoxelGI / SDFGI) y Agua del Estanque PBR
+> [!WARNING]
+> **Revisado.** El parque se genera en tiempo de ejecución: `LightmapGI` (horneado en el editor) no es viable, y `VoxelGI` se hornea de forma estática y no sigue los cambios de hora. Se elige **SDFGI + SSIL** para Ultra (§10.2, mejoras G10 y G11 de §11).
 - **Clasificación**: `Medio Coste (M) / Alto Impacto Visual` | **Duración estimada**: 3 a 4 días.
 - **Intervención**:
   - Configurar un nodo `VoxelGI` horneado o `SDFGI` en tiempo real que abarque el parque ($45 	imes 12 	imes 45\text{ m}$).
@@ -628,13 +642,13 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Hito 0** | **2.0.1** | Shaders Toon en 3 bandas y contorno *inverted hull* | Bajo (S) | Alto | 🚀 Quick Win | ✅ **Hecho** | [`cel_shading.gdshader`](../../shaders/cel_shading.gdshader), [`cel_outline.gdshader`](../../shaders/cel_outline.gdshader) |
 | **Hito 0** | **2.0.2** | Material Toon único compartido en `person.gd` | Bajo (S) | Medio | ⚙️ Base | ✅ **Hecho** | `Person.mannequin_material()` activo |
 | **Hito 0** | **2.0.3** | Mallas base de maniquí con rótulas visibles parciales | Medio (M) | Medio | ⚙️ Base | 🟡 **Parcial** | Catálogo con rótulas en miembros descubiertos |
-| **Hito 1** | **2.1.1** | DoF física macro ($f/1.4 - f/2.0$) con bokeh de 9 palas | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | 📝 Pendiente | `main.gd::setup_macro_camera()` con blur inmediato |
+| **Hito 1** | **2.1.1** | DoF del visor **calibrado** con `Photography.dof()` (sin tilt-shift decorativo) | Medio (M) | Alto | 💎 Gran Hito | 📝 Pendiente | Ver [11 §4](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) y G14 (§11) |
 | **Hito 1** | **2.1.2** | Tone Mapping AgX / ACES y curva de color de estudio | Muy Bajo (XS) | Alto | 🚀 **Quick Win** | ✅ **Hecho** | Altas luces de barniz suaves sin quemado con compresión S-curve |
 | **Hito 1** | **2.1.3** | Viñeteo óptico, aberración cromática y grano ISO analógico | Bajo (S) | Medio-Alto | 🚀 **Quick Win** | ✅ **Hecho** | Shaders de revelado con caída cos^4, dispersión radial y grano estocástico |
-| **Hito 2** | **2.2.1** | Configuración de preset `Forward+` y soporte de cluster | Bajo (S) | Medio | ⚙️ Base | 📝 Pendiente | `project.godot` con Forward+ y fallback Compatibility |
-| **Hito 2** | **2.2.2** | Screen-Space Contact Shadows en pies y bancos | Bajo (S) | **Muy Alto** | 🚀 **Quick Win** | 📝 Pendiente | Cero *peter-panning*; anclaje físico inmediato |
+| **Hito 2** | **2.2.1** | Perfil Ultra con `forward_plus` vía `override.cfg` y reinicio; vuelta automática a Compatibility | Bajo (S) | Medio | ⚙️ Base | 📝 Pendiente | §10.3.3 |
+| **Hito 2** | **2.2.2** | ~~Sombras de contacto en espacio de pantalla~~: no están en el entorno estándar de Godot 4; se sustituyen por SSAO + SSIL | — | — | — | ❌ Descartado | §11 |
 | **Hito 2** | **2.2.3** | SSAO macro ($0.35\text{ m}$) en rótulas y pliegues | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras de cavidad profundas en articulaciones |
-| **Hito 2** | **2.2.4** | Sombras direccionales PCSS con penumbra suave | Bajo (S) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Sombras borrosas según distancia del foco |
+| **Hito 2** | **2.2.4** | Sombras con penumbra física (PCSS de Forward+, `light_angular_distance`), solo Ultra | Bajo (S) | Medio | 🚀 Quick Win | 📝 Pendiente | G13 (§11) |
 | **Hito 2** | **2.2.5** | Volumetric Fog y motas de polvo flotando en contraluz | Bajo-Medio (S-M) | Alto | 🚀 **Quick Win** | 📝 Pendiente | Atmósfera de taller de modelismo con haz de luz |
 | **Hito 3** | **2.3.1** | Bancos de 7 listones de teca biselados y patas de forja | Bajo (S) | Alto | 🚀 **Quick Win** | ✅ **Hecho** | Acabado físico de forja y teca satinada en `park.gd` |
 | **Hito 3** | **2.3.2** | Farolas de fundición de hierro con cristal y filamento | Medio (M) | Alto | 💎 **Gran Hito** | ✅ **Hecho** | Farolas ornamentales en `park.gd::build_farola_mesh()` con 4 paneles de cristal `TRANSPARENCY_ALPHA`, bombilla con emisión dinámica día/noche y visual en `docs/evidencias/sheets/sheet_mobiliario.png` |
@@ -646,7 +660,7 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Hito 5** | **2.5.1** | Atlas de texturas textiles PBR (denim, piqué, ripstop) | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Ropa con hilado de tejido visible a 45° en zoom |
 | **Hito 5** | **2.5.2** | Activación del canal `Sheen` para lustre de microfibras | Bajo (S) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Halo aterciopelado en hombros y bordes de ropa |
 | **Hito 5** | **2.5.3** | Normal maps de costuras, dobladillos y calzado de cuero | Bajo-Medio (S-M) | Medio-Alto | 💎 **Gran Hito** | 📝 Pendiente | Calzado con suela estriada y pespuntes de hilo |
-| **Hito 6** | **2.6.1** | Configuración de `VoxelGI` o `SDFGI` en `park.gd` | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Rebote verde del césped sobre los maniquíes |
+| **Hito 6** | **2.6.1** | SDFGI + SSIL en Ultra (LightmapGI y VoxelGI descartados, ver §11) | Bajo (S) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Rebote verde del césped sobre los maniquíes |
 | **Hito 6** | **2.6.2** | Shader PBR de agua para el estanque con refracción y SSR | Medio (M) | Alto | 💎 **Gran Hito** | 📝 Pendiente | Estanque reflectante con lecho de grava sumergido |
 | **Hito 7** | **2.7.1** | Herramienta de retargeting de Quaternius UAL 1 & 2 | Medio (M) | Medio | ⚙️ Base | 📝 Pendiente | `tools/import_quaternius_anims.py` y `BoneMap` |
 | **Hito 7** | **2.7.2** | Cinemática híbrida en `person.gd` (analítico + blend) | Medio-Alto (M-L) | **Muy Alto** | 👑 **Prémium** | 📝 Pendiente | Cero drift en pies ($drift=0$) con andares orgánicos |
@@ -669,125 +683,98 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 | **Deformación y costuras aberrantes en texturas de maderas** | Medio | **UVs Cilíndricas Analíticas**: Cálculo matemático de coordenadas UV en `build_catalog.py` alineadas con el eje óseo de cada pieza de maniquí, garantizando continuidad de veta leñosa. |
 | **Caída de rendimiento por evaluación de AnimationTree en multitudes** | Medio | **Desacoplamiento Tier 2**: Los personajes ambientales de fondo ejecutan clips cíclicos estáticos (`AnimationPlayer`) evaluados a menor tasa de refresco, sin raycasts fotográficos. |
 | **Regresión en tests fotográficos y determinismo** | Crítico | **Aislamiento de la lógica de evaluación**: `photography.gd` y la física de rayos se mantienen estrictamente independientes del pipeline de sombreado y postprocesado. |
+| **Perfiles que alteran la puntuación** (mallas LOD, población o vegetación extra que tapan al objetivo) | Crítico | Colisionadores y puntos de control siempre de la geometría base; lo añadido por perfil solo fuera de la zona jugable o por debajo de 0,3 m (§10.3); prueba de coherencia entre perfiles (§10.4). |
 
 ---
 
-## 10. Sistema de Perfiles Gráficos Estándar (Bajo, Medio, Alto, Ultra) y Configuración Personalizada
+## 10. Perfiles Gráficos: Presupuestos por Perfil y Ultra para GPUs Potentes
 
-Para garantizar que **Proyecto Paparazzi** ofrezca una experiencia visual impecable en todo el espectro de plataformas —desde **dispositivos móviles modestos (Android / iOS) donde debe ser jugable con detalle moderado y 60 FPS**, hasta **PCs de escritorio modernos de gama entusiasta (con GPUs de última generación como la serie NVIDIA RTX 5000)** donde debe lucir a la altura de las mayores producciones gráficas—, se adopta el estándar de la industria estructurado en **4 Perfiles Escalonados Graduales** respaldados por un **Menú de Configuración Granular Personalizada**.
+> [!IMPORTANT]
+> **Revisión del 29-09-2026.** Esta sección sustituye a la versión anterior, que tenía tres problemas: presupuestos de Alto/Ultra incompatibles con los invariantes de AGENTS.md §3.1, un cambio de backend «en caliente» imposible en Godot 4 y tecnologías que Godot no ofrece de serie (DLSS). Los invariantes pasan a ser **por perfil** (AGENTS.md §3.1). Los perfiles móviles conservan los límites actuales; **Ultra** se amplía para aprovechar una GPU de escritorio potente, pero solo donde se nota en la imagen.
 
-```
-+---------------------------------------------------------------------------------------------------+
-|                     ESPECTRO DE HARDWARE Y ESCALABILIDAD TÉCNICA                                  |
-+---------------------------------------------------------------------------------------------------+
-  [ MÓVILES GAMA MEDIA / ANDROID ]             [ PC MODERNO / NVIDIA SERIE 5000 / BLACKWELL ]
-  - Backend: gl_compatibility / mobile         - Backend: Forward+ (Clustered Vulkan)
-  - Resolución: 720p / 1080p nativo            - Resolución: 1440p / 4K nativo a 120+ FPS
-  - Toon 3 bandas / PBR ligero 1K              - Diorama PBR 2K/4K sin compresión
-  - Sombras PCF filtradas (2048)               - Sombras PCSS ultra suaves con penumbra física (4096)
-  - 21 jugables + 12 ambientales bancos        - 21 jugables + 36 ambientales de maqueta viva
-  - Mallas 8-10 segmentos suaves               - Mallas de ebanistería 20-24 segmentos (curvas puras)
-  - Consumo VRAM: < 55 MiB                     - VoxelGI (512³) + SDFGI + SSIL + Subsurface Scattering
-  - Batería y temperatura optimizadas          - DoF macro física con bokeh cinematográfico y AgX
-```
+### 10.1 Estado actual
+- Los cuatro perfiles (`Bajo`, `Medio`, `Alto`, `Ultra`) existen en `main.gd::show_graphics_settings()` y `park.gd::apply_graphics_preset()`. Hoy todos usan `gl_compatibility` y solo cambian sombras, niebla, curva de color y grosor del contorno.
+- `Ultra` es el perfil por defecto en **todas** las plataformas, también en el APK Android.
+- Medidas actuales en [TESTS_Y_VERIFICACION.md §5](../TESTS_Y_VERIFICACION.md): en Ultra, unos 1.800 draw calls y una mediana de 20 ms por fotograma en una Intel Iris Xe. El cuello de botella son los draw calls del parque, no los triángulos ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)).
 
----
+### 10.2 Tabla de perfiles objetivo
 
-### 10.1 Tabla Comparativa de Perfiles Gráficos Estándar
-
-| Parámetro Técnico | Perfil 1: Bajo (*Low*) | Perfil 2: Medio (*Medium / Default*) | Perfil 3: Alto (*High*) | Perfil 4: Ultra / Master (*Ultra*) |
+| Parámetro | Bajo | Medio | Alto | Ultra |
 |---|---|---|---|---|
-| **Dispositivos Objetivo** | Móviles de gama de entrada, WebGL ligero en navegador, hardware antiguo. | Móviles de gama media-alta, tablets, Steam Deck, portátiles ultraligeros. | PCs estándar de juegos (RTX 3060/4060, RX 6700/7600), consolas. | **PCs modernos y entusiastas (NVIDIA RTX serie 5000 / 4080 / 4090)**. |
-| **Backend de Render Godot 4** | `gl_compatibility` (OpenGL 3.3 / WebGL 2) | `mobile` / `gl_compatibility` optimizado | `Forward+` (Clustered Vulkan) | **`Forward+` al límite técnico (Vulkan compute)** |
-| **Estilo y Materialidad** | Toon Cell-Shading limpio en colores de vértice (`ARRAY_COLOR`) | Toon suave de 3 bandas con oclusión ambiental precalculada o PBR ligero 1K | **Diorama PBR 1K/2K**: vetas de madera noble con Clearcoat y telas con Sheen | **Diorama Físico Master 2K/4K**: maderas nobles con Clearcoat, telas Sheen, forja y SSS |
-| **Segmentos Radiales Mallas** | **6 segmentos** (estética facetada/origami) | **8-10 segmentos** (maniquí estilizado suave) | **14-16 segmentos** (torneado continuo sin aristas) | **20-24 segmentos** (curvaturas orgánicas perfectas para planos cerrados en 4K) |
-| **Triángulos por Maniquí** | $\approx 950 - 1.200\text{ tris}$ | $\approx 1.800 - 2.400\text{ tris}$ | $\approx 4.500 - 6.500\text{ tris}$ | **$\approx 10.000 - 14.000\text{ tris}$** (acabado artesanal de alta ebanistería) |
-| **Delineado de Contorno** | Desactivado (1 draw call por figura) | Inverted Hull básico ligero (1,6 px) | Desactivado (micro-geometría y SSAO) | **Desactivado** (sustituido por micro-geometría real y oclusión de contacto física) |
-| **Animación (Quaternius UAL)** | `gait.gd` analítico puro + poses básicas | Cinemática Híbrida (`gait.gd` + blend UAL a 30 Hz) | Animación Completa con micro-gestos y miradas | **Animación Completa a 60 Hz** + micro-vibraciones de soporte mecánico en muñecas |
-| **Población en Escena** | 21 viandantes (Tier 1 jugable únicamente) | 21 jugables + 12 ambientales en bancos (Tier 2) | 21 jugables + 24 ambientales (bancos y cenador) | **21 jugables + 36 ambientales de maqueta viva** (bancos habitados, verja y paseantes) |
-| **Iluminación Global (GI)** | Desactivada (luz directa + hemisferio plano) | Hemisferio ambiental + AO precalculada en vértices | **SDFGI o VoxelGI equilibrado** ($128^3$) | **VoxelGI Ultra ($256^3-512^3$) + SDFGI + SSIL** (sangrado de color dinámico completo) |
-| **Sombras y Penumbra** | Atlas 1024 / Sombras duras | Atlas 2048 / Filtro PCF suavizado estándar | Atlas 4096 / Sombras PCSS + Contact Shadows | **Atlas 4096-8192 / PCSS suave con penumbra variable física + Contact Shadows full-rate** |
-| **Oclusión Ambiental (SSAO)** | Desactivada | SSAO ligera de bajo radio (half-rate) | SSAO completa a escala macro | **SSAO Ultra bilateral full-rate** (sombras oscuras en hendiduras de rótulas y ropa) |
-| **Efectos Volumétricos** | Desactivados | Niebla de distancia exponencial estática | Niebla volumétrica suave | **Volumetric Fog densa (God rays físicos) + Partículas GPU de polvo en suspensión** |
-| **Simulación Óptica de Cámara** | Básico (revelado monocromo/color) | Revelado + DoF fotográfica suave básica | DoF Macro Tilt-Shift física ($f/1.8$, 9 palas) + AgX | **DoF Macro Tilt-Shift ($f/1.4$) con bokeh físico + Aberración + AgX + Grano analógico** |
-| **Subsurface Scattering (SSS)** | Desactivado | Desactivado | Transmitancia sutil en hojas | **SSS completo en hojas botánicas y cantos finos de madera noble a contraluz** |
-| **Anti-Aliasing y Escalado** | FXAA básico / 100% nativo | TAA básico / FSR 1.0 equilibrado | TAA full / FSR 2.2 Calidad | **TAA de alta fidelidad / FSR 3.0 / DLSS nativo en 1440p y 4K con refresco 120-240 Hz** |
-| **Triángulos Totales en Escena** | $\le 45.000\text{ tris}$ | $\le 95.000\text{ tris}$ | $\approx 220.000 - 320.000\text{ tris}$ | **$\approx 550.000 - 850.000\text{ tris}$** (parque detallado, arbolado y multitud) |
-| **Consumo de VRAM Objetivo** | $< 35\text{ MiB}$ | $< 55\text{ MiB}$ | $< 220\text{ MiB}$ | **$\approx 350 - 550\text{ MiB}$** (perfectamente holgado en GPUs modernas de 8 a 24 GB) |
+| **Plataforma** | Móviles de entrada | Móviles de gama media-alta y tablets (**por defecto en móvil**) | PC con gráfica integrada o dedicada modesta, Steam Deck (**por defecto en escritorio**) | PC con GPU dedicada potente (opcional, requiere reinicio) |
+| **Renderizador** | `gl_compatibility` | `gl_compatibility` | `gl_compatibility` | **`forward_plus`** (Vulkan/D3D12) |
+| **Triángulos por maniquí** | ≤ 1.900 (catálogo actual) | ≤ 1.900 | ≤ 4.000 (10–12 lados) | **≤ 8.000** (16–20 lados) |
+| **Triángulos en escena** | ≤ 100.000 | ≤ 100.000 | ≤ 300.000 | **≤ 1.500.000** (la mayoría en hierba instanciada) |
+| **VRAM** | < 60 MiB | < 60 MiB | < 256 MiB | **< 1 GiB** |
+| **Draw calls (objetivo)** | ≤ 100 | ≤ 150 | ≤ 300 | ≤ 1.000 |
+| **Parque** | Toon + contorno fusionado ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md)) | Igual + oclusión horneada en vértices | Igual + hierba y flores instanciadas (densidad 0,3) con viento | Densidad 1,0, hojas sueltas, copas con más lóbulos ([15](15_VARIEDAD_PROCEDURAL.md)) |
+| **Sombras del sol** | Desactivadas (mancha de contacto bajo cada viandante) | Atlas 1024 | Atlas 2048 filtradas | Atlas 4096 con penumbra física (`light_angular_distance`, PCSS de Forward+) |
+| **Iluminación indirecta** | Ambiente plano | Hemisferio cielo/suelo | Hemisferio + oclusión horneada | **SDFGI** (dinámica, compatible con día, hora dorada y noche) + **SSIL** |
+| **Oclusión ambiental** | Horneada en vértices | Horneada | Horneada | Horneada + **SSAO** |
+| **Atmósfera** | Niebla de profundidad | Niebla de profundidad | Profundidad + altura | **Niebla volumétrica**: haces de sol entre copas en hora dorada, halos de farola de noche |
+| **Brillo (glow)** | No | No | Farolas y cielo de noche | Glow HDR completo |
+| **Antialiasing** | Ninguno | MSAA 2× | MSAA 4× | TAA o FSR 2.2, con MSAA |
+| **DoF en el visor** | No | No | Shader propio calibrado ([11 §4](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)) | `CameraAttributesPractical` calibrado con `Photography.dof()` |
+| **Población ambiental** | 0 | 0 | +12 fuera de la zona jugable | +36 fuera de la zona jugable |
 
----
+**Por qué estos límites en Ultra y no más**:
+- **8.000 triángulos por maniquí**: a 200 mm, el encuadre vertical a 4 m abarca solo 0,40 m (sensor de 36 × 20,25 mm), así que la cabeza y los hombros de un viandante del carril 1 llenan la pantalla. A 1440p, pasar de 6 a 16–20 lados elimina las aristas visibles en siluetas y rótulas. Por encima de unos 8.000 la diferencia ya no se aprecia ni en ese caso, así que el coste no compensa.
+- **1,5 M de triángulos en escena**: el grueso es hierba y flores instanciadas (`MultiMeshInstance3D`), que es lo que da vida al césped en planos generales. Los 21 viandantes a 8.000 suman solo 168.000.
+- **1 GiB de VRAM**: suficiente para el atlas de sombras de 4096, los búferes de SDFGI, SSIL, SSAO y niebla volumétrica y las texturas PBR del Diorama (§3.3), con margen en cualquier GPU de 6 GB o más.
 
-### 10.2 Menú de Configuración Granular Personalizada (Custom Settings)
+### 10.3 Reglas de coherencia entre perfiles (obligatorias)
+1. **La puntuación no depende del perfil.** Colisionadores, rayos de oclusión y puntos de control usan siempre la geometría base (la de Bajo). Los perfiles solo cambian la malla visible, y la misma evidencia da la misma nota en Bajo y en Ultra (determinismo, AGENTS.md §3.5).
+2. **Lo que añade un perfil no puede tapar al objetivo sin puntuar.** La población ambiental y la vegetación extra solo se colocan fuera de la zona jugable ($r > 12.8\text{ m}$, tras la verja) o por debajo de 0,3 m (hierba y flores, bajo el punto de control de las rodillas). Así ningún perfil muestra una oclusión que la puntuación no ve.
+3. **Cambiar de renderizador exige reiniciar.** Godot 4 fija el método de renderizado al arrancar. Al elegir Ultra se escribe `rendering/renderer/rendering_method="forward_plus"` en `override.cfg` y se reinicia con `OS.set_restart_on_exit(true)`. Si el equipo no admite Vulkan ni D3D12, Godot vuelve a `gl_compatibility` y el juego baja a Alto. Bajo, Medio y Alto se cambian en caliente, como hoy.
+4. **El APK Android nunca usa Ultra.** El preset `Android` sigue en `gl_compatibility` y el perfil inicial en móvil es `Medio` ([13 §5](13_INTERFAZ_MOVIL_UTILIZABLE.md)).
+5. **Detección inicial**: `OS.has_feature("mobile")` → Medio; escritorio → Alto. Ultra solo se activa si el jugador lo elige; se puede sugerir cuando `RenderingServer.get_video_adapter_type()` indica una GPU dedicada.
 
-Siguiendo el estándar de las producciones comerciales de PC, el jugador puede elegir un preset global (`[ Bajo | Medio | Alto | Ultra ]`) o ajustar individualmente cada parámetro, pasando el selector automáticamente al modo **`Personalizado`**:
+### 10.4 Pruebas por perfil
+- `--smoke-test` acepta `--profile=<nombre>` y comprueba los presupuestos de triángulos de ese perfil. `test_game.gd` mide la VRAM con el límite del perfil activo.
+- `test_photography.gd` añade una prueba de coherencia: la misma evidencia evaluada con geometría de Bajo y de Ultra da la misma nota.
+- `--metrics` ya imprime `draw_calls` ([TESTS §4.1](../TESTS_Y_VERIFICACION.md)); se añade un umbral por perfil en `test_game.gd`.
+- `./tools/run_evidence.sh` captura la misma escena en los cuatro perfiles para comparar.
 
-```
-+-----------------------------------------------------------------------------------------------+
-|                       MENÚ DE AJUSTES GRÁFICOS PERSONALIZADOS                                 |
-+-----------------------------------------------------------------------------------------------+
-  Perfil Global:               [ <  PERSONALIZADO  > ]  (Bajo / Medio / Alto / Ultra)
-
-  [ CALIDAD GEOMÉTRICA Y ENTORNOS ]
-  - Nivel de Detalle de Mallas (LOD):    [ <  Ultra (20+ seg)  > ] (Bajo / Medio / Alto / Ultra)
-  - Calidad del Mobiliario y Parque:     [ <  Modelismo Artesanal  > ] (Básico / Detallado / Maqueta)
-  - Densidad de Población Ambiental:     [ <  Alta (+24 en Bancos)  > ] (21 Jugables / +12 / +24 / +36)
-
-  [ MATERIALES Y SOMBREADO ]
-  - Calidad de Texturas y Shaders:       [ <  PBR Completo 2K/4K  > ] (Toon Vértice / PBR 1K / PBR 2K / Ultra)
-  - Capa de Barniz en Madera (Clearcoat):[ [X] Activado ]
-  - Lustre Textil en Ropa (Sheen):       [ [X] Activado ]
-  - Translucidez Botánica (SSS):         [ [X] Activado ]
-
-  [ ILUMINACIÓN Y SOMBRAS ]
-  - Backend de Render:                   [ <  Forward+ (Clustered)  > ] (Compatibility / Forward+)
-  - Iluminación Global (GI):             [ <  VoxelGI + SSIL  > ] (Desactivada / SDFGI / VoxelGI / Ultra)
-  - Calidad de Sombras:                  [ <  PCSS Ultra Suave  > ] (Duras / Filtradas / PCSS / Ultra PCSS)
-  - Sombras de Contacto (Contact Shadows):[ [X] Activado (Elimina flotación) ]
-  - Oclusión Ambiental (SSAO):           [ <  Macro Full-Rate  > ] (Desactivada / Media / Alta / Ultra)
-
-  [ ATMÓSFERA Y POSTPROCESADO ]
-  - Niebla Volumétrica y Focos:          [ <  Densa + Motas de Polvo  > ] (Desactivada / Simple / Volumétrica)
-  - Profundidad de Campo (DoF Macro):    [ <  Física Tilt-Shift (9 Palas)  > ] (Desactivada / Suave / Macro)
-  - Tone Mapping Fílmico:                [ <  AgX Fílmico  > ] (Lineal / Reinhard / ACES / AgX)
-  - Grano Fotográfico Analógico:         [ <  ISO 100 Fino  > ] (Desactivado / ISO 100 / ISO 400)
-
-  [ RENDIMIENTO Y PANTALLA ]
-  - Resolución de Renderizado:           [ 3840 x 2160 (4K) ]
-  - Escalado y Reconstrucción:           [ <  FSR 2.2 / TAA Nativo  > ] (Bilineal / TAA / FSR Calidad)
-  - Límite de Fotogramas (FPS):          [ <  144 FPS / Ilimitado  > ] (30 / 60 / 120 / 144 / Ilimitado)
-+-----------------------------------------------------------------------------------------------+
-```
-
----
-
-### 10.3 Pipeline de Modelado Procedural Multi-LOD (`tools/build_catalog.py`)
-
-Para dar soporte limpio a los 4 perfiles sin duplicar archivos en disco, el generador paramétrico se parametriza mediante un diccionario de niveles de detalle:
+### 10.5 Mallas multi-LOD
+El generador `tools/build_catalog.py` se parametriza por nivel de detalle, con la misma jerarquía de 20 huesos y los mismos pesos rígidos en todos los niveles:
 
 ```python
-# tools/build_catalog.py
-# Generación paramétrica multi-LOD para los 4 perfiles estándar
 LOD_PROFILES = {
-    "low":     {"segments": 6,  "sphere_rings": 4,  "uvs": False, "subdivisions": 1},
-    "medium":  {"segments": 8,  "sphere_rings": 6,  "uvs": False, "subdivisions": 2},
-    "high":    {"segments": 14, "sphere_rings": 10, "uvs": True,  "subdivisions": 2},
-    "ultra":   {"segments": 20, "sphere_rings": 16, "uvs": True,  "subdivisions": 3},
+    "base":  {"segments": 6,  "sphere_rings": 4},   # Bajo, Medio y colisiones de todos los perfiles
+    "alto":  {"segments": 12, "sphere_rings": 8},
+    "ultra": {"segments": 18, "sphere_rings": 12},
 }
 ```
 
-1. **Garantía Inquebrantable de Rigging**:
-   - Sea cual sea el nivel de detalle seleccionado ($6, 8, 14$ o $20$ segmentos), **la jerarquía de 20 huesos, sus orientaciones y la asignación rígida de peso único ($1.0$) se mantienen estrictamente idénticas**.
-   - `gait.gd` analítico y el retargeting de Quaternius garantizan exactamente la misma cinemática sin deslizamiento ($drift = 0.000000\text{ m/frame}$) tanto en un móvil a perfil Bajo como en un PC con RTX 5000 a perfil Ultra.
-2. **Generación de UVs y Texturas**:
-   - En perfiles `low` y `medium`, el sistema puede prescindir de las coordenadas UV si opera en modo Toon con colores de vértice (`ARRAY_COLOR`).
-   - En perfiles `high` y `ultra`, se activan las coordenadas UV cilíndricas y esféricas para proyectar los mapas PBR de vetas leñosas y micro-tejidos.
+Generar las piezas en tiempo de ejecución en lugar de guardarlas en `data/piezas/` evita triplicar su tamaño en disco y es la base de la variedad procedural de [15](15_VARIEDAD_PROCEDURAL.md).
 
 ---
 
-### 10.4 Detección Automática y Escalabilidad en Runtime
+## 11. Banco Ampliado de Mejoras Gráficas
 
-1. **Perfil Recomendado Automático**:
-   - **WebGL en navegador o dispositivo Android identificado con GPU modesta**: selecciona por defecto el perfil **Medio** (o **Bajo** si la memoria GPU es inferior a 2 GB).
-   - **PC de escritorio con GPU dedicada (Vulkan 1.3 / Forward+)**: selecciona automáticamente el perfil **Alto** (si la GPU tiene 4-8 GB de VRAM) o **Ultra** (si detecta GPUs modernas como RTX serie 4000/5000 o AMD equivalentes con $\ge 12\text{ GB}$ de VRAM).
-2. **Conmutación Fluida en Caliente**:
-   - Desde el menú de pausa del juego, el usuario puede alternar entre presets o ajustar controles individuales. Godot 4 reasigna dinámicamente los materiales (`StandardMaterial3D` vs `ShaderMaterial`), recalibra las cascadas de sombras y adapta el postprocesado de cámara en tiempo real sin requerir recargar la escena.
+Ordenado por relación impacto/coste. La columna **Perfiles** indica dónde se activa cada mejora.
+
+| # | Mejora | Perfiles | Coste | Impacto | Notas |
+|---|---|---|:---:|:---:|---|
+| G1 | **Parque ilustrado**: parque fusionado en pocas superficies con colores de vértice, material toon y contorno de tinta, oclusión horneada y atmósfera reajustada | Todos | **S-M** | **Muy alto** | **Paso 1 de la hoja de ruta**: [16_PARQUE_ILUSTRADO_QUICK_WIN.md](16_PARQUE_ILUSTRADO_QUICK_WIN.md). Unifica el estilo con la referencia y reduce los draw calls de ~1.800 a unas decenas. |
+| G2 | Césped con variación cromática por ruido de baja frecuencia y bordillos claros en los paseos | Todos | S | Alto | Colores de vértice en los anillos de suelo; subdividirlos lo justo para que el ruido se vea. |
+| G3 | Cielo pintado: gradiente de tres tonos, disco solar estilizado y skyline con perspectiva aérea | Todos | S | Alto | Parte de [07 §3](07_VISORES_REALISTAS_Y_MOVIL.md); en la referencia el cielo claro y el skyline dan la profundidad. |
+| G4 | Viento en copas y arbustos (vaivén en el shader de vértices, ponderado por altura) | Medio+ | S | Medio-alto | El peso va en un canal de vértice; sin coste de CPU. No afecta a colisionadores. |
+| G5 | Mancha de contacto bajo cada viandante cuando no hay sombras | Bajo | XS | Medio | Evita el efecto de «personajes flotantes» en móviles de entrada. |
+| G6 | Hierba y flores instanciadas con `MultiMeshInstance3D`, altura < 0,3 m | Alto, Ultra | M | Alto | Densidad por perfil; regla §10.3.2. |
+| G7 | Glow en farolas y filamentos de noche | Alto, Ultra | XS | Alto (noche) | Solo ajustes de `Environment`. |
+| G8 | Maniquíes de 12 y 18 lados (LOD de §10.5) | Alto, Ultra | M | Alto en teleobjetivo | Mismo rig y pesos; test de uniones de `test_art.gd` por nivel. |
+| G9 | Hora dorada continua (progresión de temperatura de color y longitud de sombras) | Todos | S-M | Alto | [07 §3.3](07_VISORES_REALISTAS_Y_MOVIL.md); `park.illumination_ev()` debe seguir la misma curva. |
+| G10 | SDFGI + SSIL: rebote verde del césped en bancos y maniquíes | Ultra | S (config.) | Alto | Dinámico: sirve para día, hora dorada y noche sin hornear. |
+| G11 | SSAO de radio corto en rótulas, bancos y alcorques | Ultra | XS | Medio-alto | Complementa la oclusión horneada. |
+| G12 | Niebla volumétrica: haces de sol en hora dorada y halos de farola de noche | Ultra | S | Muy alto (hora dorada y noche) | Coste de GPU alto; solo Ultra. |
+| G13 | Sombras de 4096 con penumbra física (PCSS de Forward+) | Ultra | XS | Medio | `light_angular_distance` del sol y `light_size` de las farolas. |
+| G14 | DoF del visor calibrado con el objetivo real | Alto, Ultra | M | Alto | Ver [11 §4](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md); nunca un tilt-shift decorativo que contradiga la apertura elegida. |
+| G15 | Variedad procedural de vegetación y personajes | Todos (densidad por perfil) | M-L | Muy alto a medio plazo | [15_VARIEDAD_PROCEDURAL.md](15_VARIEDAD_PROCEDURAL.md). |
+| G16 | Materiales PBR del Diorama (§3.3): madera con clearcoat, telas con sheen | Ultra | L | Alto | Exige UVs analíticas en `build_catalog.py` (tarea 2.4.1). Es un estilo alternativo, no una mejora del toon. |
+
+**Tecnologías descartadas o condicionadas**:
+- **LightmapGI**: solo se hornea en el editor y el parque se genera en tiempo de ejecución. Inviable salvo que el parque pase a ser una escena guardada.
+- **VoxelGI**: su horneado es estático y lento; no sigue los cambios de hora. SDFGI encaja mejor.
+- **DLSS**: Godot no lo incluye de serie. FSR 2.2 sí está disponible en Forward+.
+- **Sombras de contacto en espacio de pantalla** (Hito 2, tarea 2.2.2): no forman parte del entorno estándar de Godot 4. Requerirían un shader propio; SSAO y SSIL cubren buena parte del efecto.

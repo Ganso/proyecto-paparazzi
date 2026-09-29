@@ -64,7 +64,7 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
    - Tras editar el generador hay que regenerar con `python3 tools/build_catalog.py`. Aviso: el generador produce diferencias de coma flotante del orden de $10^{-16}$ en piezas no modificadas (según la versión de Python); conviene no incluir esos ficheros en el commit.
 2. **Superficie Única Combinada**:
    - En lugar de crear múltiples nodos `MeshInstance3D`, `person.gd` concatena los vértices, normales, índices y pesos de todas las piezas en un único arreglo para llamar a `Mesh.add_surface_from_arrays()`.
-   - **Resultado**: Exactamente **1 draw call por personaje**.
+   - **Resultado**: una única superficie por personaje, dibujada en **2 draw calls** (pase toon + pase de contorno `next_pass`).
 3. **Coloreado por Vértice (`Mesh.ARRAY_COLOR`)**:
    - Los colores se asignan como atributo de color en cada vértice (`ARRAY_COLOR`), sin texturas PNG ni materiales individuales en GPU. Cada forma de una pieza declara una **zona de color** que `person.gd::setup()` resuelve:
 
@@ -90,7 +90,7 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
    - La falda es más ancha que los muslos a la altura de la cadera (`test_art.gd` lo mide) para que no asomen por los lados.
    - Comparativas antes/después de estas correcciones: [general](evidencias/comparativas/uniones_calzado_1_general.png), [cadera](evidencias/comparativas/uniones_calzado_2_cadera.png), [en movimiento](evidencias/comparativas/uniones_calzado_3_movimiento.png), [hombros](evidencias/comparativas/uniones_calzado_4_hombros.png) y [calzado](evidencias/comparativas/uniones_calzado_5_calzado.png). Cabeza y proporciones: [gorra](evidencias/comparativas/cabeza_1_gorra.png), [pelo](evidencias/comparativas/cabeza_2_pelo.png), [proporciones](evidencias/comparativas/proporciones_1_general.png) y [proporciones en movimiento](evidencias/comparativas/proporciones_2_movimiento.png). Sombreado y revisión: [oclusión](evidencias/comparativas/sombreado_1_oclusion.png), [lineup](evidencias/comparativas/revision_1_lineup.png) y [hoja de prendas](evidencias/comparativas/revision_2_prendas.png). Estilo maniquí: [general](evidencias/comparativas/maniqui_1_general.png), [lineup](evidencias/comparativas/maniqui_2_lineup.png), [parque](evidencias/comparativas/maniqui_3_parque.png) y [vistas](evidencias/comparativas/maniqui_4_vistas.png).
 5. **Presupuesto Geométrico**:
-   - Límite máximo: **1.900 triángulos por viandante** (`test_art.gd`).
+   - Límite máximo: **1.900 triángulos por viandante** (`test_art.gd`) en los perfiles Bajo y Medio. Alto y Ultra podrán usar mallas de más lados (4.000 y 8.000) con el mismo rig y los mismos pesos ([futuro/02 §10.5](futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md)).
    - Valor medido actual (máximo del catálogo): ver [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md).
 
 ---

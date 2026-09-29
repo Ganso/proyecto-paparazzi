@@ -123,19 +123,22 @@ Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa 
 ## 4. Fusión de Malla Estática (`merge_static_meshes`)
 
 Para mantener el máximo rendimiento en `gl_compatibility`:
-- Toda la arquitectura del parque (anillos de suelo, verjas, farolas, bancos, jardineras, edificios y los **280 elementos vegetales**) se consolidan en **un único nodo de malla estática combinada** al arrancar.
-- **Impacto**: El escenario completo se dibuja en **1 único draw call**.
+- Al arrancar, la arquitectura del parque (anillos de suelo, verjas, farolas, bancos, jardineras, edificios y los **280 elementos vegetales**) se agrupa **por color de material y por celda de 6 × 6 m**: cada grupo se combina con `SurfaceTool.append_from()` en un `MeshInstance3D` con su `StandardMaterial3D` (uno por color, 78 en total).
+- **Estado real**: 692 nodos de malla estática y unos **1.800 draw calls** por fotograma en el visor (perfil Ultra), no 1. La cifra medida está en [TESTS_Y_VERIFICACION.md §5](TESTS_Y_VERIFICACION.md) (`--metrics`).
+- **Pendiente**: fusionar en pocas superficies con colores de vértice (`ARRAY_COLOR`) y un único material toon, sectorizadas para conservar el recorte por frustum. Está especificado como paso 1 de la hoja de ruta en [futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md).
 
 ---
 
 ## 5. Presupuestos y Rendimiento (Invariantes de Diseño)
+
+Límites actuales, que son los de los perfiles Bajo y Medio. Los presupuestos ampliados de Alto y Ultra, y las reglas para que ningún perfil altere la puntuación, están en [futuro/02 §10](futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md).
 
 | Métrica | Límite | Cómo se verifica |
 |---|:---:|---|
 | **Triángulos en escena** | $\le 100.000$ | `--smoke-test` |
 | **Triángulos por viandante** | $\le 1.900$ | `tests/test_art.gd` |
 | **Memoria de vídeo (VRAM)** | $< 60\text{ MiB}$ | `tests/test_game.gd` |
-| **Draw calls** | 1 parque estático + 2 por viandante (superficie única dibujada con toon + contorno de tinta) | Por construcción (`merge_static_meshes`, superficie única y material de 2 pases en `person.gd`; `test_art.gd` comprueba el material); ningún test cuenta los draw calls |
+| **Draw calls** | Objetivo: pocas superficies de parque + 2 por viandante (superficie única dibujada con toon + contorno de tinta). Hoy se cumple en los viandantes pero no en el parque (unos 1.800 en total) | `--metrics` imprime `draw_calls`; `test_art.gd` comprueba el material de 2 pases. Ningún test impone todavía un límite |
 | **Tiempo de fotograma** | Objetivo 60 FPS | `godot-4 --path . -- --metrics` imprime mediana, p95 y máximo; no hay umbral automatizado |
 | **Relación de aspecto** | 16:9 estricto ($1280 \times 720$) | `project.godot` |
 

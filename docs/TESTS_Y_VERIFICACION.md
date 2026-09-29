@@ -61,7 +61,7 @@ Se pasan tras `--` (`godot-4 --path . -- <opción>`):
 | Opción | Efecto |
 |---|---|
 | `--smoke-test` | Prueba de humo (§3) y salida. |
-| `--metrics` | Tras 120 fotogramas en `SEARCH`, mide 600 fotogramas e imprime `METRICS frames=… median_ms=… p95_ms=… max_ms=…`. Es la única medida de rendimiento disponible; no tiene umbral automatizado. |
+| `--metrics` | Tras 120 fotogramas en `SEARCH`, mide 600 fotogramas e imprime `METRICS frames=… median_ms=… p95_ms=… max_ms=… draw_calls=… shadow_draw_calls=…` (los draw calls son los del último fotograma del visor 3D, leídos con `RenderingServer.viewport_get_render_info`). Es la única medida de rendimiento disponible; no tiene umbral automatizado. |
 | `--stress` | Confina a los viandantes en el sector $\theta \in [96^\circ, 144^\circ]$ para forzar congestión. |
 | `--screenshot=<ruta>` | Guarda una captura del fotograma 100 en `<ruta>`. |
 
@@ -96,8 +96,10 @@ Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en
 | Viandantes atascados tras 20 s | 0 | 0 | `simulate_jams.gd` |
 | Comprobaciones de expansión | 140, 0 fallos | 0 fallos | `test_expansion.gd` |
 | Comprobaciones de sesión | 34, 0 fallos | 0 fallos | `test_game.gd` |
-| VRAM en sesión completa | 50,51 MiB (texturas 40,93 · buffers 9,58) | < 60 MiB | `test_game.gd` |
+| VRAM en sesión completa | 50,51 MiB (texturas 40,93 · buffers 9,58) · en Windows con Intel Iris Xe, 56,60 MiB (texturas 40,93 · buffers 15,67; medido el 2026-09-29) | < 60 MiB | `test_game.gd` |
 | Triángulos en escena (21 viandantes + parque) | 82.198 | ≤ 100.000 | `--smoke-test` |
+| Draw calls del visor 3D (perfil Ultra, día) | 1.790 (medido el 2026-09-29 en Windows, Intel Iris Xe) | Objetivo: 1 parque + 2 por viandante, hoy **incumplido** (ver [futuro/16](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)) | `--metrics` |
+| Tiempo de fotograma (perfil Ultra, día) | mediana 20,22 ms · p95 24,38 ms (medido el 2026-09-29, Intel Iris Xe) | Objetivo 16,7 ms (60 FPS), sin umbral automatizado | `--metrics` |
 | Comprobaciones de exportación | 24, 0 fallos | 0 fallos | `test_export.gd` |
 | Tamaño de `build/paparazzi-debug.apk` (arm64-v8a) | 28 MB | < 50 MB (aviso de GitHub; límite 100 MB) | `tools/export_android.sh` |
 

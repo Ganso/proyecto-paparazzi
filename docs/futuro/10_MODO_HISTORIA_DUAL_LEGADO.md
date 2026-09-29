@@ -85,3 +85,17 @@ Tras heredar el viejo maletín fotográfico, notas de campo y negativos de su ab
    - Generación de grano procedural perlin/ruido analógico acoplado a la densidad de negros.
 3. **Contador de Disparos Restantes de Carrete**:
    - Visualización mecánica de película restante (`shots_left`) en el HUD del visor analógico.
+
+---
+
+## 5. Dependencias, Tono y Criterios de Aceptación
+
+- **Dependencias reales**: [03](03_NUEVAS_CAMARAS_Y_TLR.md) (TLR del abuelo), [04](04_DIVERSIDAD_ESCENARIOS.md) (bulevar del capítulo 1B y pista del 3B) y [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md) (barrido del capítulo 3A). Es de los últimos futuribles en la hoja de ruta.
+- **Reglas de tono, obligatorias antes de implementar**:
+  1. **Capítulo 3A**: la mecánica debe hacer imposible «ganar» acosando. Acercarse por debajo de una distancia mínima o disparar cuando el sujeto se tapa la cara falla la misión, y la mejor nota solo se obtiene con el barrido limpio a distancia.
+  2. **Capítulo 4B**: la foto «íntima y degradante» no puntúa ni desbloquea nada. La única recompensa del desenlace es la foto respetuosa.
+  3. Se mantiene la regla ética de AGENTS.md §3.5: los personajes siguen siendo maniquíes de madera y ningún predicado ni diálogo usa el tono de acabado.
+- **Criterios de aceptación** (nueva suite `tests/test_campaign.gd`):
+  1. Cada capítulo aplica las restricciones de equipo de su época (tabla §2).
+  2. Los fallos éticos del 3A y el 4B se detectan de forma determinista a partir de la evidencia (distancia, oclusión de la cara).
+  3. Todos los textos narrativos están en `data/textos.es.json`.

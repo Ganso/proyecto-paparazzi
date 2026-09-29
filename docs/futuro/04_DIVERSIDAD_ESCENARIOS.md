@@ -63,8 +63,21 @@ Este documento describe el diseño de cuatro nuevos entornos temáticos que expa
 
 | Escenario | Radio / Superficie | Nivel de Luz ($EV$) | Tipología Dominante de Lente | Invariante de Rendimiento |
 |---|:---:|:---:|:---:|:---:|
-| **Parque Actual** | Cilíndrico $r = 45\text{ m}$ | $4.0 - 14.0$ | $50\text{ mm}$ y $105\text{ mm}$ | $57.532$ tris, 1 draw call |
+| **Parque Actual** | Cilíndrico $r = 45\text{ m}$ (zona jugable hasta $12.4\text{ m}$) | $2.0 - 14.8$ | $50\text{ mm}$ y zoom $70\text{–}200\text{ mm}$ | Cifras medidas en [TESTS §5](../TESTS_Y_VERIFICACION.md); ≤ 100.000 tris en los perfiles móviles |
 | **Bulevar** | Pasillo $14 \times 80\text{ m}$ | $8.0 - 13.0$ | $28\text{ mm}$ y $35\text{ mm}$ | $\le 65.000$ tris, oclusión de fachadas |
 | **Estación** | Bóveda $30 \times 60\text{ m}$ | $5.0 - 10.0$ | $50\text{ mm}$ y $85\text{ mm}$ | $\le 70.000$ tris, niebla volumétrica |
 | **Museo** | Sala $20 \times 30\text{ m}$ | $6.0 - 8.0$ | $35\text{ mm}$ y $50\text{ mm}$ ($f/1.8$) | $\le 50.000$ tris, sin sombras solares |
 | **Pista Atletismo** | Elipse $80 \times 120\text{ m}$ | $11.0 - 15.0$ | $105\text{ mm}$ y $135\text{ mm}$ | $\le 60.000$ tris, LOD en gradas |
+
+---
+
+## 4. Dependencias, Coste Real y Criterios de Aceptación
+
+- **Coste real: muy alto (XL).** Ningún escenario nuevo es circular: el bulevar y la estación son recorridos lineales, el museo es una sala y la pista es una elipse. Todos exigen sustituir `LANES`, `LANE_BOUNDS` y el steering cilíndrico de `main.gd` por recorridos genéricos, que es la navegación por grafo de [01 §3 Alternativa C](01_MAPA_ABIERTO_Y_PROTAGONISTA.md). Esa navegación debe diseñarse una sola vez para ambos documentos.
+- **Enfoque por zonas**: las zonas de [13 §3.2](13_INTERFAZ_MOVIL_UTILIZABLE.md) usan los radios de los carriles; cada escenario debe declarar sus propias distancias de referencia.
+- **Presupuestos por perfil**: las cifras de la tabla §3 son para los perfiles móviles (Bajo/Medio); los perfiles de escritorio siguen la tabla de [02 §10](02_ESTILO_VISUAL_Y_POLIGONOS.md).
+- **Criterios de aceptación por escenario**:
+  1. Equivalentes de `test_navigation.gd` (cruces y adelantamientos) y de `simulate_jams.gd` (0 viandantes atascados en 20 s) sobre sus recorridos.
+  2. `--smoke-test` y `test_game.gd` parametrizados por escenario, con los presupuestos de su perfil.
+  3. Las etiquetas de oclusión nuevas (`Texts.get_text(...)`) registradas en `data/textos.es.json`.
+  4. Capturas del escenario añadidas a `./tools/run_evidence.sh`.

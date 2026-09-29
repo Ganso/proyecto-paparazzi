@@ -47,6 +47,8 @@ La cámara réflex de objetivos gemelos de formato medio ($6 \times 6\text{ cm}$
 3. **Formato Cuadrado $1:1$**:
    - Máscara cuadrada de $720 \times 720$ píxeles en el centro de la pantalla.
    - Evaluación fotográfica adaptada a la simetría central y composiciones cuadradas.
+   - **Evaluación en 1:1**: `Photography.inside()` y la nota de encuadre de `evaluate()` normalizan sobre todo el viewport 16:9. En la TLR la evidencia debe proyectarse sobre el cuadrado central, o un sujeto fuera de la máscara puntuaría como encuadrado.
+   - **Respuesta del paneo**: además de la imagen, hay que decidir y probar cómo responden al espejo el arrastre táctil, el stick y las teclas. El jugador debe notar el efecto especular del visor, no un control roto.
 4. **Carrete de Rollo 120**:
    - Exactamente **12 disparos** por rollo.
    - Manivela lateral mecánica animada con sonido de trinquete para avanzar el fotograma.
@@ -101,3 +103,16 @@ La máxima expresión de la fotografía pausada de estudio y arquitectura sobre 
 | **TLR (Rolleiflex)** | **$1.10\text{ m}$** | **$1:1$** | **Invertida horizontalmente (espejo plano)** | **12 fotos (Rollo 120)** |
 | **Smartphone** | $1.50\text{ m}$ | $4:3$ / $16:9$ | Pantalla digital con PDAF y salto entre 3 cámaras | Ilimitado |
 | **Gran Formato (4x5)** | $1.40\text{ m}$ | $5:4$ | **Invertida totalmente (180°) bajo paño negro** | **1 foto por chasis** |
+
+---
+
+## 5. Recomendación y Criterios de Aceptación
+
+- **Prioridad: la TLR.** Aporta una mecánica nueva (visor invertido, cintura, 12 disparos) con coste medio y es prerrequisito del Acto I del [modo historia](10_MODO_HISTORIA_DUAL_LEGADO.md).
+- **Smartphone, aplazado**: su «tocar para enfocar» con detección de fase no debe saber quién es el objetivo (ver [12 §2.1](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)), y el modo retrato computacional necesita un desenfoque en tiempo real que no existe en `gl_compatibility` ([11 §2](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)).
+- **Gran formato, aplazado**: el *tilt* de Scheimpflug exige sustituir en `Photography.coc()` el plano de foco perpendicular por un plano inclinado. Es un cambio de fórmula que debe llevar sus propios tests de determinismo.
+- **Criterios de aceptación de la TLR** (ampliar `test_equipment.gd` y `test_photography.gd`):
+  1. La cámara baja a $y = 1.10	ext{ m}$ al elegir la TLR y vuelve a $1.60	ext{ m}$ con los demás cuerpos.
+  2. El rollo admite exactamente 12 disparos.
+  3. Un sujeto dentro del viewport 16:9 pero fuera del cuadrado central se evalúa como recortado.
+  4. La inversión especular no altera la puntuación: la misma escena, invertida o no, da la misma nota.

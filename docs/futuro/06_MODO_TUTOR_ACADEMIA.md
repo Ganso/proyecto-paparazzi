@@ -75,8 +75,19 @@ Resultado: APROBADO CON MENCIÓN (94/100)
   de la trepidación (regla recomendada: mínimo 1/125s).
 ```
 
-Al superar las 5 lecciones, el juego desbloquea el título **"Graduado de la Academia Fotográfica"** y concede acceso al catálogo de ópticas profesionales en el modo estándar.
+Al superar las 5 lecciones, el juego desbloquea el título **"Graduado de la Academia Fotográfica"** como insignia permanente. **No restringe el catálogo**: todas las ópticas siguen disponibles desde el principio, como en el juego actual.
 
+
+---
+
+## 4. Punto de Partida en el Código y Criterios de Aceptación
+
+- **Buena parte del informe ya existe**: `Photography.evaluate()` devuelve `lines`, cinco diagnósticos explicados (enfoque con CoC y distancia, exposición con ΔEV, movimiento con t·f y arrastre, oclusión con obstáculos, encuadre con altura y tercios), que la pantalla `RESULT` ya muestra. El tutor los reutiliza y añade el umbral de aprobado de cada lección, así que el coste real es **bajo-medio (S-M)**.
+- **Ejercicios sobre el sandbox**: `show_sandbox_controls()` ya permite pausar la escena y repetir disparos sin límite, una base natural para la demostración guiada.
+- **Criterios de aceptación** (nueva suite `tests/test_academy.gd`, headless):
+  1. Cada lección aprueba o suspende de forma determinista a partir de una evidencia fija (reutilizando el patrón de `test_photography.gd`).
+  2. El examen de la lección 2 (dos personas nítidas a 4,0 y 4,7 m) solo se aprueba si ambas quedan dentro de `Photography.dof()`.
+  3. Todos los textos de teoría, examen e informe están en `data/textos.es.json`.
 
 ---
 

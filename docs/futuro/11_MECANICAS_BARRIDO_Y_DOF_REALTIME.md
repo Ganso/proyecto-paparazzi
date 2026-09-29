@@ -36,6 +36,15 @@ func evaluate_panning(target_velocity_rad_s: float, camera_angular_speed_rad_s: 
     }
 ```
 
+### 1.2.1 Prerrequisito: el motor aún no simula la exposición en el tiempo
+- `take_photo()` pone `pan_velocity = 0` antes de capturar y el revelado parte de **un único fotograma**.
+- `Photography.evaluate()` solo usa `e.v`, la velocidad del **sujeto** perpendicular al eje de visión. El «pulso» es la regla $t \cdot f$ y el movimiento de la cámara no interviene.
+- **Trabajo necesario**:
+  1. Registrar la velocidad angular de cámara de los últimos $t$ segundos (historial de `angle` y `pitch`) y guardarla en la evidencia como `camera_omega`, para que la puntuación siga siendo determinista.
+  2. Pasar `camera_omega` a `evaluate_panning()`.
+  3. Sintetizar el estriado en `develop.gdshader` a partir de la evidencia, porque el render es un único fotograma.
+- **Coste real: medio-alto (M-L)**. Es prerrequisito de [05 §2.4](05_DESAFIOS_Y_MODOS_JUEGO.md) y del capítulo 3A de [10](10_MODO_HISTORIA_DUAL_LEGADO.md). El control más fiable para mantener una $\omega$ constante es el stick del mando ([14 §4.1](14_SOPORTE_GAMEPAD.md)).
+
 ### 1.3 Shader de Revelado con Desenfoque Direccional
 Para plasmar el barrido en la evidencia fotográfica final, el shader de revelado (`develop.gdshader`) incorpora una pasada de desenfoque direccional en el eje X:
 - Máscara de silueta para el sujeto (preservando su nitidez).
@@ -50,7 +59,7 @@ En una cámara réflex real, el visor óptico muestra siempre la imagen a máxim
 
 En el simulador:
 - Por defecto, el visor muestra la escena nítida o con la profundidad de campo correspondiente a la máxima apertura del objetivo ($f_{\max}$).
-- Al mantener pulsado el botón de previsualización (o tecla asignada, ej. `Barra Espaciadora` o botón virtual en visor táctil):
+- Al mantener pulsado el botón de previsualización (acción `previsualizar_dof` del mapa único de [14 §2](14_SOPORTE_GAMEPAD.md): gatillo izquierdo en el mando y botón 👁 del carril derecho en móvil, según [13 §2](13_INTERFAZ_MOVIL_UTILIZABLE.md); nunca `Espacio`, que es el disparador):
   1. Se calcula el mapa de CoC para la apertura de trabajo fijada ($f/8, f/11$, etc.).
   2. El shader del visor actualiza en tiempo real el desenfoque de los carriles anterior y posterior.
   3. La luminancia del visor se atenúa ligeramente (como en un visor óptico réflex real) o se compensa con ganancia electrónica (visor EVF digital).
@@ -60,3 +69,15 @@ En el simulador:
 ## 3. Beneficios Pedagógicos y de Jugabilidad
 1. **Entrenamiento de pulso**: Enseña al jugador a seguir con cadencia fluida a los corredores y ciclistas.
 2. **Control creativo**: El jugador decide conscientemente si aislar al objetivo mediante velocidad rápida ($1/1000\text{ s}$ congelado) o mediante barrido artístico ($1/30\text{ s}$ estriado).
+
+---
+
+## 4. Implementación del DoF en Vivo por Perfil y Criterios de Aceptación
+
+- **`gl_compatibility`** (perfiles Bajo, Medio y Alto): no ofrece desenfoque de profundidad de campo integrado, así que la previsualización debe hacerse con un shader propio que lea la textura de profundidad y aplique el CoC de `Photography.coc()`.
+- **Forward+** (perfil Ultra de [02 §10](02_ESTILO_VISUAL_Y_POLIGONOS.md)): se puede usar el DoF de `CameraAttributesPractical`, **calibrado** con las distancias de `Photography.dof()` para que lo que se ve coincida con lo que se puntúa.
+- **Criterios de aceptación** (ampliar `test_photography.gd` y `test_game.gd`):
+  1. `evaluate_panning()` es determinista: la misma `camera_omega` da la misma nota.
+  2. Con $\omega_{\text{cámara}} = \omega_{\text{sujeto}}$ a 1/30 s el sujeto queda nítido y el fondo estriado; con la cámara quieta, el sujeto queda movido.
+  3. Mover la cámara durante una exposición larga sin sujeto al que seguir penaliza el pulso (hoy no ocurre).
+  4. La previsualización DoF no cambia la puntuación: activarla o no da la misma nota.

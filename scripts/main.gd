@@ -519,7 +519,10 @@ func _process(dt: float) -> void:
 	if run_metrics and boot_frames == 720:
 		metrics.sort()
 		var visible_count = people.filter(func(p): return camera.is_position_in_frustum(p.position+Vector3.UP*p.height*.75)).size()
-		print("METRICS frames=%d visible=%d median_ms=%.2f p95_ms=%.2f max_ms=%.2f" % [metrics.size(),visible_count,metrics[metrics.size()/2],metrics[int(metrics.size()*.95)],metrics[-1]])
+		var render_target = viewport.get_viewport_rid()
+		var draw_calls = RenderingServer.viewport_get_render_info(render_target,RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		var shadow_draw_calls = RenderingServer.viewport_get_render_info(render_target,RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW,RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		print("METRICS frames=%d visible=%d median_ms=%.2f p95_ms=%.2f max_ms=%.2f draw_calls=%d shadow_draw_calls=%d" % [metrics.size(),visible_count,metrics[metrics.size()/2],metrics[int(metrics.size()*.95)],metrics[-1],draw_calls,shadow_draw_calls])
 		get_tree().quit()
 
 func update_person(p: Pedestrian, dt: float) -> void:
@@ -1117,7 +1120,7 @@ func show_graphics_settings() -> void:
 		"Bajo: 60 FPS garantizados para móviles de entrada y WebGL. Sombras desactivadas y niebla off.",
 		"Medio: Para tablets y portátiles ligeros. Sombras PCF estándar (1024) y niebla suave.",
 		"Alto: Para PCs de juegos estándar. Sombras nítidas (2048), niebla atmosférica y ACES.",
-		"Ultra (Por defecto): Fidelidad de estudio. Sombras PCSS extendidas (48m), ACES con contraste analógico y contorno ilustrado HD."
+		"Ultra (Por defecto): Fidelidad de estudio. Sombras filtradas suaves extendidas (48m), ACES con contraste analógico y contorno ilustrado HD."
 	]
 
 	for i in 4:
@@ -1140,7 +1143,7 @@ func show_graphics_settings() -> void:
 	label(desc_panel, "Desglose técnico de parámetros activos:", Rect2(25, 108, 1050, 26), 16, Color("a7c683"))
 	
 	var specs = [
-		"• Sombras direccionales y sol: " + ("Desactivadas (0 draw calls de sombra)" if graphics_preset == "Bajo" else ("Básicas 1024 (alcance 30m)" if graphics_preset == "Medio" else ("Avanzadas PCF 2048 (alcance 38m)" if graphics_preset == "Alto" else "Ultra PCSS con penumbra difusa (alcance 48m, bias 0.015)"))),
+		"• Sombras direccionales y sol: " + ("Desactivadas (0 draw calls de sombra)" if graphics_preset == "Bajo" else ("Básicas 1024 (alcance 30m)" if graphics_preset == "Medio" else ("Avanzadas PCF 2048 (alcance 38m)" if graphics_preset == "Alto" else "Ultra filtradas con penumbra suave (blur 2.0, alcance 48m, bias 0.015)"))),
 		"• Atmósfera y niebla de profundidad: " + ("Desactivada (fondo plano)" if graphics_preset == "Bajo" else ("Suave (begin 9m, end 25m)" if graphics_preset == "Medio" else ("Atmosférica (begin 8m, end 22m)" if graphics_preset == "Alto" else "Densa cinematográfica de estudio (begin 7m, end 20m, curva 1.1)"))),
 		"• Curva de color y Tone Mapping: " + ("Lineal estándar" if graphics_preset == "Bajo" else ("Reinhard fotométrico" if graphics_preset == "Medio" else ("ACES cinematográfico (contraste 0.98, sat 1.05)" if graphics_preset == "Alto" else "ACES Master Studio (contraste 1.02, sat 1.08, exp 0.90, white 1.45)"))),
 		"• Delineado Toon de maniquíes: " + ("Línea fina 1.2 px (sin tintado)" if graphics_preset == "Bajo" else ("Línea 1.4 px (tintado 25%)" if graphics_preset == "Medio" else ("Línea 1.6 px (tintado 40%)" if graphics_preset == "Alto" else "Línea ilustrada 1.8 px HD (tintado armónico 48%, depth-bias 0.0018)"))),

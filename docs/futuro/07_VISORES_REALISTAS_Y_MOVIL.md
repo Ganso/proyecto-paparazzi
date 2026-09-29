@@ -47,6 +47,9 @@ Actualmente, [scripts/viewfinder.gd](../../scripts/viewfinder.gd) dibuja líneas
 
 ## 2. Ergonomía Táctil Especializada para Móviles
 
+> [!NOTE]
+> **Sustituida por [13_INTERFAZ_MOVIL_UTILIZABLE.md](13_INTERFAZ_MOVIL_UTILIZABLE.md)**, que desarrolla esta sección con medidas, gestos y pruebas. Se conserva como antecedente.
+
 Para garantizar una experiencia fluida con dos pulgares en pantallas táctiles de 5 a 7 pulgadas:
 
 ```
@@ -78,4 +81,14 @@ Para hacer aún más legible y comprensible el paso de las nubes y el oscurecimi
    - Proyección de sombras oscuras sobre el césped y las calzadas que se desplazan visualmente en la dirección del viento.
    - Permite al jugador anticipar visualmente cuándo la sombra de una nube va a cubrir al sujeto que está siguiendo.
 3. **Hora Dorada y Atardecer Dinámico**:
+   - ✅ *Parcialmente hecho*: ya existe una hora dorada fija (`park.set_time_of_day("golden")`, [ESCENARIO §3.1](../ESCENARIO_Y_RENDIMIENTO.md)). Falta la progresión continua descrita aquí.
    - Progresión suave de la temperatura de color de la luz solar (de luz blanca diurna de mediodía $5500\text{ K}$ a luz cálida rasante de atardecer $3200\text{ K}$ con sombras alargadas).
+
+---
+
+## 4. Criterios de Aceptación
+
+1. **Las capas del visor no afectan a la puntuación**: ocular, cristal esmerilado y LCD se dibujan en la interfaz, fuera del `SubViewport` que captura `take_photo()`. Una misma escena da la misma nota con y sin esos efectos (`test_photography.gd`/`test_game.gd`).
+2. El disco solar y el destello varían con la apertura de forma determinista y no cambian `park.illumination_ev()`.
+3. Las sombras de nubes proyectadas coinciden con `sun_transmission()`: un punto bajo sombra de nube mide la misma reducción de EV que ya documenta [ESCENARIO §3.2](../ESCENARIO_Y_RENDIMIENTO.md).
+4. VRAM dentro del presupuesto del perfil ([02 §10](02_ESTILO_VISUAL_Y_POLIGONOS.md)) y capturas añadidas a `./tools/run_evidence.sh`.

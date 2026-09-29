@@ -32,6 +32,11 @@ El prototipo actual cuenta con los siguientes cimientos operativos y verificados
 
 ---
 
+### 2.1 Limitación actual: los automatismos conocen al objetivo
+- **AF matricial**: `main.gd::select_matrix_point()` recorre los 9 colimadores y, si alguno toca al objetivo (`p == target`), lo elige antes que a cualquier otra persona. Basta con barrer el parque en AF matricial para ver en qué persona «salta» el colimador, lo que **delata al sujeto buscado** y anula parte del reto de identificación.
+- **Exposición automática**: `update_meter()` y `auto_expose()` sustituyen la lectura del colimador por la luz sobre el pecho del objetivo en cuanto aparece en el encuadre.
+- **Corrección (fase 0 de este documento)**: el AF matricial elige con una regla geométrica independiente de la identidad (la persona más cercana al centro del encuadre y, en caso de empate, la más próxima a la cámara), y la exposición automática mide el colimador activo o las zonas del §3. Ningún automatismo lee `target`.
+
 ## 3. Especificación de Modos de Exposición Automática (Metering)
 
 Se proyecta una arquitectura de fotometría TTL (*Through-The-Lens*) con tres modos clásicos seleccionables según el cuerpo y la preferencia del jugador:
@@ -48,7 +53,7 @@ La escena proyectada en el frustum de la cámara se subdivide en $M \times N$ zo
 $$EV_{matricial} = \sum_{k=1}^{K} w_k \cdot EV_k$$
 
 Donde los pesos $w_k$ se normalizan ($\sum w_k = 1$) y se modulan dinámicamente:
-- **Prioridad de Sujeto**: La zona que contiene el pecho/cabeza del objetivo recibe un multiplicador $w_k \times 2.5$.
+- **Prioridad de persona**: la zona que contiene a la persona bajo el colimador activo recibe un multiplicador $w_k \times 2.5$. Es cualquier persona detectada por los rayos, sin saber si es el objetivo del encargo (ver §2.1).
 - **Compensación de Cielo**: Si las zonas superiores exhiben $EV_k > EV_{medio} + 3.0$ (cielo brillante), su peso se atenúa para evitar que la cámara subexponga a los peatones en el suelo.
 
 ### 3.2 Medición Puntual Ligada al Colimador
@@ -68,6 +73,9 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 - **Recomposición (Focus and Recompose)**: Permite centrar el colimador en el sujeto, fijar foco a $4.20\text{ m}$, y luego reencuadrar la cámara aplicando la regla de los tercios sin que la lente modifique su distancia.
 
 ### 4.2 AF-C (Continuous / Autofoco Continuo Predictivo)
+
+> [!NOTE]
+> **Valor limitado en el parque actual**: con el jugador en el centro de carriles circulares, la distancia a un viandante apenas cambia (solo por su desvío lateral dentro de `LANE_BOUNDS` o en los cambios de carril). La predicción solo aporta algo con corredores que cambian de carril o en escenarios lineales ([04](04_DIVERSIDAD_ESCENARIOS.md)). Aquí la dificultad real es *a quién* enfocar, no seguirlo.
 - **Mecánica**: El autofoco permanece activo cuadro a cuadro a 60 FPS mientras el disparador esté a medio recorrido o el modo esté activo.
 - **Algoritmo Predictivo Cinemático**: Para viandantes en movimiento (especialmente corredores deportivos a $v \in [2.6, 3.0]\text{ m/s}$), enfocar a la distancia actual produce desenfoque por culpa del retardo mecánico del obturador ($\Delta t_{lag} \approx 0.040\text{ s}$).
 - **Ecuación Predictiva**:
@@ -80,7 +88,11 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 - Si el sujeto permanece quieto o en pausa de banco, opera en **AF-S** permitiendo recomponer el encuadre.
 - Si el sujeto inicia la marcha o carrera ($\|\vec{v}\| > 0.3\text{ m/s}$), el sistema conmuta instantáneamente a **AF-C** emitiendo un doble bip de confirmación en el HUD.
 
-### 4.4 Detección y Seguimiento Inteligente de Sujetos (AI Subject / Eye Tracking)
+### 4.4 ❌ Descartado: Detección y Seguimiento Inteligente de Sujetos (AI Subject / Eye Tracking)
+
+> [!CAUTION]
+> **Descartado.** Buscar «el personaje que mejor coincide con los rasgos del briefing» resolvería por el jugador el reto central del juego: identificar al objetivo. Se conserva el texto como antecedente. Un seguimiento aceptable solo podría engancharse a la persona que el jugador ya ha elegido con el colimador.
+
 - Exclusivo de cuerpos compactos digitales modernos y cámaras de gama alta.
 - Evalúa el frustum visible en busca del personaje que mejor coincide con los rasgos del briefing (o el más próximo al centro del visor).
 - El colimador activo se desprende de la cuadrícula rígida de 9 puntos y **persigue de forma autónoma** la cabeza del sujeto a través del visor 2D, proyectando un marco delimitador dinámico.
@@ -106,6 +118,9 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 ```
 
 ### Controles Previstos:
+> [!NOTE]
+> Estas entradas se declaran como acciones en el mapa único de `InputMap` ([14 §2](14_SOPORTE_GAMEPAD.md)): `fotometria_siguiente`, `modo_af_siguiente` y `bloqueo_af_ae`. En mando y en móvil, el bloqueo AF-L/AE-L es la fase 1 del disparador de dos fases ([14 §3](14_SOPORTE_GAMEPAD.md), [13 §4.1](13_INTERFAZ_MOVIL_UTILIZABLE.md)).
+
 - **Compensación de Exposición**: Botón superior, rueda de ratón sobre el botón o teclas `[` / `]` y `-` / `+`.
 - **Selector de Fotometría**: Menú de equipo o tecla de acceso rápido `M` (alterna entre Matricial $\to$ Puntual $\to$ Ponderada).
 - **Selector de Modo AF**: Menú de equipo o combinación `Shift + F` (alterna entre AF-S $\to$ AF-C $\to$ AF-A $\to$ MF).
@@ -124,3 +139,17 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
    - Respeta estrictamente el límite de **$60\text{ MiB}$** de memoria de vídeo global.
 3. **Determinismo**:
    - Las ecuaciones de CoC y EV en `photography.gd` se mantienen matemáticamente puras y deterministas.
+
+---
+
+## 7. Orden de Implementación y Criterios de Aceptación
+
+1. **Fase 0**: AF matricial y AE sin conocer al objetivo (§2.1). **Prioritaria**: corrige un atajo del juego actual.
+2. **Fase 1**: fotometría puntual y ponderada al centro, y AF-S con bloqueo mediante el disparador de dos fases.
+3. **Fase 2 (opcional)**: AF-A y AF-C predictivo, con el valor limitado que explica §4.2.
+
+**Criterios de aceptación** (ampliar `test_equipment.gd`):
+1. Con el objetivo y otra persona a la misma distancia y en colimadores simétricos, el AF matricial elige según la regla geométrica, nunca por identidad. Intercambiar quién es el objetivo no cambia el colimador elegido.
+2. Con el objetivo en sombra y el fondo al sol, la exposición automática depende solo del modo de medición y del colimador, no de `target`.
+3. La medición puntual lee exactamente `park.illumination_ev()` en el punto del colimador activo, y la matricial es la media ponderada del §3.1, ambas deterministas.
+4. El bloqueo AF-L/AE-L mantiene foco y exposición mientras dura la fase 1 del disparador.

@@ -9,8 +9,8 @@ Este documento describe la arquitectura modular, el flujo de datos, la máquina 
 Proyecto Paparazzi es un simulador fotográfico 3D desarrollado en **Godot 4** que combina mecánicas de búsqueda visual con una simulación fotográfica matemáticamente determinista basada en las leyes reales de la óptica geométrica, fotometría analógica y cinemática de locomoción.
 
 ### Principios Fundamentales
-- **Cero texturas de personajes**: Toda la multitud y el parque se renderizan mediante **colores de vértice** (`Mesh.ARRAY_COLOR`), eliminando transferencias de texturas y reduciendo drásticamente la memoria de vídeo (VRAM < 60 MiB).
-- **Malla combinada de superficie única**: Cada personaje y el parque estático constan de una única superficie (`Mesh.ARRAY_VERTEX`, etc.), minimizando los *draw calls*.
+- **Cero texturas**: la multitud se renderiza con **colores de vértice** (`Mesh.ARRAY_COLOR`) y el parque con un `StandardMaterial3D` sin textura por cada color, lo que mantiene la memoria de vídeo por debajo de 60 MiB.
+- **Malla combinada**: cada personaje es una única superficie (2 draw calls: toon + contorno). El parque se agrupa por color y celda de 6 m, lo que hoy produce unos 1.800 draw calls por fotograma ([ESCENARIO_Y_RENDIMIENTO.md §4](ESCENARIO_Y_RENDIMIENTO.md)); su fusión real es el paso 1 de la hoja de ruta.
 - **Evaluación determinista e inmutable**: La fotografía tomada genera un expediente numérico cerrado (`evidence`). Dados los mismos parámetros de entrada, el algoritmo de puntuación en `photography.gd` produce exactamente el mismo resultado matemático.
 - **Mundo cilíndrico centrado en el jugador**: El escenario se modela en coordenadas cilíndricas $(r, \theta, y)$ con la cámara del jugador situada permanentemente en el origen $(0, 1.60\text{ m}, 0)$.
 

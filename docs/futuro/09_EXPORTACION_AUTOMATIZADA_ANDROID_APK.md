@@ -157,10 +157,10 @@ Las decisiones arquitectónicas del proyecto benefician directamente la ejecuci�
 
 | Factor de Rendimiento | Parámetro en Proyecto Paparazzi | Impacto en Dispositivo Móvil |
 |---|---|---|
-| **Carga de Geometría** | 57.532 triángulos en escena | **Excelente**: Cualquier SoC moderno (Snapdragon 7/8, Dimensity, Tensor) renderiza $>1.000.000$ polígonos/frame a 60 FPS sin sobrecalentamiento. |
-| **Draw Calls** | 22 draw calls totales (1 parque estático + 21 personajes) | **Óptimo**: Las APIs móviles sufren con draw calls elevados ($>100$). Con 22 draw calls, la sobrecarga del driver es insignificante. |
-| **Consumo de Memoria (VRAM)** | $\approx 42.68\text{ MiB}$ | **Mínimo**: Deja libre más del 95% de la memoria gráfica compartida para el sistema operativo. |
-| **Renderizado de Sombras** | Atlas de 2048 con filtrado suave | Posibilidad de ajustar a atlas de 1024 en móviles de gama baja para ahorro térmico. |
+| **Carga de Geometría** | Triángulos en escena por debajo del límite de 100.000 (cifra medida en [TESTS §5](../TESTS_Y_VERIFICACION.md)) | **Holgada**: cualquier SoC moderno (Snapdragon 7/8, Dimensity, Tensor) dibuja más de 1.000.000 polígonos por fotograma. |
+| **Draw Calls** | **Punto débil actual**: unos 1.800 por fotograma, porque el parque se agrupa por color y celda de 6 m (ver [ESCENARIO §4](../ESCENARIO_Y_RENDIMIENTO.md)); los viandantes aportan 2 cada uno | **Crítico en móvil**: los drivers móviles se resienten por encima de unos cientos de draw calls. La fusión del parque del [paso 1](16_PARQUE_ILUSTRADO_QUICK_WIN.md) los reduce a unas decenas. |
+| **Consumo de Memoria (VRAM)** | Por debajo del límite de 60 MiB (cifra medida en [TESTS §5](../TESTS_Y_VERIFICACION.md)) | **Holgado** para la memoria compartida de un móvil de gama media. |
+| **Renderizado de Sombras** | Atlas de 2048 en escritorio; `project.godot` ya fija 1024 en móvil (`*.mobile`) | El perfil gráfico inicial en móvil debe ser `Medio`, no `Ultra` ([13 §5](13_INTERFAZ_MOVIL_UTILIZABLE.md)). |
 | **Shaders de Revelado (`develop.gdshader`)** | Bokeh CoC y grano fotográfico | El procesado se realiza **solo en el instante de disparar** (en `RESULT`), por lo que durante la búsqueda activa a $60\text{ FPS}$ no hay coste de fragment shader. |
 
 ---
@@ -169,5 +169,7 @@ Las decisiones arquitectónicas del proyecto benefician directamente la ejecuci�
 
 1. ✅ **Fase 1: Configuración de Plantillas y Preset**: Registrar `export_presets.cfg` con el identificador `org.ganso.proyectopaparazzi`.
 2. ✅ **Fase 2: Script `export_android.sh`**: Implementar y validar el script con comprobación automática de `debug.keystore`.
-3. **Fase 3: Controles Táctiles en Pantalla**: Integrar la capa de UI táctil descrita en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) condicionada a `OS.has_feature("mobile")`.
+3. **Fase 3: Controles Táctiles en Pantalla** (desarrollada en [13_INTERFAZ_MOVIL_UTILIZABLE.md](13_INTERFAZ_MOVIL_UTILIZABLE.md)): Integrar la capa de UI táctil descrita en [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) condicionada a `OS.has_feature("mobile")`.
 4. **Fase 4: Integración CI/CD (GitHub Actions)**: Flujo de trabajo automatizado que genera el APK firmado con clave de debug en cada commit etiquetado y lo adjunta como artefacto descargable.
+   - **Caché de plantillas**: las plantillas de exportación de Godot 4.7.2 pesan 1,2 GB; el flujo debe cachearlas (`actions/cache`) junto con el JDK y el SDK, o cada ejecución las descargará de nuevo.
+   - **Dónde publicar el APK**: hoy se versiona en `build/paparazzi-debug.apk` por decisión del proyecto, y cada versión commiteada añade unos 28 MB al historial. Con CI conviene publicarlo como artefacto del flujo o en una *release* de GitHub y dejar de commitearlo.
