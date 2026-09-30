@@ -307,6 +307,9 @@ static func register_actions() -> void:
 			var ev = InputEventKey.new()
 			ev.physical_keycode = code
 			InputMap.action_add_event(action,ev)
+		var pad = InputEventJoypadButton.new()
+		pad.button_index = {"academia_siguiente":JOY_BUTTON_A,"academia_atras":JOY_BUTTON_B,"academia_pausa":JOY_BUTTON_START}[action]
+		InputMap.action_add_event(action,pad)
 
 func toggle_pause() -> void:
 	set_scene_pause(not paused)
@@ -917,7 +920,7 @@ func _draw() -> void:
 	draw_rect(rect.grow(5),Color(.96,.84,.45,a),false,3)
 	draw_rect(rect.grow(9),Color(.96,.84,.45,a*.35),false,2)
 
-func handle_key(event: InputEventKey) -> bool:
+func handle_key(event: InputEvent) -> bool:
 	if not active: return false
 	if event.is_action_pressed("academia_siguiente"):
 		go_next()

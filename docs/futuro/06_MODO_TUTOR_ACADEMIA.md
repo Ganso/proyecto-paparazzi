@@ -108,7 +108,7 @@ Decisiones del usuario antes de empezar: lecciones libres (sin desbloqueo), prog
 
 | Pieza | Qué hace |
 |---|---|
-| `scripts/academy.gd` | Lecciones (`SETUP`: luz, cuerpo, objetivo, exposición inicial y diagrama de cada página), panel del tutor sobre el visor, subtítulos, resaltado de controles del HUD, demostraciones guionizadas, prácticas con tareas y pistas en vivo, progreso en `user://academia.cfg` y acciones del InputMap (`academia_siguiente`: Intro, `academia_atras`: Retroceso, `academia_pausa`: P). |
+| `scripts/academy.gd` | Lecciones (`SETUP`: luz, cuerpo, objetivo, exposición inicial y diagrama de cada página), panel del tutor sobre el visor, subtítulos, resaltado de controles del HUD, demostraciones guionizadas, prácticas con tareas y pistas en vivo, progreso en `user://academia.cfg` y acciones del InputMap (`academia_siguiente`: Intro o A del mando, `academia_atras`: Retroceso o B, `academia_pausa`: P o Start). |
 | `scripts/academy_diagram.gd` | Diagramas en vivo que leen el estado de la cámara: triángulo de exposición, escalas de pasos (diafragma, velocidad, ISO), zona nítida en planta, rastro de un corredor según la velocidad, cuadrícula de tercios con aire delante y vista lateral de la compresión. |
 | `scripts/main.gd` | Menú (`show_academy()`), resultado de la práctica (`show_academy_result()`, con díptico en las lecciones 2 y 5), fotos de la demostración al panel (`academy_demo_shot`), opción `--academy=<lección>:<fase>[:página]` (también `menu` e `inicio`). |
 | `data/textos.es.json` | Todos los textos (`academia_*`): 21 páginas de teoría de 60 palabras como mucho, 29 subtítulos, 15 tareas y sus pistas. |

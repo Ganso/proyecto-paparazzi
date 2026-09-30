@@ -1152,9 +1152,14 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 	p.side_flip_cd = maxf(0.0,p.side_flip_cd-dt)
 	if p.pass_timer <= 0: p.pass_side = 0.0
 	var blocking_ahead = INF
+	var nearest_r = NAN
+	var nearest_ahead = INF
 	for other in people:
 		if other == p or not other.visible: continue
 		var ahead = deg_to_rad(fposmod((other.theta-p.theta)*p.direction+180.0,360.0)-180.0)*p.radius
+		if ahead > -.2 and ahead < nearest_ahead and absf(other.radius-p.radius) < .9:
+			nearest_ahead = ahead
+			nearest_r = other.radius
 		if ahead <= -.9 or ahead > 4.0: continue
 		var lateral = other.radius-p.radius
 		if absf(lateral) > 1.1: continue
@@ -1175,7 +1180,8 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 		if absf(lateral) < PERSONAL_SPACE+.1:
 			# Oncoming walkers always keep to their own right, whatever side was latched before:
 			# both pick opposite sides, so they never mirror each other into a standoff.
-			if other.direction != p.direction and not still and p.pass_side != p.direction:
+			# (Unless already stuck: then the side that frees the way wins, see below.)
+			if other.direction != p.direction and not still and p.pass_side != p.direction and p.stuck_time < 1.0:
 				p.pass_side = 0.0
 			if p.pass_side == 0.0:
 				var room_out = hi-(other.radius+PERSONAL_SPACE)
@@ -1235,7 +1241,13 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 	if p.stuck_time > 2.0:
 		# Try the other side, at most once every 1.5 s (never flip-flop frame by frame).
 		if p.pass_timer < 1.5:
-			p.pass_side = (-p.pass_side if p.pass_side != 0.0 else 1.0)*(1.0 if p.rng.randf() < .7 else -1.0)
+			if not is_nan(nearest_r):
+				# Step away from whoever is closest in front, towards the side with room.
+				var away = 1.0 if p.radius >= nearest_r else -1.0
+				if (away > 0 and p.radius > hi-.05) or (away < 0 and p.radius < lo+.05): away = -away
+				p.pass_side = away
+			else:
+				p.pass_side = (-p.pass_side if p.pass_side != 0.0 else 1.0)*(1.0 if p.rng.randf() < .7 else -1.0)
 			p.pass_timer = 3.0
 		if p.stuck_time > 3.0 and not try_change_lane(p) and p.stuck_time > 5.0:
 			# Give way: turn back (the heading turns smoothly, see turn_heading()).
@@ -1501,6 +1513,7 @@ func show_help() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
+	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "SEARCH" and academy and academy.handle_key(event): return
 		if event.keycode == KEY_ENTER and mode == "RESULT" and academy and academy.active:

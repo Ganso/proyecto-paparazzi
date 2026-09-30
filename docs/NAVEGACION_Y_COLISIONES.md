@@ -78,7 +78,7 @@ Para cada viandante visible entre $0.9\text{ m}$ por detrás y $4.0\text{ m}$ po
 ### 3.4 Pasos de reserva, orientación y atascos
 - Si el paso completo no es válido (`travel_clear`), prueba solo el lateral mientras frena; si tampoco, frena del todo y acumula `stuck_time`.
 - La **orientación** (`turn_heading`) sigue a la velocidad real cuando supera $0.12\text{ m/s}$, girando como mucho $75^\circ/\text{s}$ ($120^\circ/\text{s}$ los corredores). Parado, conserva la orientación y gira despacio ($70^\circ/\text{s}$) hacia lo que mira.
-- Con `stuck_time` $> 2\text{ s}$ prueba el otro lado (como mucho una vez cada $1.5\text{ s}$); con $> 3\text{ s}$ intenta cambiar de carril; con $> 5\text{ s}$ da media vuelta con suavidad.
+- Con `stuck_time` $> 2\text{ s}$ cambia de lado (como mucho una vez cada $1.5\text{ s}$): se aparta de quien tiene más cerca delante, hacia el lado con sitio. Ya atascado, la regla de pasar por la derecha ante quien viene de frente deja de imponerse; antes podía empujarle contra alguien parado; con $> 3\text{ s}$ intenta cambiar de carril; con $> 5\text{ s}$ da media vuelta con suavidad.
 
 ### 3.5 Transición Diagonal entre Carriles
 Cuando un viandante cambia de carril (`destination_lane >= 0`):
