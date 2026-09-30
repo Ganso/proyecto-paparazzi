@@ -32,7 +32,9 @@ El prototipo actual cuenta con los siguientes cimientos operativos y verificados
 
 ---
 
-### 2.1 Limitación actual: los automatismos conocen al objetivo
+### 2.1 ✅ Corregido (30-09-2026): los automatismos ya no conocen al objetivo
+
+> Hecho en `main.gd::select_matrix_point()` (la persona más cercana al centro del encuadre, y en empate la más próxima a la cámara), `update_meter()` y `auto_expose()` (miden lo que hay bajo el colimador activo). Lo comprueba `tests/test_automatisms.gd`. Se conserva abajo la descripción del problema original.
 - **AF matricial**: `main.gd::select_matrix_point()` recorre los 9 colimadores y, si alguno toca al objetivo (`p == target`), lo elige antes que a cualquier otra persona. Basta con barrer el parque en AF matricial para ver en qué persona «salta» el colimador, lo que **delata al sujeto buscado** y anula parte del reto de identificación.
 - **Exposición automática**: `update_meter()` y `auto_expose()` sustituyen la lectura del colimador por la luz sobre el pecho del objetivo en cuanto aparece en el encuadre.
 - **Corrección (fase 0 de este documento)**: el AF matricial elige con una regla geométrica independiente de la identidad (la persona más cercana al centro del encuadre y, en caso de empate, la más próxima a la cámara), y la exposición automática mide el colimador activo o las zonas del §3. Ningún automatismo lee `target`.
@@ -144,7 +146,7 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 
 ## 7. Orden de Implementación y Criterios de Aceptación
 
-1. **Fase 0**: AF matricial y AE sin conocer al objetivo (§2.1). **Prioritaria**: corrige un atajo del juego actual.
+1. **Fase 0** ✅ (30-09-2026): AF matricial y AE sin conocer al objetivo (§2.1).
 2. **Fase 1**: fotometría puntual y ponderada al centro, y AF-S con bloqueo mediante el disparador de dos fases.
 3. **Fase 2 (opcional)**: AF-A y AF-C predictivo, con el valor limitado que explica §4.2.
 

@@ -1889,11 +1889,14 @@ func point_hit(point: Vector2) -> Dictionary:
 	var origin = camera.project_ray_origin(pixel)
 	return ray_to(origin+camera.project_ray_normal(pixel)*90)
 
+# Matrix AF (docs/futuro/12 §2.1, fase 0): a geometric rule that never knows who the assignment is
+# about. Among the 9 points, the person nearest the centre of the frame wins (ties: the one nearer
+# the camera); with nobody under a point, the nearest scenery.
 func select_matrix_point() -> void:
 	var pts = finder.points()
-	var best_target_idx = -1
+	var centre = ui.size*.5
 	var best_person_idx = -1
-	var nearest_person_dist = INF
+	var best_person_key = INF
 	var best_scenery_idx = -1
 	var nearest_scenery_dist = INF
 	for i in pts.size():
@@ -1902,20 +1905,14 @@ func select_matrix_point() -> void:
 		var distance = camera.global_position.distance_squared_to(hit.position)
 		if distance < 1.0: continue
 		if hit.collider.has_meta("person"):
-			var p = hit.collider.get_meta("person")
-			if p == target:
-				best_target_idx = i
-				break
-			if distance < nearest_person_dist:
-				nearest_person_dist = distance
+			var key = pts[i].distance_to(centre)/ui.size.x+sqrt(distance)*.001
+			if key < best_person_key:
+				best_person_key = key
 				best_person_idx = i
-		else:
-			if distance < nearest_scenery_dist:
-				nearest_scenery_dist = distance
-				best_scenery_idx = i
-	if best_target_idx != -1:
-		finder.active = best_target_idx
-	elif best_person_idx != -1:
+		elif distance < nearest_scenery_dist:
+			nearest_scenery_dist = distance
+			best_scenery_idx = i
+	if best_person_idx != -1:
 		finder.active = best_person_idx
 	elif best_scenery_idx != -1:
 		finder.active = best_scenery_idx
@@ -1924,13 +1921,8 @@ func select_matrix_point() -> void:
 
 func update_meter() -> void:
 	var hit = point_hit(finder.points()[finder.active])
+	# The meter reads what is under the active point, never the assignment's subject (12 §2.1).
 	measured_ev = park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
-	if equipment.auto_exposure and not sandbox and target != null:
-		var chest = target.control_points()[1]
-		if not camera.is_position_behind(chest):
-			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
-			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
-				measured_ev = park.illumination_ev(chest,time_of_day,target)
 
 # Correct exposure for a given scene EV (same criteria as auto_expose()).
 func expose_for(scene_ev: float) -> void:
@@ -1949,14 +1941,7 @@ func expose_for(scene_ev: float) -> void:
 					iso_index = iso
 
 func auto_expose() -> void:
-	var target_ev = measured_ev
-	if not sandbox and target != null:
-		var chest = target.control_points()[1]
-		if not camera.is_position_behind(chest):
-			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
-			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
-				target_ev = park.illumination_ev(chest,time_of_day,target)
-	target_ev -= equipment.exposure_compensation()
+	var target_ev = measured_ev-equipment.exposure_compensation()
 	var best_cost = INF
 	var stops = apertures()
 	for n in stops.size():
