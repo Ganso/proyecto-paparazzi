@@ -77,7 +77,7 @@ func neutral() -> void:
 	for side in ["I","D"]:
 		for part in ["muslo","pierna","pie"]: p.pose_bone(part+"."+side,0)
 		var sign_side = -1 if side == "I" else 1
-		p.rig.set_bone_pose_rotation(p.bones["brazo."+side],Quaternion(Vector3.BACK,sign_side*.055))
+		p.rig.set_bone_pose_rotation(p.bones["brazo."+side],Quaternion(Vector3.BACK,sign_side*p.arm_out[side]))
 		p.pose_bone("antebrazo."+side,.12)
 
 func pose(delta: float, traveled_distance = -1.0) -> void:
@@ -150,7 +150,7 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 		var cycle = fposmod(cycle_base+(0 if side == "I" else .5),1)
 		var arm = -cos(cycle*TAU)*(.55 if p.runner else .27)
 		var elbow = 1.30+arm*.16 if p.runner else .20+arm*.25
-		var shoulder = Quaternion(Vector3.BACK,sign_side*.055)*Quaternion(Vector3.RIGHT,arm)
+		var shoulder = Quaternion(Vector3.BACK,sign_side*p.arm_out[side])*Quaternion(Vector3.RIGHT,arm)
 		p.rig.set_bone_pose_rotation(p.bones["brazo."+side],shoulder)
 		p.pose_bone("antebrazo."+side,elbow)
 	var lean = -.12 if p.runner else -.025

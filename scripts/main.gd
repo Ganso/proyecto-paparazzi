@@ -229,6 +229,9 @@ func build_world() -> void:
 		dof_pass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var dof_material = ShaderMaterial.new()
 		dof_material.shader = preload("res://shaders/viewfinder_dof.gdshader")
+		# First of the transparent pass: glass, falling water and other transparents are drawn over it
+		# (it copies the opaque image; drawn last, it erased them).
+		dof_material.render_priority = -128
 		dof_pass.material_override = dof_material
 		camera.add_child(dof_pass)
 
@@ -1142,9 +1145,9 @@ func smoke_test() -> void:
 	assert(target.protected_target)
 	var triangles = park.triangle_count
 	for p in people:
-		assert(p.rig.get_bone_count() == 20)
-		# 1.900 per pedestrian in the base pieces; 8.000 for Ultra's hd mannequins (docs/futuro/17 §3).
-		assert(p.triangle_count <= (8000 if Person.detail == "hd" else 1900),Texts.get_text("presupuesto_por_viandante"))
+		assert(p.primary_bone_count == 20)
+		# 1.900 per pedestrian in the base pieces; 60.000 for the Blender mannequins with wig and clothes (docs/futuro/18).
+		assert(p.triangle_count <= (60000 if Person.detail == "hd" else 1900),Texts.get_text("presupuesto_por_viandante"))
 		triangles += p.triangle_count
 	# Scene budget per profile (docs/futuro/17 §3): the park detail follows the renderer.
 	# The mesh detail sets the budget: a saved Ultra profile running in gl_compatibility builds "lo".

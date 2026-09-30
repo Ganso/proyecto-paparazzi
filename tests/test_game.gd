@@ -211,6 +211,16 @@ func run() -> void:
 	check(opaque_surfaces.size() + ground_surfaces.size() == park_surfaces.filter(func(n): return not n.material_override in own_materials).size(),"Opaque park surfaces share the vertex-colour material (ground: textured material in hd)")
 	check(ground_surfaces.is_empty() != hd,"Textured ground only in hd (%d surfaces)" % ground_surfaces.size())
 	check(game.park.park_material is StandardMaterial3D and game.park.park_material.vertex_color_use_as_albedo and game.park.park_material.next_pass == null,"Park keeps smooth shading without ink outline")
+	if hd:
+		# Blender mannequins (docs/futuro/18): rigid wood, smooth-skinned clothes; weights sum to 1.
+		var arrays = game.target.mesh.surface_get_arrays(0)
+		var w: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+		var blended = 0
+		var normalised = true
+		for k in range(0,w.size(),4):
+			if w[k] < .999: blended += 1
+			normalised = normalised and absf(w[k]+w[k+1]+w[k+2]+w[k+3]-1.0) < .01
+		check(normalised and blended > 0,"hd clothes blend bones at the joints (%d vertices)" % blended)
 	check(game.Person.mannequin_material().shader.resource_path.ends_with("mannequin_pbr.gdshader") and game.Person.mannequin_material().next_pass == null,"Mannequins: realistic material without outline in every profile")
 	var coloured = true
 	for node in opaque_surfaces:

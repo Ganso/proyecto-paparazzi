@@ -80,7 +80,7 @@ Sombras de farola de noche: Ultra las 12, Alto las 4 interiores, Medio y Bajo ni
 | Nivel | Perfiles | Renderizador | Resolución 3D | Triángulos en escena | Por maniquí | VRAM |
 |---|---|---|---|---|---|---|
 | `lo` | Android y respaldo sin Vulkan | `gl_compatibility` | 1280 × 720 | ≤ 100.000 | ≤ 1.900 | < 60 MB |
-| `hd` | **Bajo, Medio, Alto y Ultra** en escritorio | `forward_plus` | Nativa × escala del perfil | ≤ 5.000.000 | ≤ 8.000 | < 8 GiB |
+| `hd` | **Bajo, Medio, Alto y Ultra** en escritorio | `forward_plus` | Nativa × escala del perfil | ≤ 5.000.000 | ≤ 60.000 (maniquíes de Blender, [18](18_PERSONAJES_BLENDER.md)) | < 8 GiB |
 
 Cifras medidas en [TESTS §5](../TESTS_Y_VERIFICACION.md): Ultra a 2560 × 1440 va a 10,3 ms de GPU de día y 11,8 ms de noche con 2,4 M de triángulos y todo el postprocesado (sin la profundidad de campo, 7,3 y 8,9 ms).
 

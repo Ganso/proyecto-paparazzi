@@ -100,7 +100,7 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
 
 Añadido en el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md), fase 5). **Sustituye al estilo toon con contorno** de las secciones anteriores: desde el 30-09-2026 todos los perfiles usan `shaders/mannequin_pbr.gdshader` sin contorno de tinta (`Person.OUTLINE = false`; `cel_shading.gdshader` y `cel_outline.gdshader` se conservan, sin uso). En escritorio (Forward+) la malla es `hd` (`Person.detail = "hd"`); en Android, la base.
 
-- **Malla**: `data/piezas_hd/`, generada con `python3 tools/build_catalog.py --lod hd`. Mismas piezas, huesos y zonas de color, con 2,25 veces más lados por sección (de 8 a 18). Las rótulas (`ellipsoid`) pasan a 15–20 lados y 7–10 anillos, y los segmentos a 14 lados. Máximo en escena: ~6.000 triángulos por maniquí (límite de Ultra: 8.000).
+- **Malla**: `data/piezas_hd/`, modelada por script en Blender (`tools/blender/build_characters.py`; detalle completo en [futuro/18](futuro/18_PERSONAJES_BLENDER.md) y en §3.ter). Mismos 20 huesos, zonas de color y rasgos con nombre que las piezas base. Máximo en escena: ~41.000 triángulos por maniquí (límite: 60.000). `build_catalog.py --lod hd` queda desactivado para no sobrescribirla.
 - **Colisionadores**: `Person.setup()` hace dos pasadas. `collision` construye los colisionadores con las piezas base y `visual` dibuja las `hd` sin colisionador. Los rayos de oclusión, el AF y la puntuación son idénticos en todos los perfiles.
 - **Sombreado realista** (`shaders/mannequin_pbr.gdshader`, decisión del usuario del 30-09-2026): iluminación física estándar (sombras, iluminación global y reflejos como el resto de la escena). La madera lleva barniz (`CLEARCOAT`) y la tela es mate con un brillo de borde (`RIM`) que imita la pelusa. Sin contorno: su casco invertido producía píxeles NaN que el glow convertía en destellos ([futuro/17 §2.5](futuro/17_SALTO_GRAFICO_ULTRA.md)).
 - **Texturas procedurales** (`shaders/mannequin_patterns.gdshaderinc`; activas en todos los perfiles salvo Bajo):
@@ -110,9 +110,26 @@ Añadido en el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md), fa
   - **Sarga** (`tela_b`: pantalones y faldas): costillas diagonales tipo vaquero con desgaste.
   - **Pelo**: mechones que caen desde la coronilla.
   - El dibujo **solo tiñe el albedo**: una primera versión inclinaba la normal para dar relieve y producía destellos (píxeles que saltaban de banda o captaban el brillo de un fotograma a otro). Cada zona desvanece por separado sus rasgos gruesos y finos antes de que un píxel cubra medio periodo, así que nada más fino que unos dos píxeles llega a dibujarse.
-- **Color**: en Ultra los colores de vértice se leen como sRGB, el glow solo actúa por encima de 2,2 (farolas y bombillas; antes encendía los pequeños brillos del barniz de forma intermitente) y el grosor del contorno se escala con la resolución (`main.gd::render_factor`).
+- **Color**: los colores de vértice se leen como sRGB y el glow solo actúa por encima de 2,2 (farolas y bombillas; antes encendía los pequeños brillos del barniz de forma intermitente).
 - **Ética**: las texturas no añaden rasgos nombrables; el acabado de madera sigue fuera de los predicados.
 - **Vista previa**: `~/bin/godot-4-fp --path . --rendering-method forward_plus --script tools/preview_people.gd -- --hd --zoom=1.1 --output=/tmp/maniquies.png`.
+
+## 3.ter Maniquíes, Ropa y Pelucas de Blender (escritorio)
+
+Rediseño completo del [paso 3](futuro/18_PERSONAJES_BLENDER.md) (30-09-2026). Solo el cuerpo es de madera; el pelo es una peluca y la ropa es tela.
+
+- **Maniquí**: pelvis, abdomen y pecho torneados con cintura articulada, bíceps y gemelos, manos con pulgar, rótulas encajadas, cuello grueso y barbilla por delante del cuello. Rígido: cada pieza con peso 1,0 en su hueso.
+- **Formas `"skinned"`** (`person.gd::build_skinned_mesh()`): vértices en espacio de modelo, normales suaves y hasta 4 huesos por vértice. La ropa y el pelo reparten el peso entre huesos (**pesos suaves**) y se doblan en codos, rodillas y caderas:
+  - tronco de las prendas solo con huesos del torso (`TOP_BONES`) y cada manga con los de su brazo (`ARM_BONES`): con los brazos colgando, el bajo quedaba más cerca del antebrazo y se estiraba al balancearlos;
+  - perneras con `pants_weights()`: cada una sigue a su pierna y solo se funde con la pelvis en la cadera y la entrepierna.
+- **`"hides"`**: cada prenda declara las partes del cuerpo que tapa y `person.gd` no las dibuja (la madera rígida atravesaría la tela que se dobla). El brazo solo se oculta si la manga lo cubre entero.
+- **Huesos secundarios y muelles**: pelo, falda, bufanda y bolso declaran `"chains"`; `add_secondary_chains()` añade sus huesos después de los 20 universales (`primary_bone_count`) y `build_spring_simulator()` los mueve con `SpringBoneSimulator3D` (inercia, rigidez, arrastre, gravedad y cápsulas de colisión en muslos, piernas, tórax y cabeza). La marcha y la puntuación no los ven.
+  - Falda: 8 cadenas colgadas de los muslos (se balancea al andar, ondea al pararse y cubre el regazo al sentarse), con caída previa simulada en Blender (evasé con godets).
+  - Melena: 7 cadenas desde las orejas; coleta: 1; bufanda: 2 colas; bandolera: el bolso.
+- **Bandolera**: tote fino en el costado derecho y brazo derecho algo separado del cuerpo (`arm_out`, 0,2 rad, aplicado en `gait.gd`); con falda se usa la variante `_falda`, con el bolso a la altura de la cintura. La correa va pegada al cuerpo y puede rozar las prendas holgadas (preferencia del usuario frente a una correa que flota).
+- **Arrugas modeladas**: pliegue del codo, tela sobre el puño, pliegue tras la rodilla, quiebre del pantalón sobre el zapato y tela sobre el cinturón (`wrinkles()`).
+- **Pelucas**: base ajustada al cráneo con línea del pelo continua y mechones en cinta (`wig()`); flequillo con puntas, melena recta, coleta con goma. Tocados: fedora, gorra con visera con grosor, gorro con vuelta de canalé y pompón.
+- **Evidencias**: `tools/capture_characters.gd` (hojas en `docs/evidencias/personajes_modelado/`; el catálogo anterior está en `antes/`).
 
 ---
 

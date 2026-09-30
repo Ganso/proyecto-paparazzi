@@ -77,7 +77,7 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
   - Luz incidente: **$EV \approx 14.8$** al sol y **$EV = 11.0$** en sombra (detalle en [SIMULACION_FOTOGRAFICA.md §2.2](SIMULACION_FOTOGRAFICA.md)).
 - **Hora Dorada (Golden Hour)**:
   - **Sol rasante bajo en el horizonte** (pitch $-15^\circ$, azimut $-48^\circ$): proyecta sombras largas, dramáticas y oblicuas que atraviesan los paseos circulares y acentúan el volumen y relieve de los maniquíes.
-  - **Luz solar ámbar dorado intensa**: `light_color = Color("ffa544")`, `light_energy = 2.2`, con la misma penumbra del perfil.
+  - **Luz solar ámbar dorado intensa**: `light_color = Color("ffa544")`, `light_energy = 2.6`, ambiente 0,7 y exposición ×1,2 (más luminosa desde el 30-09-2026; el fotómetro no cambia), con la misma penumbra del perfil.
   - **Gradiente de cielo crepuscular**: cenit azul índigo profundo (`18355e`), horizonte naranja resplandeciente (`ed8234`) y suelo reflectante ambarino (`b55e24`).
   - **Ambiente y niebla dorada**: contraste cromático con ambiente de cielo azul claro (`9aaed0`, energía 0.55, tomado de su color y no del cielo) y neblina de profundidad dorada difusa (`e58b3e`).
   - **Encendido crepuscular de farolas**: filamentos incandescentes encendiéndose con luz cálida suave (`light_energy = 0.90`, `ffcb74`), sin sombras.
@@ -92,7 +92,8 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
 
 ### 3.2 Sistema Meteorológico de Nubes
 El parque cuenta con un sistema de nubes procedurales cúbicas de baja altura:
-- **Ciclo de 18 s** (`park.gd`, `weather_time`): `cloud_cover` sube de 0 a 1 entre los segundos 6.0 y 7.2 del ciclo, se mantiene hasta el 11.0 y baja a 0 entre el 11.0 y el 12.2.
+- **Ciclo de 45 s** (`park.gd`, `WEATHER_CYCLE`, `weather_time`): un frente pasa de vez en cuando; `cloud_cover` sube de 0 a 1 entre los segundos 6,0 y 6,5 del ciclo, se mantiene hasta el 8,5 y baja a 0 entre el 8,5 y el 9,0 (antes, cada 18 s y durante 6 s). El frente no se dibuja: solo oscurece la luz del sol y el fotómetro (las nubes cercanas parecían misiles bajo el cielo).
+- **Nubes lejanas** (`build_sky_clouds()`): 16 cúmulos a 170–260 m y 85–135 m de altura que giran despacio alrededor del parque (0,35°/s), fuera de la niebla y teñidos por la hora. Son decorativas: no tapan el sol ni afectan al fotómetro.
 - **Atenuación**: la transmisión solar pasa de 1.0 a 0.09 (`sun_transmission()`, −3.5 EV en la luz directa). En un punto al sol la luz incidente baja de $EV \approx 14.8$ a $\approx 12.1$ (−2.7 EV), porque la componente ambiental ($EV = 11$) no cambia.
 - **Afectación dual**: La nube oscurece tanto la imagen renderizada en el Viewport como la lectura del exposímetro fotográfico en tiempo real, obligando al jugador a compensar la apertura o la velocidad sobre la marcha.
 
@@ -130,7 +131,7 @@ Límites por nivel de detalle ([futuro/17 §3](futuro/17_SALTO_GRAFICO_ULTRA.md)
 | Métrica | `lo` (Bajo, Medio, Alto) | `hd` (Ultra, Forward+) | Cómo se verifica |
 |---|:---:|:---:|---|
 | **Triángulos en escena** | $\le 100.000$ | $\le 5.000.000$ | `--smoke-test` |
-| **Triángulos por viandante** | $\le 1.900$ | $\le 8.000$ | `tests/test_art.gd` (`lo`), `--smoke-test` (`hd`) |
+| **Triángulos por viandante** | $\le 1.900$ | $\le 60.000$ | `tests/test_art.gd` (`lo`), `--smoke-test` (`hd`) |
 | **Memoria de vídeo (VRAM)** | $< 60\text{ MB}$ | $< 8\text{ GiB}$ | `tests/test_game.gd` |
 | **Resolución del visor 3D** | 1280 × 720 | Nativa de la ventana | `main.gd::update_render_resolution()` |
 | **Draw calls** | Día ≤ 300 en el visor (38 superficies de parque + 2 por viandante + pases de sombra del sol). De noche depende de las farolas con sombra del perfil | `--metrics` imprime `draw_calls`; `test_game.gd` impone el límite de día y comprueba las sombras de farola por perfil |

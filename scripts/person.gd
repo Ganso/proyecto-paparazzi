@@ -36,6 +36,71 @@ var colliders = {}
 static var detail = "lo"
 # Build pass: "both" (base detail), "collision" (base pieces, no mesh) or "visual" (hd, no colliders).
 var build_pass = "both"
+# The 20 bones of the universal rig; secondary chain bones come after them.
+var primary_bone_count = 20
+# Arm abduction at rest (radians). A shoulder bag on the right hip pushes that arm out a little.
+var arm_out = {"I": .055, "D": .055}
+var catalog_ref: Dictionary
+var chains: Array = []
+var piece_cache = {}
+
+func piece_resource(path: String) -> Dictionary:
+	if not piece_cache.has(path): piece_cache[path] = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return piece_cache[path]
+
+func selected_pieces(t: Dictionary, hd: bool) -> Array:
+	var slots = {"cuerpo":0,"torso":t.upper,"piernas":t.lower,"cabeza":t.hair,"accesorio":t.get("accessory",0)}
+	var out = []
+	for piece in profile.piezas:
+		if piece.indice == slots[piece.ranura]:
+			var path: String = piece.recurso
+			if hd:
+				path = path.replace("res://data/piezas/","res://data/piezas_hd/")
+				# With a skirt the shoulder bag rides high, above the skirt's flare (docs/futuro/18).
+				var skirt = catalog_ref.piezas.piernas[t.lower].style == "skirt"
+				var variant = path.replace(".json","_falda.json")
+				if piece.ranura == "accesorio" and skirt and FileAccess.file_exists(variant): path = variant
+			out.append(piece_resource(path))
+	return out
+
+func add_secondary_chains(t: Dictionary) -> void:
+	for resource in selected_pieces(t,true):
+		for chain in resource.get("chains",[]):
+			var parent: String = chain.parent
+			var points: Array = chain.points
+			for k in points.size():
+				var id = "%s.%d" % [chain.name,k]
+				bone(id,parent,vector(points[k]))
+				parent = id
+			chains.append(chain)
+
+# Secondary motion: each chain wavers with inertia and returns to its rest shape; the legs, torso
+# and head are collision capsules so skirt and hair slide over them instead of passing through.
+func build_spring_simulator() -> void:
+	var sim = SpringBoneSimulator3D.new()
+	sim.name = "Muelles"
+	rig.add_child(sim)
+	sim.setting_count = chains.size()
+	for i in chains.size():
+		var chain: Dictionary = chains[i]
+		var n: int = chain.points.size()
+		sim.set_root_bone_name(i,"%s.0" % chain.name)
+		sim.set_end_bone_name(i,"%s.%d" % [chain.name,n-1])
+		sim.set_stiffness(i,chain.get("stiffness",1.0))
+		sim.set_drag(i,chain.get("drag",.4))
+		sim.set_gravity(i,chain.get("gravity",0.0))
+		sim.set_radius(i,chain.get("radius",.02))
+	for spec in [["muslo.I",.075,.5],["muslo.D",.075,.5],["pierna.I",.055,.45],["pierna.D",.055,.45],["torax",.15,.3],["cabeza",.1,.1]]:
+		if not bones.has(spec[0]): continue
+		var capsule = SpringBoneCollisionCapsule3D.new()
+		capsule.bone_name = spec[0]
+		capsule.radius = spec[1]*joint/.045 if spec[0].begins_with("muslo") or spec[0].begins_with("pierna") else spec[1]*profile.hombros/.42
+		capsule.height = spec[2]*nz/1.5
+		# Capsules run along the bone (down the limb): offset to its middle.
+		var child_offset = -capsule.height*.5+capsule.radius
+		capsule.position_offset = Vector3(0,child_offset,0) if not spec[0] in ["torax","lumbar","caderas","cabeza"] else Vector3(0,capsule.height*.25,0)
+		capsule.rotation_offset = Quaternion.IDENTITY
+		sim.add_child(capsule)
 # Colour zone of the shape being built; in hd it selects the procedural texture of the toon shader
 # (wood, knit, twill, hair) through UV2 (docs/futuro/17 fase 5).
 var current_zone = "piel"
@@ -47,6 +112,7 @@ var triangle_count = 0
 
 func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	traits = t
+	catalog_ref = catalog
 	profile = catalog.perfiles[t.profile]
 	height = profile.altura
 	nz = height-height/profile.relacion_cabeza
@@ -62,6 +128,11 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	rig.name = "Rig"
 	add_child(rig)
 	make_rig()
+	primary_bone_count = rig.get_bone_count()
+	if detail == "hd" and catalog.piezas.accesorio[t.get("accessory",0)].style == "bag": arm_out["D"] = .2
+	# hd pieces may bring secondary bone chains (hair, skirt, scarf, bag) that SpringBoneSimulator3D
+	# swings (docs/futuro/18): they are added before the skin binds are built.
+	if detail == "hd": add_secondary_chains(t)
 	rig.reset_bone_poses()
 	mesh = ArrayMesh.new()
 	skin = Skin.new()
@@ -75,19 +146,23 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 		"pelo":Color(catalog.tonos_pelo[t.hair_color].rgb),
 		"calzado":Color(catalog.tonos_calzado[shoe_color(t,catalog)])
 	}
-	var slots = {"cuerpo":0,"torso":t.upper,"piernas":t.lower,"cabeza":t.hair,"accesorio":t.get("accessory",0)}
 	var passes = ["both"] if detail != "hd" else ["collision","visual"]
 	for pass_name in passes:
 		build_pass = pass_name
-		for piece in profile.piezas:
-			if piece.indice == slots[piece.ranura]:
-				var path: String = piece.recurso
-				if pass_name == "visual": path = path.replace("res://data/piezas/","res://data/piezas_hd/")
-				var resource: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
-				for shape in resource.geometry: build_shape(shape,colors)
+		var resources = selected_pieces(t,pass_name == "visual")
+		# Body parts a garment covers are not drawn (docs/futuro/18): smooth-skinned cloth bends at
+		# the joints while the rigid wood does not, so hidden wood would poke through.
+		var hidden = {}
+		for resource in resources:
+			for part in resource.get("hides",[]): hidden[part] = true
+		for resource in resources:
+			for shape in resource.geometry:
+				if hidden.has(shape.get("part","")): continue
+				build_shape(shape,colors)
 	build_pass = "both"
 
 	finish_mesh()
+	if not chains.is_empty(): build_spring_simulator()
 	gait = preload("res://scripts/gait.gd").new(self)
 func bone(id: String, parent: String, world: Vector3) -> void:
 	var i = rig.get_bone_count()
@@ -299,9 +374,41 @@ func build_shape(shape: Dictionary, colors: Dictionary) -> void:
 	if not shape.get("outline",true): color.a = 0
 	match shape.type:
 		"mesh": build_contoured_mesh(shape,color)
+		"skinned": build_skinned_mesh(shape,color)
 		"ellipsoid": ellipsoid(shape.bone,vector(shape.position),vector(shape.size),color)
 		"box": box(shape.bone,vector(shape.position),vector(shape.size),color)
 		"segment": segment(shape.bone,vector(shape.a),vector(shape.b),shape.radius_a,shape.radius_b,color)
+
+# Pieces modelled in Blender (tools/blender/build_characters.py, docs/futuro/18): vertices already in
+# model space at rest, with up to four bones per vertex. Wood stays rigid (one bone); clothes and
+# hair blend two to four bones across the joints, so they bend instead of splitting or clipping.
+func build_skinned_mesh(shape: Dictionary, color: Color) -> void:
+	var names: Array = shape.bone_names
+	var joints: Array = shape.joints
+	var weights: Array = shape.weights
+	var vertices: Array = shape.vertices
+	var normals: Array = shape.normals
+	var key = color.to_html()+current_zone
+	if not batches.has(key): batches[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"i":PackedInt32Array(),"b":PackedInt32Array(),"w":PackedFloat32Array(),"color":color,"u":PackedVector2Array(),"u2":PackedVector2Array()}
+	var batch: Dictionary = batches[key]
+	var offset: int = batch.v.size()
+	var zone_base = ZONE_TEXTURES.get(current_zone,4)*100
+	for k in vertices.size():
+		var v = vector(vertices[k])
+		var best = 0
+		for j in 4:
+			if weights[k*4+j] > weights[k*4+best]: best = j
+		var dominant: int = bones[names[joints[k*4+best]]]
+		# Position in the dominant bone's space: the procedural pattern sticks to the piece.
+		var local = rests[dominant].affine_inverse()*v
+		batch.u.append(Vector2(local.x,local.y))
+		batch.u2.append(Vector2(local.z,zone_base+dominant))
+		batch.v.append(v)
+		batch.n.append(vector(normals[k]).normalized())
+		for j in 4:
+			batch.b.append(bones[names[joints[k*4+j]]])
+			batch.w.append(weights[k*4+j])
+	for index in shape.indices: batch.i.append(index+offset)
 
 func build_contoured_mesh(shape: Dictionary, color: Color) -> void:
 	var arrays = []

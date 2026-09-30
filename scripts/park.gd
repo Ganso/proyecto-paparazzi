@@ -826,6 +826,7 @@ func build() -> void:
 	ParkAssets.cache.clear()
 	if detail == "hd": build_grass()
 	build_clouds()
+	build_sky_clouds()
 	set_night(false)
 	apply_graphics_preset("Ultra")
 
@@ -944,7 +945,8 @@ func apply_preset_values(preset: String) -> void:
 	var env = environment.environment
 	var meadow = ParkAssets.available("quiosco")
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 0.90
+	# A brighter golden hour: the low sun alone left the park too dark.
+	env.tonemap_exposure = 0.90 * (1.2 if time_of_day == "golden" else 1.0)
 	env.tonemap_white = 1.45
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.03
@@ -1021,11 +1023,11 @@ func set_time_of_day(tod: String) -> void:
 	elif is_golden:
 		# Spectacular low-angle golden hour lighting (pitch -15 deg, azimuth -48 deg)
 		sun.rotation_degrees = Vector3(-15,-48,0)
-		sun.light_energy = 2.2
+		sun.light_energy = 2.6
 		sun.light_color = Color("ffa544")
 		# Shadows at sunset are lit by the blue sky: a clear ambient keeps the long shadows readable.
 		environment.environment.ambient_light_color = Color("9aaed0")
-		base_ambient = .55
+		base_ambient = .7
 		environment.environment.ambient_light_energy = base_ambient
 		environment.environment.ambient_light_sky_contribution = 0.0
 		environment.environment.fog_light_color = Color("e58b3e")
@@ -1287,24 +1289,79 @@ func build_clouds() -> void:
 
 func update_weather(dt: float) -> void:
 	weather_time += dt
-	var phase = fposmod(weather_time,18.0)
+	update_sky_clouds(dt)
+	var phase = fposmod(weather_time,WEATHER_CYCLE)
 	# A cloud front crosses the sun in ~1 second, stays, then clears again.
-	cloud_cover = smoothstep(6.0,7.2,phase)*(1-smoothstep(11.0,12.2,phase)) if clouds_enabled else 0.0
+	# A cloud front now and then (every 45 s), crossing the sun in half a second and gone in 3 s.
+	cloud_cover = smoothstep(6.0,6.5,phase)*(1-smoothstep(8.5,9.0,phase)) if clouds_enabled else 0.0
 	if is_night:
 		sun.light_energy = MOONLIGHT
 	elif time_of_day == "golden":
-		sun.light_energy = 2.2 * sun_transmission()
+		sun.light_energy = 2.6 * sun_transmission()
 	else:
 		sun.light_energy = 1.4 * sun_transmission()
 	if is_instance_valid(clouds):
-		clouds.visible = clouds_enabled
-		clouds.position.x = (phase-9.0)*4.5
+		# The cloud front is felt, not seen: the near puffs looked like missiles low in the sky.
+		clouds.visible = false
+		clouds.position.x = (phase-7.5)*9.0
 		if is_night:
 			cloud_material.albedo_color = Color("202c45")
 		elif time_of_day == "golden":
 			cloud_material.albedo_color = Color("f09e60").darkened(cloud_cover*.18)
 		else:
 			cloud_material.albedo_color = Color("edf0ed").darkened(cloud_cover*.22)
+
+const WEATHER_CYCLE = 45.0
+var sky_clouds: Node3D
+var sky_cloud_material: StandardMaterial3D
+
+# Far clouds drifting slowly across the sky, only decoration: they never cover the sun.
+func build_sky_clouds() -> void:
+	sky_clouds = Node3D.new()
+	add_child(sky_clouds)
+	sky_cloud_material = StandardMaterial3D.new()
+	# Lit by the sun (rounded tops, greyer bases) and self-lit enough to stay bright white.
+	sky_cloud_material.roughness = 1.0
+	sky_cloud_material.metallic_specular = 0.0
+	sky_cloud_material.emission_enabled = true
+	sky_cloud_material.emission_energy_multiplier = .55
+	# Beyond the depth fog: without this they vanish into the haze.
+	sky_cloud_material.disable_fog = true
+	var rng = RandomNumberGenerator.new()
+	rng.seed = 777
+	for i in 16:
+		var cloud = Node3D.new()
+		var angle = i*TAU/16+rng.randf_range(-.15,.15)
+		var radius = rng.randf_range(170,260)
+		cloud.position = Vector3(sin(angle)*radius,rng.randf_range(85,135),cos(angle)*radius)
+		cloud.rotation.y = angle
+		sky_clouds.add_child(cloud)
+		var puffs = rng.randi_range(4,7)
+		for k in puffs:
+			var mesh = SphereMesh.new()
+			mesh.radius = rng.randf_range(7,13)
+			mesh.height = mesh.radius*rng.randf_range(.8,1.1)
+			mesh.radial_segments = 12
+			mesh.rings = 6
+			var node = MeshInstance3D.new()
+			node.mesh = mesh
+			node.material_override = sky_cloud_material
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			# Cumulus: big puffs in the middle, smaller ones at the ends, flat base.
+			var middle = 1.0-absf(k-(puffs-1)*.5)/(puffs*.5)
+			node.position = Vector3((k-(puffs-1)*.5)*rng.randf_range(8,11),mesh.radius*.35*middle,rng.randf_range(-5,5))
+			node.scale = Vector3(1.3,.75+.35*middle,1)
+			cloud.add_child(node)
+			triangle_count += mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size()/3
+
+func update_sky_clouds(dt: float) -> void:
+	if not is_instance_valid(sky_clouds): return
+	sky_clouds.rotation.y += dt*deg_to_rad(.35)
+	var tint = Color(1,1,1)
+	if is_night: tint = Color("2a3450")
+	elif time_of_day == "golden": tint = Color("f3b07a")
+	sky_cloud_material.albedo_color = tint
+	sky_cloud_material.emission = tint*(.25 if is_night else 1.0)
 
 func sun_transmission() -> float:
 	return lerpf(1.0,.09,cloud_cover)

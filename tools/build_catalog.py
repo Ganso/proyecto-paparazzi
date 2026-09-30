@@ -14,6 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / 'data/catalogo.json'
 cat = json.loads(CATALOG.read_text())
 HD = '--lod' in sys.argv and sys.argv[sys.argv.index('--lod')+1] == 'hd'
+if HD:
+    # data/piezas_hd/ now comes from Blender (tools/blender/build_characters.py, docs/futuro/18):
+    # regenerating it here would overwrite the Blender mannequins, clothes and wigs.
+    sys.exit('data/piezas_hd/ se genera con Blender: blender -b --factory-startup -P tools/blender/build_characters.py')
 PIECES = 'data/piezas_hd' if HD else 'data/piezas'
 (ROOT/PIECES).mkdir(exist_ok=True)
 
