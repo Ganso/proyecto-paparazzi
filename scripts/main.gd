@@ -91,6 +91,8 @@ var ambience
 # Academia de fotografía (scripts/academy.gd, docs/futuro/06).
 var academy
 var academy_demo_shot = false
+# The person the last autofocus locked on (sandbox photos of fast subjects, see capture_sandbox_evidence).
+var af_person = null
 var academy_last_thirds = ""
 var extras
 var forced_activity = ""
@@ -797,14 +799,14 @@ func update_person(p: Pedestrian, dt: float) -> void:
 			if p.runner and p.pending_stop.is_empty() and p.rng.randf() < .05:
 				# Runners stop now and then to stretch by the path.
 				p.pending_stop = {"activity":"estirar","time":p.rng.randf_range(6,10),"face":face_view(p)}
-			elif not p.runner and p.bench_goal < 0 and p.pending_stop.is_empty() and p.rng.randf() < .12:
+			elif not p.runner and not p.has_meta("staged") and p.bench_goal < 0 and p.pending_stop.is_empty() and p.rng.randf() < .12:
 				var poi_blocked = false
 				for other in people:
 					if other != p and other.lane == p.lane and (other.state == "DETENIDO" or other.state == "SENTADO") and absf(other.theta - p.theta) < 12.0:
 						poi_blocked = true
 						break
 				if not poi_blocked: plan_stop(p)
-		if not p.runner and p.lane == 1 and p.destination_lane < 0 and not p.protected_target and p.bench_goal < 0 and p.pending_stop.is_empty():
+		if not p.runner and p.lane == 1 and p.destination_lane < 0 and not p.protected_target and not p.has_meta("staged") and p.bench_goal < 0 and p.pending_stop.is_empty():
 			choose_bench(p)
 		if p.bench_goal >= 0: approach_bench(p)
 		elif not p.pending_stop.is_empty() and p.v_fwd < .04:
@@ -959,7 +961,7 @@ func clear_sector(lanes: Array, keep: Array, width = 40.0) -> void:
 
 func pick(filter: Callable, exclude: Array = []):
 	for q in people:
-		if q in exclude or q.protected_target or q.has_dog: continue
+		if q in exclude or q.protected_target or q.has_dog or q.has_meta("staged"): continue
 		# Only someone walking freely (not seated, not heading to a bench, not chatting).
 		if q.state != "CAMINANDO" or q.bench_index >= 0 or q.bench_goal >= 0 or q.partner != null: continue
 		if filter.call(q): return q
@@ -1263,6 +1265,7 @@ func autofocus() -> void:
 	var hit = ray_to(origin+dir*90)
 	finder.flash = .15
 	finder.success = not hit.is_empty()
+	af_person = hit.collider.get_meta("person") if not hit.is_empty() and hit.collider.has_meta("person") else null
 	if not hit.is_empty():
 		focus_distance = maxf(.8,camera.global_position.distance_to(hit.position))
 		refresh()
@@ -2193,6 +2196,15 @@ func capture_sandbox_evidence() -> Dictionary:
 	if not hit.is_empty() and hit.collider.has_meta("person"):
 		person = hit.collider.get_meta("person")
 		velocity = person.actual_velocity
+	elif is_instance_valid(af_person) and af_person.visible:
+		# A fast subject slipped off the point between focusing and the shutter: the photo is still
+		# of the person the AF locked on (in-frame), as it would be for a photographer.
+		var chest = af_person.control_points()[1]
+		var proj = camera.unproject_position(chest)/Vector2(viewport.size)
+		if not camera.is_position_behind(chest) and proj.x > .2 and proj.x < .8 and proj.y > .1 and proj.y < .9:
+			person = af_person
+			velocity = person.actual_velocity
+			distance = camera.global_position.distance_to(chest)
 	var axis = -camera.global_basis.z
 	var perpendicular = (velocity-axis*velocity.dot(axis)).length()
 	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}

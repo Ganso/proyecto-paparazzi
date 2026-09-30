@@ -7,7 +7,7 @@ extends Control
 const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
 const Diagram = preload("res://scripts/academy_diagram.gd")
-const PROGRESS_PATH = "user://academia.cfg"
+var progress_path = "user://academia.cfg"   # tests point it elsewhere
 const LESSONS = 5
 const PHASES = ["teoria","demo","practica"]
 
@@ -18,7 +18,7 @@ const SETUP = {
 		"pages":["triangulo","pasos_n","pasos_t","pasos_iso","pasos"],"practice_diagram":"pasos"},
 	2: {"time":"golden","cover":1.0,"body":2,"lens":4,"focal":105.0,"auto":false,"focus":"AF puntual","angle":118.0,"pitch":-2.0,"n":1.8,
 		"pages":["dof","dof","dof","dof"],"practice_diagram":"dof"},
-	3: {"time":"golden","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF matricial","angle":70.0,"pitch":-4.0,"t":250,
+	3: {"time":"golden","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":70.0,"pitch":-4.0,"t":250,
 		"pages":["movimiento","movimiento","movimiento","pasos"],"practice_diagram":"movimiento"},
 	4: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":200.0,"pitch":-3.0,
 		"pages":["tercios","tercios","tercios","tercios"],"practice_diagram":"tercios"},
@@ -43,6 +43,9 @@ var demo_photos: Array = []
 var demo_pending_label = ""
 var demo_done = false
 var frame_goal = {}         # {"who": Pedestrian, "x":…, "y":…}: keep a head at a screen fraction
+var waiting_runner = null   # caption of a demo shot waiting for the runner to reach the centre
+var waiting_time = 0.0
+var waiting_subject = null  # caption of a demo shot waiting for the framing on the subject
 var subject = null          # staged person of the lesson
 var runner = null           # staged runner (lesson 3)
 # Practice
@@ -85,7 +88,7 @@ func _ready() -> void:
 func load_progress() -> void:
 	progress = {}
 	var config = ConfigFile.new()
-	if config.load(PROGRESS_PATH) != OK: return
+	if config.load(progress_path) != OK: return
 	for n in range(1,LESSONS+1):
 		for ph in PHASES:
 			if config.get_value("leccion_%d" % n,ph,false): progress["%d_%s" % [n,ph]] = true
@@ -95,7 +98,7 @@ func save_progress() -> void:
 	for key in progress:
 		var parts = str(key).split("_")
 		config.set_value("leccion_%s" % parts[0],parts[1],true)
-	config.save(PROGRESS_PATH)
+	config.save(progress_path)
 
 func mark(n: int, ph: String) -> void:
 	if progress.get("%d_%s" % [n,ph],false): return
@@ -280,6 +283,7 @@ func stop() -> void:
 	visible = false
 	main.park.forced_cover = -1.0
 	main.graphics_button.visible = true
+	release_staged()
 	for q in main.people: q.visible = true
 	frame_goal = {}
 	highlight = ""
@@ -398,7 +402,18 @@ func clear_thumbs() -> void:
 	for c in thumbs.get_children(): c.queue_free()
 
 # ---- Staging: the people each lesson needs, in front of the camera ----
+# People placed by an earlier staging go back to their normal routine.
+func release_staged() -> void:
+	for q in main.people:
+		if not q.has_meta("staged"): continue
+		q.remove_meta("staged")
+		q.visible = true
+		if q.state == "DETENIDO" and q.state_time > 1000.0: q.state_time = 0.0
+
 func stage_subject() -> void:
+	release_staged()
+	subject = null
+	runner = null
 	# The inner path (r ≈ 1.8 m) crosses right in front of the lens: its walkers step out of the
 	# lessons, except anyone a lesson places there on purpose.
 	for q in main.people:
@@ -407,8 +422,8 @@ func stage_subject() -> void:
 	match lesson:
 		2: subject = stand_person(1,SETUP[2].angle,4.0)
 		3: runner = stage_runner()
-		4: subject = walk_person(1,SETUP[4].angle-14.0,-1.0)
-		5: subject = stand_person(0,SETUP[5].angle,1.7)
+		4: subject = walk_person(1,SETUP[4].angle+16.0,-1.0)
+		5: subject = stand_person(0,SETUP[5].angle,2.3)
 		_: subject = null
 
 func stand_person(lane: int, theta: float, radius: float):
@@ -417,6 +432,7 @@ func stand_person(lane: int, theta: float, radius: float):
 	main.clear_sector([lane],[p],30.0)
 	main.reset_walker(p,lane,theta,1.0)
 	p.visible = true
+	p.set_meta("staged",true)
 	p.radius = radius
 	p.state = "DETENIDO"
 	p.state_time = 9999.0
@@ -432,6 +448,7 @@ func walk_person(lane: int, theta: float, direction: float):
 	main.reset_walker(p,lane,theta,direction)
 	p.visible = true
 	p.speed = .6
+	p.set_meta("staged",true)   # no bench, no stops: it keeps walking across the frame
 	return p
 
 func stage_runner():
@@ -453,6 +470,8 @@ func loop_runner() -> void:
 # Each step: time (s), subtitle index (or -1), action.
 func start_demo() -> void:
 	demo_time = 0.0
+	waiting_runner = null
+	waiting_subject = null
 	demo_next = 0
 	demo_done = false
 	demo_steps = []
@@ -472,14 +491,14 @@ func start_demo() -> void:
 			[0.3,1,"look_subject"],[1.5,-1,"af"],[2.0,-1,"n:min"],
 			[4.0,2,"hl:nitidez"],
 			[7.0,3,""],[9.0,-1,"shoot:f/1.8"],
-			[11.5,4,"hl:diafragma"],[12.0,-1,"nc:+1"],[12.7,-1,"nc:+1"],[13.4,-1,"nc:+1"],[14.1,-1,"nc:+1"],[14.8,-1,"nc:+1"],
+			[11.5,4,"hl:diafragma"],[12.0,-1,"nc:+1"],[12.6,-1,"nc:+1"],[13.2,-1,"nc:+1"],[13.8,-1,"nc:+1"],[14.4,-1,"nc:+1"],[15.0,-1,"nc:+1"],
 			[16.0,5,"hl:nitidez"],
 			[19.0,6,""],[20.0,-1,"shoot:f/11"],
 			[24.0,-1,"end"]]
 		3: demo_steps = [
-			[0.3,1,"hl:velocidad"],[0.8,-1,"t_set:30"],[1.6,-1,"cue_runner"],
+			[0.3,1,"hl:velocidad"],[0.8,-1,"t_set:30"],
 			[3.3,2,"shoot_runner:1/30"],
-			[7.5,3,"hl:velocidad"],[8.0,-1,"t_set:1000"],[9.6,-1,"cue_runner"],
+			[7.5,3,"hl:velocidad"],[8.0,-1,"t_set:1000"],
 			[11.3,4,"shoot_runner:1/1000"],
 			[15.5,5,"hl:velocidad"],
 			[19.5,-1,"end"]]
@@ -491,7 +510,7 @@ func start_demo() -> void:
 			[11.0,5,"frame_lead_eyes"],[13.5,-1,"shoot:tercios"],
 			[17.0,-1,"end"]]
 		5: demo_steps = [
-			[0.3,1,"frame:0.5:0.5"],
+			[0.1,-1,"freeze"],[0.3,1,"frame:0.5:0.35"],
 			[3.5,2,"shoot:28 mm"],
 			[7.5,3,"lens_tele"],
 			[11.0,4,"shoot:135 mm"],
@@ -501,6 +520,27 @@ func start_demo() -> void:
 
 func run_demo(dt: float) -> void:
 	if paused and lesson == 3: return
+	if waiting_runner != null:
+		waiting_time += dt
+		var off = 99.0
+		if runner: off = rad_to_deg(angle_difference(deg_to_rad(main.angle),deg_to_rad(runner.theta)))
+		# Shoot the moment one of the central AF points actually lands on the runner (AF puntual on
+		# that point), as a photographer pressing at the right instant would.
+		var on_runner = point_on(runner,16.0) if runner and absf(off) < 6.0 else -1
+		if on_runner >= 0 or waiting_time > 8.0:
+			if on_runner >= 0: main.finder.active = on_runner
+			demo_shoot(waiting_runner)
+			waiting_runner = null
+		return
+	if waiting_subject != null:
+		# A shot of the staged subject: wait until the framing has settled on it.
+		waiting_time += dt
+		var point = point_on(subject,6.0) if subject else -1
+		if (point >= 0 and waiting_time > .4) or waiting_time > 4.0:
+			if point >= 0: main.finder.active = point
+			demo_shoot(waiting_subject)
+			waiting_subject = null
+		return
 	demo_time += dt
 	while demo_next < demo_steps.size() and demo_time >= demo_steps[demo_next][0]:
 		var step: Array = demo_steps[demo_next]
@@ -541,19 +581,28 @@ func do_action(action: String) -> void:
 			main.apply_equipment()
 			main.focal = 135.0
 			if subject: subject.visible = false
+			set_scene_pause(false)
 			subject = stand_person(3,SETUP[5].angle,11.6)
-			frame_goal = {"who":subject,"x":.5,"y":.5} if subject else {}
+			main.clear_sector([1,2],[subject],40.0)
+			set_scene_pause(true)
+			frame_goal = {"who":subject,"x":.5,"y":.5,"snap":true} if subject else {}
 			main.refresh()
-		"cue_runner":
-			# Place the runner so it reaches the centre of the frame 1.7 s later.
-			if runner:
-				var lead = rad_to_deg(runner.speed*1.7/main.LANES[2])
-				main.reset_walker(runner,2,main.angle-lead,1.0)
-		"shoot": demo_shoot(parts[1] if parts.size() > 1 else "")
+		"freeze":
+			# A lesson about perspective, not motion: nobody crosses the line of sight.
+			main.clear_sector([1,2,3],[subject],40.0)
+			set_scene_pause(true)
+		"shoot":
+			if subject and lesson != 1:
+				waiting_subject = parts[1] if parts.size() > 1 else ""
+				waiting_time = 0.0
+			else: demo_shoot(parts[1] if parts.size() > 1 else "")
 		"shoot_runner":
-			if runner: frame_goal = {}
-			demo_shoot(parts[1] if parts.size() > 1 else "")
+			# Hold the timeline until the runner crosses the centre of the frame, then shoot.
+			waiting_runner = parts[1] if parts.size() > 1 else ""
+			waiting_time = 0.0
+			if runner: main.reset_walker(runner,2,main.angle-25.0,1.0)
 		"end":
+			if lesson == 5: set_scene_pause(false)
 			demo_done = true
 			highlight = ""
 			mark(lesson,"demo")
@@ -563,6 +612,18 @@ func do_action(action: String) -> void:
 		main.n_index = 0
 		expose_with_shutter()
 	main.refresh()
+
+# The AF point (centre first) whose ray lands on `who` with some margin on both sides, or -1.
+func point_on(who, margin: float) -> int:
+	for i in [4,1,7,3,5,0,2,6,8]:
+		var ok = true
+		for dx in [-margin,0.0,margin]:
+			var hit = main.point_hit(main.finder.points()[i]+Vector2(dx,0))
+			if hit.is_empty() or not hit.collider.has_meta("person") or hit.collider.get_meta("person") != who:
+				ok = false
+				break
+		if ok: return i
+	return -1
 
 func lead_x(p) -> float:
 	# Walking to the left of the frame → place on the right third, and vice versa.
@@ -738,11 +799,11 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 			elif tasks[0]: notes.append(lesson_text("pista_foto_no"))
 		5:
 			var fill = person_fill(e)
-			if e.f <= 35.0 and e.d < 3.0 and fill >= .45 and fill <= 1.15: tasks[0] = true
-			elif e.f <= 35.0 and e.d >= 3.0: notes.append(lesson_text("pista_cerca"))
-			if e.f >= 120.0 and e.d > 9.0 and fill >= .45 and fill <= 1.15: tasks[1] = true
+			if e.f <= 35.0 and e.d < 4.5 and fill >= .45 and fill <= 1.3: tasks[0] = true
+			elif e.f <= 35.0 and e.d >= 4.5: notes.append(lesson_text("pista_cerca"))
+			if e.f >= 120.0 and e.d > 9.0 and fill >= .45 and fill <= 1.3: tasks[1] = true
 			elif e.f >= 120.0 and e.d <= 9.0: notes.append(lesson_text("pista_lejos"))
-			if (e.f <= 35.0 or e.f >= 120.0) and (fill < .45 or fill > 1.15) and e.d < 40.0: notes.append(lesson_text("pista_tamano"))
+			if (e.f <= 35.0 or e.f >= 120.0) and (fill < .45 or fill > 1.3) and e.d < 40.0: notes.append(lesson_text("pista_tamano"))
 			if tasks[0] and tasks[1]: tasks[2] = true
 	complete_if_done()
 	update_panel()
@@ -795,6 +856,10 @@ func track_frame_goal(dt: float) -> void:
 	var err_x = atan2(local.x,-local.z)-atan(want_x)
 	var err_y = atan2(local.y,-local.z)-atan(want_y)
 	var gain = minf(1.0,dt*2.5)
+	if frame_goal.get("snap",false):
+		# Cut straight to the new subject (a lens change), then keep tracking smoothly.
+		gain = 1.0
+		frame_goal.snap = false
 	main.angle = fposmod(main.angle+rad_to_deg(err_x)*gain,360)
 	main.pitch = clampf(main.pitch+rad_to_deg(err_y)*gain,-40,40)
 	main.update_camera()
