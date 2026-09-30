@@ -53,7 +53,7 @@ func run() -> void:
 	await frames(1)
 	var latency = (Time.get_ticks_usec()-start_usec)/1000.0
 	check(game.angle != old_angle,"Mouse drag pans camera")
-	check(latency < 50,"Pan input under 50 ms")
+	check(latency < 50,"Pan input under 50 ms (%.1f ms)" % latency)
 	press.position = drag.position
 	press.pressed = false
 	Input.parse_input_event(press)
@@ -154,7 +154,9 @@ func run() -> void:
 	check(game.mode == "SUMMARY" and game.records.size() == 5,"Five-job session reaches summary")
 	await screenshot("resumen")
 	print("SESSION VIDEO MEMORY: %.2f MiB, textures %.2f, buffers %.2f, photo %s" % [Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED)/1048576.0,Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)/1048576.0,Performance.get_monitor(Performance.RENDER_BUFFER_MEM_USED)/1048576.0,game.current_photo.get_size()])
-	check(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) <= 60000000,"Session graphics memory below 60 MB with shadow atlas")
+	# Per-profile budget (docs/futuro/17 §3): 60 MB in gl_compatibility, 8 GiB for Ultra in Forward+.
+	var vram_limit = 8.0*1073741824.0 if RenderingServer.get_current_rendering_method() == "forward_plus" else 60000000.0
+	check(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) <= vram_limit,"Session graphics memory within the profile budget")
 	game.start_session(true)
 	game.begin_assignment()
 	check(game.night and game.mode == "SEARCH" and game.records.is_empty(),"Night restart resets session")
@@ -177,23 +179,39 @@ func run() -> void:
 	for i in 200: game.update_person(game.target,.1)
 	check(game.target.theta >= 0 and game.target.theta < 360 and game.target.visible,"Target remains in circular park")
 	# Graphics presets verification (docs/futuro/02, 2.8.4)
-	check(game.graphics_preset == "Ultra","Default graphics preset is Ultra")
+	# Every desktop profile runs in Forward+ with the hd scene; gl_compatibility (Android fallback)
+	# builds lo and never starts in Ultra (docs/futuro/17 §2.1).
+	var forward = RenderingServer.get_current_rendering_method() == "forward_plus"
+	check(forward or game.graphics_preset != "Ultra","Startup profile fits the renderer (%s)" % game.graphics_preset)
+	check(game.park.detail == ("hd" if forward else "lo"),"Park mesh detail follows the renderer")
+	game.apply_graphics_preset("Ultra")
 	check(game.park.sun.shadow_enabled and game.park.sun.directional_shadow_max_distance == 48.0,"Ultra activates extended soft filtered shadows")
 	check(game.park.environment.environment.tonemap_mode == Environment.TONE_MAPPER_ACES,"Ultra uses ACES tone mapper")
 	game.apply_graphics_preset("Bajo")
 	check(game.graphics_preset == "Bajo","Switched to Bajo preset")
-	check(not game.park.sun.shadow_enabled,"Bajo disables shadows for maximum performance")
-	check(not game.park.environment.environment.fog_enabled,"Bajo disables distance fog")
-	check(game.park.environment.environment.tonemap_mode == Environment.TONE_MAPPER_LINEAR,"Bajo uses linear tonemap")
+	# Lower profiles are performance subsets of Ultra: same tone curve, grading and haze.
+	var env = game.park.environment.environment
+	check(env.tonemap_mode == Environment.TONE_MAPPER_ACES and env.fog_enabled and env.adjustment_color_correction != null,"Bajo keeps Ultra's tone curve, haze and colour grading")
+	if forward:
+		check(not env.sdfgi_enabled and not env.ssao_enabled and not env.volumetric_fog_enabled,"Bajo drops SDFGI, SSAO and volumetric fog")
+		check(game.viewport.scaling_3d_scale < 1.0 and game.viewport.scaling_3d_mode == Viewport.SCALING_3D_MODE_FSR2,"Bajo renders fewer pixels, upscaled with FSR 2")
+		check(game.park.grass_nodes.is_empty() or game.park.grass_nodes[0].multimesh.visible_instance_count < game.park.grass_nodes[0].multimesh.instance_count,"Bajo thins the grass")
 	game.apply_graphics_preset("Ultra")
 	check(game.graphics_preset == "Ultra","Restored to Ultra preset")
 	check(game.park.sun.shadow_enabled and game.park.environment.environment.fog_enabled,"Ultra restores shadows and atmospheric fog")
 	# Merged park (docs/futuro/16): few surfaces, vertex colours with baked occlusion, smooth shading.
 	var park_surfaces = game.park.get_children().filter(func(n): return n is MeshInstance3D and n.mesh != null)
-	check(park_surfaces.size() <= 40,"Park merged into at most 40 surfaces (%d)" % park_surfaces.size())
+	# 36 sectors plus glass, bulbs and pond water; hd adds the 36 sectors of textured ground (docs/futuro/17).
+	var hd = game.park.detail == "hd"
+	var surface_limit = 80 if hd else 40
+	check(park_surfaces.size() <= surface_limit,"Park merged into at most %d surfaces (%d)" % [surface_limit,park_surfaces.size()])
 	var opaque_surfaces = park_surfaces.filter(func(n): return n.material_override == game.park.park_material)
-	check(opaque_surfaces.size() == park_surfaces.size()-2,"All opaque park surfaces share the vertex-colour material")
+	var own_materials = [game.park.glass_material,game.park.bulb_material,game.park.water_material,game.park.spray_material,game.park.windows_material]
+	var ground_surfaces = park_surfaces.filter(func(n): return n.material_override == game.park.ground_material_hd)
+	check(opaque_surfaces.size() + ground_surfaces.size() == park_surfaces.filter(func(n): return not n.material_override in own_materials).size(),"Opaque park surfaces share the vertex-colour material (ground: textured material in hd)")
+	check(ground_surfaces.is_empty() != hd,"Textured ground only in hd (%d surfaces)" % ground_surfaces.size())
 	check(game.park.park_material is StandardMaterial3D and game.park.park_material.vertex_color_use_as_albedo and game.park.park_material.next_pass == null,"Park keeps smooth shading without ink outline")
+	check(game.Person.mannequin_material().shader.resource_path.ends_with("mannequin_pbr.gdshader") and game.Person.mannequin_material().next_pass == null,"Mannequins: realistic material without outline in every profile")
 	var coloured = true
 	for node in opaque_surfaces:
 		var arrays = node.mesh.surface_get_arrays(0)
@@ -205,9 +223,12 @@ func run() -> void:
 	var labelled = game.park.find_children("*","StaticBody3D",true,false).filter(func(b): return b.has_meta("label"))
 	check(labelled.size() > 100,"Park colliders and labels survive the merge (%d)" % labelled.size())
 	game.apply_graphics_preset("Bajo")
-	check(game.viewport.screen_space_aa == Viewport.SCREEN_SPACE_AA_DISABLED,"Bajo disables FXAA")
+	check(game.viewport.screen_space_aa == Viewport.SCREEN_SPACE_AA_DISABLED,"Bajo adds no screen-space antialiasing pass")
 	game.apply_graphics_preset("Ultra")
-	check(game.viewport.screen_space_aa == Viewport.SCREEN_SPACE_AA_FXAA,"Ultra smooths edges with FXAA")
+	if RenderingServer.get_current_rendering_method() == "forward_plus":
+		check(game.viewport.msaa_3d == Viewport.MSAA_4X,"Ultra in Forward+ smooths edges with MSAA 4x")
+	else:
+		check(game.viewport.screen_space_aa == Viewport.SCREEN_SPACE_AA_FXAA,"Ultra smooths edges with FXAA")
 	game.park.set_time_of_day("day")
 	check(game.park.lamps.all(func(l): return not l.visible),"Lamps are hidden by day")
 	await frames(4)

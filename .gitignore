@@ -4,3 +4,4 @@ build/*
 !build/paparazzi-debug.apk
 *.log
 Godot*.exe
+override.cfg

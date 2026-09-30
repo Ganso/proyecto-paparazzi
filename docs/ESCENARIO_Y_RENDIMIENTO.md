@@ -1,6 +1,9 @@
 # Escenario Cilíndrico, Clima y Presupuestos de Rendimiento — Proyecto Paparazzi
 
-Este documento describe la arquitectura geométrica del parque procedural, la iluminación dinámica, el sistema meteorológico de nubes y los presupuestos estrictos de rendimiento documentados en [scripts/park.gd](../scripts/park.gd).
+Este documento describe la arquitectura geométrica del parque procedural, la iluminación dinámica, el sistema meteorológico de nubes y los presupuestos de rendimiento por perfil documentados en [scripts/park.gd](../scripts/park.gd).
+
+> [!IMPORTANT]
+> **Salto gráfico (2026-09-29/30, [futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md))**: el mobiliario, la vegetación, el quiosco, el estanque y las torres se generan con Blender por script (`tools/blender/build_park_assets.py`) en dos niveles de detalle: `hd` para Ultra (Forward+) y `lo` para Bajo, Medio y Alto. Los **colisionadores no cambian con el perfil**: siguen siendo las primitivas de siempre, sin malla visible, o se sacan de la malla `lo`. La peana de diorama se eliminó y el parque se abre a una pradera.
 
 ---
 
@@ -13,76 +16,59 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
 |                       ESTRUCTURA RADIAL DEL PARQUE                            |
 +-------------------------------------------------------------------------------+
   r = 0.0 m          [CÁMARA DEL JUGADOR] y = 1.60 m
-  r = 0.8 m          Farolas interiores de la plaza central (4 unidades)
+  r = 0.0 - 2.8 m    Plaza central de losas (textura en hd)
   r = 1.2 - 2.4 m    CARRIL 0: Paseo circular interior (3 viandantes)
-  r = 2.9 - 4.85 m   CARRIL 1: Plaza central y calzada principal (7 viandantes)
-  r = 4.85 m         4 Bancos urbanos orientados al centro (a 90°)
-  r = 5.55 m         Papeleras cilíndricas
-  r = 6.1 - 7.9 m    CARRIL 2: Calzada intermedia (6 viandantes)
+  r = 2.6 m          Farolas interiores (4 unidades), entre los carriles 0 y 1
+  r = 2.9 - 4.85 m   CARRIL 1: Paseo de asfalto (7 viandantes)
+  r = 4.85 m         4 Bancos de listones con bastidores de fundición, orientados al centro
+  r = 5.55 m         Papeleras de chapa
+  r = 6.1 - 7.9 m    CARRIL 2: Paseo de adoquín (6 viandantes)
   r = 8.6 m          Farolas exteriores (8 unidades)
   r = 9.2 m          Arbustos interiores decorativos (70 unidades)
-  r = 9.7 m          Jardineras con flores
-  r = 10.6 - 12.4 m  CARRIL 3: Calzada perimetral de tierra (5 viandantes)
-  r = 12.8 m         Verja perimetral de barrotes (72 postes)
+  r = 9.7 m          Jardineras de tablones con flores
+  r = 10.6 - 12.4 m  CARRIL 3: Paseo perimetral de grava (5 viandantes)
+  r = 2.8 ... 12.5   Bordillos de piedra entre paseos y césped (hd)
+  r = 12.8 m         Verja de lanzas con pilares de piedra cada 30°; abierta ante quiosco y estanque
   ------------------ LÍMITE DE LA ZONA JUGABLE ---------------------------------
-  r = 13.2 - 13.8 m  Masa densa de setos y arbustos perimetrales (84 arbustos)
-  r = 14.2 m         Fila primaria de arbolado (30 árboles)
-  r = 15.0 - 16.4 m  Sotobosque y arbustos bajo copas (60 arbustos)
-  r = 15.2 - 16.2 m  Fila secundaria de árboles intercalados (36 árboles)
-  r = 17.8 - 19.2 m  Peana perimetral de caoba con moldura de diorama y placa de latón (Escala 1:18)
-  r = 21.0 - 27.0 m  Bloques de edificios del horizonte urbano (36 edificios)
-  r = 45.0 m         Límite exterior del césped
+  r = 13.4 m         Seto perimetral (84 arbustos, sin arbustos en las dos aperturas)
+  r = 14.2 m         Arbolado primario (30 posiciones, sin árboles en las dos aperturas)
+  r = 18.5 - 36 m    PRADERA: 44 árboles sueltos y matas; quiosco (120°, 24 m) y estanque (245°, 21 m)
+  r = 39 - 44 m      Franja de arbolado lejano (60 árboles)
+  r = 46 - 52 m      Segunda franja (54 árboles) y matas de pradera: solo se dibujan en hd
+  r = 50 - 200 m     Calles de la ciudad (asfalto)
+  r = 110 - 160 m    Horizonte de 30 torres escalonadas con ventanas (iluminadas de noche en hd)
 ```
 
----
+## 2. Vegetación, Pradera y Agua
 
-## 2. Masa Vegetal Densa y Especies Botánicas con Variación Procedural
+### 2.1 Árboles y arbustos de Blender
+- **4 especies por gramática** (`SPECIES` en `tools/blender/build_park_assets.py`), con **4 variantes** cada una: plátano (copa ancha), tilo (copa globosa), ciprés (huso de racimos apilados) y arce otoñal (oro y ámbar). Fuste curvo con cuello radicular, ramas en dos niveles (el segundo solo en `hd`) y racimos de follaje en las puntas: icosferas deformadas por ruido, más claras arriba y hacia fuera, con la oclusión ambiental horneada por Cycles.
+- `park.gd::build_tree()` conserva la variación por semilla (giro, inclinación y escala) y elige la variante con `semilla % 4`. Los **colisionadores** (tronco y copa, etiquetas `un_arbol` y `una_copa_de_arbol`) salen de la envolvente convexa de la malla `lo`, idéntica en todos los perfiles.
+- **Arbustos**: 6 variantes de radio 1, escaladas al elipsoide de siempre (`park.gd::bush()`), cuyo colisionador se mantiene.
+- Triángulos por árbol: ~2.500–4.000 en `hd` y ~150–300 en `lo`.
 
-Para cerrar visualmente el horizonte y dotar al diorama de una riqueza orgánica viva y estilizada:
+### 2.2 Pradera exterior (fuera de la zona jugable)
+- **Quiosco de música** octogonal (Ø 4,6 m): gradas, columnas torneadas, barandilla de balaustres, tejado con nervios y remate. De noche y en hora dorada se encienden una guirnalda de bombillas bajo el alero y un farol central (`meadow_lights`).
+- **Estanque** elíptico (7 × 4,6 m) con borde bajo de piedra y **fuente** de dos tazas. Tres farolas detrás lo iluminan en hora dorada y de noche.
+- **Agua animada**: `shaders/park_water.gdshader` (ondulación de ruido que se desplaza, ondas concéntricas donde cae la cortina, espuma y color según el ángulo; en Ultra refleja por SSR) y `shaders/park_spray.gdshader` (surtidor que sube y cortinas que caen como hilos translúcidos con destellos).
+- Las luces de la pradera no están en `lamps`: `illumination_ev()` no las ve y, a más de 20 m de los carriles, tampoco iluminan a los viandantes.
+- **Verja abierta** ante el quiosco y el estanque: faltan tres tramos (±7,5°) y un pilar marca cada lado.
+- **Torres** (6 estilos, `TOWER_STYLES`): volúmenes escalonados con remate; en `hd`, ventanas en `shaders/park_windows.gdshader`, que enciende de noche una de cada tres.
 
-### 2.1 Catálogo de Especies Botánicas Estilizadas (`build_tree`)
-El parque implementa **4 especies botánicas** diferenciadas estructural y cromáticamente:
-
-1. **Especie 0: Roble / Plátano de Sombra (*Quercus / Platanus*)**:
-   - **Estructura**: Fuste robusto con ensanchamiento/cuello radicular basal ($r = 0.20\text{ m}$), bifurcación en 2 ramas secundarias oblicuas divergentes.
-   - **Follaje**: Cúpula central ancha semiesférica y 4 racimos esféricos perimetrales distribuidos en corona tridimensional 3D (rompiendo cualquier alineación plana).
-   - **Paleta**: Verde bosque denso y frondoso (`#486b33`, `#577a3d`, `#3d5a2a`).
-2. **Especie 1: Ciprés / Álamo Columnar (*Cupressus / Populus nigra*)**:
-   - **Estructura**: Fuste estilizado vertical arropado por el follaje.
-   - **Follaje**: Silueta columnar/fusiforme estrecha escalonada en 4 niveles ovoides superpuestos rematados en ápice cónico sutil.
-   - **Paleta**: Verde ciprés profundo azulado (`#274434`, `#315340`, `#3b614b`).
-3. **Especie 2: Tilo / Castaño (*Tilia / Castanea*)**:
-   - **Estructura**: Tronco limpio y equilibrado con cuello visible ($r = 0.18\text{ m}$).
-   - **Follaje**: Copa globosa compacta (estilo nube diorama suave) compuesta por un domo central superior y 3 racimos esféricos densos en tríada.
-   - **Paleta**: Verde tilo/manzana luminoso y fresco (`#6fa040`, `#608e36`, `#517a2d`).
-4. **Especie 3: Arce Dorado Otoñal (*Acer*)**:
-   - **Estructura**: Tronco esbelto asimétrico con una rama lateral extendida que sostiene una masa de follaje suspendida más baja.
-   - **Follaje**: 3 nubes escalonadas horizontales que generan una silueta asimétrica de inspiración japonesa y señorial.
-   - **Paleta**: Gradiente otoñal cálido de ámbar, oro y siena tostada (`#c48d35`, `#af7629`, `#975d20`).
-
-### 2.2 Sistema de Variación Procedural Individual
-Cada espécimen vegetal se genera mediante una semilla pseudoaleatoria única y determinista (`seed`), garantizando que no existan dos árboles idénticos:
-- **Rotación azimutal libre en 360° (`rotation.y in [0, 2*PI]`)**: Elimina la repetición angular desde cualquier ángulo de visión del fotógrafo.
-- **Inclinación orgánica del fuste (`rotation.x, rotation.z in [-2 deg, +2 deg]`)**: Simula el fototropismo y la asimetría natural del crecimiento en exteriores.
-- **Variación de escala y esbeltez (+-15%)**: Modulación independiente de altura y anchura por espécimen.
-- **Jitter tridimensional en racimos de copa**: Los centros, radios y alturas de las masas esféricas se perturban sutilmente en 3D.
-- **Micro-modulación cromática**: Las copas reciben variaciones tonales según la altura de la masa (luces superiores más claras y masas bajas más densas).
-
-### 2.3 Estratificación en Anillos del Paisaje
-1. **Seto Perimetral Bajo ($r \approx 13.4\text{ m}$)**:
-   - 84 arbustos facetados (`SphereMesh` de 7 segmentos y 2 anillos, $r \in [0.55, 0.95]\text{ m}$) solapados que ocultan la base de la verja.
-2. **Arbolado Primario ($r = 14.2\text{ m}$)**:
-   - 30 árboles botánicos principales distribuidos cada $12^\circ$.
-3. **Arbolado Secundario Intercalado ($r \approx 15.6\text{ m}$)**:
-   - 36 árboles botánicos adicionales de mayor escala ($+15\%$), desfasados $9^\circ$ para sellar los huecos visuales con un telón boscoso denso.
-4. **Sotobosque de Conexión ($r \approx 15.0\text{ m}$)**:
-   - 60 arbustos medianos bajo las copas para unificar visualmente el suelo con las ramas.
+### 2.3 Suelo y césped (hd)
+- **Suelo texturizado** (`shaders/park_ground.gdshader`): losas en la plaza, asfalto, adoquín y grava en los paseos y césped, con texturas periódicas generadas por `tools/texturas/build_textures.py` (color, normal y ORM de 2048 px, `Texture2DArray`), mapeadas en coordenadas del mundo y con una segunda muestra girada para romper la repetición. El alfa del color de vértice elige la capa y el RGB conserva la oclusión de contacto.
+- **Bordillos de piedra** biselados (6 cm) en los bordes de los paseos (`park.gd::curb()`).
+- **Hierba instanciada** (`park.gd::build_grass()`, `shaders/park_grass.gdshader`): matas de cinco briznas de 6–14 cm en `MultiMeshInstance3D` por sector, más densas cerca (110 matas/m² hasta 11 m y 4 más allá de 35 m), fuera de paseos, estanque y quiosco. Se mecen con ráfagas que recorren el parque. Por debajo de 0,3 m y sin colisionador (regla de [02 §10.3](futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md)).
+- En `lo` el suelo mantiene los colores de vértice planos y no hay hierba instanciada.
 
 ---
 
 ## 3. Iluminación y Clima Procedural
 
 ### 3.1 Iluminación y Horas del Día: Día, Hora Dorada y Noche (`park.set_time_of_day()`)
+- **Perfiles**: los cuatro de escritorio usan Forward+ y comparten aspecto; Alto, Medio y Bajo solo quitan coste (tabla en [futuro/17 §2.4](futuro/17_SALTO_GRAFICO_ULTRA.md)). Bajo, sin SDFGI, calibra la luz ambiente por hora (`NO_GI_AMBIENT`) para mantener la exposición de Ultra.
+- **Ultra (Forward+)**: SDFGI (energía 0,7 y rebote 0,25, para que el césped no tiña de verde las superficies claras), SSAO, SSIL, SSR, niebla volumétrica ligera (densidad 0,0022), glow (umbral 1,4), sombras del sol de 4096 con penumbra (`light_angular_distance`) y MSAA 4×, todo en `park.gd::apply_forward_effects()`. Los colores de vértice se leen como sRGB (en los perfiles `lo` se siguen usando como lineales, el aspecto para el que está ajustada su luz).
+- **Gradación de color por hora** (Alto y Ultra, `park.gd::grading_lut()`): LUT 3D de 33³ generada por código y aplicada en `Environment.adjustment_color_correction`. Día: sombras frías y luces cálidas; hora dorada: sombras verde azuladas y violáceas con luces ámbar; noche: sombras azules, luz de farola cálida y algo menos de saturación.
 - **Día**:
   - Sol cenital (`DirectionalLight3D`, pitch $-72^\circ$): `light_energy = 1.4`, color cálido `fff0d7`.
   - Sombras dinámicas ortogonales activadas con atlas de 2048, nítidas y pegadas a los pies: `shadow_blur` 0,6–0,8 y `shadow_normal_bias` 0,6–0,7 según el perfil (`apply_preset_values()`).
@@ -115,7 +101,7 @@ El parque cuenta con un sistema de nubes procedurales cúbicas de baja altura:
 ### 3.3 Perspectiva Aérea y Niebla de Profundidad (Atmospheric Depth Fog)
 Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa vegetal de fondo:
 - **Niebla de profundidad moderada (`Environment.fog_mode = FOG_MODE_DEPTH`)**, fijada solo por el perfil gráfico (`park.gd::apply_preset_values()`):
-  - Alto y Ultra: de 8 a 40 m; Medio: de 9 a 48 m; Bajo: sin niebla. `fog_sky_affect = 0.3` para que el cielo siga azul.
+  - Con la pradera abierta: Ultra de 30 a 220 m (curva 1,4), Alto de 25 a 140 m y Medio de 25 a 150 m; de noche, de 15 a 120 m. Bajo, sin niebla. Sin los objetos de Blender se usan los valores anteriores (de 8 a 40 m). `fog_sky_affect = 0.3` para que el cielo siga azul.
   - Los carriles conservan contraste y color casi íntegros, y el arbolado y el skyline ganan bruma. Antes era un muro de 7 a 20 m que blanqueaba el parque desde el carril 2; una versión casi sin niebla (4–110 m) dejaba la imagen plana.
   - Tono del horizonte: `cddcdd` de día, `e58b3e` en hora dorada y `192139` de noche (de noche, bruma de 4 a 34 m).
 - **Mapeo de tonos HDR / ACES (`tonemap_mode = TONE_MAPPER_ACES`, `tonemap_white = 1.4` y ajustes de contraste)**: Curva cinematográfica de compresión de altas luces.
@@ -125,7 +111,10 @@ Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa 
 
 ## 4. Parque Fusionado y Oclusión Horneada (`merge_static_meshes`)
 
-Implementado en el paso 1 de la hoja de ruta ([futuro/16](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que detalla parámetros, resultados y comparativas.
+Implementado en el paso 1 de la hoja de ruta ([futuro/16](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que detalla parámetros, resultados y comparativas. Desde el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)):
+- Los objetos de Blender entran en la fusión con su color y oclusión ya horneados (`meta baked`); `ParkAssets` (`scripts/park_assets.gd`) lee los `.glb` en tiempo de ejecución con `GLTFDocument` y convierte solo el nivel de detalle pedido.
+- Materiales propios fuera de los sectores: vidrio, bombillas, agua, agua en movimiento y ventanas. En `hd` el suelo forma 36 sectores más con su material texturizado (≤ 80 superficies en total).
+- Las primitivas etiquetadas de siempre se crean en modo `collider_only`: conservan su `StaticBody3D` y no dibujan nada.
 - **Fusión**: al arrancar, los props opacos (suelo, verjas, farolas, bancos, jardineras, edificios y los **280 elementos vegetales**) se transforman a coordenadas de mundo y se combinan en **36 superficies** (12 sectores de 30° × 3 bandas radiales: 0–9, 9–17 y 17–45 m), que conservan el recorte por frustum. El vidrio y las bombillas de las farolas mantienen su material: **38 superficies en total** (antes 692).
 - **Material**: un único `StandardMaterial3D` con `vertex_color_use_as_albedo` (`park.gd::vertex_color_material()`), con el mismo sombreado suave de antes: el parque no lleva toon ni contorno, que son propios de los maniquíes.
 - **Color**: el albedo de cada prop se escribe en `ARRAY_COLOR` en sRGB (el motor lo convierte, igual que con los maniquíes), multiplicado por la **oclusión horneada**: pie de los objetos (×0,72 a ras de suelo), volumen de copas y arbustos (caras hacia el tronco o hacia abajo, hasta ×0,72) y **contacto en el suelo** bajo cada prop bajo (hasta ×0,55, `ground_occlusion()` con una rejilla de oclusores de 3 m). Para ello el suelo está subdividido (120 segmentos, pasos de 0,6 m hasta 19 m) e indexado.
@@ -136,13 +125,14 @@ Implementado en el paso 1 de la hoja de ruta ([futuro/16](futuro/16_PARQUE_ILUST
 
 ## 5. Presupuestos y Rendimiento (Invariantes de Diseño)
 
-Límites actuales, que son los de los perfiles Bajo y Medio. Los presupuestos ampliados de Alto y Ultra, y las reglas para que ningún perfil altere la puntuación, están en [futuro/02 §10](futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md).
+Límites por nivel de detalle ([futuro/17 §3](futuro/17_SALTO_GRAFICO_ULTRA.md)). El parque `lo` es común a Bajo, Medio y Alto, así que cumple el presupuesto móvil. Las reglas para que ningún perfil altere la puntuación están en [futuro/02 §10.3](futuro/02_ESTILO_VISUAL_Y_POLIGONOS.md) y [futuro/17 §2.3](futuro/17_SALTO_GRAFICO_ULTRA.md).
 
-| Métrica | Límite | Cómo se verifica |
-|---|:---:|---|
-| **Triángulos en escena** | $\le 100.000$ | `--smoke-test` |
-| **Triángulos por viandante** | $\le 1.900$ | `tests/test_art.gd` |
-| **Memoria de vídeo (VRAM)** | $< 60\text{ MiB}$ | `tests/test_game.gd` |
+| Métrica | `lo` (Bajo, Medio, Alto) | `hd` (Ultra, Forward+) | Cómo se verifica |
+|---|:---:|:---:|---|
+| **Triángulos en escena** | $\le 100.000$ | $\le 5.000.000$ | `--smoke-test` |
+| **Triángulos por viandante** | $\le 1.900$ | $\le 8.000$ | `tests/test_art.gd` (`lo`), `--smoke-test` (`hd`) |
+| **Memoria de vídeo (VRAM)** | $< 60\text{ MB}$ | $< 8\text{ GiB}$ | `tests/test_game.gd` |
+| **Resolución del visor 3D** | 1280 × 720 | Nativa de la ventana | `main.gd::update_render_resolution()` |
 | **Draw calls** | Día ≤ 300 en el visor (38 superficies de parque + 2 por viandante + pases de sombra del sol). De noche depende de las farolas con sombra del perfil | `--metrics` imprime `draw_calls`; `test_game.gd` impone el límite de día y comprueba las sombras de farola por perfil |
 | **Tiempo de fotograma** | Objetivo 60 FPS | `godot-4 --path . -- --metrics` imprime mediana, p95 y máximo; no hay umbral automatizado |
 | **Relación de aspecto** | 16:9 estricto ($1280 \times 720$) | `project.godot` |

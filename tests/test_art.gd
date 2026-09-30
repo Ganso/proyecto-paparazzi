@@ -133,10 +133,11 @@ func garment_checks(casting) -> void:
 	root.add_child(mannequin)
 	mannequin.setup({"profile":3,"upper":0,"lower":2,"hair":0,"skin":"oscura","hair_color":"moreno","upper_color":"rojo","lower_color":"vaquero","accessory":0,"accessory_color":"rojo","runner":false},casting.catalog,5)
 	var material = mannequin.mesh.surface_get_material(0)
-	check(material is ShaderMaterial and material.shader.resource_path.ends_with("cel_shading.gdshader"),"Mannequins use the toon shader")
-	check(material.next_pass is ShaderMaterial and material.next_pass.shader.resource_path.ends_with("cel_outline.gdshader"),"Toon material carries the ink outline pass")
-	var outline_code = material.next_pass.shader.code
-	check("tint_strength" in outline_code and "depth_bias" in outline_code,"Outline shader includes harmonic tinting and depth bias")
+	# Realistic varnished wood and cloth, without ink outline (docs/futuro/17 fase 5, 30-09-2026).
+	check(material is ShaderMaterial and material.shader.resource_path.ends_with("mannequin_pbr.gdshader"),"Mannequins use the realistic wood and cloth shader")
+	check(material.next_pass == null,"No ink outline pass")
+	var arrays_uv = mannequin.mesh.surface_get_arrays(0)
+	check(arrays_uv[Mesh.ARRAY_TEX_UV] != null and arrays_uv[Mesh.ARRAY_TEX_UV2] != null,"Mannequins carry bone-space UVs for the procedural patterns")
 	check(material == Person.mannequin_material(),"One shared mannequin material")
 	var wood = Color(casting.catalog.tonos_madera[casting.catalog.madera_por_tono["oscura"]])
 	var body_colours = mannequin.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]

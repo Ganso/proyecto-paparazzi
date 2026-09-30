@@ -3,7 +3,21 @@ const Person = preload("res://scripts/person.gd")
 const Cast = preload("res://scripts/casting.gd")
 func _initialize() -> void:
 	call_deferred("run")
+# --hd: Ultra's mannequins (data/piezas_hd and procedural textures, docs/futuro/17 fase 5).
+# --zoom=<m>: height of the orthographic frame (2.6 shows the six); --x=<m>: frame centre.
 func run() -> void:
+	var hd = "--hd" in OS.get_cmdline_user_args()
+	var frame = 2.6
+	var centre = 0.0
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--zoom="): frame = float(arg.get_slice("=",1))
+		if arg.begins_with("--x="): centre = float(arg.get_slice("=",1))
+	if hd:
+		Person.detail = "hd"
+		var material = Person.mannequin_material()
+		material.set_shader_parameter("textured",true)
+		material.set_shader_parameter("linear_colors",true)
+		material.set_shader_parameter("varnish_specular",.22)
 	var world = Node3D.new()
 	root.add_child(world)
 	var env = WorldEnvironment.new()
@@ -29,10 +43,11 @@ func run() -> void:
 	world.add_child(ground)
 	var camera = Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 2.6
-	camera.position = Vector3(0,1.85,-6)
+	camera.size = frame
+	var look_y = .88 if frame >= 2.0 else 1.0+frame*.1
+	camera.position = Vector3(centre,look_y+.97,-6)
 	world.add_child(camera)
-	camera.look_at(Vector3(0,.88,0))
+	camera.look_at(Vector3(centre,look_y,0))
 	camera.current = true
 	var cast = Cast.new()
 	var styles = [[0,2,0,0,"burdeos","vaquero","castaño"],[1,1,1,3,"beige","rojo","pelirrojo"],[2,3,0,4,"negro","vaquero","moreno"],[3,0,2,1,"rojo","vaquero","castaño"],[1,0,3,2,"gris","azul marino","castaño"],[0,1,0,5,"verde","beige","moreno"]]

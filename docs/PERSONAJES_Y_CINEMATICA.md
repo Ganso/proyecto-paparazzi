@@ -96,6 +96,26 @@ Cada personaje combina múltiples prendas (torso, pantalones/falda, peinado, cal
 
 ---
 
+## 3.bis Maniquíes Realistas: Nivel de Detalle `hd` y Texturas Procedurales
+
+Añadido en el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md), fase 5). **Sustituye al estilo toon con contorno** de las secciones anteriores: desde el 30-09-2026 todos los perfiles usan `shaders/mannequin_pbr.gdshader` sin contorno de tinta (`Person.OUTLINE = false`; `cel_shading.gdshader` y `cel_outline.gdshader` se conservan, sin uso). En escritorio (Forward+) la malla es `hd` (`Person.detail = "hd"`); en Android, la base.
+
+- **Malla**: `data/piezas_hd/`, generada con `python3 tools/build_catalog.py --lod hd`. Mismas piezas, huesos y zonas de color, con 2,25 veces más lados por sección (de 8 a 18). Las rótulas (`ellipsoid`) pasan a 15–20 lados y 7–10 anillos, y los segmentos a 14 lados. Máximo en escena: ~6.000 triángulos por maniquí (límite de Ultra: 8.000).
+- **Colisionadores**: `Person.setup()` hace dos pasadas. `collision` construye los colisionadores con las piezas base y `visual` dibuja las `hd` sin colisionador. Los rayos de oclusión, el AF y la puntuación son idénticos en todos los perfiles.
+- **Sombreado realista** (`shaders/mannequin_pbr.gdshader`, decisión del usuario del 30-09-2026): iluminación física estándar (sombras, iluminación global y reflejos como el resto de la escena). La madera lleva barniz (`CLEARCOAT`) y la tela es mate con un brillo de borde (`RIM`) que imita la pelusa. Sin contorno: su casco invertido producía píxeles NaN que el glow convertía en destellos ([futuro/17 §2.5](futuro/17_SALTO_GRAFICO_ULTRA.md)).
+- **Texturas procedurales** (`shaders/mannequin_patterns.gdshaderinc`; activas en todos los perfiles salvo Bajo):
+  - Cada vértice lleva su posición en el espacio de su hueso (`UV`, `UV2.x`) y `UV2.y = zona × 100 + hueso`: el dibujo va pegado a la pieza al andar y cambia de pieza a pieza.
+  - **Madera** (zona `piel`): anillos de crecimiento alrededor del eje del miembro, deformados por ruido, y fibras finas. Aspecto torneado.
+  - **Punto** (`tela_a`: camisetas y chaquetas): bucles de ~3 mm con pelusa y moteado.
+  - **Sarga** (`tela_b`: pantalones y faldas): costillas diagonales tipo vaquero con desgaste.
+  - **Pelo**: mechones que caen desde la coronilla.
+  - El dibujo **solo tiñe el albedo**: una primera versión inclinaba la normal para dar relieve y producía destellos (píxeles que saltaban de banda o captaban el brillo de un fotograma a otro). Cada zona desvanece por separado sus rasgos gruesos y finos antes de que un píxel cubra medio periodo, así que nada más fino que unos dos píxeles llega a dibujarse.
+- **Color**: en Ultra los colores de vértice se leen como sRGB, el glow solo actúa por encima de 2,2 (farolas y bombillas; antes encendía los pequeños brillos del barniz de forma intermitente) y el grosor del contorno se escala con la resolución (`main.gd::render_factor`).
+- **Ética**: las texturas no añaden rasgos nombrables; el acabado de madera sigue fuera de los predicados.
+- **Vista previa**: `~/bin/godot-4-fp --path . --rendering-method forward_plus --script tools/preview_people.gd -- --hd --zoom=1.1 --output=/tmp/maniquies.png`.
+
+---
+
 ## 4. Cinemática Inversa y Locomoción Analítica (`gait.gd`)
 
 El archivo [scripts/gait.gd](../scripts/gait.gd) implementa un modelo de cinemática analítica en tiempo real para las extremidades inferiores.

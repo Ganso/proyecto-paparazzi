@@ -699,6 +699,9 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 
 ### 10.2 Tabla de perfiles objetivo
 
+> [!NOTE]
+> **Actualización (30-09-2026)**: el salto gráfico ([17](17_SALTO_GRAFICO_ULTRA.md)) implementó Ultra en Forward+ con límites propios para la GPU de desarrollo: **≤ 5.000.000 triángulos, ≤ 8.000 por maniquí y < 8 GiB de VRAM**, a resolución nativa. Alto sigue en `gl_compatibility` y comparte con Bajo y Medio el parque `lo` (≤ 100.000 triángulos). Donde esta tabla difiera, manda [17 §3](17_SALTO_GRAFICO_ULTRA.md).
+
 | Parámetro | Bajo | Medio | Alto | Ultra |
 |---|---|---|---|---|
 | **Plataforma** | Móviles de entrada | Móviles de gama media-alta y tablets (**por defecto en móvil**) | PC con gráfica integrada o dedicada modesta, Steam Deck (**por defecto en escritorio**) | PC con GPU dedicada potente (opcional, requiere reinicio) |

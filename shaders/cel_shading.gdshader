@@ -13,11 +13,27 @@ uniform float lit_tone : hint_range(0.0, 1.0) = 0.85;
 uniform float mid_tone : hint_range(0.0, 1.0) = 0.5;
 uniform float varnish_specular : hint_range(0.0, 1.0) = 0.40;
 uniform float rim_intensity : hint_range(0.0, 1.0) = 0.20;
+// Vertex colours are sRGB values. The mobile profiles use them as linear (their lighting is tuned
+// to that paler look); Ultra linearises them for correct saturation (docs/futuro/17).
+uniform bool linear_colors = false;
+// Ultra's hd mannequins (docs/futuro/17 fase 5): procedural wood grain, knit, denim twill and hair
+// strands. UV/UV2 carry the position in the bone's own space and UV2.y = zone * 100 + bone.
+uniform bool textured = false;
+uniform float texture_strength : hint_range(0.0, 1.0) = 1.0;
+
+#include "res://shaders/mannequin_patterns.gdshaderinc"
 
 void fragment() {
-	ALBEDO = COLOR.rgb;
+	// Thin pieces seen edge-on (hat brims) can interpolate a zero normal: normalising it gave NaN
+	// lighting, one pixel that the glow blew up into a white flash. Fall back to facing the camera.
+	NORMAL = dot(NORMAL, NORMAL) > 1e-8 ? normalize(NORMAL) : VIEW;
+	ALBEDO = linear_colors ? pow(COLOR.rgb, vec3(2.2)) : COLOR.rgb;
 	ROUGHNESS = 0.35;
 	SPECULAR = 0.5;
+	if (textured) {
+		// Colour only: tilting the normal made single pixels jump between toon bands.
+		ALBEDO = textured_albedo(ALBEDO, texture_strength);
+	}
 }
 
 void light() {

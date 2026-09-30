@@ -31,6 +31,15 @@ var stride = 1.461
 var joint = .045
 var hip_y = .82
 var colliders = {}
+# Mesh detail (docs/futuro/17 fase 5): "hd" in Forward+ Ultra draws data/piezas_hd/ and rounder
+# joints, but the colliders are always built from the base pieces, so scoring never changes.
+static var detail = "lo"
+# Build pass: "both" (base detail), "collision" (base pieces, no mesh) or "visual" (hd, no colliders).
+var build_pass = "both"
+# Colour zone of the shape being built; in hd it selects the procedural texture of the toon shader
+# (wood, knit, twill, hair) through UV2 (docs/futuro/17 fase 5).
+var current_zone = "piel"
+const ZONE_TEXTURES = {"piel":0,"tela_a":1,"tela_b":2,"pelo":3}
 var rng = RandomNumberGenerator.new()
 var poi = -1
 var bench_index = -1
@@ -67,10 +76,16 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 		"calzado":Color(catalog.tonos_calzado[shoe_color(t,catalog)])
 	}
 	var slots = {"cuerpo":0,"torso":t.upper,"piernas":t.lower,"cabeza":t.hair,"accesorio":t.get("accessory",0)}
-	for piece in profile.piezas:
-		if piece.indice == slots[piece.ranura]:
-			var resource: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(piece.recurso))
-			for shape in resource.geometry: build_shape(shape,colors)
+	var passes = ["both"] if detail != "hd" else ["collision","visual"]
+	for pass_name in passes:
+		build_pass = pass_name
+		for piece in profile.piezas:
+			if piece.indice == slots[piece.ranura]:
+				var path: String = piece.recurso
+				if pass_name == "visual": path = path.replace("res://data/piezas/","res://data/piezas_hd/")
+				var resource: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+				for shape in resource.geometry: build_shape(shape,colors)
+	build_pass = "both"
 
 	finish_mesh()
 	gait = preload("res://scripts/gait.gd").new(self)
@@ -122,6 +137,10 @@ func ellipsoid(id: String, pos: Vector3, size: Vector3, color: Color) -> void:
 	primitive.radial_segments = 7 if id == "cabeza" else 8 if id.begins_with("brazo.") else 6
 	# Shoulders get an extra ring: with two they end in a peak above the sleeve.
 	primitive.rings = 3 if id.begins_with("brazo.") else 2
+	if build_pass == "visual":
+		# Round ball joints in hd: 16–20 sides and 8 rings instead of 6–8 and 2–3.
+		primitive.radial_segments = primitive.radial_segments*5/2
+		primitive.rings = primitive.rings*3+1
 	append_primitive(primitive,id,Transform3D(Basis.from_scale(size),pos),color)
 
 func box(id: String, pos: Vector3, size: Vector3, color: Color) -> void:
@@ -134,12 +153,13 @@ func segment(id: String, a: Vector3, b: Vector3, ra: float, rb: float, color: Co
 	primitive.bottom_radius = ra
 	primitive.top_radius = rb
 	primitive.height = a.distance_to(b)
-	primitive.radial_segments = 6
+	primitive.radial_segments = 14 if build_pass == "visual" else 6
 	primitive.rings = 1
 	var basis = Basis(Quaternion(Vector3.UP,(b-a).normalized()))
 	append_primitive(primitive,id,Transform3D(basis,(a+b)*.5),color)
 
 func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color, with_collision = true) -> void:
+	if build_pass == "visual": with_collision = false
 	if with_collision and not colliders.has(id):
 		var attachment = BoneAttachment3D.new()
 		attachment.bone_name = id
@@ -157,14 +177,23 @@ func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color
 		shape.points = collision_points
 		collision.shape = shape
 		colliders[id].add_child(collision)
-	var key = color.to_html()
-	if not batches.has(key): batches[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"i":PackedInt32Array(),"b":PackedInt32Array(),"w":PackedFloat32Array(),"color":color}
+	if build_pass == "collision": return
+	var key = color.to_html()+current_zone
+	if not batches.has(key): batches[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"i":PackedInt32Array(),"b":PackedInt32Array(),"w":PackedFloat32Array(),"color":color,"u":PackedVector2Array(),"u2":PackedVector2Array()}
 	var batch: Dictionary = batches[key]
 	var arrays = primitive.surface_get_arrays(0)
 	var offset: int = batch.v.size()
 	var transform: Transform3D = rests[bones[id]]*tr
 	var normal_matrix = transform.basis.inverse().transposed()
+	# UVs for the procedural patterns in every detail level; the profile decides if they are drawn.
+	var textured = true
+	var zone_code = ZONE_TEXTURES.get(current_zone,4)*100+bones[id]
 	for j in arrays[Mesh.ARRAY_VERTEX].size():
+		if textured:
+			# Position in the bone's own space: the texture sticks to the piece while it moves.
+			var local = tr*arrays[Mesh.ARRAY_VERTEX][j]
+			batch.u.append(Vector2(local.x,local.y))
+			batch.u2.append(Vector2(local.z,zone_code))
 		batch.v.append(transform*arrays[Mesh.ARRAY_VERTEX][j])
 		batch.n.append((normal_matrix*arrays[Mesh.ARRAY_NORMAL][j]).normalized())
 		batch.b.append_array(PackedInt32Array([bones[id],0,0,0]))
@@ -182,13 +211,20 @@ func occlusion(v: Vector3, n: Vector3) -> float:
 
 # Toon shading plus ink outline (next_pass), shared by every person: one material, two passes.
 static var shared_material: ShaderMaterial
+const OUTLINE = false
+
 static func mannequin_material() -> ShaderMaterial:
 	if shared_material == null:
 		shared_material = ShaderMaterial.new()
-		shared_material.shader = preload("res://shaders/cel_shading.gdshader")
-		var outline = ShaderMaterial.new()
-		outline.shader = preload("res://shaders/cel_outline.gdshader")
-		shared_material.next_pass = outline
+		# Realistic varnished wood and cloth in every profile (the toon bands were retired on
+		# 30-09-2026: the lower profiles only drop cost, never change the look).
+		shared_material.shader = preload("res://shaders/mannequin_pbr.gdshader")
+		# The ink outline (cel_outline.gdshader) is off since the realistic style (30-09-2026): its
+		# inverted hull produced invalid pixels on thin pieces (hat brims) that flashed in the glow.
+		if OUTLINE:
+			var outline = ShaderMaterial.new()
+			outline.shader = preload("res://shaders/cel_outline.gdshader")
+			shared_material.next_pass = outline
 	return shared_material
 
 func finish_mesh() -> void:
@@ -199,7 +235,11 @@ func finish_mesh() -> void:
 	var bone_indices = PackedInt32Array()
 	var weights = PackedFloat32Array()
 	var colors = PackedColorArray()
+	var uv = PackedVector2Array()
+	var uv2 = PackedVector2Array()
 	for batch in batches.values():
+		uv.append_array(batch.u)
+		uv2.append_array(batch.u2)
 		var offset = vertices.size()
 		vertices.append_array(batch.v)
 		normals.append_array(batch.n)
@@ -218,6 +258,8 @@ func finish_mesh() -> void:
 	arrays[Mesh.ARRAY_BONES] = bone_indices
 	arrays[Mesh.ARRAY_WEIGHTS] = weights
 	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_TEX_UV] = uv
+	arrays[Mesh.ARRAY_TEX_UV2] = uv2
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
 	mesh.surface_set_material(0,mannequin_material())
 	var instance = MeshInstance3D.new()
@@ -250,6 +292,7 @@ func vector(values: Array) -> Vector3:
 	return Vector3(values[0],values[1],values[2])
 
 func build_shape(shape: Dictionary, colors: Dictionary) -> void:
+	current_zone = shape.color
 	var color: Color = colors[shape.color]
 	color = color.darkened(shape.get("darken",0)).lightened(shape.get("lighten",0))
 	# Alpha only flags shapes the ink outline must skip (cel_outline.gdshader); the surface is opaque.

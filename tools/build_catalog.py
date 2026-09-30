@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
-"""Generate low-poly, smoothly contoured mannequin parts with rigid bone bindings."""
+"""Generate low-poly, smoothly contoured mannequin parts with rigid bone bindings.
+
+    python3 tools/build_catalog.py            # data/piezas/ (all profiles; colliders of every profile)
+    python3 tools/build_catalog.py --lod hd   # data/piezas_hd/ (Ultra's visible meshes, docs/futuro/17)
+
+The hd level only multiplies the sides of every cross-section (8 -> 18); shapes, bones and colour
+zones are identical, and catalogo.json keeps pointing at the base pieces."""
 import json
 import math
+import sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / 'data/catalogo.json'
 cat = json.loads(CATALOG.read_text())
+HD = '--lod' in sys.argv and sys.argv[sys.argv.index('--lod')+1] == 'hd'
+PIECES = 'data/piezas_hd' if HD else 'data/piezas'
+(ROOT/PIECES).mkdir(exist_ok=True)
+
+def S(n):
+    """Sides of a cross-section at this level of detail."""
+    return round(n*2.25) if HD else n
 
 def loft_mesh(rings, segments=8):
     """Elliptical cross sections (y, half-width, half-depth, z-offset), smooth normals."""
@@ -48,9 +62,10 @@ def oriented(vertices, normals, triangles):
         indices.extend([a,b,c] if sum(cross[k]*n[k] for k in range(3))<0 else [a,c,b])
     return indices
 
-def visor_mesh(head, cz, steps=6, spread=math.radians(78)):
+def visor_mesh(head, cz, steps=None, spread=math.radians(78)):
     """Curved cap peak: starts on the scalp over the forehead and only projects forwards,
     dipping slightly at the tip, with a thin rim so it reads from the side."""
+    steps=steps or S(6)
     rows=[]
     for i in range(steps+1):
         a=-spread+2*spread*i/steps
@@ -99,6 +114,7 @@ for profile in cat['perfiles']:
             def ball(bone,pos,size,color,**kwargs): shape('ellipsoid',bone,color,position=pos,size=size,**kwargs)
             def seg(bone,a,b,ra,rb,color,**kwargs): shape('segment',bone,color,a=a,b=b,radius_a=ra,radius_b=rb,**kwargs)
             def loft(bone,rings,color,segments=8,**kwargs):
+                segments=S(segments)
                 mesh=loft_mesh(rings,segments)
                 if bone not in ('cabeza','mano.I','mano.D','pie.I','pie.D'):
                     mesh['indices']=mesh['indices'][:-segments*6]
@@ -172,10 +188,11 @@ for profile in cat['perfiles']:
             elif slot=='piernas':
                 short=piece['length']<1
                 skirt=piece['style']=='skirt'
-                pelvis=loft_mesh([(nz*y,shoulder*x,shoulder*z,0) for y,x,z in [(-.012,.93,.38),(.055,.96,.53),(.105,.80,.54)]],8)
-                for i in range(8):
-                    pelvis['vertices'][i][1]+=nz*.074*abs(math.sin(math.tau*i/8))
-                pelvis['indices']=pelvis['indices'][:-48]
+                n=S(8)
+                pelvis=loft_mesh([(nz*y,shoulder*x,shoulder*z,0) for y,x,z in [(-.012,.93,.38),(.055,.96,.53),(.105,.80,.54)]],n)
+                for i in range(n):
+                    pelvis['vertices'][i][1]+=nz*.074*abs(math.sin(math.tau*i/n))
+                pelvis['indices']=pelvis['indices'][:-n*6]
                 shape('mesh','caderas','tela_b',**pelvis)
                 for side in ['I','D']:
                     thigh=nz*(.542-.323);calf=nz*(.323-.03)
@@ -202,19 +219,21 @@ for profile in cat['perfiles']:
                 hair=piece['style'];color='tela_b' if hair in ('cap','hat','beanie') else 'pelo'
                 if hair=='cap':
                     # Smooth crown ending in a clean band at peak height, closed on top.
-                    crown=loft_mesh([(head*y,head*x,head*z,head*.03) for y,x,z in [(.60,.405,.425),(.80,.375,.405),(.95,.255,.295),(1.04,.04,.07)]],10)
-                    crown['indices']=crown['indices'][:-60]+crown['indices'][-30:]
+                    n=S(10)
+                    crown=loft_mesh([(head*y,head*x,head*z,head*.03) for y,x,z in [(.60,.405,.425),(.80,.375,.405),(.95,.255,.295),(1.04,.04,.07)]],n)
+                    crown['indices']=crown['indices'][:-n*6]+crown['indices'][-n*3:]
                     shape('mesh','cabeza',color,**crown)
                 elif hair!='bald':
                     # Scalp follows the skull, with a high forehead and a lower nape.
                     rings=[(.39,.325,.34),(.66,.392,.414),(.85,.33,.365),(.98,.195,.245),(1.025,.035,.065)]
-                    m=loft_mesh([(head*y,head*x,head*z,head*.035) for y,x,z in rings],10)
+                    n=S(10)
+                    m=loft_mesh([(head*y,head*x,head*z,head*.035) for y,x,z in rings],n)
                     # Raise the front hairline without covering the faceless oval.
-                    for i in range(10):
-                        front=max(0,math.cos(math.tau*i/10))
-                        m['vertices'][i][1]+=head*((.23+.06*math.sin(math.tau*i/10)) if hair=='fringe' else .33)*front
+                    for i in range(n):
+                        front=max(0,math.cos(math.tau*i/n))
+                        m['vertices'][i][1]+=head*((.23+.06*math.sin(math.tau*i/n)) if hair=='fringe' else .33)*front
                     # Open underside: only the side/top cap, avoiding a disc across the face.
-                    m['indices']=m['indices'][:(len(rings)-1)*10*6]+m['indices'][-30:]
+                    m['indices']=m['indices'][:(len(rings)-1)*n*6]+m['indices'][-n*3:]
                     shape('mesh','cabeza',color,**m)
                 if hair=='long':
                     # Rounded mass behind the ears, widening slightly at shoulder length.
@@ -241,9 +260,10 @@ for profile in cat['perfiles']:
                 if piece['style']=='bag':
                     shape('box','caderas','accesorio',position=[shoulder*.95,nz*.10,0],size=[shoulder*.7,nz*.18,shoulder*.7])
                     patch('lumbar',[[-shoulder*.8,nz*.23,-shoulder*.59],[-shoulder*.6,nz*.23,-shoulder*.60],[shoulder*.85,-nz*.06,-shoulder*.55],[shoulder*.65,-nz*.06,-shoulder*.56]],'accesorio')
-            relative=f'data/piezas/{profile["id"]}_{slot}_{index}.json'
+            relative=f'{PIECES}/{profile["id"]}_{slot}_{index}.json'
             (ROOT/relative).write_text(json.dumps(dict(geometry=geometry),ensure_ascii=False,separators=(',',':'))+'\n')
             all_pieces.append(dict(piece,ranura=slot,indice=index,recurso='res://'+relative))
     profile['piezas']=all_pieces
-CATALOG.write_text(json.dumps(cat,ensure_ascii=False,indent=2)+'\n')
-print('Generated',sum(len(p['piezas']) for p in cat['perfiles']),'contoured mannequin parts.')
+if not HD:
+    CATALOG.write_text(json.dumps(cat,ensure_ascii=False,indent=2)+'\n')
+print('Generated',sum(len(p['piezas']) for p in cat['perfiles']),'contoured mannequin parts in',PIECES)

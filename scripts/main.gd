@@ -88,6 +88,55 @@ var smoke = false
 var run_metrics = false
 var stress = false
 var metrics: Array[float] = []
+var gpu_metrics: Array[float] = []
+var cpu_metrics: Array[float] = []
+var start_time_of_day = "day"
+# Fixed framing for --screenshot captures: --angle=, --pitch=, --focal= (degrees, degrees, mm).
+var shot_view = {}
+# --burst=<n>: with --screenshot=<path>.png, save n consecutive frames (<path>_000.png, …) to hunt
+# single-frame artefacts such as sparkles.
+var burst_frames = 0
+# --debug-off=ssr,ssil,ssao,sdfgi,glow,volumetric,dof,textured,clearcoat: switch effects off to
+# isolate rendering artefacts (applied after every graphics preset).
+var debug_off: PackedStringArray = []
+
+func apply_debug_off() -> void:
+	if debug_off.is_empty() or park == null: return
+	var env = park.environment.environment
+	for key in debug_off:
+		match key:
+			"ssr": env.ssr_enabled = false
+			"ssil": env.ssil_enabled = false
+			"ssao": env.ssao_enabled = false
+			"sdfgi": env.sdfgi_enabled = false
+			"glow": env.glow_enabled = false
+			"volumetric": env.volumetric_fog_enabled = false
+			"dof": if is_instance_valid(dof_pass): dof_pass.visible = false
+			"textured": Person.mannequin_material().set_shader_parameter("textured",false)
+			"clearcoat": Person.mannequin_material().set_shader_parameter("clearcoat_amount",0.0)
+			"rim": Person.mannequin_material().set_shader_parameter("rim_amount",0.0)
+			"lamps": for lamp in park.lamps: lamp.visible = false
+			"pcss": park.sun.light_angular_distance = 0.0
+			"sun_shadow": park.sun.shadow_enabled = false
+			"pbr": Person.mannequin_material().shader = preload("res://shaders/cel_shading.gdshader")
+			"outline": Person.mannequin_material().next_pass = null
+			"nanview":
+				if not camera.has_node("DebugNan"):
+					var quad = QuadMesh.new()
+					quad.size = Vector2(2,2)
+					var probe = MeshInstance3D.new()
+					probe.name = "DebugNan"
+					probe.mesh = quad
+					probe.extra_cull_margin = 16384
+					var probe_material = ShaderMaterial.new()
+					probe_material.shader = preload("res://shaders/debug_nan.gdshader")
+					probe.material_override = probe_material
+					camera.add_child(probe)
+var viewport_container: SubViewportContainer
+# Post-processing of the viewfinder (docs/futuro/17 postprocesado): exact depth of field in
+# Forward+ Ultra and lens character (vignetting, chromatic aberration) in every profile but Bajo.
+var dof_pass: MeshInstance3D
+var lens_material: ShaderMaterial
 var min_frame = 0.0
 var max_frame = 0.0
 var fps_label: Label
@@ -98,27 +147,52 @@ func _ready() -> void:
 		if arg == "--smoke-test": smoke = true
 		if arg == "--metrics": run_metrics = true
 		if arg == "--stress": stress = true
+		if arg.begins_with("--profile="): graphics_preset = arg.trim_prefix("--profile=")
+		if arg.begins_with("--time="): start_time_of_day = arg.trim_prefix("--time=")
+		if arg.begins_with("--burst="): burst_frames = int(arg.trim_prefix("--burst="))
+		if arg.begins_with("--debug-off="): debug_off = arg.trim_prefix("--debug-off=").split(",")
+		for key in ["angle","pitch","focal"]:
+			if arg.begins_with("--%s=" % key): shot_view[key] = float(arg.get_slice("=",1))
+	if not Array(OS.get_cmdline_user_args()).any(func(a): return a.begins_with("--profile=")): graphics_preset = startup_profile()
+	# Ultra needs Forward+ and the other profiles run in gl_compatibility (docs/futuro/17 §2.1).
+	# Desktop runs every profile in Forward+ (docs/futuro/17 §2.1). Ultra's effects need it: in the
+	# gl_compatibility fallback (Android, no Vulkan) the top profile is Alto.
+	if not ParkScene.forward_plus() and graphics_preset == "Ultra" and not smoke and screenshot_path == "" and not run_metrics: graphics_preset = "Alto"
 	build_world()
 	build_ui()
 	populate()
-	await settle_population()
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
+	await settle_population()
+	await warm_up_view()
 	update_camera()
-	apply_graphics_preset("Ultra")
+	apply_graphics_preset(graphics_preset)
 	intro()
+	if run_metrics:
+		# Measure the real cost, not the vsync cap.
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+		Engine.max_fps = 0
+		RenderingServer.viewport_set_measure_render_time(viewport.get_viewport_rid(),true)
 	if smoke or screenshot_path != "" or run_metrics:
-		start_session(false)
+		start_session(start_time_of_day)
 		begin_assignment()
 	if stress:
 		for i in people.size():
 			people[i].theta = 96.0+48.0*i/(people.size()-1)
 			people[i].place()
 
+# Look around once while the intro screen covers the view: every material of the park (water,
+# grass, lit windows…) is compiled now instead of stalling the first time it enters the frame.
+func warm_up_view() -> void:
+	var saved = camera.rotation
+	for step in 4:
+		camera.rotation = Vector3(0,step*PI*.5,0)
+		await RenderingServer.frame_post_draw
+	camera.rotation = saved
+
 func build_world() -> void:
 	var container = SubViewportContainer.new()
-	container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	container.stretch = true
+	viewport_container = container
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(container)
 	viewport = SubViewport.new()
@@ -128,17 +202,35 @@ func build_world() -> void:
 	viewport.msaa_3d = Viewport.MSAA_DISABLED
 	viewport.positional_shadow_atlas_size = 2048
 	container.add_child(viewport)
+	update_render_resolution()
+	get_window().size_changed.connect(update_render_resolution)
 	park = ParkScene.new()
+	park.detail = "hd" if ParkScene.forward_plus() else "lo"
+	Person.detail = "lo" if "lo_people" in debug_off else park.detail
 	viewport.add_child(park)
 	park.build()
 	camera = Camera3D.new()
 	camera.position.y = 1.6
 	camera.near = .08
-	camera.far = 90
+	# Far enough for the skyline towers at 110–160 m (docs/futuro/17 fase 4).
+	camera.far = 320
 	# Lock the sensor width; fov is horizontal with KEEP_WIDTH.
 	camera.keep_aspect = Camera3D.KEEP_WIDTH
 	viewport.add_child(camera)
 	camera.current = true
+	lens_material = ShaderMaterial.new()
+	lens_material.shader = preload("res://shaders/viewfinder_lens.gdshader")
+	if ParkScene.forward_plus():
+		var quad = QuadMesh.new()
+		quad.size = Vector2(2,2)
+		dof_pass = MeshInstance3D.new()
+		dof_pass.mesh = quad
+		dof_pass.extra_cull_margin = 16384
+		dof_pass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var dof_material = ShaderMaterial.new()
+		dof_material.shader = preload("res://shaders/viewfinder_dof.gdshader")
+		dof_pass.material_override = dof_material
+		camera.add_child(dof_pass)
 
 func populate() -> void:
 	var counts = [3, 7, 6, 5]
@@ -364,6 +456,7 @@ func refresh() -> void:
 	iso_button.text = ("▣ " if equipment.film else "")+Texts.get_text("iso_d") % Photo.ISOS[iso_index]
 	focal_label.text = ("ZOOM " if equipment.zoom() else "FIJO ")+"%.0f mm" % focal
 	focus_label.text = Texts.get_text("foco")+(Texts.get_text("infinito") if is_inf(focus_distance) else Texts.get_text("2f_m") % focus_distance)
+	update_lens_effects()
 	var depth = Photo.dof(focal,apertures()[n_index],focus_distance)
 	dof_label.text = Texts.get_text("nitido_2f_m_s") % [depth.x,Texts.get_text("infinito") if is_inf(depth.y) else Texts.get_text("2f_m") % depth.y]
 	finder.delta_ev = -Photo.ev(apertures()[n_index],1.0/Photo.DENOMINATORS[t_index],Photo.ISOS[iso_index],measured_ev)
@@ -493,6 +586,7 @@ func _process(dt: float) -> void:
 		if run_metrics:
 			angle = 120.0
 			focal = 24.0
+		for key in shot_view: set(key,shot_view[key])
 		update_camera()
 		update_focus_aid(dt)
 		if equipment.focus_mode == "MF":
@@ -512,6 +606,8 @@ func _process(dt: float) -> void:
 			refresh()
 	if run_metrics and boot_frames > 120 and mode == "SEARCH":
 		metrics.append(dt*1000)
+		gpu_metrics.append(RenderingServer.viewport_get_measured_render_time_gpu(viewport.get_viewport_rid()))
+		cpu_metrics.append(RenderingServer.viewport_get_measured_render_time_cpu(viewport.get_viewport_rid()))
 		fps_label.text = Texts.get_text("0f_fps_42_viandantes") % (1.0/maxf(dt,.0001))
 	if boot_frames == 100:
 		if smoke: smoke_test()
@@ -523,6 +619,10 @@ func _process(dt: float) -> void:
 		var draw_calls = RenderingServer.viewport_get_render_info(render_target,RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
 		var shadow_draw_calls = RenderingServer.viewport_get_render_info(render_target,RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW,RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
 		print("METRICS frames=%d visible=%d median_ms=%.2f p95_ms=%.2f max_ms=%.2f draw_calls=%d shadow_draw_calls=%d" % [metrics.size(),visible_count,metrics[metrics.size()/2],metrics[int(metrics.size()*.95)],metrics[-1],draw_calls,shadow_draw_calls])
+		gpu_metrics.sort()
+		cpu_metrics.sort()
+		var triangles = RenderingServer.viewport_get_render_info(render_target,RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+		print("METRICS_GPU profile=%s renderer=%s time=%s resolution=%dx%d gpu_median_ms=%.2f gpu_p95_ms=%.2f render_cpu_median_ms=%.2f primitives=%d vram_mib=%.1f" % [graphics_preset,RenderingServer.get_current_rendering_method(),time_of_day,viewport.size.x,viewport.size.y,gpu_metrics[gpu_metrics.size()/2],gpu_metrics[int(gpu_metrics.size()*.95)],cpu_metrics[cpu_metrics.size()/2],triangles,Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED)/1048576.0])
 		get_tree().quit()
 
 func update_person(p: Pedestrian, dt: float) -> void:
@@ -794,6 +894,7 @@ func take_photo() -> void:
 	# Freeze first, then wait for physics and the render to represent precisely this state.
 	await get_tree().physics_frame
 	var evidence = capture_sandbox_evidence() if sandbox else capture_evidence()
+	evidence["rendered_dof"] = dof_active()
 	current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
 	shot_serial += 1
@@ -809,11 +910,37 @@ func take_photo() -> void:
 	shooting = false
 	show_results()
 
+# Vignetting and lateral chromatic aberration grow with wide angles (the same strengths develop the
+# photo). Depth of field follows focal length, aperture and focus distance exactly.
+func lens_strengths(focal_mm: float) -> Vector2:
+	var wide = clampf((50.0-focal_mm)/26.0,0.0,1.0)
+	return Vector2(.22+.26*wide,.14+.24*wide)
+
+func dof_active() -> bool:
+	return is_instance_valid(dof_pass) and dof_pass.visible
+
+func update_lens_effects() -> void:
+	if not is_instance_valid(camera): return
+	var strengths = lens_strengths(focal)
+	if lens_material:
+		lens_material.set_shader_parameter("vignette_amount",strengths.x)
+		lens_material.set_shader_parameter("chromatic_aberration",strengths.y)
+	if dof_active():
+		var dof_material: ShaderMaterial = dof_pass.material_override
+		dof_material.set_shader_parameter("focal_mm",focal)
+		dof_material.set_shader_parameter("aperture",apertures()[n_index])
+		dof_material.set_shader_parameter("focus_m",-1.0 if is_inf(focus_distance) else focus_distance)
+
 func photo_material(result: Dictionary) -> ShaderMaterial:
 	var mat = ShaderMaterial.new()
 	mat.shader = Develop
 	var evidence: Dictionary = result.evidence
-	mat.set_shader_parameter("coc_pixels",minf(result.coc/36*viewport.size.x*.5,35))
+	# With the viewfinder's exact depth of field the capture is already blurred per pixel; otherwise
+	# the develop pass blurs the whole frame by the subject's circle of confusion.
+	mat.set_shader_parameter("coc_pixels",0.0 if evidence.get("rendered_dof",false) else minf(result.coc/36*viewport.size.x*.5,35))
+	var strengths = lens_strengths(evidence.f)
+	mat.set_shader_parameter("vignette_amount",strengths.x)
+	mat.set_shader_parameter("chromatic_aberration",strengths.y)
 	mat.set_shader_parameter("exposure",clampf(result.delta,-8,8))
 	mat.set_shader_parameter("motion",Vector2(minf(result.drag/36*viewport.size.x,90)*evidence.motion_sign,0))
 	var shake_angle = fposmod(evidence.seed*2.399963,TAU)
@@ -1016,15 +1143,30 @@ func smoke_test() -> void:
 	var triangles = park.triangle_count
 	for p in people:
 		assert(p.rig.get_bone_count() == 20)
-		assert(p.triangle_count <= 1900,Texts.get_text("presupuesto_por_viandante"))
+		# 1.900 per pedestrian in the base pieces; 8.000 for Ultra's hd mannequins (docs/futuro/17 §3).
+		assert(p.triangle_count <= (8000 if Person.detail == "hd" else 1900),Texts.get_text("presupuesto_por_viandante"))
 		triangles += p.triangle_count
-	assert(triangles <= 100000,Texts.get_text("presupuesto_de_escena"))
+	# Scene budget per profile (docs/futuro/17 §3): the park detail follows the renderer.
+	# The mesh detail sets the budget: a saved Ultra profile running in gl_compatibility builds "lo".
+	var budget = SCENE_TRIANGLES["Ultra"] if park.detail == "hd" else SCENE_TRIANGLES["Medio"]
+	assert(triangles <= budget,Texts.get_text("presupuesto_de_escena"))
 	var evidence = capture_evidence()
 	assert(Photo.evaluate(evidence) == Photo.evaluate(evidence))
-	print("SMOKE PASS: 21 viandantes, 20 huesos/persona, %d triángulos, expediente determinista" % triangles)
+	print("SMOKE PASS: 21 viandantes, 20 huesos/persona, %d triángulos (límite %d, perfil %s, detalle %s, máximo por viandante %d), expediente determinista" % [triangles,budget,graphics_preset,park.detail,people.map(func(p): return p.triangle_count).max()])
 	if screenshot_path == "" and not run_metrics: get_tree().quit()
 
+func save_burst() -> void:
+	var base = screenshot_path.get_basename()
+	for k in burst_frames:
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s_%03d.png" % [base,k])
+	print("BURST: %d frames in %s_*.png" % [burst_frames,base])
+	get_tree().quit()
+
 func save_screenshot() -> void:
+	if burst_frames > 0:
+		save_burst()
+		return
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(screenshot_path)
 	print("SCREENSHOT: "+screenshot_path)
@@ -1080,30 +1222,83 @@ func show_equipment() -> void:
 	button(root,"Usar este equipo",Rect2(880,630,320,55),restore_equipment_screen,true)
 
 
+# Same realistic mannequins in every profile; the procedural wood and cloth patterns (a few
+# instructions per pixel) are the only thing the two lowest profiles skip.
 func apply_mannequin_graphics_preset(preset: String) -> void:
 	var mat = Person.mannequin_material()
-	if mat and mat.next_pass is ShaderMaterial:
-		var outline: ShaderMaterial = mat.next_pass
-		match preset:
-			"Bajo":
-				outline.set_shader_parameter("tint_strength", 0.0)
-				outline.set_shader_parameter("width_px", 1.2)
-			"Medio":
-				outline.set_shader_parameter("tint_strength", 0.25)
-				outline.set_shader_parameter("width_px", 1.4)
-			"Alto":
-				outline.set_shader_parameter("tint_strength", 0.40)
-				outline.set_shader_parameter("width_px", 1.6)
-			"Ultra", _:
-				outline.set_shader_parameter("tint_strength", 0.48)
-				outline.set_shader_parameter("width_px", 1.8)
-				outline.set_shader_parameter("depth_bias", 0.0018)
+	if mat is ShaderMaterial: mat.set_shader_parameter("textured",preset != "Bajo")
+
+# The profile persists in override.cfg with the renderer it needs: Godot reads that file at launch,
+# before any rendering starts (docs/futuro/17 §2.1). Next to the executable when exported.
+const PROFILE_SETTING = "paparazzi/graficos/perfil"
+# The "lo" park is shared by Bajo, Medio and Alto, so it must fit the mobile budget of 100.000.
+# Ultra targets a desktop GPU (RX 6700 XT at 1440p): the instanced lawn alone adds ~2 M triangles.
+# Internal 3D resolution per profile in Forward+ (upscaled with FSR 2).
+const RENDER_SCALE = {"Bajo": .5, "Medio": .7, "Alto": .85, "Ultra": 1.0}
+const SCENE_TRIANGLES = {"Bajo": 100000, "Medio": 100000, "Alto": 100000, "Ultra": 5000000}
+
+func override_path() -> String:
+	if OS.has_feature("template"): return OS.get_executable_path().get_base_dir().path_join("override.cfg")
+	return ProjectSettings.globalize_path("res://override.cfg")
+
+func startup_profile() -> String:
+	if ProjectSettings.has_setting(PROFILE_SETTING): return str(ProjectSettings.get_setting(PROFILE_SETTING))
+	if OS.has_feature("mobile"): return "Medio"
+	# First launch on desktop: Ultra on a dedicated GPU, Alto otherwise (02 §10.3.5).
+	return "Ultra" if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else "Alto"
+
+func save_profile(preset: String) -> void:
+	if OS.has_feature("mobile"): return
+	var config = ConfigFile.new()
+	config.load(override_path())
+	# The renderer is no longer per profile: drop the key older versions wrote.
+	if config.has_section_key("rendering","renderer/rendering_method"): config.erase_section_key("rendering","renderer/rendering_method")
+	config.set_value("paparazzi","graficos/perfil",preset)
+	config.save(override_path())
+
+# Profile chosen in the settings screen: saved and applied at once (no restart since every
+# desktop profile shares the Forward+ renderer).
+func select_graphics_profile(preset: String) -> void:
+	save_profile(preset)
+	apply_graphics_preset(preset)
+
+# In Forward+ the 3D view matches the window's physical pixels (2560 × 1440 on a 1440p screen) and
+# the lower profiles render internally at a fraction of it, upscaled with FSR 2 (RENDER_SCALE).
+# gl_compatibility keeps 1280 × 720. Everything downstream normalises by viewport.size.
+var render_factor = 1.0
+
+func update_render_resolution() -> void:
+	var factor = 1.0
+	if ParkScene.forward_plus():
+		var window = Vector2(get_window().size)
+		factor = maxf(1.0,minf(window.x/1280.0,window.y/720.0))
+	viewport.size = Vector2i(roundi(1280*factor),roundi(720*factor))
+	viewport_container.stretch = false
+	viewport_container.position = Vector2.ZERO
+	viewport_container.size = Vector2(viewport.size)
+	viewport_container.scale = Vector2.ONE/factor
+	render_factor = factor
 
 func apply_graphics_preset(preset: String) -> void:
 	graphics_preset = preset
 	if park: park.apply_graphics_preset(preset)
 	# FXAA smooths the mannequins' ink lines and the scene edges without the memory of MSAA (VRAM < 60 MiB).
-	if is_instance_valid(viewport): viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if preset == "Bajo" else Viewport.SCREEN_SPACE_AA_FXAA
+	if is_instance_valid(viewport):
+		var forward = ParkScene.forward_plus()
+		var scale = RENDER_SCALE.get(preset,1.0) if forward else 1.0
+		# Forward+: Ultra multisamples at native resolution; lower profiles render fewer pixels and
+		# FSR 2 upscales them (it also antialiases). gl_compatibility: FXAA.
+		viewport.scaling_3d_scale = scale
+		viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2 if forward and scale < 1.0 else Viewport.SCALING_3D_MODE_BILINEAR
+		viewport.msaa_3d = Viewport.MSAA_4X if forward and scale >= 1.0 else Viewport.MSAA_DISABLED
+		viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if not forward and preset != "Bajo" else Viewport.SCREEN_SPACE_AA_DISABLED
+		viewport.positional_shadow_atlas_size = 4096 if forward and preset in ["Ultra","Alto"] else 2048
+		viewport.use_debanding = forward
+		update_render_resolution()
+	if is_instance_valid(dof_pass): dof_pass.visible = preset in ["Ultra","Alto"]
+	if is_instance_valid(viewport_container): viewport_container.material = null if preset == "Bajo" else lens_material
+	update_lens_effects()
+	apply_debug_off()
 	apply_mannequin_graphics_preset(preset)
 	if is_instance_valid(graphics_button):
 		graphics_button.text = "Gráficos · " + graphics_preset
@@ -1118,18 +1313,19 @@ func show_graphics_settings() -> void:
 	label(root, "Configuración escalonada de rendimiento y fidelidad visual (docs/futuro/02, §10)", Rect2(75, 78, 1100, 28), 15, Color("b8d78c"))
 
 	var preset_names = ["Bajo", "Medio", "Alto", "Ultra"]
+	# Same look in every profile; the lower ones only drop cost (docs/futuro/17 §2.1).
 	var preset_descs = [
-		"Bajo: 60 FPS garantizados para móviles de entrada y WebGL. Sombras desactivadas y niebla off.",
-		"Medio: Para tablets y portátiles ligeros. Sombras PCF estándar (1024) y niebla suave.",
-		"Alto: Para PCs de juegos estándar. Sombras nítidas (2048), niebla atmosférica y ACES.",
-		"Ultra (Por defecto): Fidelidad de estudio. Sombras filtradas suaves extendidas (48m), ACES con contraste analógico y contorno ilustrado HD."
+		"Bajo: mismo aspecto con el mínimo coste. Resolución interna al 50 % (FSR 2), sin iluminación global ni oclusión ambiental y con poca hierba.",
+		"Medio: resolución al 70 %, iluminación global con 3 cascadas, oclusión ambiental y sombras de 2048; sin niebla volumétrica.",
+		"Alto: resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra física y profundidad de campo en el visor.",
+		"Ultra: resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba completa y sombras de farola en las 12."
 	]
 
 	for i in 4:
 		var pname = preset_names[i]
 		var is_active = (graphics_preset == pname)
 		button(root, ("✓ " if is_active else "") + pname + (" (Activo)" if is_active else ""), Rect2(75 + i * 280, 118, 260, 52), func():
-			apply_graphics_preset(pname)
+			select_graphics_profile(pname)
 			show_graphics_settings()
 		, is_active)
 	
@@ -1144,14 +1340,15 @@ func show_graphics_settings() -> void:
 	
 	label(desc_panel, "Desglose técnico de parámetros activos:", Rect2(25, 108, 1050, 26), 16, Color("a7c683"))
 	
+	var fx: Dictionary = park.EFFECTS.get(graphics_preset,park.EFFECTS["Ultra"])
 	var specs = [
-		"• Sombras direccionales y sol: " + ("Desactivadas (0 draw calls de sombra)" if graphics_preset == "Bajo" else ("Básicas 1024 (alcance 30m)" if graphics_preset == "Medio" else ("Avanzadas PCF 2048 (alcance 38m)" if graphics_preset == "Alto" else "Ultra filtradas con penumbra suave (blur 2.0, alcance 48m, bias 0.015)"))),
-		"• Atmósfera y niebla de profundidad: " + ("Desactivada (fondo plano)" if graphics_preset == "Bajo" else ("Suave (begin 9m, end 25m)" if graphics_preset == "Medio" else ("Atmosférica (begin 8m, end 22m)" if graphics_preset == "Alto" else "Densa cinematográfica de estudio (begin 7m, end 20m, curva 1.1)"))),
-		"• Curva de color y Tone Mapping: " + ("Lineal estándar" if graphics_preset == "Bajo" else ("Reinhard fotométrico" if graphics_preset == "Medio" else ("ACES cinematográfico (contraste 0.98, sat 1.05)" if graphics_preset == "Alto" else "ACES Master Studio (contraste 1.02, sat 1.08, exp 0.90, white 1.45)"))),
-		"• Delineado Toon de maniquíes: " + ("Línea fina 1.2 px (sin tintado)" if graphics_preset == "Bajo" else ("Línea 1.4 px (tintado 25%)" if graphics_preset == "Medio" else ("Línea 1.6 px (tintado 40%)" if graphics_preset == "Alto" else "Línea ilustrada 1.8 px HD (tintado armónico 48%, depth-bias 0.0018)"))),
-		"• Consumo de VRAM aproximado: " + ("< 35 MiB (óptimo móvil)" if graphics_preset == "Bajo" else ("< 45 MiB" if graphics_preset == "Medio" else ("< 50 MiB" if graphics_preset == "Alto" else "< 52 MiB (muy inferior al límite de 60 MiB)")))
+		"• Resolución interna: %d %% %s" % [int(RENDER_SCALE.get(graphics_preset,1.0)*100),"(nativa, MSAA 4×)" if graphics_preset == "Ultra" else "(escalada con FSR 2)"],
+		"• Iluminación global SDFGI: " + ("desactivada (luz ambiente calibrada)" if fx.sdfgi == 0 else "%d cascadas" % fx.sdfgi),
+		"• Oclusión ambiental: %s · Rebote en pantalla (SSIL): %s · Reflejos (SSR): %s" % ["sí" if fx.ssao else "no","sí" if fx.ssil else "no","sí" if fx.ssr else "no"],
+		"• Niebla volumétrica: %s · Penumbra física del sol: %s · Atlas de sombras: %d" % ["sí" if fx.volumetric else "no","sí" if fx.penumbra else "no",fx.atlas],
+		"• Hierba: %d %% · Profundidad de campo en el visor: %s" % [int(fx.grass*100),"sí" if graphics_preset in ["Ultra","Alto"] else "no"]
 	]
-	
+
 	for s_idx in specs.size():
 		label(desc_panel, specs[s_idx], Rect2(25, 142 + s_idx * 36, 1050, 28), 15, Color("b7c5ad"))
 	

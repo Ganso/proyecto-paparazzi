@@ -26,6 +26,19 @@ xvfb-run -a -s "-screen 0 1440x900x24" godot-4 --audio-driver Dummy --path . --s
 
 > [!NOTE]
 > Con renderizado por software cada fotograma tarda más de 50 ms, así que la comprobación `Pan input under 50 ms` de `test_game.gd` (latencia real de un fotograma) falla bajo Xvfb. El resto de comprobaciones son válidas; la de latencia solo es significativa con GPU.
+>
+> Lo mismo ocurre en Wayland (KDE) si la ventana de la prueba queda tapada por otra: el compositor deja de entregar fotogramas y la sincronía vertical espera ~1.000 ms. Pasa también con el código anterior. Añade `--disable-vsync` al comando (`godot-4 --path . --disable-vsync --script tests/test_game.gd`).
+
+### Forward+ (Vulkan) en escritorio
+Los cuatro perfiles de escritorio usan el renderizador `forward_plus` (`project.godot`; [futuro/17 §2.4](futuro/17_SALTO_GRAFICO_ULTRA.md)); `gl_compatibility` queda para Android. **En esta máquina todas las suites se ejecutan con `~/bin/godot-4-fp`**: con el snap `godot-4` el juego cae a OpenGL y prueba la escena de Android. En el equipo de desarrollo el Godot del snap (`godot-4`) no arranca Vulkan (trae sus drivers vacíos) y cae a OpenGL, así que Ultra se ejecuta con el **binario oficial de Godot 4.7.2** instalado en `~/.local/opt/godot/` y enlazado como `~/bin/godot-4-fp`. Ese binario tampoco depende del sandbox del snap, que no puede escribir en `/tmp`.
+
+```bash
+~/bin/godot-4-fp --path . --rendering-method forward_plus -- --smoke-test
+~/bin/godot-4-fp --path . --rendering-method forward_plus --resolution 2560x1440 -- --metrics
+~/bin/godot-4-fp --path . --rendering-method forward_plus --disable-vsync --script tests/test_game.gd
+```
+
+`--rendering-method` en la línea de comandos manda sobre `override.cfg`, que es donde el juego guarda el perfil elegido. Las suites de `gl_compatibility` se ejecutan igual con `godot-4` o con `~/bin/godot-4-fp --rendering-method gl_compatibility`.
 
 ---
 
@@ -48,8 +61,8 @@ xvfb-run -a -s "-screen 0 1440x900x24" godot-4 --audio-driver Dummy --path . --s
 | **Navegación** | `godot-4 --path . --script tests/test_navigation.gd` | Cruce en sentidos opuestos en el carril 1, adelantamiento de un corredor a un caminante y desvío ante un obstáculo estático | `NAVIGATION TESTS: N checks, N failures` |
 | **Atascos (20 s)** | `godot-4 --path . --script tests/simulate_jams.gd` | 400 pasos a $\Delta t = 0.05\text{ s}$ sin jugador. Éxito: **0 viandantes con `stuck_time > 0.8 s`** | `Deadlocked pedestrians (stuck_time > 0.8s): N` |
 | **Expansión** | `godot-4 --path . --script tests/test_expansion.gd` | Pantalla de encargo, ropa deportiva de corredores, nubes y EV, bloqueo de ISO con carrete y sandbox. Guarda capturas en `/tmp/paparazzi-*.png` | `EXPANSION TESTS: N checks, N failures` |
-| **Sesión completa** | `godot-4 --path . --script tests/test_game.gd` | 5 encargos, entrada, disparo, revelado, flujo de pantallas y **VRAM < 60 MiB**. Guarda capturas en `/tmp/paparazzi-*.png` | `SESSION VIDEO MEMORY: …` y `GAME TESTS: N checks, N failures` |
-| **Humo** | `godot-4 --path . -- --smoke-test` | 21 viandantes, 20 huesos por persona, ≤ 100.000 triángulos y expediente determinista | `SMOKE PASS: …` |
+| **Sesión completa** | `godot-4 --path . --script tests/test_game.gd` | 5 encargos, entrada, disparo, revelado, flujo de pantallas, **VRAM del perfil** (60.000.000 bytes en `gl_compatibility`, 8 GiB en Forward+), perfil inicial y nivel de detalle según el renderizador, superficies del parque fusionado (≤ 40 en `lo`, ≤ 80 en `hd` por el suelo texturizado) y suelo texturizado solo en `hd`. Guarda capturas en `/tmp/paparazzi-*.png` | `SESSION VIDEO MEMORY: …` y `GAME TESTS: N checks, N failures` |
+| **Humo** | `godot-4 --path . -- --smoke-test` | 21 viandantes, 20 huesos por persona, presupuestos del perfil (escena ≤ 100.000 triángulos y ≤ 1.900 por viandante en `lo`; ≤ 5.000.000 y ≤ 8.000 en `hd`) y expediente determinista | `SMOKE PASS: … (límite …, perfil …, detalle …, máximo por viandante …)` |
 
 ---
 
@@ -64,24 +77,35 @@ Se pasan tras `--` (`godot-4 --path . -- <opción>`):
 | `--metrics` | Tras 120 fotogramas en `SEARCH`, mide 600 fotogramas e imprime `METRICS frames=… median_ms=… p95_ms=… max_ms=… draw_calls=… shadow_draw_calls=…` (los draw calls son los del último fotograma del visor 3D, leídos con `RenderingServer.viewport_get_render_info`). Es la única medida de rendimiento disponible; no tiene umbral automatizado. |
 | `--stress` | Confina a los viandantes en el sector $\theta \in [96^\circ, 144^\circ]$ para forzar congestión. |
 | `--screenshot=<ruta>` | Guarda una captura del fotograma 100 en `<ruta>`. |
+| `--profile=<Bajo\|Medio\|Alto\|Ultra>` | Fuerza el perfil gráfico (si no, el guardado en `override.cfg` o el de la primera vez: Ultra con GPU dedicada, Alto en otro caso). Ultra solo es real en Forward+; en `gl_compatibility` aplica sus valores sin los efectos de Forward+. |
+| `--time=<day\|golden\|night>` | Hora del día de la sesión que abren `--smoke-test`, `--metrics` y `--screenshot`. |
+| `--angle=<grados>`, `--pitch=<grados>`, `--focal=<mm>` | Encuadre fijo para las capturas (azimut, inclinación y focal). |
+| `--burst=<n>` | Con `--screenshot=<ruta>.png`, guarda `n` fotogramas seguidos (`<ruta>_000.png`, …) para cazar artefactos de un solo fotograma. |
+| `--debug-off=<lista>` | Apaga efectos para aislar artefactos (lista en [futuro/17 §2.5](futuro/17_SALTO_GRAFICO_ULTRA.md)); `nanview` pinta de magenta los píxeles no finitos. |
+| `--metrics` (Forward+) | Además imprime `METRICS_GPU profile=… renderer=… time=… resolution=… gpu_median_ms=… gpu_p95_ms=… render_cpu_median_ms=… primitives=… vram_mib=…`. Desactiva la sincronía vertical para medir el coste real. |
 
 ### 4.2 Scripts de `tools/`
 
 | Herramienta | Comando | Función |
 |---|---|---|
-| `run_evidence.sh` | `./tools/run_evidence.sh` | Orquesta la suite de evidencias gráficas: ejecuta `capture_evidence.gd` y después `build_sheets.py`. Requiere display. |
+| `run_evidence.sh` | `./tools/run_evidence.sh` | Orquesta la suite de evidencias gráficas: ejecuta `capture_evidence.gd`, `build_sheets.py` y `capture_ultra.sh`. Requiere display. |
 | `capture_evidence.gd` | `godot-4 --path . --script tools/capture_evidence.gd` | Renderiza estados del juego, assets, el lineup y las vistas de revisión de personajes (frente, 3/4, perfil y espalda) y fotogramas de animación en `docs/evidencias/scratch/`. |
 | `build_sheets.py` | `python3 tools/build_sheets.py` | Monta hojas de assets, GIFs y [`docs/evidencias/GALERIA.md`](evidencias/GALERIA.md). Requiere Pillow y `ffmpeg` en el `PATH` (`pip install imageio-ffmpeg` trae un binario). Los GIF se montan con el *demuxer* `concat` y una lista de fotogramas, que funciona también en Windows (sus compilaciones de ffmpeg no admiten `-pattern_type glob`). |
 | `export_android.sh` | `./tools/export_android.sh` (`INSTALL=1` para instalar y lanzar con `adb`) | Exporta `build/paparazzi-debug.apk` en headless con el preset `Android` y la firma de depuración de `~/.android/debug.keystore` (la genera si falta). Busca Godot en `GODOT_BIN`, `Godot*_win64_console.exe` local, `godot-4` o `godot`; el JDK 17 y el SDK en `JAVA_HOME`/`ANDROID_HOME` o en `ANDROID_TOOLCHAIN` (`jdk17/` y `sdk/`, por defecto `D:/Android-toolchain` en Windows). Requiere las plantillas de exportación de Godot 4.7.2 y en el SDK `platform-tools`, `build-tools;35.0.1` y `platforms;android-35`. El APK se versiona en git: haz commit tras compilar. Ver [futuro/09](futuro/09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md). |
-| `build_catalog.py` | `python3 tools/build_catalog.py` | Regenera `data/catalogo.json` y `data/piezas/`. |
-| `preview_people.gd` | `godot-4 --path . --script tools/preview_people.gd` | Visor interactivo de vestuario y perfiles anatómicos. |
+| `build_catalog.py` | `python3 tools/build_catalog.py` · `python3 tools/build_catalog.py --lod hd` | Regenera `data/catalogo.json` y `data/piezas/`; con `--lod hd`, solo `data/piezas_hd/` (maniquíes de Ultra, 2,25 veces más lados). Aviso: las normales de `data/piezas/` versionadas ya no coinciden bit a bit con las que genera el script actual (la geometría sí); no regenerar la base sin revisar `test_art.gd`. |
+| `preview_people.gd` | `godot-4 --path . --script tools/preview_people.gd -- [--hd] [--zoom=<m>] [--x=<m>] [--output=<png>]` | Lineup de seis maniquíes. `--hd` usa los de Ultra con texturas procedurales (ejecutar con Forward+); `--zoom` y `--x` encuadran de cerca. |
+| `build_park_assets.sh` | `./tools/build_park_assets.sh [--only banco,farola]` | Regenera los objetos del parque con Blender (`tools/blender/build_park_assets.py`, sin interfaz) y las texturas del suelo (`tools/texturas/build_textures.py`, Python + numpy). Requiere Blender 4.3 en el `PATH` (o `BLENDER_BIN`). |
+| `blender/build_park_assets.py` | `blender -b --factory-startup -P tools/blender/build_park_assets.py -- [--only …] [--no-bake]` | Genera `assets/parque/*.glb` (mallas `hd` y `lo`, color y oclusión horneados con Cycles en el color de vértice). |
+| `blender/preview_assets.py` | `blender -b --factory-startup -P tools/blender/preview_assets.py -- <png> [nombres]` | Hoja de vista previa de los objetos (fila `hd` delante, `lo` detrás). |
+| `texturas/build_textures.py` | `python3 tools/texturas/build_textures.py [--size 2048] [--only …]` | Texturas periódicas del suelo en `assets/texturas/` (color, normal y ORM). |
+| `capture_ultra.sh` | `./tools/capture_ultra.sh` | Capturas de Ultra a 2560 × 1440 en `docs/evidencias/ultra/` (lo llama `run_evidence.sh`; se omite si no hay Godot con Vulkan en `GODOT_FP` o `~/bin/godot-4-fp`). |
 | `preview_gait.gd` | `godot-4 --path . --script tools/preview_gait.gd` | Visor interactivo de la marcha. |
 
 ---
 
 ## 5. Cifras de Referencia (Fuente Única)
 
-Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en GPU Radeon RX 6700 XT). Cada cifra es la que imprime la suite indicada; si cambia el código, vuelve a ejecutar la suite y actualiza esta tabla.
+Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en GPU Radeon RX 6700 XT) y actualizadas el **2026-09-30** con el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)). Cada cifra es la que imprime la suite indicada; si cambia el código, vuelve a ejecutar la suite y actualiza esta tabla.
 
 | Cifra | Valor | Límite (invariante) | Fuente |
 |---|:---:|:---:|---|
@@ -93,14 +117,18 @@ Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en
 | Comprobaciones de marcha | 8.840, 0 fallos | 0 fallos | `test_gait.gd` |
 | Deriva máxima del pie de apoyo | 0.000000 m/fotograma | 0 | `test_gait.gd` |
 | Comprobaciones de navegación | 10, 0 fallos | 0 fallos | `test_navigation.gd` |
-| Viandantes atascados tras 20 s | 0 en Linux (2026-09-27) · **1 en Windows con Intel Iris Xe** (2026-09-29), también con el código anterior al parque ilustrado; pendiente de investigar | 0 | `simulate_jams.gd` |
+| Viandantes atascados tras 20 s | 0 en Linux (2026-09-27) · **1** en Windows con Intel Iris Xe (2026-09-29) y en Linux (2026-09-30), también con el código anterior; pendiente de investigar | 0 | `simulate_jams.gd` |
 | Comprobaciones de expansión | 140, 0 fallos | 0 fallos | `test_expansion.gd` |
-| Comprobaciones de sesión | 47, 0 fallos (2026-09-29, Windows, Intel Iris Xe) | 0 fallos | `test_game.gd` |
-| VRAM en sesión completa | 50,51 MiB en Linux (RX 6700 XT, antes del paso 1) · 56,54 MiB en Windows con Intel Iris Xe (texturas 40,93 · buffers 15,62; 2026-09-29). En 2 de 6 ejecuciones un pico de búferes transitorios superó el límite | `test_game.gd` compara con **60.000.000 bytes (57,2 MiB)** | `test_game.gd` |
-| Triángulos en escena (21 viandantes + parque) | 90.646 (2026-09-29, suelo subdividido para la oclusión de contacto) | ≤ 100.000 | `--smoke-test` |
+| Comprobaciones de sesión | Forward+: 51, 0 fallos · `gl_compatibility` (escena de Android): 48, 1 fallo, el de VRAM (58,37 MiB) (con `--disable-vsync`; 2026-09-30, RX 6700 XT) | 0 fallos | `test_game.gd` |
+| Tiempo de GPU por perfil a 2560 × 1440, día | Ultra 10,94 ms · Alto 7,84 · Medio 3,93 · Bajo 2,16 (VRAM 1.525 / 1.413 / 1.196 / 766 MiB; 2026-09-30) | Ultra ≤ 12 ms | `--metrics --profile=<p>` |
+| Destellos (píxeles no finitos) | 0 en 300 fotogramas (tres ráfagas de 100, 24–35 mm, día y hora dorada; 2026-09-30) | 0 | `--burst` + detector |
+| VRAM en sesión completa | `gl_compatibility`: **59,91 MiB** (texturas 40,93 · buffers 18,98), **supera** el límite desde el parque de Blender y la pradera; pendiente de optimizar ([futuro/17 §6](futuro/17_SALTO_GRAFICO_ULTRA.md)) · Forward+ Ultra: 1.104 MiB en `test_game.gd`, 1.509 MiB en `--metrics` a 1440p | 60.000.000 bytes en `gl_compatibility` · 8 GiB en Ultra | `test_game.gd`, `--metrics` |
+| Triángulos en escena (21 viandantes + parque) | `lo` (Bajo, Medio, Alto): 93.378 · `hd` (Ultra): 2.391.401, de ellos ~1,3 M de hierba instanciada (2026-09-30) | `lo` ≤ 100.000 · `hd` ≤ 5.000.000 | `--smoke-test` |
+| Triángulos por maniquí `hd` (máximo en escena) | 5.998 | ≤ 8.000 | `--smoke-test` en Forward+ |
+| Tiempo de GPU de Ultra a 2560 × 1440 (RX 6700 XT, sin vsync) | día 10,30 ms (p95 10,52) · noche 11,80 ms (p95 12,10), con profundidad de campo, LUT y carácter de objetivo; sin la profundidad de campo, 7,27 y 8,86 ms (2026-09-30) | Objetivo ≤ 12 ms de día y ≤ 16 ms de noche | `--metrics` (Forward+) |
 | Draw calls del visor 3D (perfil Ultra, día) | 119 en `--metrics` · 85 en `test_game.gd` (2026-09-29, Windows, Intel Iris Xe; antes del paso 1, 1.790) | ≤ 300 de día | `--metrics`, `test_game.gd` |
 | Tiempo de fotograma (perfil Ultra, día) | mediana 16,67 ms · p95 16,67 ms, limitado por sincronía vertical (2026-09-29, Intel Iris Xe; antes 20,22 ms) | Objetivo 16,7 ms (60 FPS), sin umbral automatizado | `--metrics` |
-| Comprobaciones de exportación | 24, 0 fallos | 0 fallos | `test_export.gd` |
+| Comprobaciones de exportación | 26, 0 fallos | 0 fallos | `test_export.gd` |
 | Tamaño de `build/paparazzi-debug.apk` (arm64-v8a) | 28 MB | < 50 MB (aviso de GitHub; límite 100 MB) | `tools/export_android.sh` |
 
 **Nota sobre `test_game.gd`**: bajo Xvfb pasaron 22 de 23 comprobaciones; la que falla es la de latencia de 50 ms (ver §1). Hay que confirmar los 23/23 en una máquina con GPU.
@@ -118,5 +146,6 @@ Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en
 | **Navegación, carriles o `park.gd`** | `test_navigation.gd` y `simulate_jams.gd` |
 | **Interfaz, flujo de pantallas o memoria** | `test_game.gd` y `test_expansion.gd` |
 | **`export_presets.cfg`, ajustes móviles de `project.godot` o `.gitignore`** | `test_export.gd` y `./tools/export_android.sh` |
-| **Cambios visuales (shaders, mallas, escena)** | `./tools/run_evidence.sh` |
+| **Cambios visuales (shaders, mallas, escena)** | `./tools/run_evidence.sh` y, en Ultra, `--smoke-test` y `--metrics` con `~/bin/godot-4-fp --rendering-method forward_plus` |
+| **Objetos o texturas del parque** | `./tools/build_park_assets.sh`, después `--smoke-test` en los dos renderizadores y `test_game.gd` |
 | **Cualquier cambio antes de dar por cerrada una tarea** | `godot-4 --path . -- --smoke-test` |

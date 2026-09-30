@@ -11,8 +11,11 @@ func _initialize() -> void:
 	check(presets.get_value("preset.0","export_path","") == "build/paparazzi-debug.apk","Versioned APK path")
 	var include: String = presets.get_value("preset.0","include_filter","")
 	check("data/*.json" in include and "data/piezas/*.json" in include,"JSON data packed")
+	# Blender props are read at run time with GLTFDocument (docs/futuro/17): the "lo" meshes serve
+	# the mobile profiles. Ground textures are only used by Ultra, which Android never runs.
+	check("assets/parque/*.glb" in include,"Blender park props packed")
 	var exclude: String = presets.get_value("preset.0","exclude_filter","")
-	for folder in ["build/*","docs/*","tests/*","tools/*"]:
+	for folder in ["build/*","docs/*","tests/*","tools/*","assets/texturas/*"]:
 		check(folder in exclude,"Excluded " + folder)
 	var options = "preset.0.options"
 	check(presets.get_value(options,"package/unique_name","") == "org.ganso.proyectopaparazzi","Package id")

@@ -43,7 +43,8 @@ graph TD
 | Módulo | Archivo | Responsabilidad Principal |
 |---|---|---|
 | **Controlador** | [scripts/main.gd](../scripts/main.gd) | Máquina de estados, bucle principal, navegación 2D de viandantes, interacción ratón/táctil y gestión de interfaz de usuario. |
-| **Escenario** | [scripts/park.gd](../scripts/park.gd) | Geometría procedural del parque, plazas, carriles concéntricos, farolas con sombras, ciclo día/noche y nubes procedurales. |
+| **Escenario** | [scripts/park.gd](../scripts/park.gd) | Parque (colisionadores de primitivas y mallas de Blender fusionadas por sectores), pradera con quiosco y estanque, suelo texturizado y hierba instanciada en `hd`, farolas con sombras, ciclo día/noche, nubes y efectos de Forward+ en Ultra. |
+| **Objetos de Blender** | [scripts/park_assets.gd](../scripts/park_assets.gd) | Lectura en tiempo de ejecución de `assets/parque/*.glb` (generados por `tools/blender/build_park_assets.py`) con `GLTFDocument`, por nivel de detalle `hd`/`lo` y rol (vidrio, bombillas, agua, ventanas, madera) ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)). |
 | **Viandantes** | [scripts/person.gd](../scripts/person.gd) | Ensamblado de piezas anatómicas, rig universal de 20 huesos, pesaje rígido y combinación en una sola superficie con colores de vértice. |
 | **Locomoción** | [scripts/gait.gd](../scripts/gait.gd) | Cinemática analítica de marcha y carrera, cálculo de altura de cadera, orientación de suela y pisada con deslizamiento cero (`drift = 0`). |
 | **Casting** | [scripts/casting.gd](../scripts/casting.gd) | Generación aleatoria de rasgos de vestimenta, asignación de encargos y concordancia morfológica estricta de género y número en español. |
