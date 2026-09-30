@@ -14,6 +14,8 @@ var flocks: Array[Dictionary] = []
 var body_mm: MultiMesh
 var head_mm: MultiMesh
 var wing_mm: MultiMesh
+# At night pigeons roost in the trees (main.gd sets it from the time of day).
+var night = false
 
 static func polar(theta: float, r: float) -> Vector3:
 	return Vector3(sin(deg_to_rad(theta))*r,0,-cos(deg_to_rad(theta))*r)
@@ -32,7 +34,7 @@ func build(detail = "hd") -> void:
 	wing_mm = add_multimesh(wing_mesh(),material,PER_FLOCK*FLOCK_HOMES.size()*2)
 	for f in FLOCK_HOMES.size():
 		var home = polar(FLOCK_HOMES[f].x,FLOCK_HOMES[f].y)
-		flocks.append({"home":home,"center":home,"state":"suelo","timer":0.0,"feeder":null})
+		flocks.append({"home":home,"center":home,"state":"suelo","timer":0.0,"feeder":null,"next":"suelo"})
 		for i in PER_FLOCK:
 			var pos = home+Vector3(rng.randf_range(-1,1),0,rng.randf_range(-1,1))*.9
 			var tone = rng.randf_range(.8,1.15)
@@ -131,6 +133,12 @@ func update_flock(f: int, dt: float, people: Array) -> void:
 			for g in flocks.size():
 				if g != f and flocks[g].center.distance_to(spot) < flock.center.distance_to(spot) and flocks[g].feeder == null: nearest = false
 			if nearest and (flock.feeder == null or flock.feeder == p): feeder = p
+	if night:
+		if flock.state == "suelo":
+			flock.feeder = null
+			take_off(flock,roost(flock),"posada")
+		elif flock.state == "posada": flock.timer = 5.0
+		return
 	match flock.state:
 		"suelo":
 			# A runner going by scares the whole flock only now and then (rolled once per pass);
@@ -146,7 +154,7 @@ func update_flock(f: int, dt: float, people: Array) -> void:
 				elif d > 4.0: passing.erase(p)
 			flock.passing = passing
 			if scared:
-				take_off(flock,Vector3(flock.center.x,0,flock.center.z).normalized()*rng.randf_range(13.5,15.5)+Vector3.UP*rng.randf_range(4.5,6.5),"posada")
+				take_off(flock,roost(flock),"posada")
 			elif feeder != null and flock.feeder == null:
 				flock.feeder = feeder
 				take_off(flock,feeder.position+feeder.global_basis*Vector3(0,0,-.85),"suelo")
@@ -159,6 +167,28 @@ func update_flock(f: int, dt: float, people: Array) -> void:
 			if flock.timer <= 0:
 				flock.state = flock.next
 				flock.timer = rng.randf_range(8,16)
+
+# A perch in the tree curtain behind the lawn.
+func roost(flock: Dictionary) -> Vector3:
+	return Vector3(flock.home.x,0,flock.home.z).normalized()*rng.randf_range(13.5,15.5)+Vector3.UP*rng.randf_range(4.5,6.5)
+
+# Jump straight to the roost (a session that starts at night, or a capture).
+func settle_night() -> void:
+	for flock in flocks:
+		var perch = roost(flock)
+		flock.center = perch
+		flock.state = "posada"
+		flock.timer = 5.0
+		flock.feeder = null
+		flock.next = "posada"
+		for b in birds:
+			if flocks[b.flock] == flock:
+				b.pos = perch+Vector3(rng.randf_range(-1.5,1.5),rng.randf_range(-.4,.4),rng.randf_range(-1.5,1.5))
+				b.from = b.pos
+				b.to = b.pos
+				b.fly_t = 1.0
+				b.fly_len = 1.0
+				b.air = 0.0
 
 func take_off(flock: Dictionary, destination: Vector3, next: String) -> void:
 	var start = flock.center

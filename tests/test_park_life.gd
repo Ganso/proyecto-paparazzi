@@ -167,5 +167,15 @@ func run() -> void:
 	check(actor.props.values().all(func(n): return not n.visible),"Props hidden when the activity ends")
 	check(actor.props.has("telefono") and actor.props.telefono.get_meta("light").shadow_enabled == false,"Phone light casts no shadows")
 
+	# --- Night: pigeons roost in the trees, the picnic and the ball game go home ---
+	game.start_session("night",true)
+	game.mode = "TEST"
+	step(3.0)
+	if hd:
+		check(game.pigeons.flocks.all(func(f): return f.state == "posada"),"Pigeons roost at night")
+		check(game.pigeons.birds.all(func(b): return b.pos.y > 2.0),"No pigeon on the ground at night")
+		check(not game.extras.day_only.is_empty() and game.extras.day_only.all(func(n): return not n.visible),"Picnic, tourist and ball game hidden at night")
+	check(Person.screen_glow == 1.0,"Phone screens glow fully at night")
+
 	print("PARK LIFE TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

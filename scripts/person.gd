@@ -383,11 +383,26 @@ func pose_bone(id: String, angle: float) -> void:
 func animate(delta: float, traveled_distance = -1.0) -> void:
 	gait.pose(delta,traveled_distance)
 	update_props()
+	update_skirt_springs()
+
+# Seated, the skirt chains (children of the thighs) would stay stiffly along the thighs: they relax
+# and weigh more, so the cloth drapes over the knees and hangs at the sides (docs/futuro/19).
+var skirt_seated = -1.0
+func update_skirt_springs() -> void:
+	if chains.is_empty() or is_equal_approx(seat,skirt_seated): return
+	skirt_seated = seat
+	var sim = rig.get_node_or_null("Muelles")
+	if sim == null: return
+	var e = smoothstep(0,1,seat)
+	for i in chains.size():
+		if not str(chains[i].name).begins_with("falda"): continue
+		sim.set_stiffness(i,lerpf(chains[i].get("stiffness",1.0),.25,e))
+		sim.set_gravity(i,lerpf(chains[i].get("gravity",0.0),2.5,e))
 
 # ---- Hand-held props (docs/futuro/19_VIDA_EN_EL_PARQUE.md) ----
 # Small objects shown while an activity is on: built on first use from primitives, attached to
 # the hand bones, visual only (no colliders, so scoring never sees them).
-const PROP_FOR = {"movil": ["telefono"], "leer": ["periodico"], "foto": ["camara"], "cafe": ["cafe"], "palomas": ["pan"]}
+const PROP_FOR = {"movil": ["telefono"], "leer": ["periodico"], "foto": ["camara"], "cafe": ["cafe"], "palomas": ["pan","migas"]}
 static var prop_materials = {}
 # Phone screen glow by time of day (park.gd::set_time_of_day): 0 day … 1 night. The screen is
 # emissive and a tiny light (no shadows, 0.5 m) lights the face from below.
@@ -402,7 +417,11 @@ func update_props() -> void:
 	if props.has("periodico") and props.periodico.visible:
 		var paper: Node3D = props.periodico.get_meta("sheet")
 		var hands = (global_transform*rig.get_bone_global_pose(bones["mano.D"]).origin+global_transform*rig.get_bone_global_pose(bones["mano.I"]).origin)*.5
-		paper.global_transform = Transform3D(global_basis*Basis(Vector3.RIGHT,-.35),hands+global_basis*Vector3(0,.06,-.05))
+		paper.global_transform = Transform3D(global_basis*Basis(Vector3.RIGHT,-.35),hands+global_basis*Vector3(0,.07,-.035))
+	if props.has("migas"):
+		# Crumbs leave the hand at the end of each toss (same cycle as gait.gd "palomas").
+		var cycle = fposmod(act_time+act_seed,3.6)/3.6
+		props.migas.get_meta("particles").emitting = props.migas.visible and cycle > .2 and cycle < .36
 	if props.has("telefono") and props.telefono.visible:
 		var light: OmniLight3D = props.telefono.get_meta("light")
 		light.light_energy = lerpf(.08,.4,screen_glow)*smoothstep(.3,1.0,act_w)
@@ -513,6 +532,23 @@ func make_prop(key: String) -> Node3D:
 			lid.height = .012
 			lid.radial_segments = 16
 			prop_part(holder,lid,prop_material("tapa",Color("2b2b2b"),.5),Vector3(-.035,-.06,0),Vector3(PI,0,0))
+		"migas":
+			var crumbs = CPUParticles3D.new()
+			crumbs.amount = 14
+			crumbs.lifetime = .9
+			crumbs.local_coords = false
+			crumbs.emitting = false
+			var crumb = BoxMesh.new()
+			crumb.size = Vector3(.012,.008,.012)
+			crumbs.mesh = crumb
+			crumbs.material_override = prop_material("miga",Color("e9dcc0"),.9)
+			crumbs.direction = Vector3(0,.3,-1)
+			crumbs.spread = 25.0
+			crumbs.initial_velocity_min = .6
+			crumbs.initial_velocity_max = 1.3
+			crumbs.gravity = Vector3(0,-9.8,0)
+			holder.add_child(crumbs)
+			attach.set_meta("particles",crumbs)
 		"pan":
 			var bag = BoxMesh.new()
 			bag.size = Vector3(.045,.1,.075)

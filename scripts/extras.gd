@@ -11,6 +11,13 @@ const POND = Vector2(245.0, 21.0)
 
 var extras: Array = []
 var dogs: Array = []
+# Picnic, tourist and ball game go home at night (set_time_of_day()).
+var day_only: Array[Node3D] = []
+var kid: Pedestrian
+var ball: MeshInstance3D
+var ball_velocity = Vector3.ZERO
+var ball_area = Vector3.ZERO
+var kick_pause = 0.0
 var cast = Cast.new()
 var rng = RandomNumberGenerator.new()
 
@@ -43,15 +50,15 @@ func build(detail: String) -> void:
 	var picnic = polar(111.0,18.2)
 	add_blanket(picnic,facing(picnic,bandstand))
 	var side = (bandstand-picnic).normalized().cross(Vector3.UP)
-	add_still(picnic+side*.45,facing(picnic+side*.45,picnic-side*.6),"suelo","cafe")
-	add_still(picnic-side*.5,facing(picnic-side*.5,picnic+side*.6),"suelo","leer")
+	day_only.append(add_still(picnic+side*.45,facing(picnic+side*.45,picnic-side*.6),"suelo","cafe"))
+	day_only.append(add_still(picnic-side*.5,facing(picnic-side*.5,picnic+side*.6),"suelo","leer"))
 	# Two friends chatting and a tourist photographing the bandstand.
 	var chat = polar(129.0,19.0)
 	var chat_side = chat.normalized().cross(Vector3.UP)*.55
 	add_still(chat+chat_side,facing(chat+chat_side,chat-chat_side),"","charla")
 	add_still(chat-chat_side,facing(chat-chat_side,chat+chat_side),"","charla")
 	var tourist = polar(122.0,17.4)
-	add_still(tourist,facing(tourist,bandstand),"","foto")
+	day_only.append(add_still(tourist,facing(tourist,bandstand),"","foto"))
 	# By the pond: a child watching the water, someone on the phone on the grass, a reader.
 	var watcher = pond+(Vector3.ZERO-pond).normalized()*3.9+(Vector3.ZERO-pond).normalized().cross(Vector3.UP)*1.2
 	add_still(watcher,facing(watcher,pond),"","mirar",true)
@@ -59,6 +66,8 @@ func build(detail: String) -> void:
 	add_still(lounger,facing(lounger,pond)+.8,"suelo","movil")
 	var reader = polar(254.5,16.9)
 	add_still(reader,facing(reader,pond)-.6,"suelo","leer")
+	# A child kicking a ball about, to the right of the bandstand.
+	add_ball_game(polar(137.0,17.0))
 
 func spawn(child = false) -> Pedestrian:
 	var p = Person.new()
@@ -81,7 +90,7 @@ func add_walker(center: Vector3, radius: float, angle: float, direction: float) 
 	place_walker(p,0.0)
 	p.animate(0)
 
-func add_still(pos: Vector3, heading: float, seat: String, activity: String, child = false) -> void:
+func add_still(pos: Vector3, heading: float, seat: String, activity: String, child = false) -> Pedestrian:
 	var p = spawn(child)
 	p.position = pos
 	p.rotation.y = heading
@@ -93,6 +102,7 @@ func add_still(pos: Vector3, heading: float, seat: String, activity: String, chi
 	else:
 		p.state = "DETENIDO"
 	p.animate(0)
+	return p
 
 func add_blanket(pos: Vector3, heading: float) -> void:
 	var img = Image.create(64,64,false,Image.FORMAT_RGB8)
@@ -113,6 +123,7 @@ func add_blanket(pos: Vector3, heading: float) -> void:
 	blanket.position = pos+Vector3.UP*.006
 	blanket.rotation.y = heading
 	add_child(blanket)
+	day_only.append(blanket)
 	var basket_material = StandardMaterial3D.new()
 	basket_material.albedo_color = Color("9a6b3c")
 	basket_material.roughness = .9
@@ -124,6 +135,60 @@ func add_blanket(pos: Vector3, heading: float) -> void:
 	basket.position = pos+blanket.basis*Vector3(.5,.12,-.45)
 	basket.rotation.y = heading
 	add_child(basket)
+	day_only.append(basket)
+
+func add_ball_game(center: Vector3) -> void:
+	ball_area = center
+	kid = spawn(true)
+	kid.state = "CAMINANDO"
+	kid.speed = .85
+	kid.position = center+Vector3(.8,0,0)
+	kid.set_meta("kid",true)
+	day_only.append(kid)
+	ball = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = .11
+	sphere.height = .22
+	ball.mesh = sphere
+	var img = Image.create(32,16,false,Image.FORMAT_RGB8)
+	for y in 16:
+		for x in 32: img.set_pixel(x,y,Color("d9342b") if (x/8+y/8)%2 == 0 else Color("f3efe6"))
+	var material = StandardMaterial3D.new()
+	material.albedo_texture = ImageTexture.create_from_image(img)
+	material.roughness = .5
+	ball.material_override = material
+	ball.position = center+Vector3(0,.11,0)
+	add_child(ball)
+	day_only.append(ball)
+
+# The child walks to the ball and kicks it somewhere inside the play area (1.8 m around).
+func update_ball_game(dt: float) -> void:
+	if kid == null or not kid.visible: return
+	ball_velocity *= exp(-1.3*dt)
+	var next = ball.position+ball_velocity*dt
+	var off = Vector3(next.x-ball_area.x,0,next.z-ball_area.z)
+	if off.length() > 1.8: ball_velocity = ball_velocity.bounce(off.normalized())*.6
+	ball.position += ball_velocity*dt
+	ball.position.y = .11
+	var speed = ball_velocity.length()
+	if speed > .01: ball.rotate(Vector3.UP.cross(ball_velocity.normalized()).normalized(),speed*dt/.11)
+	kick_pause -= dt
+	var to = Vector3(ball.position.x-kid.position.x,0,ball.position.z-kid.position.z)
+	var moved = 0.0
+	if kick_pause <= 0 and to.length() > .32:
+		moved = minf(kid.speed*dt,to.length()-.3)
+		kid.position += to.normalized()*moved
+		kid.rotation.y = lerp_angle(kid.rotation.y,atan2(-to.x,-to.z),minf(1.0,dt*5))
+		kid.state = "CAMINANDO"
+	elif kick_pause <= 0:
+		var aim = (ball_area-ball.position).normalized().rotated(Vector3.UP,rng.randf_range(-1.2,1.2))
+		ball_velocity = aim*rng.randf_range(1.6,2.6)+to.normalized()*.6
+		kick_pause = rng.randf_range(.6,1.4)
+	if kick_pause > 0: kid.state = "DETENIDO"
+	kid.animate(dt,moved)
+
+func set_time_of_day(tod: String) -> void:
+	for node in day_only: node.visible = tod != "night"
 
 func place_walker(p: Pedestrian, dt: float) -> void:
 	var route: Dictionary = p.get_meta("route")
@@ -135,9 +200,12 @@ func place_walker(p: Pedestrian, dt: float) -> void:
 
 func update(dt: float) -> void:
 	for p in extras:
+		if p == kid: continue
+		if not p.visible: continue
 		if p.state == "CAMINANDO":
 			place_walker(p,dt)
 			p.animate(dt,p.speed*dt)
 		else:
 			p.animate(dt,0.0)
+	update_ball_game(dt)
 	for d in dogs: d.update(dt)

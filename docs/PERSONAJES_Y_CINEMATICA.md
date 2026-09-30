@@ -178,6 +178,8 @@ Añadido el 30-09-2026 con la vida en el parque ([futuro/19_VIDA_EN_EL_PARQUE.md
 ### 4.bis.1 Sentarse y levantarse (`gait.gd::sit`)
 `p.seat` pasa de 0 a 1 en $1.3\text{ s}$ mientras el estado es `SENTADO` (y vuelve a 0 en `LEVANTANDO`). La postura se resuelve con la misma cinemática inversa de la marcha (`solve_leg`): la cadera baja de su altura de pie a la del asiento (`max(0.47, b + suela)`) y los pies se quedan donde estaban, mientras `main.gd` lleva la raíz hacia atrás la longitud del muslo, del borde del banco ($r = 4.60\text{ m}$) al centro del asiento. El tronco se inclina hacia delante al bajar y al subir ($-0.38\cdot\sin(\pi e)$) y queda erguido una vez sentado. Las piernas cortas (el perfil infantil) no llegan al suelo: el muslo descansa en el asiento y la espinilla cuelga.
 
+**Falda sentada**: las cadenas de la falda son hijas de los muslos; mientras dura la postura, `person.gd::update_skirt_springs()` relaja su rigidez (2,6 → 0,25) y sube su gravedad (0,15 → 2,5), y la tela cae entre las rodillas en vez de quedarse tiesa sobre los muslos.
+
 **Sentado en el suelo** (`seat_kind = "suelo"`, figurantes de la pradera): la cadera baja a $0.075\cdot nz$, las piernas se estiran hacia delante con las rodillas algo levantadas y los brazos se apoyan detrás.
 
 ### 4.bis.2 Capa de actividades (`gait.gd::activity`)

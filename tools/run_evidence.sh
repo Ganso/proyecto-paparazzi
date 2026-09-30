@@ -8,7 +8,7 @@ GODOT="${GODOT_FP:-$HOME/bin/godot-4-fp}"
 [ -x "$GODOT" ] || GODOT=godot-4
 
 echo "=== [1/3] Renderizando estados, assets y cinemática con Godot 4 ==="
-"$GODOT" --path "$PROJECT_DIR" --script "$PROJECT_DIR/tools/capture_evidence.gd"
+"$GODOT" --path "$PROJECT_DIR" --disable-vsync --script "$PROJECT_DIR/tools/capture_evidence.gd"
 
 echo "=== [2/3] Ensamblando spritesheets estructurados, GIFs y GALERIA.md ==="
 python3 "$PROJECT_DIR/tools/build_sheets.py"

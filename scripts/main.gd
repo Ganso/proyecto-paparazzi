@@ -566,6 +566,10 @@ func start_session(time_mode = "day", free_play = false) -> void:
 		time_of_day = str(time_mode)
 	night = (time_of_day == "night")
 	park.set_time_of_day(time_of_day)
+	if pigeons:
+		pigeons.night = night
+		if night: pigeons.settle_night()
+	if extras: extras.set_time_of_day(time_of_day)
 	records.clear()
 	assignment = 0
 	best_photo = null
@@ -668,7 +672,6 @@ func _process(dt: float) -> void:
 			for p in people: update_person(p,1.0/30)
 			pigeons.update(1.0/30,people,[dog] if dog else [])
 			if dog: dog.update(1.0/30)
-		if OS.has_environment("DOG_DEBUG") and dog: print("DOG theta %.1f r %.2f owner %s" % [fposmod(rad_to_deg(atan2(dog.position.x,-dog.position.z)),360),dog.position.length(),dog.walker.state])
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
 		for p in people:
@@ -683,9 +686,6 @@ func _process(dt: float) -> void:
 		for step in 240:
 			for p in people: update_person(p,1.0/30)
 			pigeons.update(1.0/30,people,[dog] if dog else [])
-		if OS.has_environment("PIGEON_DEBUG"):
-			for f in pigeons.flocks: print("FLOCK ",f.state," ",f.center," feeder ",f.feeder != null)
-			for p in people: if p.activity == "palomas": print("FEEDER ",p.state," w ",p.act_w," pos ",p.position)
 	if boot_frames == 100:
 		if smoke: smoke_test()
 		if screenshot_path != "": save_screenshot.call_deferred()
@@ -1100,7 +1100,8 @@ func autofocus() -> void:
 	if not hit.is_empty():
 		focus_distance = maxf(.8,camera.global_position.distance_to(hit.position))
 		refresh()
-		play_tone(1100,.085)
+		# The scripted camera of the evidence video refocuses twice a second: silently.
+		if not demo.has("af"): play_tone(1100,.085)
 		notify_player(Texts.get_text("af_confirmado_2f_m") % focus_distance)
 	else:
 		play_tone(230,.12)

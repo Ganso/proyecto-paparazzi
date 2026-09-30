@@ -22,6 +22,7 @@ Detalle en [NAVEGACION_Y_COLISIONES.md §3](../NAVEGACION_Y_COLISIONES.md). En r
 - **Paradas con actividad**: se para frenando (`pending_stop`) y mira al paisaje mientras hace algo (`mirar`, `movil`, `foto`, `cafe`). Dos caminantes que se cruzan pueden **pararse a charlar** frente a frente.
 - **Sentados**: leen el periódico, miran el móvil, toman café, echan migas a las palomas o descansan.
 - **Andando**: a veces sacan el móvil y caminan más despacio mirándolo.
+- **Reparto medido** en 60 s de multitud: el 74 % del tiempo caminando, el 12 % parados y el 14 % sentados (`test_crowd.gd` exige al menos un 60 % caminando).
 - **Capa de actividades** (`gait.gd::activity`): tren superior mezclado con peso `act_w`; las piernas no se tocan.
 - **Objetos de mano** (`person.gd::make_prop`): teléfono, periódico con texto procedural, cámara, vaso de café y bolsa de pan. Se construyen al usarse, en la mano (`BoneAttachment3D`), sin colisionadores. **El móvil ilumina la cara** con una luz pequeña sin sombras, más intensa de noche (petición del usuario durante la sesión).
 
@@ -44,14 +45,17 @@ En el suelo miden menos de 0,3 m y no tienen colisionadores. Solo en `hd`.
 
 ## 5. Figurantes de la pradera
 
-`scripts/extras.gd`: 14 personas en las dos aberturas de la verja (quiosco y estanque):
+`scripts/extras.gd`: 15 personas en las dos aberturas de la verja (quiosco y estanque):
 
 - paseantes en bucle, uno de ellos con perro;
 - un pícnic con manta de cuadros y cesta;
 - dos amigas charlando;
 - un turista fotografiando el quiosco;
 - gente leyendo o con el móvil sentada en la hierba;
-- un niño mirando el agua.
+- un niño mirando el agua;
+- otro niño jugando con un balón junto al quiosco.
+
+De noche se recogen el pícnic, el turista y el juego de balón (`extras.set_time_of_day()`), y las palomas duermen en los árboles.
 
 Son `Pedestrian` con `ambient = true`: solo se construye la malla visual, sin colisionadores. No están en `main.people`, así que nunca son objetivo ni entran en el sorteo de rasgos. Viven más allá de r = 12,8 m. Solo en `hd`: en Android no caben en los 100.000 triángulos.
 
@@ -69,7 +73,7 @@ Son `Pedestrian` con `ambient = true`: solo se construye la malla visual, sin co
 | Figurantes | ✅ | — | no |
 | Sonido ambiente | ✅ | ✅ | — |
 
-Triángulos medidos: 3.391.125 en `hd` y 94.112 en `lo` ([TESTS_Y_VERIFICACION.md §5](../TESTS_Y_VERIFICACION.md)). Para que Android cupiera, `lo` dibuja ahora solo parte de los árboles lejanos (los colisionadores siguen todos). El presupuesto ya se pasaba (108.498) antes de esta sesión.
+Triángulos medidos: 3.424.785 en `hd` y 94.112 en `lo` ([TESTS_Y_VERIFICACION.md §5](../TESTS_Y_VERIFICACION.md)). Para que Android cupiera, `lo` dibuja ahora solo parte de los árboles lejanos (los colisionadores siguen todos). El presupuesto ya se pasaba (108.498) antes de esta sesión.
 
 ## 8. Criterios de aceptación y pruebas
 
@@ -80,6 +84,7 @@ Triángulos medidos: 3.391.125 en `hd` y 94.112 en `lo` ([TESTS_Y_VERIFICACION.m
 
 ## 9. Pendiente y mejoras posibles
 
+- **Falda sentada** (hecho a medias): sus cadenas cuelgan de los muslos y con rigidez 2,6 se quedaban tiesas en horizontal al sentarse. Ahora `person.gd::update_skirt_springs()` baja la rigidez a 0,25 y sube la gravedad a 2,5 según `seat`, y la tela cae entre las rodillas. Falta un colisionador del asiento para la parte de atrás.
 - Migas visibles (partículas) al echar de comer y palomas que se posan en la verja.
 - Más razas de perro y algún perro con los figurantes del quiosco.
 - Voces lejanas y risas de niños (difíciles de sintetizar con naturalidad; mejor con muestras CC0 si el usuario lo aprueba).

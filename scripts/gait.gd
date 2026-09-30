@@ -243,8 +243,8 @@ func activity() -> void:
 			if p.state != "CAMINANDO": arm("I",.45,.55,1.7,w*.8)
 			head(-.42,0,w)
 		"leer":
-			arm("D",.5,.38,1.55,w)
-			arm("I",.5,.38,1.55,w)
+			arm("D",.55,.1,1.5,w)
+			arm("I",.55,.1,1.5,w)
 			head(-.3+.04*sin(t*.4),.1*sin(t*.23),w)
 		"foto":
 			# Raise the camera to the eye every few seconds, look around between shots.

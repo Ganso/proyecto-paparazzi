@@ -36,8 +36,10 @@ func run() -> void:
 		headings[p] = p.rotation.y
 		lateral_sign[p] = 0
 		flips[p] = 0
+	var state_counts = {}
 	for step in steps:
 		for p in game.people: game.update_person(p, dt)
+		for p in game.people: state_counts[p.state] = state_counts.get(p.state,0)+1
 		for p in game.people:
 			if not p.visible: continue
 			if p.state == "CAMINANDO":
@@ -69,6 +71,12 @@ func run() -> void:
 	for p in flips: worst_flips = maxi(worst_flips, flips[p])
 	var jammed = game.people.filter(func(p): return p.visible and p.state == "CAMINANDO" and p.stuck_time > 2.0)
 	print("CROWD: max turn %.0f°/s, worst quick lateral reversals %d in 60 s, min gap %.2f m, mean walking speed %.2f m/s, jammed %d" % [rad_to_deg(max_turn_rate), worst_flips, min_gap, speed_sum / maxf(1, moving_samples), jammed.size()])
+	var total_samples = 0
+	for k in state_counts: total_samples += state_counts[k]
+	var shares = []
+	for k in state_counts: shares.append("%s %d%%" % [k,roundi(100.0*state_counts[k]/total_samples)])
+	print("CROWD STATES: ", ", ".join(shares))
+	check(float(state_counts.get("CAMINANDO",0))/total_samples >= .6,"Most people are walking most of the time")
 	if min_gap < .42: print("  closest pair ", worst)
 	for p in jammed: print("  jammed ", describe(p))
 	for p in flips: if flips[p] > 2: print("  trembling ", describe(p), " reversals ", flips[p])
