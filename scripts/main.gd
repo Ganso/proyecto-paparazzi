@@ -771,7 +771,10 @@ func update_person(p: Pedestrian, dt: float) -> void:
 		var interest = int(p.theta/30)
 		if interest != p.poi and p.theta < 240:
 			p.poi = interest
-			if not p.runner and p.bench_goal < 0 and p.pending_stop.is_empty() and p.rng.randf() < .12:
+			if p.runner and p.pending_stop.is_empty() and p.rng.randf() < .05:
+				# Runners stop now and then to stretch by the path.
+				p.pending_stop = {"activity":"estirar","time":p.rng.randf_range(6,10),"face":face_view(p)}
+			elif not p.runner and p.bench_goal < 0 and p.pending_stop.is_empty() and p.rng.randf() < .12:
 				var poi_blocked = false
 				for other in people:
 					if other != p and other.lane == p.lane and (other.state == "DETENIDO" or other.state == "SENTADO") and absf(other.theta - p.theta) < 12.0:

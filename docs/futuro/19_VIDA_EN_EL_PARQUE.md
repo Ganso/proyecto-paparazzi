@@ -19,7 +19,7 @@ Detalle en [NAVEGACION_Y_COLISIONES.md §3](../NAVEGACION_Y_COLISIONES.md). En r
 ## 2. Bancos, paradas y actividades
 
 - **Bancos de dos plazas**: el viandante decide una vez por banco (probabilidad 0,4, o 0,55 si ya hay alguien sentado) si sentarse, reserva una plaza, se arrima a su borde frenando, se gira hacia el camino y se sienta en 1,3 s con cinemática inversa: los pies se quedan quietos y la cadera va atrás y abajo hasta el asiento ([PERSONAJES_Y_CINEMATICA.md §4.bis](../PERSONAJES_Y_CINEMATICA.md)). Si se sienta junto a alguien, suelen charlar girando la cabeza el uno hacia el otro. Al levantarse espera a tener hueco. Nada se teletransporta (`test_park_life.gd`: menos de 6 cm por fotograma).
-- **Paradas con actividad**: se para frenando (`pending_stop`) y mira al paisaje mientras hace algo (`mirar`, `movil`, `foto`, `cafe`). Dos caminantes que se cruzan pueden **pararse a charlar** frente a frente.
+- **Paradas con actividad**: se para frenando (`pending_stop`) y mira al paisaje mientras hace algo (`mirar`, `movil`, `foto`, `cafe`). Dos caminantes que se cruzan pueden **pararse a charlar** frente a frente, y se saludan con la mano al encontrarse. Los corredores se paran a veces (probabilidad 0,05 por sector) a **estirar** junto al camino.
 - **Sentados**: leen el periódico, miran el móvil, toman café, echan migas a las palomas o descansan.
 - **Andando**: a veces sacan el móvil y caminan más despacio mirándolo.
 - **Reparto medido** en 60 s de multitud: el 79 % del tiempo caminando, el 13 % parados y el 8 % sentados (`test_crowd.gd` exige al menos un 60 % caminando).

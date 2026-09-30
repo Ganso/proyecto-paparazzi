@@ -191,7 +191,8 @@ Sobre la marcha, la postura de pie o la sentada se mezcla una capa de tren super
 | `leer` | los dos brazos al frente, cabeza baja, leve vaivén | periódico abierto entre las manos | sentado |
 | `foto` | sube la cámara al ojo cada 7 s y mira alrededor entre tomas | cámara | parado |
 | `cafe` | vaso a la altura del pecho, sorbo cada 9 s | vaso de papel con funda y tapa | parado o sentado |
-| `charla` | gestos de la mano derecha, asentimientos | — | parado, frente a su pareja |
+| `charla` | saluda con la mano los dos primeros segundos; luego gestos de la mano derecha y asentimientos; sentados, giran la cabeza hacia el otro (`look_yaw`) | — | parado frente a su pareja o sentado a su lado |
+| `estirar` | brazos por encima de la cabeza, flexión lateral del tronco | — | corredores parados junto al camino |
 | `mirar` | brazos cruzados, la cabeza barre el paisaje | — | parado |
 | `palomas` | echa migas cada 3,6 s | bolsa de pan en la izquierda | sentado |
 

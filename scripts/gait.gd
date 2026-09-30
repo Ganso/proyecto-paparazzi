@@ -257,6 +257,17 @@ func activity() -> void:
 			arm("D",.25+.35*g,.2,.9+.6*g,w*(.4+.6*smoothstep(-.2,.6,sin(t*.31))))
 			arm("I",.15+.15*sin(t*.9+1),.1,.5+.3*g,w*.5)
 			head(.06*sin(t*2.1),p.look_yaw+.12*sin(t*.37),w)
+			# A wave of the hand when they meet (the first two seconds).
+			var hello = 1.0-smoothstep(1.4,2.0,p.act_time)
+			if hello > 0: arm("D",1.75,.1,1.45+.35*sin(p.act_time*11.0),hello)
+		"estirar":
+			# A runner's break: arms overhead, bending from side to side.
+			var bend = sin(t*.9)
+			arm("D",2.9,0,.15,w)
+			arm("I",2.9,0,.15,w)
+			var lumbar: int = p.bones["lumbar"]
+			p.rig.set_bone_pose_rotation(lumbar,p.rig.get_bone_pose_rotation(lumbar).slerp(Quaternion(Vector3.BACK,.28*bend),w))
+			head(.1,0,w)
 		"mirar":
 			# Arms crossed, head sweeping the view slowly.
 			arm("D",.28,.62,1.95,w)

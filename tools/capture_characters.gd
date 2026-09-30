@@ -274,7 +274,7 @@ func run() -> void:
 	if wants("actividades"):
 		# Activities of the park life (docs/futuro/19): upper-body poses and hand-held props.
 		var cells = []
-		var cases = [["móvil (de pie)", "movil", "reposo", 0.0], ["móvil (sentado)", "movil", "sentado", 0.0], ["periódico", "leer", "sentado", 0.0], ["café", "cafe", "reposo", 0.0], ["foto", "foto", "reposo", 3.0], ["palomas", "palomas", "sentado", 0.9], ["charla", "charla", "reposo", 1.2], ["mirar", "mirar", "reposo", 0.0]]
+		var cases = [["móvil (de pie)", "movil", "reposo", 0.0], ["móvil (sentado)", "movil", "sentado", 0.0], ["periódico", "leer", "sentado", 0.0], ["café", "cafe", "reposo", 0.0], ["foto", "foto", "reposo", 3.0], ["palomas", "palomas", "sentado", 0.9], ["charla", "charla", "reposo", 5.0], ["mirar", "mirar", "reposo", 0.0], ["saludo", "charla", "reposo", 0.4], ["estirar", "estirar", "reposo", 1.7]]
 		for case in cases:
 			clear_people()
 			var t = base_traits()
