@@ -1,6 +1,9 @@
-# Especificación Futura: Modo "Tutor de Fotografía" y Academia Interactiva
+# Especificación: Modo "Tutor de Fotografía" y Academia Interactiva
 
 Este documento especifica la arquitectura pedagógica y los exámenes interactivos para el modo educativo **Academia de Fotografía**.
+
+> [!NOTE]
+> **Estado (01-10-2026): 🟡 implementado salvo los exámenes.** Las cinco lecciones tienen **teoría, demostración guiada y práctica**. El examen aparece en el menú como «todavía no disponible»: sus criterios de aprobado (§2, «Examen práctico»), el informe formativo (§3) y el título de graduado quedan para más adelante, por decisión del usuario. Lo implementado está en el §6. Evidencias en [`docs/evidencias/academia/`](../evidencias/academia/).
 
 ---
 
@@ -94,3 +97,46 @@ Al superar las 5 lecciones, el juego desbloquea el título **"Graduado de la Aca
 ## 5. Raíces en el Documento Fundacional (2012)
 Esta especificación formaliza la propuesta 3 del documento de mayo de 2012 ([PROYECTO_PAPARAZZI_2012.md](../origen/PROYECTO_PAPARAZZI_2012.md)):
 > *"Un tutor interactivo para aprender técnica fotográfica. Concepto: Simuladores de cámaras (CameraSim). El motor del juego se utiliza para demostrar en la práctica los conceptos más técnicos... y ofrecer un sistema de ayuda pedagógica interactiva."*
+
+---
+
+## 6. Implementación (01-10-2026)
+
+Decisiones del usuario antes de empezar: lecciones libres (sin desbloqueo), progreso guardado, todo en el parque actual, el tutor fija cámara y objetivo, se añaden las ópticas necesarias, teoría sobre el visor en tono informal, demostración con subtítulos, sin narración hablada por ahora, botón «Academia» en el inicio y exámenes a futuro. Antes se corrigió la fase 0 de [12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md): el AF matricial y la exposición automática ya no conocen al objetivo, porque un tutor que hace trampa enseña mal.
+
+### 6.1 Piezas
+
+| Pieza | Qué hace |
+|---|---|
+| `scripts/academy.gd` | Lecciones (`SETUP`: luz, cuerpo, objetivo, exposición inicial y diagrama de cada página), panel del tutor sobre el visor, subtítulos, resaltado de controles del HUD, demostraciones guionizadas, prácticas con tareas y pistas en vivo, progreso en `user://academia.cfg` y acciones del InputMap (`academia_siguiente`: Intro, `academia_atras`: Retroceso, `academia_pausa`: P). |
+| `scripts/academy_diagram.gd` | Diagramas en vivo que leen el estado de la cámara: triángulo de exposición, escalas de pasos (diafragma, velocidad, ISO), zona nítida en planta, rastro de un corredor según la velocidad, cuadrícula de tercios con aire delante y vista lateral de la compresión. |
+| `scripts/main.gd` | Menú (`show_academy()`), resultado de la práctica (`show_academy_result()`, con díptico en las lecciones 2 y 5), fotos de la demostración al panel (`academy_demo_shot`), opción `--academy=<lección>:<fase>[:página]` (también `menu` e `inicio`). |
+| `data/textos.es.json` | Todos los textos (`academia_*`): 21 páginas de teoría de 60 palabras como mucho, 29 subtítulos, 15 tareas y sus pistas. |
+| `scripts/equipment.gd` | Tres fijos nuevos en la réflex: 28 f/2,8, 105 f/1,8 y 135 f/2. |
+| `scripts/park.gd` | `forced_cover`: cielo cubierto fijo para la luz suave de la lección 2. |
+
+### 6.2 Las lecciones
+
+| Lección | Luz y equipo | Demostración | Práctica |
+|---|---|---|---|
+| 1 · La exposición | Hora dorada; réflex 24–105 a 50 mm, manual, empieza en f/4 | Cierra dos pasos (la aguja cae a −2), compensa con dos pasos de velocidad, sube dos de ISO y vuelve a 0 cerrando; dispara | f/11 · aguja en 0 con la velocidad (±⅓ EV) · foto bien expuesta (±½ EV) |
+| 2 · La profundidad de campo | Hora dorada cubierta; 105 mm f/1,8, manual | Enfoca a alguien a 4 m a f/1,8 (franja de centímetros, fondo en bokeh), cierra paso a paso hasta f/11 compensando; compara las dos fotos | Enfocar a alguien a 3–6 m · foto a f/2,8 o más abierto · otra a f/8 o más cerrado (díptico) |
+| 3 · El movimiento | Hora dorada; réflex a 50 mm, manual, AF puntual | El corredor pasa a 1/30 (fantasma) y a 1/1000 (congelado); el disparo espera a que un colimador lo cubra | Corredor a 1/60 o más lento · a 1/500 o más rápido · y bien expuesto (±1 EV). El corredor vuelve a pasar cada pocos segundos |
+| 4 · La composición | Día; 50 mm f/1,8, exposición automática, tercios | Centra a un paseante y luego lo lleva a un tercio con aire hacia donde camina y los ojos en la línea de arriba | Activar la cuadrícula · cabeza en un cruce (a menos del 6 % del ancho) · con aire delante y disparar |
+| 5 · La focal y la perspectiva | Día; 28 mm y 135 mm (botones del panel), automática | 28 mm a alguien a 2,3 m (el quiosco pequeño y lejano) y 135 mm a alguien a 11,6 m (el quiosco llena el fondo); escena congelada | 28 mm de cuerpo entero a menos de 4,5 m · 135 mm de cuerpo entero a más de 9 m (con una persona bajo el colimador) · díptico |
+
+Cada lección prepara su escena delante de la cámara: oculta el paseo interior (r ≈ 1,8 m, que se cruza por delante del objetivo; `Person.set_hidden()` desactiva también sus colisionadores), aparta a quien estorbe en el sector y coloca al sujeto con la marca `staged` (sin bancos ni paradas). Al salir, todo vuelve a su rutina.
+
+### 6.3 Pendiente
+
+- **Exámenes** (§2 y §4): criterios de aprobado deterministas, informe formativo (§3), intentos y título de graduado.
+- Narración hablada de la teoría (TTS local).
+- Controles táctiles y Android (el APK no se ha recompilado).
+- Lecciones extra (enfoque manual con telemétrica y réflex; luz nocturna, ISO y grano) y más escenarios.
+
+### 6.4 Pruebas y evidencias
+
+- `tests/test_academy.gd` (con display): textos de todas las páginas, subtítulos y tareas, menú con el examen no disponible, teoría y resaltado, las cinco demostraciones hasta el final con sus fotos (la 1 acaba con la aguja en 0; la 2 compara f/1,8 y f/11 y la zona nítida crece; la 3 pilla al corredor a 1/30 con rastro y a 1/1000 congelado; la 5 hace el 28 mm de cerca y el 135 mm de lejos de cuerpo entero), criterios de práctica con evidencias fabricadas, una práctica real de la lección 1 y el progreso en disco.
+- `tests/test_automatisms.gd`: el AF matricial y el exposímetro no dependen del objetivo del encargo.
+- `tools/capture_academy.gd`: capturas en `docs/evidencias/academia/` (menú, teoría, demostraciones, prácticas y díptico de la lección 5).
+

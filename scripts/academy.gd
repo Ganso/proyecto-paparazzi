@@ -388,12 +388,12 @@ func update_panel() -> void:
 			for k in TASKS:
 				var l: Label = task_labels[k]
 				l.visible = true
-				l.position.y = 110+k*44
+				l.position.y = 122+k*42
 				l.text = "%s  %s" % [text("academia_hecho") if tasks[k] else text("academia_pendiente"),lesson_text("p%d" % (k+1))]
 				l.add_theme_color_override("font_color",Color("b8d78c") if tasks[k] else Color("c9d4bf"))
 			hint_label.visible = hint != ""
 			hint_label.text = hint
-			hint_label.position.y = 250
+			hint_label.position.y = 252
 			next_button.text = text("academia_siguiente") if lesson < LESSONS else text("academia_volver_menu")
 	for b in extra_buttons: b.visible = phase == "practica" and lesson == 5
 
@@ -696,8 +696,8 @@ func start_practice() -> void:
 	for b in extra_buttons: b.queue_free()
 	extra_buttons = []
 	if lesson == 5:
-		extra_buttons.append(make_button(self,text("academia_cambiar_objetivo") % "28 mm",Rect2(590,500,145,40),func(): set_lens(3,28.0)))
-		extra_buttons.append(make_button(self,text("academia_cambiar_objetivo") % "135 mm",Rect2(742,500,150,40),func(): set_lens(5,135.0)))
+		extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "28 mm",Rect2(12,314,168,32),func(): set_lens(3,28.0)))
+		extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "135 mm",Rect2(186,314,167,32),func(): set_lens(5,135.0)))
 	update_panel()
 
 func set_lens(index: int, f: float) -> void:
@@ -743,8 +743,19 @@ func check_practice(dt: float) -> void:
 			if not tasks[0]: new_hint = lesson_text("pista_angular")
 			elif not tasks[1]: new_hint = lesson_text("pista_tele")
 	hint = new_hint
+	highlight = practice_highlight()
 	if tasks != before or hint_label.text != hint: update_panel()
 	complete_if_done()
+
+# The control the next pending task needs, pulsing on the HUD.
+func practice_highlight() -> String:
+	var next = tasks.find(false)
+	if next < 0: return ""
+	match lesson:
+		1: return ["diafragma","velocidad","disparar"][next]
+		2: return ["nitidez","diafragma","diafragma"][next]
+		3: return "velocidad"
+	return ""
 
 func complete_if_done() -> void:
 	if tasks.all(func(t): return t) and not practice_done_shown:

@@ -37,6 +37,7 @@ graph TD
     F --> L[shaders/focus_aid.gdshader<br/>Ayuda de Enfoque Telemétrico/Prisma]
     C --> M[shaders/cel_shading.gdshader + cel_outline.gdshader<br/>Maniquí toon y contorno de tinta]
     A --> N[pigeons.gd · dog.gd · extras.gd · ambience.gd<br/>Vida en el parque: palomas, perro, figurantes y sonido]
+    A --> O[academy.gd · academy_diagram.gd<br/>Academia: lecciones, tutor sobre el visor, diagramas en vivo]
     N --> C
 ```
 
@@ -54,6 +55,7 @@ graph TD
 | **Equipo** | [scripts/equipment.gd](../scripts/equipment.gd) | Catálogo de cuerpos (compacta, telemétrica, réflex), objetivos fotográficos (24 mm a 200 mm), pasos de diafragma y carretes analógicos. |
 | **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 colimadores AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
 | **Vida en el parque** | [scripts/pigeons.gd](../scripts/pigeons.gd), [scripts/dog.gd](../scripts/dog.gd), [scripts/extras.gd](../scripts/extras.gd), [scripts/ambience.gd](../scripts/ambience.gd) | Palomas (MultiMesh), perro con correa, figurantes de la pradera sin colisionadores y sonido ambiente sintetizado. Los actualiza `main.gd` cada fotograma junto a los viandantes ([futuro/19](futuro/19_VIDA_EN_EL_PARQUE.md)). |
+| **Academia** | [scripts/academy.gd](../scripts/academy.gd), [scripts/academy_diagram.gd](../scripts/academy_diagram.gd) | Modo tutor sobre la sesión de sandbox: panel sobre el visor con teoría, demostraciones guionizadas (subtítulos, resaltado de controles, fotos en miniatura) y prácticas con tareas y pistas; progreso en `user://academia.cfg` ([futuro/06](futuro/06_MODO_TUTOR_ACADEMIA.md)). |
 | **Localización** | [scripts/texts.gd](../scripts/texts.gd) | Resolución de claves localizadas desde `data/textos.es.json` con interpolación de variables. |
 
 ---
@@ -83,6 +85,8 @@ stateDiagram-v2
 ```
 
 `EQUIPMENT` se puede abrir desde la intro y desde la barra superior durante la partida; al cerrarse vuelve al estado desde el que se abrió (`equipment_return`).
+
+Estados añadidos por la Academia: `ACADEMY` (menú de lecciones). Las lecciones corren en `SEARCH` sobre una sesión de sandbox con el panel del tutor encima; sus fotos de práctica abren `RESULT` con el resultado propio de la Academia.
 
 ### Detalle de Estados
 

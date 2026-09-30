@@ -3,7 +3,7 @@
 Este directorio contiene las especificaciones de diseño, análisis de viabilidad técnica y propuestas arquitectónicas para futuras expansiones de **Proyecto Paparazzi**.
 
 > [!IMPORTANT]
-> **Paso 1 completado: [16 · Parque fusionado, oclusión horneada y atmósfera](16_PARQUE_ILUSTRADO_QUICK_WIN.md).** **Paso 2 completado (salvo optimización): [17 · Salto gráfico](17_SALTO_GRAFICO_ULTRA.md)**: Ultra en Forward+ a 1440p nativos, objetos de Blender en `hd` y `lo`, suelo texturizado, pradera con quiosco y estanque, maniquíes con texturas de madera y tela y hierba al viento. **Paso 2c completado: [19 · Vida en el parque](19_VIDA_EN_EL_PARQUE.md)**: marcha suave sin temblequeo, bancos, actividades con objetos de mano, perro, palomas, figurantes y sonido ambiente. **Siguiente: paso 3**, la migración a `InputMap` ([14](14_SOPORTE_GAMEPAD.md) fase 1) y el AF/AE que no conoce al objetivo ([12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0). El orden completo está en la [hoja de ruta (§4)](#4-hoja-de-ruta-recomendada).
+> **Paso 1 completado: [16 · Parque fusionado, oclusión horneada y atmósfera](16_PARQUE_ILUSTRADO_QUICK_WIN.md).** **Paso 2 completado (salvo optimización): [17 · Salto gráfico](17_SALTO_GRAFICO_ULTRA.md)**: Ultra en Forward+ a 1440p nativos, objetos de Blender en `hd` y `lo`, suelo texturizado, pradera con quiosco y estanque, maniquíes con texturas de madera y tela y hierba al viento. **Paso 2c completado: [19 · Vida en el parque](19_VIDA_EN_EL_PARQUE.md)**: marcha suave sin temblequeo, bancos, actividades con objetos de mano, perro, palomas, figurantes y sonido ambiente. **Paso 6 adelantado y en curso: [06 · Academia](06_MODO_TUTOR_ACADEMIA.md)**, con teoría, demostración y práctica de cinco lecciones (faltan los exámenes). **Siguiente: paso 3**, la migración a `InputMap` ([14](14_SOPORTE_GAMEPAD.md) fase 1) y el AF/AE que no conoce al objetivo ([12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0). El orden completo está en la [hoja de ruta (§4)](#4-hoja-de-ruta-recomendada).
 
 ---
 
@@ -23,7 +23,7 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 | **Nuevas Cámaras: TLR (Visor invertido), Móvil, Gran Formato** | 📝 *Propuesta futura* (TLR primero) | [03_NUEVAS_CAMARAS_Y_TLR.md](03_NUEVAS_CAMARAS_Y_TLR.md) |
 | **Mayor Diversidad de Escenarios Urbanos** | 📝 *Propuesta futura* (aplazada) | [04_DIVERSIDAD_ESCENARIOS.md](04_DIVERSIDAD_ESCENARIOS.md) |
 | **Desafíos Específicos y Modos de Juego** | 📝 *Propuesta futura* | [05_DESAFIOS_Y_MODOS_JUEGO.md](05_DESAFIOS_Y_MODOS_JUEGO.md) |
-| **Modo "Tutor de Fotografía" y Academia** | 📝 *Propuesta futura* | [06_MODO_TUTOR_ACADEMIA.md](06_MODO_TUTOR_ACADEMIA.md) |
+| **Modo "Tutor de Fotografía" y Academia** | 🟡 **Parcialmente hecho** (faltan los exámenes) | [06_MODO_TUTOR_ACADEMIA.md](06_MODO_TUTOR_ACADEMIA.md) §6: `scripts/academy.gd` y `academy_diagram.gd`; cinco lecciones con teoría sobre el visor, demostración guiada con subtítulos y práctica con tareas; examen visible como «no disponible»; `tests/test_academy.gd`; evidencias en `docs/evidencias/academia/`. |
 | **Visores Realistas de Carcasa y Efectos de Cielo** | 📝 *Propuesta futura* | [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md). Su §2 (ergonomía táctil) queda sustituida por [13](13_INTERFAZ_MOVIL_UTILIZABLE.md). |
 | **Cámaras de Carrete con ISO Fijo** | ✅ **Ya implementado** | Activo en `scripts/equipment.gd:15` (`film`), bloquea ISO manual. Documentado en [docs/EQUIPAMIENTO_Y_OPTICAS.md](../EQUIPAMIENTO_Y_OPTICAS.md). |
 | **Ropa Deportiva Exclusiva para Corredores** | ✅ **Ya implementado** | Validado en `scripts/casting.gd:18` y `tests/test_expansion.gd:38` (sin accesorios sueltos). Documentado en [docs/PERSONAJES_Y_CINEMATICA.md](../PERSONAJES_Y_CINEMATICA.md). |
@@ -79,7 +79,7 @@ Estimaciones revisadas contra el código. Las dependencias son las reales: una e
 3. [03_NUEVAS_CAMARAS_Y_TLR.md](03_NUEVAS_CAMARAS_Y_TLR.md) — Cámaras de formato medio TLR con visor de cintura invertido horizontalmente, smartphones computacionales y banco óptico 4×5.
 4. [04_DIVERSIDAD_ESCENARIOS.md](04_DIVERSIDAD_ESCENARIOS.md) — Nuevas localizaciones (Bulevar comercial, Estación de tren, Museo, Pista deportiva) y su dependencia de una navegación generalizada.
 5. [05_DESAFIOS_Y_MODOS_JUEGO.md](05_DESAFIOS_Y_MODOS_JUEGO.md) — Modos de juego reglados (Reto de focal fija, Paparazzi contrarreloj, Cazador nocturno, Barrido, Regla de Magnum) e insignias.
-6. [06_MODO_TUTOR_ACADEMIA.md](06_MODO_TUTOR_ACADEMIA.md) — Academia interactiva de fotografía, lecciones pedagógicas con ejercicios prácticos y evaluación por examen.
+6. [06_MODO_TUTOR_ACADEMIA.md](06_MODO_TUTOR_ACADEMIA.md) — Academia interactiva de fotografía: **lecciones con teoría, demostración y práctica implementadas** (01-10-2026); la evaluación por examen queda pendiente.
 7. [07_VISORES_REALISTAS_Y_MOVIL.md](07_VISORES_REALISTAS_Y_MOVIL.md) — Ocular de visor fotorrealista, pantallas LCD de datos, paralaje en compactas y mejoras de cielo, sol y nubes.
 8. [08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md](08_CAPTURA_AUTOMATICA_DE_EVIDENCIAS.md) — Suite de capturas automáticas de hitos, spritesheets de assets por categoría, muestrario de personajes representativos, GIFs animados de cinemática y prevención de `.import` mediante `.gdignore`.
 9. [09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md) — Pipeline de compilación y empaquetado desatendido a APK de depuración para pruebas en hardware móvil real vía CLI y ADB.
@@ -109,7 +109,7 @@ graph TD
     P3["3 · Correcciones de base<br/>InputMap (14 fase 1) · AF/AE sin conocer al objetivo (12 fase 0)"] --> P4
     P4["4 · Interfaz móvil (13) y mando (14 fases 2-3)"] --> P6
     P5["5 · Mejoras gráficas rápidas<br/>02 §11 G2-G5, G7 · variedad 15 fase 1"] --> P8
-    P6["6 · Academia (06) y desafíos (05 sin barrido)"] --> P7
+    P6["6 🟡 · Academia (06: lecciones hechas, exámenes pendientes) y desafíos (05 sin barrido)"] --> P7
     P7["7 · Barrido y DoF calibrado (11) → desafío de barrido (05 §2.4)"] --> P9
     P8["8 · Variedad procedural 15 fases 2-5"] --> P9
     P9["9 · Fotometría y AF avanzados (12 fases 1-2) · puestos de observación (01-A) · TLR (03) · visores (07)"] --> P10
@@ -124,7 +124,7 @@ graph TD
 | 3 | [14](14_SOPORTE_GAMEPAD.md) fase 1 y [12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0 | El mapa único de controles evita que cada especificación invente teclas. El AF matricial que delata al objetivo es un atajo del juego actual. |
 | 4 | [13](13_INTERFAZ_MOVIL_UTILIZABLE.md) y [14](14_SOPORTE_GAMEPAD.md) fases 2-3 | Hay un APK en el repositorio, pero el enfoque manual es inviable en móvil. Móvil y mando comparten el disparador de dos fases. |
 | 5 | [02 §11](02_ESTILO_VISUAL_Y_POLIGONOS.md) G2–G5 y G7, y [15](15_VARIEDAD_PROCEDURAL.md) fase 1 | Mejoras de coste S que se apoyan en los colores de vértice del paso 1. |
-| 6 | [06](06_MODO_TUTOR_ACADEMIA.md) y [05](05_DESAFIOS_Y_MODOS_JUEGO.md) (salvo 2.4) | Mucho valor de juego con bajo riesgo; la base (`lines`, sandbox) ya existe. |
+| 6 🟡 | [06](06_MODO_TUTOR_ACADEMIA.md) y [05](05_DESAFIOS_Y_MODOS_JUEGO.md) (salvo 2.4) | Mucho valor de juego con bajo riesgo; la base (`lines`, sandbox) ya existe. **Adelantado por el usuario (30-09-2026)**: la Academia tiene ya teoría, demostración y práctica; faltan sus exámenes y los desafíos de 05. |
 | 7 | [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md), después [05 §2.4](05_DESAFIOS_Y_MODOS_JUEGO.md) | El barrido necesita simular la exposición en el tiempo. |
 | 8 | [15](15_VARIEDAD_PROCEDURAL.md) fases 2-5 | Variedad sobre la base de Blender ya asentada. |
 | 9 | [12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fases 1-2, [01](01_MAPA_ABIERTO_Y_PROTAGONISTA.md)-A, [03](03_NUEVAS_CAMARAS_Y_TLR.md) (TLR) y [07](07_VISORES_REALISTAS_Y_MOVIL.md) | Profundizan en la fotografía sobre controles ya estables. |

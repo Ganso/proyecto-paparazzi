@@ -247,8 +247,8 @@
   "academia_l5_p1": "Con el 28 mm, foto de cuerpo entero a alguien cercano (a menos de 4,5 m)",
   "academia_l5_p2": "Con el 135 mm, foto de cuerpo entero a alguien a más de 9 m",
   "academia_l5_p3": "Compara las dos fotos",
-  "academia_l5_pista_angular": "Pon el 28 mm (botón de abajo) y encuadra de cuerpo entero a alguien del paseo de los bancos.",
-  "academia_l5_pista_tele": "Pon el 135 mm y busca a alguien del paseo exterior, junto a los árboles.",
+  "academia_l5_pista_angular": "Pon el 28 mm (botón del panel) y encuadra de cuerpo entero a alguien del paseo de los bancos.",
+  "academia_l5_pista_tele": "Pon el 135 mm (botón del panel) y busca a alguien del paseo exterior, junto a los árboles.",
   "academia_l5_pista_lejos": "Esa persona está demasiado cerca para el tele: busca a alguien a más de 9 m.",
   "academia_l5_pista_cerca": "Con el angular busca a alguien cercano, a menos de 4,5 m (el paseo de los bancos).",
   "academia_l5_pista_tamano": "Encuádralo de cuerpo entero: que ocupe casi toda la altura de la foto."

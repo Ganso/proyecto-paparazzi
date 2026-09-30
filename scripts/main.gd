@@ -695,6 +695,9 @@ func _process(dt: float) -> void:
 		if parts[0] == "menu":
 			show_academy()
 			return
+		if parts[0] == "inicio":
+			intro()
+			return
 		academy.begin(int(parts[0]),parts[1] if parts.size() > 1 else "teoria")
 		if parts.size() > 2:
 			academy.page = int(parts[2])-1
