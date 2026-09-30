@@ -131,6 +131,22 @@ func run() -> void:
 	check(academy.comparison_photos().size() == 2,"Lesson 5: diptych of the two photos")
 
 	print("· real practice")
+	# --- Lesson 4 for real: the tutor sees a head on a crossing with lead room ---
+	academy.begin(4,"practica")
+	for i in 20: await process_frame
+	var walker = academy.subject
+	check(walker != null,"Lesson 4 places a walker")
+	if walker:
+		academy.frame_goal = {"who":walker,"x":.5,"y":.5,"snap":true}
+		var t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec()-t0 < 1500: await process_frame
+		check(academy.thirds_check() == "cruce","Lesson 4: a centred head is not on a crossing")
+		academy.frame_goal = {"who":walker,"x":0.0,"y":1.0/3.0,"lead":true}
+		t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec()-t0 < 3000: await process_frame
+		check(academy.thirds_check() == "listo","Lesson 4: head on the crossing with lead room (%s)" % academy.thirds_check())
+		academy.frame_goal = {}
+
 	# --- A real practice: lesson 1 by hand ---
 	academy.begin(1,"practica")
 	for i in 5: await process_frame
@@ -138,7 +154,8 @@ func run() -> void:
 	game.n_index = stops.find(11.0)
 	game.refresh()
 	academy.expose_with_shutter()
-	for i in 30: await process_frame
+	var t1 = Time.get_ticks_msec()
+	while Time.get_ticks_msec()-t1 < 800: await process_frame   # the tutor checks every 0.25 s
 	check(academy.tasks[0] and academy.tasks[1],"Lesson 1: f/11 and the needle at 0 tick the first two tasks")
 	await game.take_photo()
 	for i in 3: await process_frame

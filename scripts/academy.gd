@@ -774,21 +774,24 @@ func complete_if_done() -> void:
 # Lesson 4: where the head of the person under the active point is, against the thirds.
 # "" (nobody), "cruce" (not on a crossing), "aire" (crossing on the wrong side), "listo".
 func thirds_check() -> String:
-	var hit = main.point_hit(main.finder.points()[main.finder.active])
-	if hit.is_empty() or not hit.collider.has_meta("person"): return ""
-	var p = hit.collider.get_meta("person")
-	var head = head_screen(p)
-	if head.x < 0: return ""
+	# Whoever in the frame (up to 15 m, not hidden) has the head nearest a crossing of the thirds.
 	var best = 1e9
 	var best_x = 0.0
-	for cx in [1.0/3.0,2.0/3.0]:
-		for cy in [1.0/3.0,2.0/3.0]:
-			var d = Vector2((head.x-cx)*16.0/9.0,head.y-cy).length()
-			if d < best:
-				best = d
-				best_x = cx
+	var best_p = null
+	for p in main.people:
+		if not p.visible or p.position.distance_to(main.camera.global_position) > 15.0: continue
+		var head = head_screen(p)
+		if head.x < 0 or head.x > 1 or head.y < 0 or head.y > 1: continue
+		for cx in [1.0/3.0,2.0/3.0]:
+			for cy in [1.0/3.0,2.0/3.0]:
+				var d = Vector2((head.x-cx)*16.0/9.0,head.y-cy).length()
+				if d < best:
+					best = d
+					best_x = cx
+					best_p = p
+	if best_p == null: return ""
 	if best > .06*16.0/9.0: return "cruce"
-	var motion = p.actual_velocity.dot(main.camera.global_basis.x)
+	var motion = best_p.actual_velocity.dot(main.camera.global_basis.x)
 	if absf(motion) > .05 and ((motion < 0 and best_x < .5) or (motion > 0 and best_x > .5)): return "aire"
 	return "listo"
 
@@ -883,7 +886,8 @@ func track_frame_goal(dt: float) -> void:
 	if frame_goal.is_empty() or not is_instance_valid(frame_goal.get("who")): return
 	var p = frame_goal.who
 	if frame_goal.get("lead",false): frame_goal.x = lead_x(p)
-	var head = p.control_points()[0]
+	# Lead a walking subject a little (a camera operator anticipates), so it does not lag behind.
+	var head = p.control_points()[0]+p.actual_velocity*.35
 	var local = main.camera.global_transform.affine_inverse()*head
 	if local.z > -.1: return
 	var half_h = deg_to_rad(main.camera.fov)*.5

@@ -157,7 +157,7 @@ func draw_thirds() -> void:
 	txt(head+Vector2(-120,40),"aire delante",11,amber)
 	if academy.phase == "practica" and academy.lesson == 4:
 		var state = m.academy_last_thirds
-		txt(Vector2(8,size.y-4),{"":"Nadie bajo el punto de enfoque","cruce":"Cabeza fuera de los cruces","aire":"Cruce correcto, pero sin aire delante","listo":"¡Perfecto!"}.get(state,""),11,green if state == "listo" else ink)
+		txt(Vector2(8,size.y-4),{"":"Nadie cerca en el encuadre","cruce":"Cabeza fuera de los cruces","aire":"Cruce correcto, pero sin aire delante","listo":"¡Perfecto!"}.get(state,""),11,green if state == "listo" else ink)
 
 func draw_compression() -> void:
 	var m = academy.main
