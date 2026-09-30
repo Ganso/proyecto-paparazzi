@@ -578,12 +578,19 @@ func build_meadow(rng: RandomNumberGenerator) -> void:
 		var pos = polar(theta,rng.randf_range(18.5,36.0))
 		if pos.distance_to(bandstand) < 6.5 or pos.distance_to(pond) < 6.0: continue
 		if in_view_opening(theta) and pos.length() < 30.0: continue
+		hd_only = (placed+placed/4)%4 != 0   # every species still drawn
 		build_tree(placed%4, pos, 3000 + placed * 53, rng.randf_range(1.0,1.3))
+		hd_only = false
 		placed += 1
 	# Far tree belt framing the lawn in front of the skyline: two staggered rows.
+	# In lo (Android) one tree in three of this row is drawn (and one in four of the scattered
+	# meadow trees above), to stay within 100.000 triangles; the colliders are all there in every
+	# profile.
 	for i in 60:
 		var theta = i*6.0+rng.randf_range(-2.0,2.0)
+		hd_only = i%3 != 0
 		build_tree((i*3)%4, polar(theta,rng.randf_range(39.0,44.0)), 4000 + i * 29, rng.randf_range(1.2,1.5))
+	hd_only = false
 	# The second row and the shrub clusters are drawn only in hd, to keep the mobile profiles within
 	# 100.000 triangles. Their colliders exist in every profile: beyond the lanes, they never hide a
 	# pedestrian, and at 46–52 m even the golden-hour sun passes above them.
