@@ -72,7 +72,9 @@ func run() -> void:
 		# Everyone else on the bench path steps out of the way (hidden) and frees the benches.
 		for q in game.people:
 			if q != sitter and q.lane == 1: q.visible = false
-		for bench_i in game.park.benches: bench_i.occupied = false
+		for bench_i in game.park.benches:
+			game.set_seat(bench_i,0,null)
+			game.set_seat(bench_i,1,null)
 		var bench_index = 0
 		var bench = game.park.benches[bench_index]
 		sitter.theta = fposmod(bench.theta-sitter.direction*9.0,360)
@@ -81,7 +83,8 @@ func run() -> void:
 		sitter.pending_stop = {}
 		sitter.stuck_time = 0.0
 		sitter.activity = ""
-		bench.occupied = true
+		game.set_seat(bench,0,sitter)
+		sitter.bench_slot = 0
 		sitter.bench_goal = bench_index
 		sitter.place()
 		var max_jump = 0.0
@@ -109,8 +112,46 @@ func run() -> void:
 			if sitter.state == "CAMINANDO":
 				stood = true
 				break
-		check(stood and not bench.occupied,"Stands up and frees the bench")
+		check(stood and bench.seats[0] == null,"Stands up and frees the bench")
 		check(max_jump < .06,"No teleport while standing up")
+		# Someone else sits on the free place beside a seated person: they chat, heads turned.
+		var first = null
+		var second = null
+		for q in game.people:
+			if q != sitter and q.lane == 1 and not q.runner and not q.protected_target and q.state == "CAMINANDO":
+				if first == null: first = q
+				elif second == null: second = q
+		if first and second:
+			for q in [first,second]:
+				q.visible = true
+				q.pending_stop = {}
+				q.stuck_time = 0.0
+				q.activity = ""
+				q.partner = null
+			sitter.visible = false
+			for slot in 2:
+				var q = [first,second][slot]
+				q.direction = 1.0
+				q.theta = fposmod(game.seat_theta(bench,slot)-(9.0 if slot == 0 else 30.0),360)
+				q.radius = 4.3
+				q.v_fwd = q.speed
+				game.set_seat(bench,slot,q)
+				q.bench_slot = slot
+				q.bench_goal = bench_index
+				q.place()
+			for q in [first,second]:
+				for i in 30*14:
+					game.update_person(q,1.0/30)
+					if OS.has_environment("LIFE_DEBUG") and i % 15 == 0: print("pair t=%.1f %s θ%.2f r%.2f v%.2f goal%d slot%d stuck%.1f ahead %.2f" % [i/30.0,q.state,q.theta,q.radius,q.v_fwd,q.bench_goal,q.bench_slot,q.stuck_time,game.ahead_of(q,game.seat_theta(bench,q.bench_slot))])
+					if q.state == "SENTADO" and q.seat >= 1.0: break
+			for i in 30*3:
+				for q in [first,second]: game.update_person(q,1.0/30)
+			check(first.state == "SENTADO" and second.state == "SENTADO","Two people share a bench")
+			check(first.position.distance_to(second.position) > .7,"Each on their own place")
+			var chatting = first.activity == "charla" or second.activity == "charla"
+			if chatting:
+				var talker = first if first.activity == "charla" else second
+				check(absf(talker.look_yaw) > .3,"Seated chat turns the head to the other")
 		for q in game.people: q.visible = true
 
 	# --- Chat: two oncoming walkers stop and face each other ---

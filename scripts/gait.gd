@@ -256,7 +256,7 @@ func activity() -> void:
 			var g = sin(t*1.3)*.5+.5
 			arm("D",.25+.35*g,.2,.9+.6*g,w*(.4+.6*smoothstep(-.2,.6,sin(t*.31))))
 			arm("I",.15+.15*sin(t*.9+1),.1,.5+.3*g,w*.5)
-			head(.06*sin(t*2.1),.12*sin(t*.37),w)
+			head(.06*sin(t*2.1),p.look_yaw+.12*sin(t*.37),w)
 		"mirar":
 			# Arms crossed, head sweeping the view slowly.
 			arm("D",.28,.62,1.95,w)

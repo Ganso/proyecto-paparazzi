@@ -798,7 +798,7 @@ func build() -> void:
 		root.position = polar(theta,bench_radius)
 		root.rotation.y = PI-deg_to_rad(theta)
 		add_child(root)
-		benches.append({"theta":theta,"radius":bench_radius,"occupied":false,"root":root})
+		benches.append({"theta":theta,"radius":bench_radius,"occupied":false,"seats":[null,null],"root":root})
 		material(Color("2a3230"), 0.55, 0.45) # Cast iron legs
 		material(Color("8f6136"), 0.42, 0.45) # Varnished teak slats
 		collider_only = ParkAssets.available("banco")

@@ -799,7 +799,7 @@ func update_person(p: Pedestrian, dt: float) -> void:
 	if p.state == "SENTADO" or p.state == "LEVANTANDO":
 		var bench = park.benches[p.bench_index]
 		var e = smoothstep(0,1,p.seat)
-		p.theta = lerpf(p.sit_from.x,bench.theta,e)
+		p.theta = p.sit_from.x+angle_difference(deg_to_rad(p.sit_from.x),deg_to_rad(seat_theta(bench,p.bench_slot)))*180.0/PI*e
 		p.radius = lerpf(p.sit_from.y,bench_seat(bench,p),e)
 		p.position = park.polar(p.theta,p.radius)
 	p.actual_velocity = (p.position-previous_position)/maxf(dt,.0001)
@@ -861,6 +861,17 @@ func face_view(p: Pedestrian) -> float:
 	var outward = -deg_to_rad(p.theta)+PI
 	return outward+p.rng.randf_range(-1.0,1.0)+(PI if p.rng.randf() < .5 else 0.0)
 
+# Two places per bench, 0.42 m either side of its centre. Someone already sitting makes the other
+# place more tempting: two people on a bench chat (update_still()).
+const SEAT_SPREAD = .42
+
+func seat_theta(bench: Dictionary, slot: int) -> float:
+	return fposmod(bench.theta+(slot*2-1)*rad_to_deg(SEAT_SPREAD/bench.get("radius",4.85)),360.0)
+
+func set_seat(bench: Dictionary, slot: int, who) -> void:
+	bench.seats[slot] = who
+	bench.occupied = bench.seats[0] != null and bench.seats[1] != null
+
 func choose_bench(p: Pedestrian) -> void:
 	for i in park.benches.size():
 		var bench = park.benches[i]
@@ -870,9 +881,14 @@ func choose_bench(p: Pedestrian) -> void:
 		# Decided once per bench passed.
 		if p.get_meta("bench_seen",-1) == i: continue
 		p.set_meta("bench_seen",i)
-		if p.rng.randf() < .4:
-			bench.occupied = true
+		var company = bench.seats[0] != null or bench.seats[1] != null
+		if p.rng.randf() < (.55 if company else .4):
+			# The free place, or the nearer one if both are free.
+			var slot = 0 if bench.seats[0] == null else 1
+			if bench.seats[0] == null and bench.seats[1] == null and ahead_of(p,seat_theta(bench,1)) < ahead_of(p,seat_theta(bench,0)): slot = 1
+			set_seat(bench,slot,p)
 			p.bench_goal = i
+			p.bench_slot = slot
 		return
 
 # The bench seat spans r 4.80–5.20 (legs from 4.76): people stop just in front of it, then the hips
@@ -887,7 +903,7 @@ func bench_seat(bench: Dictionary, p: Pedestrian) -> float:
 # once there, the person turns to face the path and sits (update_still()).
 func approach_bench(p: Pedestrian) -> void:
 	var bench = park.benches[p.bench_goal]
-	var ahead = ahead_of(p,bench.theta)
+	var ahead = ahead_of(p,seat_theta(bench,p.bench_slot))
 	var front = bench_front(bench,p)
 	if ahead < .1 and absf(p.radius-front) < .14:
 		p.bench_index = p.bench_goal
@@ -897,9 +913,15 @@ func approach_bench(p: Pedestrian) -> void:
 		p.state_time = 999.0
 		p.face_target = PI-deg_to_rad(bench.theta)
 	elif ahead < -.6 or p.stuck_time > 2.5:
-		# Missed it or blocked: give up, free the bench.
-		bench.occupied = false
+		# Missed it or blocked: give up, free the place.
+		set_seat(bench,p.bench_slot,null)
 		p.bench_goal = -1
+
+# The other person on the same bench, if seated.
+func bench_neighbour(p: Pedestrian):
+	if p.bench_index < 0: return null
+	var other = park.benches[p.bench_index].seats[1-p.bench_slot]
+	return other if other != null and other.state == "SENTADO" else null
 
 func update_still(p: Pedestrian, dt: float) -> void:
 	match p.state:
@@ -912,6 +934,15 @@ func update_still(p: Pedestrian, dt: float) -> void:
 					p.state_time = p.rng.randf_range(25,70)
 					p.activity = SEAT_ACTIVITIES[p.rng.randi()%SEAT_ACTIVITIES.size()]
 					p.act_time = 0.0
+					# Sitting down next to someone: they chat for a while.
+					var neighbour = bench_neighbour(p)
+					if neighbour != null and p.rng.randf() < .7:
+						p.activity = "charla"
+						p.partner = neighbour
+						neighbour.activity = "charla"
+						neighbour.partner = p
+						neighbour.act_time = 0.0
+						neighbour.state_time = maxf(neighbour.state_time,p.state_time*.8)
 				return
 			if p.activity == "charla" and is_instance_valid(p.partner):
 				var to = p.partner.position-p.position
@@ -919,13 +950,27 @@ func update_still(p: Pedestrian, dt: float) -> void:
 			p.state_time -= dt
 			if p.state_time <= 0: resume_walk(p)
 		"SENTADO":
+			# Seated side by side: turn the head to the other one.
+			var target_yaw = 0.0
+			if p.activity == "charla" and is_instance_valid(p.partner):
+				var to = p.partner.position-p.position
+				target_yaw = clampf(angle_difference(p.rotation.y,atan2(-to.x,-to.z)),-1.1,1.1)
+			elif p.activity == "charla":
+				p.activity = ""
+			p.look_yaw = move_toward(p.look_yaw,target_yaw,dt*1.5)
 			p.state_time -= dt
 			if p.state_time <= 0:
-				if p.activity != "": p.activity = ""
+				if p.activity != "":
+					if p.activity == "charla" and is_instance_valid(p.partner) and p.partner.partner == p:
+						p.partner.activity = SEAT_ACTIVITIES[p.rng.randi()%SEAT_ACTIVITIES.size()]
+						p.partner.partner = null
+					p.activity = ""
+					p.partner = null
 				elif p.act_w <= 0 and stand_up_clear(p): p.state = "LEVANTANDO"
 		"LEVANTANDO":
+			p.look_yaw = move_toward(p.look_yaw,0.0,dt*1.5)
 			if p.seat <= 0:
-				park.benches[p.bench_index].occupied = false
+				set_seat(park.benches[p.bench_index],p.bench_slot,null)
 				p.bench_index = -1
 				if p.rng.randf() < .5: p.direction *= -1
 				resume_walk(p)
@@ -945,7 +990,8 @@ func resume_walk(p: Pedestrian) -> void:
 func stand_up_clear(p: Pedestrian) -> bool:
 	var spot = park.polar(p.sit_from.x,p.sit_from.y)
 	for other in people:
-		if other != p and other.visible and other.position.distance_to(spot) < .9: return false
+		if other == p or not other.visible or other.state == "SENTADO": continue
+		if other.position.distance_to(spot) < .9: return false
 	return true
 
 func walk_step(p: Pedestrian, dt: float) -> void:
@@ -966,15 +1012,20 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 		if p.lane == 1 and absf(ahead_of(p,bench.theta)) < 1.5: hi = minf(hi,bench.get("radius",4.85)-.42)
 	if p.bench_goal >= 0:
 		var bench = park.benches[p.bench_goal]
-		var to_go = ahead_of(p,bench.theta)
-		if to_go < 1.6:
+		var to_go = ahead_of(p,seat_theta(bench,p.bench_slot))
+		# Along the path (clear of anyone already sitting, whose feet reach r ≈ 4.5 m) until
+		# the own place, then the last half metre sideways to the front of the bench.
+		if to_go < .6:
 			hi = bench_front(bench,p)
 			static_check = false
-		r_des = clampf(bench_front(bench,p),lo,hi)
+			r_des = clampf(bench_front(bench,p),lo,hi)
+		else:
+			r_des = minf(r_des,4.2)
 		v_des = minf(v_des,maxf(.07,(to_go-.05)*.9))
 	elif p.radius > hi+.02: static_check = false
 	r_des = clampf(r_des,lo,hi)
 	p.pass_timer = maxf(0.0,p.pass_timer-dt)
+	p.side_flip_cd = maxf(0.0,p.side_flip_cd-dt)
 	if p.pass_timer <= 0: p.pass_side = 0.0
 	var blocking_ahead = INF
 	for other in people:
@@ -983,6 +1034,9 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 		if ahead <= -.9 or ahead > 4.0: continue
 		var lateral = other.radius-p.radius
 		if absf(lateral) > 1.1: continue
+		# Walking up to a bench: whoever already sits on it is not in the way (the approach keeps to
+		# the path and only steps to the bench in front of the free place).
+		if p.bench_goal >= 0 and other.bench_index == p.bench_goal and other.state == "SENTADO": continue
 		var still = other.state != "CAMINANDO"
 		var other_v = 0.0 if still else other.v_fwd*(1.0 if other.direction == p.direction else -1.0)
 		var closing = p.v_fwd-other_v
@@ -1011,6 +1065,16 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 				p.pass_timer = 3.0
 			var side_target = clampf(other.radius+p.pass_side*PERSONAL_SPACE,lo,hi)
 			var can_pass = absf(side_target-other.radius) > PERSONAL_SPACE-.12
+			if not can_pass and p.side_flip_cd <= 0 and still:
+				# The latched side is walled off (bench, lane edge) by someone who is not moving:
+				# take the other one if it fits (at most once every 2.5 s, never flip-flopping).
+				var other_side = clampf(other.radius-p.pass_side*PERSONAL_SPACE,lo,hi)
+				if absf(other_side-other.radius) > PERSONAL_SPACE-.12:
+					p.side_flip_cd = 2.5
+					p.pass_timer = 3.0
+					p.pass_side = -p.pass_side
+					side_target = other_side
+					can_pass = true
 			var weight = clampf((4.0-ahead)/2.5,0.0,1.0)
 			r_des = lerpf(r_des,side_target,weight)
 			p.pass_timer = maxf(p.pass_timer,1.2)
@@ -1019,7 +1083,7 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 				if other.direction == p.direction or still:
 					v_des = minf(v_des,maxf(0.0,other_v)+maxf(0.0,ahead-FOLLOW_GAP)*.8)
 		# Someone slow in front, not yet reached: ease off early instead of braking late.
-		if absf(lateral) < PERSONAL_SPACE-.2 and ahead < 2.0 and other.direction == p.direction:
+		if absf(lateral) < PERSONAL_SPACE-.2 and ahead < 2.0 and other.direction == p.direction and not still:
 			v_des = minf(v_des,maxf(0.0,other_v)+maxf(0.0,ahead-FOLLOW_GAP)*1.2)
 	# Forward speed with limited acceleration.
 	var accel = (WALK_ACCEL*(2.5 if p.runner else 1.0)) if v_des > p.v_fwd else WALK_BRAKE

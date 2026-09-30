@@ -37,9 +37,17 @@ func run() -> void:
 		lateral_sign[p] = 0
 		flips[p] = 0
 	var state_counts = {}
+	# Being blocked for a while is resolved by the escalation of walk_step() (other side at 2 s,
+	# change lane at 3 s, turn back at 5 s): a stuck_time beyond 5.5 s would be a real deadlock.
+	var max_stuck = 0.0
+	var stuck_who = ""
 	for step in steps:
 		for p in game.people: game.update_person(p, dt)
-		for p in game.people: state_counts[p.state] = state_counts.get(p.state,0)+1
+		for p in game.people:
+			state_counts[p.state] = state_counts.get(p.state,0)+1
+			if p.stuck_time > max_stuck:
+				max_stuck = p.stuck_time
+				stuck_who = describe(p)
 		for p in game.people:
 			if not p.visible: continue
 			if p.state == "CAMINANDO":
@@ -69,7 +77,7 @@ func run() -> void:
 					worst = "step %d: %s vs %s" % [step, describe(a), describe(b)]
 	var worst_flips = 0
 	for p in flips: worst_flips = maxi(worst_flips, flips[p])
-	var jammed = game.people.filter(func(p): return p.visible and p.state == "CAMINANDO" and p.stuck_time > 2.0)
+	var jammed = game.people.filter(func(p): return p.visible and p.state == "CAMINANDO" and p.stuck_time > 5.5)
 	print("CROWD: max turn %.0f°/s, worst quick lateral reversals %d in 60 s, min gap %.2f m, mean walking speed %.2f m/s, jammed %d" % [rad_to_deg(max_turn_rate), worst_flips, min_gap, speed_sum / maxf(1, moving_samples), jammed.size()])
 	var total_samples = 0
 	for k in state_counts: total_samples += state_counts[k]
@@ -83,7 +91,8 @@ func run() -> void:
 	check(rad_to_deg(max_turn_rate) <= 125.0, "Heading turns at a bounded rate (no snapping)")
 	check(worst_flips <= 2, "No sideways trembling (lateral direction reversals)")
 	check(min_gap >= .42, "Walkers never overlap")
-	check(jammed.is_empty(), "Nobody stays jammed")
+	print("CROWD STUCK: longest %.1f s %s" % [max_stuck, stuck_who if max_stuck > 2.0 else ""])
+	check(max_stuck < 5.5, "Nobody stays jammed beyond the escalation (turn back at 5 s)")
 	print("CROWD TESTS: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)
 

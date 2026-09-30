@@ -18,11 +18,11 @@ Detalle en [NAVEGACION_Y_COLISIONES.md §3](../NAVEGACION_Y_COLISIONES.md). En r
 
 ## 2. Bancos, paradas y actividades
 
-- **Bancos**: el viandante decide una vez por banco (probabilidad 0,4) si sentarse, lo reserva, se arrima a su borde frenando, se gira hacia el camino y se sienta en 1,3 s con cinemática inversa: los pies se quedan quietos y la cadera va atrás y abajo hasta el asiento ([PERSONAJES_Y_CINEMATICA.md §4.bis](../PERSONAJES_Y_CINEMATICA.md)). Al levantarse espera a tener hueco. Nada se teletransporta (`test_park_life.gd`: menos de 6 cm por fotograma).
+- **Bancos de dos plazas**: el viandante decide una vez por banco (probabilidad 0,4, o 0,55 si ya hay alguien sentado) si sentarse, reserva una plaza, se arrima a su borde frenando, se gira hacia el camino y se sienta en 1,3 s con cinemática inversa: los pies se quedan quietos y la cadera va atrás y abajo hasta el asiento ([PERSONAJES_Y_CINEMATICA.md §4.bis](../PERSONAJES_Y_CINEMATICA.md)). Si se sienta junto a alguien, suelen charlar girando la cabeza el uno hacia el otro. Al levantarse espera a tener hueco. Nada se teletransporta (`test_park_life.gd`: menos de 6 cm por fotograma).
 - **Paradas con actividad**: se para frenando (`pending_stop`) y mira al paisaje mientras hace algo (`mirar`, `movil`, `foto`, `cafe`). Dos caminantes que se cruzan pueden **pararse a charlar** frente a frente.
 - **Sentados**: leen el periódico, miran el móvil, toman café, echan migas a las palomas o descansan.
 - **Andando**: a veces sacan el móvil y caminan más despacio mirándolo.
-- **Reparto medido** en 60 s de multitud: el 74 % del tiempo caminando, el 12 % parados y el 14 % sentados (`test_crowd.gd` exige al menos un 60 % caminando).
+- **Reparto medido** en 60 s de multitud: el 79 % del tiempo caminando, el 13 % parados y el 8 % sentados (`test_crowd.gd` exige al menos un 60 % caminando).
 - **Capa de actividades** (`gait.gd::activity`): tren superior mezclado con peso `act_w`; las piernas no se tocan.
 - **Objetos de mano** (`person.gd::make_prop`): teléfono, periódico con texto procedural, cámara, vaso de café y bolsa de pan. Se construyen al usarse, en la mano (`BoneAttachment3D`), sin colisionadores. **El móvil ilumina la cara** con una luz pequeña sin sombras, más intensa de noche (petición del usuario durante la sesión).
 

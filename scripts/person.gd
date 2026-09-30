@@ -26,6 +26,7 @@ var pref_offset = 0.0
 # Side (+1 outward, -1 inward) chosen to pass someone; kept for a while so it never flip-flops.
 var pass_side = 0.0
 var pass_timer = 0.0
+var side_flip_cd = 0.0
 var heading = 0.0
 var heading_ready = false
 # What the person is doing while stopped or seated ("", "mirar", "movil", "foto", "leer",
@@ -42,6 +43,10 @@ var face_target = NAN
 var pending_stop = {}
 var bench_goal = -1
 var sit_from = Vector2.ZERO
+# Which of the two places of the bench (0 or 1), and where the head turns (radians, + left)
+# to look at someone beside them.
+var bench_slot = 0
+var look_yaw = 0.0
 var props = {}
 var protected_target = false
 var rig: Skeleton3D
