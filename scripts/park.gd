@@ -1261,6 +1261,8 @@ var cloud_material: StandardMaterial3D
 var weather_time = 0.0
 var cloud_cover = 0.0
 var clouds_enabled = true
+# A steady overcast (0–1) for the Academy's soft-light lessons; -1 leaves the weather alone.
+var forced_cover = -1.0
 # Cold moonlight keeps the night park readable in toon shading (dark albedos times ambient
 # alone render black). illumination_ev() ignores the sun at night, so the meter is unaffected.
 const MOONLIGHT = .32
@@ -1302,6 +1304,7 @@ func update_weather(dt: float) -> void:
 	# A cloud front crosses the sun in ~1 second, stays, then clears again.
 	# A cloud front now and then (every 45 s), crossing the sun in half a second and gone in 3 s.
 	cloud_cover = smoothstep(6.0,6.5,phase)*(1-smoothstep(8.5,9.0,phase)) if clouds_enabled else 0.0
+	if forced_cover >= 0.0: cloud_cover = forced_cover
 	if is_night:
 		sun.light_energy = MOONLIGHT
 	elif time_of_day == "golden":

@@ -9,7 +9,11 @@ const LENSES = [
 	 {"name":"Fijo 90 · f/2.8", "min":90.0,"max":90.0,"wide":2.8,"long":2.8,"stop":22.0}],
 	[{"name":"Zoom 24–105 · f/4", "min":24.0,"max":105.0,"wide":4.0,"long":4.0,"stop":22.0},
 	 {"name":"Zoom 70–200 · f/2.8", "min":70.0,"max":200.0,"wide":2.8,"long":2.8,"stop":22.0},
-	 {"name":"Fijo 50 · f/1.8", "min":50.0,"max":50.0,"wide":1.8,"long":1.8,"stop":22.0}]
+	 {"name":"Fijo 50 · f/1.8", "min":50.0,"max":50.0,"wide":1.8,"long":1.8,"stop":22.0},
+	 # Added for the Academy (docs/futuro/06): wide-angle perspective, portrait bokeh, compression.
+	 {"name":"Fijo 28 · f/2.8", "min":28.0,"max":28.0,"wide":2.8,"long":2.8,"stop":22.0},
+	 {"name":"Fijo 105 · f/1.8", "min":105.0,"max":105.0,"wide":1.8,"long":1.8,"stop":22.0},
+	 {"name":"Fijo 135 · f/2", "min":135.0,"max":135.0,"wide":2.0,"long":2.0,"stop":22.0}]
 ]
 const STOPS = [1.4,1.8,2.0,2.8,4.0,5.6,8.0,11.0,16.0,22.0]
 const EV_COMPENSATIONS = [-2.0, -1.7, -1.3, -1.0, -0.7, -0.3, 0.0, 0.3, 0.7, 1.0, 1.3, 1.7, 2.0]

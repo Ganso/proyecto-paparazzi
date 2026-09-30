@@ -10,7 +10,7 @@ El simulador define 3 cuerpos (`Equipment.CAMERAS`). Todos comparten el mismo se
 
 | Característica | Compacta (`body = 0`) | Telemétrica (`body = 1`) | Réflex (`body = 2`) |
 |---|:---:|:---:|:---:|
-| **Objetivos** | Zoom 24–120 o fijo 35 | Fijos 35 / 50 / 90 | Zoom 24–105, zoom 70–200 o fijo 50 |
+| **Objetivos** | Zoom 24–120 o fijo 35 | Fijos 35 / 50 / 90 | Zoom 24–105, zoom 70–200 o fijos 50 / 28 / 105 / 135 |
 | **Modos de foco** (`focus_modes()`) | AF matricial, AF puntual, MF | **Solo MF** | AF matricial, AF puntual, MF |
 | **Ayuda en MF** (`focus_aid.gdshader`) | Imagen partida circular (ayuda digital) | Parche rectangular de doble imagen superpuesta | Imagen partida circular |
 | **Exposición** | Automática o manual | Automática o manual | Automática o manual |
@@ -41,6 +41,11 @@ $\text{HFOV} = 2\arctan(36 / 2f)$ con el ancho de sensor fijo de 36 mm.
 | Réflex | Zoom 24–105 · f/4 | 24–105 mm | f/4 (constante) | f/22 | 73.7° – 19.5° |
 | Réflex | Zoom 70–200 · f/2.8 | 70–200 mm | f/2.8 (constante) | f/22 | 28.8° – 10.3° |
 | Réflex | Fijo 50 · f/1.8 | 50 mm | f/1.8 | f/22 | 39.6° |
+| Réflex | Fijo 28 · f/2.8 | 28 mm | f/2.8 | f/22 | 65.5° |
+| Réflex | Fijo 105 · f/1.8 | 105 mm | f/1.8 | f/22 | 19.5° |
+| Réflex | Fijo 135 · f/2 | 135 mm | f/2 | f/22 | 15.2° |
+
+Los tres últimos fijos se añadieron el 30-09-2026 para la Academia ([futuro/06](futuro/06_MODO_TUTOR_ACADEMIA.md)): el 28 mm para la perspectiva angular, el 105 mm f/1,8 para el desenfoque de fondo y el 135 mm para la compresión de planos.
 
 En zooms de apertura variable, la apertura máxima se interpola linealmente con la focal (`Equipment.apertures(focal)`) y solo se ofrecen los pasos de `STOPS` que quedan dentro del rango del objetivo.
 

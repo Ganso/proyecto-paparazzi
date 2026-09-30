@@ -88,9 +88,15 @@ var advance_seconds = 0.0
 var pigeons
 var dog
 var ambience
+# Academia de fotografía (scripts/academy.gd, docs/futuro/06).
+var academy
+var academy_demo_shot = false
+var academy_last_thirds = ""
 var extras
 var forced_activity = ""
 var stage = ""
+# --academy=<lección>:<teoria|demo|practica>[:página]: open a lesson directly (evidence captures).
+var academy_start = ""
 var smoke = false
 var run_metrics = false
 var stress = false
@@ -167,6 +173,7 @@ func _ready() -> void:
 		if arg.begins_with("--advance="): advance_seconds = float(arg.trim_prefix("--advance="))
 		if arg.begins_with("--activity="): forced_activity = arg.trim_prefix("--activity=")
 		if arg.begins_with("--stage="): stage = arg.trim_prefix("--stage=")
+		if arg.begins_with("--academy="): academy_start = arg.trim_prefix("--academy=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
@@ -182,6 +189,9 @@ func _ready() -> void:
 	if not ParkScene.forward_plus() and graphics_preset == "Ultra" and not smoke and screenshot_path == "" and not run_metrics: graphics_preset = "Alto"
 	build_world()
 	build_ui()
+	academy = preload("res://scripts/academy.gd").new(self)
+	ui.add_child(academy)
+	preload("res://scripts/academy.gd").register_actions()
 	populate()
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
@@ -513,7 +523,7 @@ func refresh() -> void:
 	lens_slider.set_value_no_signal(focal)
 	counter_label.text = Texts.get_text("encargo_02d_05") % (assignment+1)
 	counter_label.visible = not sandbox
-	sandbox_button.visible = sandbox
+	sandbox_button.visible = sandbox and not (academy and academy.active)
 	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("NUBES" if park.cloud_cover > .4 else "SOL"))
 	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + ("sin límite" if sandbox else "%d disparos" % shots)
 
@@ -540,6 +550,7 @@ func create_modal() -> Control:
 
 func intro() -> void:
 	mode = "INTRO"
+	if academy and academy.active: academy.stop()
 	var root = create_modal()
 	label(root,Texts.get_text("estudio_de_fotografia_01"),Rect2(75,70,600,28),14,Color("a7c683"))
 	label(root,Texts.get_text("cada_persona_una_oportunidad"),Rect2(70,115,790,160),64,Color("e6ebdb"))
@@ -552,7 +563,8 @@ func intro() -> void:
 	button(root,Texts.get_text("parque_noche"),Rect2(545,477,210,65),func(): start_session("night"))
 	button(root,"Equipo / modos",Rect2(765,477,210,65),show_equipment)
 	button(root,"Sandbox",Rect2(985,477,220,65),func(): start_session("day",true))
-	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,590,1070,60),16,Color("8f9f86"))
+	button(root,Texts.get_text("academia_boton_inicio"),Rect2(75,556,460,52),show_academy,true)
+	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,622,1070,60),16,Color("8f9f86"))
 	label(root,Texts.get_text("m"),Rect2(950,161,245,130),95,Color("b8d78c"))
 	label(root,"PROYECTO\nPAPARAZZI",Rect2(955,305,230,70),26,Color("a7b897"))
 
@@ -657,7 +669,8 @@ func _process(dt: float) -> void:
 			pigeons.update(dt,people,[dog] if dog else [])
 			extras.update(dt)
 			if dog: dog.update(dt)
-			ambience.update(dt)
+		ambience.update(dt)
+		if academy: academy.update(dt)
 		meter_timer -= dt
 		if meter_timer <= 0:
 			meter_timer = .1
@@ -675,6 +688,12 @@ func _process(dt: float) -> void:
 			for p in people: update_person(p,1.0/30)
 			pigeons.update(1.0/30,people,[dog] if dog else [])
 			if dog: dog.update(1.0/30)
+	if boot_frames == 12 and academy_start != "":
+		var parts = academy_start.split(":")
+		academy.begin(int(parts[0]),parts[1] if parts.size() > 1 else "teoria")
+		if parts.size() > 2:
+			academy.page = int(parts[2])-1
+			academy.update_panel()
 	if boot_frames == 20 and stage != "": stage_scene(stage)
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
@@ -941,6 +960,8 @@ func clear_sector(lanes: Array, keep: Array, width = 40.0) -> void:
 func pick(filter: Callable, exclude: Array = []):
 	for q in people:
 		if q in exclude or q.protected_target or q.has_dog: continue
+		# Only someone walking freely (not seated, not heading to a bench, not chatting).
+		if q.state != "CAMINANDO" or q.bench_index >= 0 or q.bench_goal >= 0 or q.partner != null: continue
 		if filter.call(q): return q
 	return null
 
@@ -1313,8 +1334,13 @@ func take_photo() -> void:
 		best = current_result.duplicate(true)
 		best["photo"] = clean_image
 	play_tone(100,.09)
-	mode = "RESULT"
 	shooting = false
+	if academy_demo_shot:
+		# A shot of the Academy's demonstration: the photo goes to the tutor panel, no result screen.
+		academy_demo_shot = false
+		academy.on_demo_photo(current_photo,current_result)
+		return
+	mode = "RESULT"
 	show_results()
 
 # Vignetting and lateral chromatic aberration grow with wide angles (the same strengths develop the
@@ -1367,6 +1393,9 @@ func photo_preview(parent: Control, texture, result: Dictionary, rect: Rect2) ->
 	parent.add_child(preview)
 
 func show_results() -> void:
+	if academy and academy.active:
+		show_academy_result()
+		return
 	if sandbox:
 		show_sandbox_result()
 		return
@@ -1450,6 +1479,10 @@ func show_help() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if mode == "SEARCH" and academy and academy.handle_key(event): return
+		if event.keycode == KEY_ENTER and mode == "RESULT" and academy and academy.active:
+			resume_search()
+			return
 		if event.keycode == KEY_ESCAPE:
 			if mode == "HELP": resume_search() if sandbox or is_instance_valid(target) else intro()
 			elif mode == "GRAPHICS":
@@ -2073,6 +2106,58 @@ func restore_equipment_screen() -> void:
 		"BRIEFING": show_assignment()
 		_: close_modal()
 	refresh()
+
+# ---- Academia de fotografía (docs/futuro/06) ----
+func show_academy() -> void:
+	if academy.active: academy.stop()
+	mode = "ACADEMY"
+	var root = create_modal()
+	label(root,Texts.get_text("academia_titulo"),Rect2(75,30,1100,52),36,Color("e6ebdb"))
+	var sub = label(root,Texts.get_text("academia_subtitulo"),Rect2(75,86,1100,50),18,Color("b7c5ad"))
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	for n in range(1,academy.LESSONS+1):
+		var y = 146+(n-1)*86
+		panel(root,Rect2(75,y,1130,78),Color(.075,.115,.085,.95))
+		label(root,"%d" % n,Rect2(92,y+12,40,50),38,Color("b8d78c"))
+		label(root,Texts.get_text("academia_l%d_titulo" % n),Rect2(145,y+8,520,32),23,Color("e6ebdb"))
+		label(root,Texts.get_text("academia_l%d_resumen" % n),Rect2(145,y+42,520,26),15,Color("a9b8a0"))
+		var x = 675
+		for ph in academy.PHASES:
+			var ok = academy.done(n,ph)
+			label(root,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(x,y+10,150,24),14,Color("b8d78c") if ok else Color("8f9f86"))
+			x += 118
+		label(root,Texts.get_text("academia_examen_no_disponible"),Rect2(675,y+44,300,24),13,Color("5f6d59"))
+		var started = academy.done(n,"teoria")
+		button(root,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(1010,y+16,180,46),func(): close_modal(); academy.begin(n),not started)
+	label(root,Texts.get_text("academia_progreso") % [academy.practices_done(),academy.LESSONS]+" · "+Texts.get_text("academia_graduado_futuro"),Rect2(75,586,800,28),15,Color("a7c683"))
+	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,630,260,55),intro)
+	button(root,Texts.get_text("academia_reiniciar"),Rect2(350,630,240,55),func(): academy.reset_progress(); show_academy())
+
+func show_academy_result() -> void:
+	var root = create_modal()
+	label(root,Texts.get_text("academia_resultado_titulo") % [academy.lesson,shot_serial],Rect2(25,24,1170,50),32)
+	var notes: Array = academy.on_practice_photo(current_photo,current_result) if academy.phase == "practica" else []
+	var pair: Array = academy.comparison_photos() if academy.phase == "practica" else []
+	if pair.size() == 2:
+		for i in 2:
+			var shot: Dictionary = pair[i]
+			photo_preview(root,shot.texture,shot.result,Rect2(25+i*418,100,408,230))
+			var e2: Dictionary = shot.result.evidence
+			label(root,"%.0f mm · f/%s · 1/%d s · a %.1f m" % [e2.f,str(e2.n),roundi(1/e2.t),e2.d],Rect2(25+i*418,334,408,24),15,Color("b8d78c"))
+		photo_preview(root,current_photo,current_result,Rect2(25,370,370,208))
+	else:
+		photo_preview(root,current_photo,current_result,Rect2(25,100,825,464))
+	var e: Dictionary = current_result.evidence
+	var info = "%.0f mm · f/%s\n1/%d s · ISO %d\n\nLuz medida: EV %.1f\nError de exposición: %+.2f EV\nDistancia: %.2f m\nDesenfoque: %.3f mm\nMovimiento: %.3f mm" % [e.f,str(e.n),roundi(1/e.t),e.iso,e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
+	label(root,info,Rect2(885,100,360,260),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var task_text = ""
+	for k in academy.TASKS:
+		task_text += "%s  %s\n" % [Texts.get_text("academia_hecho") if academy.tasks[k] else Texts.get_text("academia_pendiente"),Texts.get_text("academia_l%d_p%d" % [academy.lesson,k+1])]
+	for note in notes: task_text += "\n"+note
+	var tl = label(root,task_text,Rect2(885,370,360,230),15,Color("c9d4bf"))
+	tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button(root,Texts.get_text("academia_volver_menu"),Rect2(25,630,260,55),show_academy)
+	button(root,Texts.get_text("academia_seguir"),Rect2(885,620,360,70),resume_search,true)
 
 func show_sandbox_controls() -> void:
 	if not sandbox: return
