@@ -385,6 +385,12 @@ func finish_mesh() -> void:
 func pose_bone(id: String, angle: float) -> void:
 	rig.set_bone_pose_rotation(bones[id],Quaternion(Vector3.RIGHT,angle))
 
+# Out of the scene for a while (the Academy clears the inner path): drawn nowhere and invisible to
+# the camera's rays too, so it cannot catch the AF, the meter or a photo's occlusion test.
+func set_hidden(value: bool) -> void:
+	visible = not value
+	for body in colliders.values(): body.collision_layer = 0 if value else 1
+
 func animate(delta: float, traveled_distance = -1.0) -> void:
 	gait.pose(delta,traveled_distance)
 	update_props()

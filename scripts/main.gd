@@ -692,6 +692,9 @@ func _process(dt: float) -> void:
 			if dog: dog.update(1.0/30)
 	if boot_frames == 12 and academy_start != "":
 		var parts = academy_start.split(":")
+		if parts[0] == "menu":
+			show_academy()
+			return
 		academy.begin(int(parts[0]),parts[1] if parts.size() > 1 else "teoria")
 		if parts.size() > 2:
 			academy.page = int(parts[2])-1
@@ -952,9 +955,14 @@ func bench_neighbour(p: Pedestrian):
 	return other if other != null and other.state == "SENTADO" else null
 
 # ---- Staged scenes for the showcase video (tools/capture_showcase.sh), around the camera azimuth ----
-func clear_sector(lanes: Array, keep: Array, width = 40.0) -> void:
+func clear_sector(lanes: Array, keep: Array, width = 40.0, stopped_too = false) -> void:
 	for q in people:
-		if q in keep or not q.lane in lanes or q.state != "CAMINANDO": continue
+		if q in keep or not q.lane in lanes or q.has_meta("staged"): continue
+		if q.state != "CAMINANDO" and not (stopped_too and q.state == "DETENIDO"): continue
+		if q.state == "DETENIDO":
+			# Someone standing in the line of sight walks on.
+			if is_instance_valid(q.partner): q.partner.partner = null
+			resume_walk(q)
 		if absf(angle_difference(deg_to_rad(q.theta),deg_to_rad(angle))) < deg_to_rad(width):
 			q.theta = fposmod(q.theta+width*2.2,360)
 			q.place()
@@ -992,7 +1000,7 @@ func stage_scene(name: String) -> void:
 			var bench = park.benches[bench_i]
 			for q in people:
 				if q.bench_index == bench_i or q.bench_goal == bench_i:
-					q.visible = false
+					q.set_hidden(true)
 			set_seat(bench,0,null)
 			set_seat(bench,1,null)
 			var first = pick(func(q): return q.lane == 1 and not q.runner)
@@ -2124,11 +2132,11 @@ func show_academy() -> void:
 		label(root,"%d" % n,Rect2(92,y+12,40,50),38,Color("b8d78c"))
 		label(root,Texts.get_text("academia_l%d_titulo" % n),Rect2(145,y+8,520,32),23,Color("e6ebdb"))
 		label(root,Texts.get_text("academia_l%d_resumen" % n),Rect2(145,y+42,520,26),15,Color("a9b8a0"))
-		var x = 675
-		for ph in academy.PHASES:
+		var columns = [675,772,912]
+		for k in academy.PHASES.size():
+			var ph = academy.PHASES[k]
 			var ok = academy.done(n,ph)
-			label(root,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(x,y+10,150,24),14,Color("b8d78c") if ok else Color("8f9f86"))
-			x += 118
+			label(root,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+10,140,24),14,Color("b8d78c") if ok else Color("8f9f86"))
 		label(root,Texts.get_text("academia_examen_no_disponible"),Rect2(675,y+44,300,24),13,Color("5f6d59"))
 		var started = academy.done(n,"teoria")
 		button(root,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(1010,y+16,180,46),func(): close_modal(); academy.begin(n),not started)
@@ -2152,13 +2160,12 @@ func show_academy_result() -> void:
 		photo_preview(root,current_photo,current_result,Rect2(25,100,825,464))
 	var e: Dictionary = current_result.evidence
 	var info = "%.0f mm · f/%s\n1/%d s · ISO %d\n\nLuz medida: EV %.1f\nError de exposición: %+.2f EV\nDistancia: %.2f m\nDesenfoque: %.3f mm\nMovimiento: %.3f mm" % [e.f,str(e.n),roundi(1/e.t),e.iso,e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
-	label(root,info,Rect2(885,100,360,260),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	academy.make_label(root,Rect2(885,100,360,260),18,Color("e6e8dd"),true).text = info
 	var task_text = ""
 	for k in academy.TASKS:
 		task_text += "%s  %s\n" % [Texts.get_text("academia_hecho") if academy.tasks[k] else Texts.get_text("academia_pendiente"),Texts.get_text("academia_l%d_p%d" % [academy.lesson,k+1])]
 	for note in notes: task_text += "\n"+note
-	var tl = label(root,task_text,Rect2(885,370,360,230),15,Color("c9d4bf"))
-	tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	academy.make_label(root,Rect2(885,370,360,240),15,Color("c9d4bf"),true).text = task_text
 	button(root,Texts.get_text("academia_volver_menu"),Rect2(25,630,260,55),show_academy)
 	button(root,Texts.get_text("academia_seguir"),Rect2(885,620,360,70),resume_search,true)
 
@@ -2207,7 +2214,7 @@ func capture_sandbox_evidence() -> Dictionary:
 			distance = camera.global_position.distance_to(chest)
 	var axis = -camera.global_basis.z
 	var perpendicular = (velocity-axis*velocity.dot(axis)).length()
-	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
+	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1,"person":person != null}
 
 func show_sandbox_result() -> void:
 	var root = create_modal()

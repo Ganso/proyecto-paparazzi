@@ -124,6 +124,8 @@ func run() -> void:
 	check(not academy.tasks[0],"Lesson 5: 28 mm on someone far does not count")
 	academy.on_practice_photo(null,fake.call({"f":28.0,"d":2.6}))
 	check(academy.tasks[0],"Lesson 5: 28 mm close and full body")
+	academy.on_practice_photo(null,fake.call({"f":135.0,"d":21.0,"person":false}))
+	check(not academy.tasks[1],"Lesson 5: the tele on the bandstand (nobody under the point) does not count")
 	academy.on_practice_photo(null,fake.call({"f":135.0,"d":11.5}))
 	check(academy.tasks[1] and academy.tasks[2],"Lesson 5: 135 mm far completes the comparison")
 	check(academy.comparison_photos().size() == 2,"Lesson 5: diptych of the two photos")

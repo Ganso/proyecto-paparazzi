@@ -284,7 +284,7 @@ func stop() -> void:
 	main.park.forced_cover = -1.0
 	main.graphics_button.visible = true
 	release_staged()
-	for q in main.people: q.visible = true
+	for q in main.people: q.set_hidden(false)
 	frame_goal = {}
 	highlight = ""
 	subtitle = ""
@@ -407,7 +407,7 @@ func release_staged() -> void:
 	for q in main.people:
 		if not q.has_meta("staged"): continue
 		q.remove_meta("staged")
-		q.visible = true
+		q.set_hidden(false)
 		if q.state == "DETENIDO" and q.state_time > 1000.0: q.state_time = 0.0
 
 func stage_subject() -> void:
@@ -417,8 +417,8 @@ func stage_subject() -> void:
 	# The inner path (r ≈ 1.8 m) crosses right in front of the lens: its walkers step out of the
 	# lessons, except anyone a lesson places there on purpose.
 	for q in main.people:
-		if q.lane == 0 and q.state == "CAMINANDO": q.visible = false
-	main.clear_sector([1,2],[],35.0)
+		if q.lane == 0 and q.state != "SENTADO": q.set_hidden(true)
+	main.clear_sector([1,2],[],35.0,true)
 	match lesson:
 		2: subject = stand_person(1,SETUP[2].angle,4.0)
 		3: runner = stage_runner()
@@ -428,10 +428,11 @@ func stage_subject() -> void:
 
 func stand_person(lane: int, theta: float, radius: float):
 	var p = main.pick(func(q): return q.lane == lane and not q.runner)
+	if p == null: p = main.pick(func(q): return not q.runner)   # anyone free walking elsewhere
 	if p == null: return null
-	main.clear_sector([lane],[p],30.0)
+	main.clear_sector([0,1,2,3].slice(0,lane+1),[p],30.0,true)
 	main.reset_walker(p,lane,theta,1.0)
-	p.visible = true
+	p.set_hidden(false)
 	p.set_meta("staged",true)
 	p.radius = radius
 	p.state = "DETENIDO"
@@ -443,6 +444,7 @@ func stand_person(lane: int, theta: float, radius: float):
 
 func walk_person(lane: int, theta: float, direction: float):
 	var p = main.pick(func(q): return q.lane == lane and not q.runner)
+	if p == null: p = main.pick(func(q): return not q.runner)
 	if p == null: return null
 	main.clear_sector([lane],[p],40.0)
 	main.reset_walker(p,lane,theta,direction)
@@ -456,7 +458,7 @@ func stage_runner():
 	if r == null: return null
 	main.clear_sector([2],[r],30.0)
 	main.reset_walker(r,2,SETUP[3].angle-32.0,1.0)
-	r.visible = true
+	r.set_hidden(false)
 	return r
 
 # Lesson 3: the runner comes round again every few seconds (it reappears out of view behind).
@@ -580,16 +582,16 @@ func do_action(action: String) -> void:
 			main.equipment.lens_index = 5
 			main.apply_equipment()
 			main.focal = 135.0
-			if subject: subject.visible = false
+			if subject: subject.set_hidden(true)
 			set_scene_pause(false)
 			subject = stand_person(3,SETUP[5].angle,11.6)
-			main.clear_sector([1,2],[subject],40.0)
+			main.clear_sector([1,2],[subject],40.0,true)
 			set_scene_pause(true)
 			frame_goal = {"who":subject,"x":.5,"y":.5,"snap":true} if subject else {}
 			main.refresh()
 		"freeze":
 			# A lesson about perspective, not motion: nobody crosses the line of sight.
-			main.clear_sector([1,2,3],[subject],40.0)
+			main.clear_sector([1,2,3],[subject],40.0,true)
 			set_scene_pause(true)
 		"shoot":
 			if subject and lesson != 1:
@@ -600,7 +602,9 @@ func do_action(action: String) -> void:
 			# Hold the timeline until the runner crosses the centre of the frame, then shoot.
 			waiting_runner = parts[1] if parts.size() > 1 else ""
 			waiting_time = 0.0
-			if runner: main.reset_walker(runner,2,main.angle-25.0,1.0)
+			if runner:
+				main.clear_sector([1,2],[runner],45.0,true)   # a clear run: nobody slows it down
+				main.reset_walker(runner,2,main.angle-25.0,1.0)
 		"end":
 			if lesson == 5: set_scene_pause(false)
 			demo_done = true
@@ -798,7 +802,7 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 			if tasks[0] and main.academy_last_thirds == "listo": tasks[2] = true
 			elif tasks[0]: notes.append(lesson_text("pista_foto_no"))
 		5:
-			var fill = person_fill(e)
+			var fill = person_fill(e) if e.get("person",true) else 0.0
 			if e.f <= 35.0 and e.d < 4.5 and fill >= .45 and fill <= 1.3: tasks[0] = true
 			elif e.f <= 35.0 and e.d >= 4.5: notes.append(lesson_text("pista_cerca"))
 			if e.f >= 120.0 and e.d > 9.0 and fill >= .45 and fill <= 1.3: tasks[1] = true
