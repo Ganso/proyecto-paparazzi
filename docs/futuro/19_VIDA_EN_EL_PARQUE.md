@@ -2,7 +2,7 @@
 
 **Estado: ✅ Implementado (30-09-2026)**, en una sesión autónoma encargada por el usuario. Pidió gente que haga cosas (sentarse en los bancos, mirar el móvil, charlar, pasear al perro, dar de comer a las palomas), sonido ambiente, figurantes fuera de la zona jugable y rutinas sin temblequeo, **más lentas pero más naturales**, ampliando carriles si hacía falta.
 
-Evidencias: `docs/evidencias/personajes_modelado/10_actividades.png` (posturas y objetos de mano) y `08_sentado.png`. Para capturas del parque vivo: `--advance=<s>` y `--activity=<actividad>` ([TESTS_Y_VERIFICACION.md §4.1](../TESTS_Y_VERIFICACION.md)).
+Evidencias: `docs/evidencias/personajes_modelado/10_actividades.png` (posturas y objetos de mano) y `08_sentado.png`. Para capturas del parque vivo: `--advance=<s>`, `--activity=<actividad>` y `--stage=<escena>` ([TESTS_Y_VERIFICACION.md §4.1](../TESTS_Y_VERIFICACION.md)). Vídeo de todas las novedades: `./tools/capture_showcase.sh`.
 
 ---
 

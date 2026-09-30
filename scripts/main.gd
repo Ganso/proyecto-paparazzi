@@ -90,6 +90,7 @@ var dog
 var ambience
 var extras
 var forced_activity = ""
+var stage = ""
 var smoke = false
 var run_metrics = false
 var stress = false
@@ -165,6 +166,8 @@ func _ready() -> void:
 		if arg.begins_with("--burst="): burst_frames = int(arg.trim_prefix("--burst="))
 		if arg.begins_with("--advance="): advance_seconds = float(arg.trim_prefix("--advance="))
 		if arg.begins_with("--activity="): forced_activity = arg.trim_prefix("--activity=")
+		if arg.begins_with("--stage="): stage = arg.trim_prefix("--stage=")
+		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
 		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose"]: demo[arg.trim_prefix("--")] = true
@@ -672,6 +675,7 @@ func _process(dt: float) -> void:
 			for p in people: update_person(p,1.0/30)
 			pigeons.update(1.0/30,people,[dog] if dog else [])
 			if dog: dog.update(1.0/30)
+	if boot_frames == 20 and stage != "": stage_scene(stage)
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
 		for p in people:
@@ -926,6 +930,78 @@ func bench_neighbour(p: Pedestrian):
 	var other = park.benches[p.bench_index].seats[1-p.bench_slot]
 	return other if other != null and other.state == "SENTADO" else null
 
+# ---- Staged scenes for the showcase video (tools/capture_showcase.sh), around the camera azimuth ----
+func clear_sector(lanes: Array, keep: Array, width = 40.0) -> void:
+	for q in people:
+		if q in keep or not q.lane in lanes or q.state != "CAMINANDO": continue
+		if absf(angle_difference(deg_to_rad(q.theta),deg_to_rad(angle))) < deg_to_rad(width):
+			q.theta = fposmod(q.theta+width*2.2,360)
+			q.place()
+
+func pick(filter: Callable, exclude: Array = []):
+	for q in people:
+		if q in exclude or q.protected_target or q.has_dog: continue
+		if filter.call(q): return q
+	return null
+
+func reset_walker(q: Pedestrian, lane: int, theta: float, direction: float) -> void:
+	q.state = "CAMINANDO"
+	q.lane = lane
+	q.destination_lane = -1
+	q.bench_goal = -1
+	q.pending_stop = {}
+	q.activity = ""
+	q.partner = null
+	q.stuck_time = 0.0
+	q.direction = direction
+	q.theta = fposmod(theta,360)
+	q.radius = LANES[lane]+LANE_OFFSETS[lane]*direction
+	q.v_fwd = q.speed
+	q.lane_timer = 99.0
+	q.place()
+
+func stage_scene(name: String) -> void:
+	match name:
+		"banco", "palomas":
+			var bench_i = 0
+			for i in park.benches.size():
+				if absf(angle_difference(deg_to_rad(park.benches[i].theta),deg_to_rad(angle))) < absf(angle_difference(deg_to_rad(park.benches[bench_i].theta),deg_to_rad(angle))): bench_i = i
+			var bench = park.benches[bench_i]
+			for q in people:
+				if q.bench_index == bench_i or q.bench_goal == bench_i:
+					q.visible = false
+			set_seat(bench,0,null)
+			set_seat(bench,1,null)
+			var first = pick(func(q): return q.lane == 1 and not q.runner)
+			var second = pick(func(q): return q.lane == 1 and not q.runner,[first]) if name == "banco" else null
+			var walkers = [first] if second == null else [first,second]
+			clear_sector([1],walkers,45.0)
+			for slot in walkers.size():
+				var q = walkers[slot]
+				reset_walker(q,1,seat_theta(bench,slot)-(12.0 if slot == 0 else 38.0),1.0)
+				set_seat(bench,slot,q)
+				q.bench_slot = slot
+				q.bench_goal = bench_i
+				q.set_meta("seat_activity","palomas" if name == "palomas" else ("leer" if slot == 0 else "charla"))
+		"charla":
+			var a = pick(func(q): return q.lane == 1 and not q.runner)
+			var b = pick(func(q): return q.lane == 1 and not q.runner,[a])
+			clear_sector([1],[a,b],50.0)
+			reset_walker(a,1,angle-14.0,1.0)
+			reset_walker(b,1,angle+14.0,-1.0)
+			for pair in [[a,b],[b,a]]:
+				pair[0].pending_stop = {"activity":"charla","time":40.0}
+				pair[0].partner = pair[1]
+		"estirar":
+			var r = pick(func(q): return q.runner)
+			clear_sector([1,2],[r],50.0)
+			reset_walker(r,1,angle-40.0,1.0)
+			r.pending_stop = {"activity":"estirar","time":30.0,"face":PI-deg_to_rad(angle)}
+		"perro":
+			if dog:
+				demo_follow = dog.walker
+				angle = rad_to_deg(atan2(dog.walker.position.x,-dog.walker.position.z))
+
 func update_still(p: Pedestrian, dt: float) -> void:
 	match p.state:
 		"DETENIDO":
@@ -936,10 +1012,12 @@ func update_still(p: Pedestrian, dt: float) -> void:
 					p.sit_from = Vector2(p.theta,p.radius)
 					p.state_time = p.rng.randf_range(25,70)
 					p.activity = SEAT_ACTIVITIES[p.rng.randi()%SEAT_ACTIVITIES.size()]
+					var forced = str(p.get_meta("seat_activity",""))
+					if forced != "" and forced != "charla": p.activity = forced
 					p.act_time = 0.0
 					# Sitting down next to someone: they chat for a while.
 					var neighbour = bench_neighbour(p)
-					if neighbour != null and p.rng.randf() < .7:
+					if neighbour != null and (p.rng.randf() < .7 or forced == "charla"):
 						p.activity = "charla"
 						p.partner = neighbour
 						neighbour.activity = "charla"
@@ -1534,6 +1612,14 @@ func update_demo(dt: float) -> void:
 		if demo.has("expose") and fmod(demo_time,.5) < dt:
 			# Meter the subject itself, as a photographer with a hand meter would.
 			expose_for(park.illumination_ev(chest,time_of_day,demo_follow))
+	if demo.has("scare-at") and demo_time >= demo["scare-at"] and not demo.has("scared") and pigeons and not pigeons.flocks.is_empty():
+		# A dog or a runner gets too close: the flock nearest the camera's line flies to the trees.
+		demo["scared"] = true
+		var view = park.polar(angle,5.5)
+		var nearest = pigeons.flocks[0]
+		for f in pigeons.flocks:
+			if f.center.distance_to(view) < nearest.center.distance_to(view): nearest = f
+		pigeons.take_off(nearest,pigeons.roost(nearest),"posada")
 	if demo.has("shoot-at") and demo_time >= demo["shoot-at"] and not demo.has("shot"):
 		demo["shot"] = true
 		take_photo()
