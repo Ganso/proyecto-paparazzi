@@ -106,6 +106,8 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
   Porque los bancos se movieron al borde exterior a $r = 4.85\text{ m}$ y los viandantes usan navegación espacial continua 2D (`space_out` vs `space_in`) dentro de `LANE_BOUNDS`.
 - **¿Cómo añado un nuevo objeto al parque?**  
   Modélalo por código en `tools/blender/build_park_assets.py` (una función `build_<nombre>(lod)` que devuelva sus `Builder` por rol, registrada en `ASSETS`), regenera con `./tools/build_park_assets.sh --only <nombre>` y revísalo con `tools/blender/preview_assets.py`. En `scripts/park.gd::build()` colócalo con `visual("<nombre>", variante, padre)` y dale colisionador con las primitivas de siempre (`collider_only = true` y `cube()`/`cylinder()` con etiqueta) o con `landmark()`/`collider()` desde su malla `lo`. Si interactúa con el fotómetro o el AF, etiquétalo con `Texts.get_text(...)` y registra el texto en `data/textos.es.json`.
+- **¿Cómo genero el vídeo de evidencias?**  
+  `./tools/capture_video.sh` (≈6 min, MP4 de 2 min en `build/video/`, con 8 secuencias en día, hora dorada y noche, y una telemétrica en enfoque manual que dispara y muestra el revelado). **Música de fondo de todos los vídeos del proyecto: `assets/audio/musica_videos.mp3`** (del usuario), con fundido de salida en los últimos 10 s. Solo bajo demanda y para cambios grandes. Detalle en [docs/TESTS_Y_VERIFICACION.md §4.2](docs/TESTS_Y_VERIFICACION.md).
 - **¿Cómo veo Ultra?**  
   `~/bin/godot-4-fp --path . --rendering-method forward_plus --resolution 2560x1440 -- --screenshot=/tmp/x.png --angle=120 --pitch=3 --focal=24 --time=day`, o `./tools/capture_ultra.sh`. Mide con `-- --metrics` (imprime `METRICS_GPU`).
 - **¿Cómo cambio la ropa, el pelo o el maniquí de escritorio?**  

@@ -96,6 +96,13 @@ var shot_view = {}
 # --burst=<n>: with --screenshot=<path>.png, save n consecutive frames (<path>_000.png, …) to hunt
 # single-frame artefacts such as sparkles.
 var burst_frames = 0
+# Scripted camera for the video evidence (tools/capture_video.sh, docs/TESTS §4.2):
+# --lens=<body>,<lens>, --pan=<deg/s>, --zoom-to=<mm> (over 12 s), --follow (tracks the pedestrian
+# nearest to the starting angle), --af (autofocus every half second), --hud=0 (hide the HUD).
+var demo = {}
+var demo_time = -1.0
+var demo_follow: Node3D
+var demo_focal_start = 0.0
 # --debug-off=ssr,ssil,ssao,sdfgi,glow,volumetric,dof,textured,clearcoat: switch effects off to
 # isolate rendering artefacts (applied after every graphics preset).
 var debug_off: PackedStringArray = []
@@ -150,6 +157,10 @@ func _ready() -> void:
 		if arg.begins_with("--profile="): graphics_preset = arg.trim_prefix("--profile=")
 		if arg.begins_with("--time="): start_time_of_day = arg.trim_prefix("--time=")
 		if arg.begins_with("--burst="): burst_frames = int(arg.trim_prefix("--burst="))
+		for key in ["lens","pan","zoom-to","hud"]:
+			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
+		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose"]: demo[arg.trim_prefix("--")] = true
+		if arg.begins_with("--shoot-at="): demo["shoot-at"] = float(arg.get_slice("=",1))
 		if arg.begins_with("--debug-off="): debug_off = arg.trim_prefix("--debug-off=").split(",")
 		for key in ["angle","pitch","focal"]:
 			if arg.begins_with("--%s=" % key): shot_view[key] = float(arg.get_slice("=",1))
@@ -173,9 +184,16 @@ func _ready() -> void:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 		Engine.max_fps = 0
 		RenderingServer.viewport_set_measure_render_time(viewport.get_viewport_rid(),true)
-	if smoke or screenshot_path != "" or run_metrics:
+	if demo.has("lens"):
+		var parts = str(demo.lens).split(",")
+		equipment.preset(int(parts[0]))
+		equipment.lens_index = int(parts[1]) if parts.size() > 1 else 0
+	if smoke or screenshot_path != "" or run_metrics or not demo.is_empty():
 		start_session(start_time_of_day)
 		begin_assignment()
+		if not demo.is_empty():
+			apply_equipment()
+			if str(demo.get("hud","1")) == "0": ui.visible = false
 	if stress:
 		for i in people.size():
 			people[i].theta = 96.0+48.0*i/(people.size()-1)
@@ -589,7 +607,10 @@ func _process(dt: float) -> void:
 		if run_metrics:
 			angle = 120.0
 			focal = 24.0
-		for key in shot_view: set(key,shot_view[key])
+		if demo.is_empty():
+			for key in shot_view: set(key,shot_view[key])
+		else:
+			update_demo(dt)
 		update_camera()
 		update_focus_aid(dt)
 		if equipment.focus_mode == "MF":
@@ -1158,6 +1179,56 @@ func smoke_test() -> void:
 	print("SMOKE PASS: 21 viandantes, 20 huesos/persona, %d triángulos (límite %d, perfil %s, detalle %s, máximo por viandante %d), expediente determinista" % [triangles,budget,graphics_preset,park.detail,people.map(func(p): return p.triangle_count).max()])
 	if screenshot_path == "" and not run_metrics: get_tree().quit()
 
+func update_demo(dt: float) -> void:
+	if demo_time < 0:
+		for key in shot_view: set(key,shot_view[key])
+		demo_focal_start = focal
+		demo_time = 0.0
+		if demo.has("follow-target"):
+			# The assignment moves to a pedestrian of the outer lane: at 90 mm and ~11.5 m a whole
+			# body fills about two thirds of the frame, the framing the score asks for.
+			var outer = people.filter(func(p): return p.lane == 3 and p.visible and p.state != "RETIRADO")
+			if not outer.is_empty():
+				if is_instance_valid(target): target.protected_target = false
+				target = outer[0]
+				target.protected_target = true
+				briefing.text = Texts.get_text("busca")+", ".join(casting.predicates_for(target.traits,people.map(func(p): return p.traits)))+"."
+			demo_follow = target
+			angle = rad_to_deg(atan2(target.position.x,-target.position.z))
+		if demo.has("follow") and not is_instance_valid(demo_follow):
+			var best = 1e9
+			for p in people:
+				var az = rad_to_deg(atan2(p.position.x,-p.position.z))
+				var d = absf(angle_difference(deg_to_rad(az),deg_to_rad(angle)))+p.position.length()*.02
+				# Mid lanes (4–12 m): a pedestrian that fits the telephoto frame.
+				if p.position.length() > 4.5 and p.position.length() < 12.5 and d < best:
+					best = d
+					demo_follow = p
+	demo_time += dt
+	angle = fposmod(angle+float(demo.get("pan","0"))*dt,360)
+	if demo.has("zoom-to"):
+		focal = lerpf(demo_focal_start,float(demo["zoom-to"]),smoothstep(0.0,12.0,demo_time))
+	if is_instance_valid(demo_follow):
+		# Keep the pedestrian's chest centred (measured in camera space) and in focus, like AF-C.
+		var chest = demo_follow.global_position+Vector3.UP*demo_follow.height*.7
+		var local = camera.global_transform.affine_inverse()*chest
+		var gain = minf(1.0,dt*4.0)
+		angle = fposmod(angle+rad_to_deg(atan2(local.x,-local.z))*gain,360)
+		pitch += rad_to_deg(atan2(local.y,-local.z))*gain
+		var subject_distance = camera.global_position.distance_to(chest)
+		if demo.has("mf-rack"):
+			# Manual focus: turn the ring from 1.2 m to the subject over 5 s (the split-image aid shows it).
+			focus_distance = lerpf(1.2,subject_distance,smoothstep(1.0,6.0,demo_time))
+		else:
+			focus_distance = subject_distance
+		if demo.has("expose") and fmod(demo_time,.5) < dt:
+			# Meter the subject itself, as a photographer with a hand meter would.
+			expose_for(park.illumination_ev(chest,time_of_day,demo_follow))
+	if demo.has("shoot-at") and demo_time >= demo["shoot-at"] and not demo.has("shot"):
+		demo["shot"] = true
+		take_photo()
+	if demo.has("af") and not is_instance_valid(demo_follow) and fmod(demo_time,.5) < dt and equipment.focus_mode != "MF": autofocus()
+
 func save_burst() -> void:
 	var base = screenshot_path.get_basename()
 	for k in burst_frames:
@@ -1464,6 +1535,22 @@ func update_meter() -> void:
 			var proj = camera.unproject_position(chest)/Vector2(viewport.size)
 			if proj.x >= 0.0 and proj.x <= 1.0 and proj.y >= 0.0 and proj.y <= 1.0:
 				measured_ev = park.illumination_ev(chest,time_of_day,target)
+
+# Correct exposure for a given scene EV (same criteria as auto_expose()).
+func expose_for(scene_ev: float) -> void:
+	var target_ev = scene_ev-equipment.exposure_compensation()
+	var best_cost = INF
+	var stops = apertures()
+	for n in stops.size():
+		for t in Photo.DENOMINATORS.size():
+			for iso in ([equipment.film_iso_index] if equipment.film else range(Photo.ISOS.size())):
+				var delta = absf(Photo.ev(stops[n],1.0/Photo.DENOMINATORS[t],Photo.ISOS[iso],target_ev))
+				var cost = delta*10 + maxf(0,focal/Photo.DENOMINATORS[t]-1)*2 + iso*.12 + n*.03
+				if cost < best_cost:
+					best_cost = cost
+					n_index = n
+					t_index = t
+					iso_index = iso
 
 func auto_expose() -> void:
 	var target_ev = measured_ev

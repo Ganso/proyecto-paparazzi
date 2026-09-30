@@ -169,3 +169,10 @@ docs/
    - El script reescribe `docs/evidencias/GALERIA.md` con enlaces markdown relativos y comentarios explicativos de cada imagen generada.
 5. **Cero Polución en el Motor**:
    - Al estar todo alojado bajo `docs/evidencias/` con su correspondiente `.gdignore`, Godot jamás genera `.import` ni consume memoria de GPU por estos archivos.
+
+---
+
+## Vídeo de evidencias (30-09-2026)
+`tools/capture_video.sh` graba bajo demanda un MP4 de 2 min (8 secuencias de 15 s) con el Movie Maker de Godot y ffmpeg: día, hora dorada y noche; gran angular con paneo, teleobjetivo siguiendo y enfocando a un viandante, zoom hacia el quiosco y, al final, la telemétrica de 90 mm en enfoque manual que mide al sujeto, dispara y muestra el revelado puntuado. La cámara la guía `main.gd::update_demo()` con las opciones `--lens`, `--pan`, `--zoom-to`, `--follow`, `--follow-target`, `--mf-rack`, `--expose`, `--shoot-at`, `--af` y `--hud`. El vídeo se guarda en `build/video/` y no se versiona; se genera solo para cambios grandes. Comandos en [TESTS §4](../TESTS_Y_VERIFICACION.md).
+
+La música de fondo de los vídeos del proyecto es `assets/audio/musica_videos.mp3` (aportada por el usuario); el script la recorta a la duración del vídeo con fundido de salida en los últimos 10 s.
