@@ -1,0 +1,114 @@
+extends Node3D
+# Ambient sound of the park (docs/futuro/19_VIDA_EN_EL_PARQUE.md §6). The WAVs are synthesized
+# by tools/audio/build_ambience.py and loaded at run time (no import step). Birds sing in the
+# trees by day and at golden hour, crickets take over at night, the fountain is heard from its
+# side of the park, wind and a distant city hum are always there, pigeons coo and flutter off.
+const DIR = "res://assets/audio/ambiente/"
+const BIRD_SPOTS = [20.0, 110.0, 200.0, 290.0]
+const CRICKET_SPOTS = [60.0, 180.0, 300.0]
+
+var park
+var pigeons
+var streams = {}
+var birds: Array[AudioStreamPlayer3D] = []
+var crickets: Array[AudioStreamPlayer3D] = []
+var fountain: AudioStreamPlayer3D
+var wind: AudioStreamPlayer
+var city: AudioStreamPlayer
+var coo_players: Array[AudioStreamPlayer3D] = []
+var coo_timers: Array[float] = []
+var flock_states: Array = []
+var rng = RandomNumberGenerator.new()
+
+static func polar(theta: float, r: float) -> Vector3:
+	return Vector3(sin(deg_to_rad(theta))*r,0,-cos(deg_to_rad(theta))*r)
+
+func stream(name: String, loop: bool) -> AudioStreamWAV:
+	if streams.has(name): return streams[name]
+	var path = DIR+name+".wav"
+	if not FileAccess.file_exists(path): return null
+	var wav = AudioStreamWAV.load_from_file(path)
+	if wav == null: return null
+	if loop:
+		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		wav.loop_begin = 0
+		wav.loop_end = wav.data.size()/2
+	streams[name] = wav
+	return wav
+
+func player3d(name: String, pos: Vector3, loop: bool, unit: float, db: float) -> AudioStreamPlayer3D:
+	var s = stream(name,loop)
+	var player = AudioStreamPlayer3D.new()
+	player.stream = s
+	player.position = pos
+	player.unit_size = unit
+	player.volume_db = db
+	player.max_distance = 80.0
+	player.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	player.set_meta("db",db)
+	add_child(player)
+	return player
+
+func build(park_node, pigeons_node) -> void:
+	park = park_node
+	pigeons = pigeons_node
+	rng.seed = 5150
+	if stream("viento",true) == null: return   # no audio files (e.g. a trimmed export)
+	wind = AudioStreamPlayer.new()
+	wind.stream = stream("viento",true)
+	wind.volume_db = -11.0
+	add_child(wind)
+	city = AudioStreamPlayer.new()
+	city.stream = stream("ciudad",true)
+	city.volume_db = -17.0
+	add_child(city)
+	for i in BIRD_SPOTS.size():
+		var b = player3d("pajaros",polar(BIRD_SPOTS[i],15.0)+Vector3.UP*5.0,true,10.0,3.0)
+		b.pitch_scale = [1.0,.93,1.07,.97][i]
+		birds.append(b)
+	for i in CRICKET_SPOTS.size():
+		var c = player3d("grillos",polar(CRICKET_SPOTS[i],10.5)+Vector3.UP*.3,true,7.0,-2.0)
+		c.pitch_scale = [1.0,1.04,.96][i]
+		crickets.append(c)
+	fountain = player3d("fuente",polar(245.0,21.0)+Vector3.UP*.8,true,12.0,4.0)
+	if pigeons and not pigeons.flocks.is_empty():
+		for f in pigeons.flocks.size():
+			var p = player3d("zureo",pigeons.flocks[f].center,false,4.0,0.0)
+			coo_players.append(p)
+			coo_timers.append(rng.randf_range(2,8))
+			flock_states.append(pigeons.flocks[f].state)
+	for node in [wind,city,fountain]+birds+crickets:
+		if node is AudioStreamPlayer3D: node.play(rng.randf_range(0,4))
+		else: node.play()
+	apply_time(true)
+
+# Per time of day: birds by day (quieter at golden hour), crickets at night.
+func apply_time(immediate = false, dt = 0.0) -> void:
+	var tod = park.time_of_day
+	var bird_db = {"day":0.0,"golden":-5.0,"night":-80.0}.get(tod,0.0)
+	var cricket_db = -80.0 if tod != "night" else 0.0
+	for b in birds: fade(b,b.get_meta("db")+bird_db,immediate,dt)
+	for c in crickets: fade(c,c.get_meta("db")+cricket_db,immediate,dt)
+
+func fade(player: Node, target: float, immediate: bool, dt: float) -> void:
+	player.volume_db = target if immediate else move_toward(player.volume_db,target,dt*20.0)
+
+func update(dt: float) -> void:
+	if wind == null: return
+	apply_time(false,dt)
+	if pigeons == null: return
+	for f in coo_players.size():
+		var flock = pigeons.flocks[f]
+		var player = coo_players[f]
+		player.position = flock.center
+		coo_timers[f] -= dt
+		if coo_timers[f] <= 0 and flock.state == "suelo":
+			coo_timers[f] = rng.randf_range(3,10)
+			player.stream = stream("zureo",false)
+			player.pitch_scale = rng.randf_range(.9,1.1)
+			player.play()
+		if flock.state == "vuelo" and flock_states[f] != "vuelo":
+			player.stream = stream("aleteo",false)
+			player.pitch_scale = rng.randf_range(.9,1.1)
+			player.play()
+		flock_states[f] = flock.state

@@ -61,6 +61,12 @@ var colliders = {}
 static var detail = "lo"
 # Build pass: "both" (base detail), "collision" (base pieces, no mesh) or "visual" (hd, no colliders).
 var build_pass = "both"
+# Ambient extras of the meadow (scripts/extras.gd): drawn only, never colliders or targets.
+var ambient = false
+# "banco" (bench-height seat) or "suelo" (sitting on the grass, legs stretched out).
+var seat_kind = "banco"
+# Walks a dog (scripts/dog.gd): the left hand holds the leash.
+var has_dog = false
 # The 20 bones of the universal rig; secondary chain bones come after them.
 var primary_bone_count = 20
 # Arm abduction at rest (radians). A shoulder bag on the right hip pushes that arm out a little.
@@ -172,7 +178,7 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 		"pelo":Color(catalog.tonos_pelo[t.hair_color].rgb),
 		"calzado":Color(catalog.tonos_calzado[shoe_color(t,catalog)])
 	}
-	var passes = ["both"] if detail != "hd" else ["collision","visual"]
+	var passes = ["both"] if detail != "hd" else (["visual"] if ambient else ["collision","visual"])
 	for pass_name in passes:
 		build_pass = pass_name
 		var resources = selected_pieces(t,pass_name == "visual")
@@ -260,7 +266,7 @@ func segment(id: String, a: Vector3, b: Vector3, ra: float, rb: float, color: Co
 	append_primitive(primitive,id,Transform3D(basis,(a+b)*.5),color)
 
 func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color, with_collision = true) -> void:
-	if build_pass == "visual": with_collision = false
+	if build_pass == "visual" or ambient: with_collision = false
 	if with_collision and not colliders.has(id):
 		var attachment = BoneAttachment3D.new()
 		attachment.bone_name = id
@@ -400,7 +406,7 @@ func update_props() -> void:
 	if props.has("telefono") and props.telefono.visible:
 		var light: OmniLight3D = props.telefono.get_meta("light")
 		light.light_energy = lerpf(.08,.4,screen_glow)*smoothstep(.3,1.0,act_w)
-		prop_materials["pantalla"].emission_energy_multiplier = lerpf(1.0,2.2,screen_glow)
+		prop_materials["pantalla"].emission_energy_multiplier = lerpf(.35,2.2,screen_glow)
 
 static func prop_material(key: String, color: Color, rough = .6, emission = Color.BLACK) -> StandardMaterial3D:
 	if not prop_materials.has(key):
@@ -509,7 +515,7 @@ func make_prop(key: String) -> Node3D:
 			prop_part(holder,lid,prop_material("tapa",Color("2b2b2b"),.5),Vector3(-.035,-.06,0),Vector3(PI,0,0))
 		"pan":
 			var bag = BoxMesh.new()
-			bag.size = Vector3(.06,.14,.1)
+			bag.size = Vector3(.045,.1,.075)
 			prop_part(holder,bag,prop_material("bolsa",Color("b98d5a"),.95),Vector3(.02,-.02,0))
 	return attach
 

@@ -85,6 +85,10 @@ var toast_time = 0.0
 var boot_frames = 0
 var screenshot_path = ""
 var advance_seconds = 0.0
+var pigeons
+var dog
+var ambience
+var extras
 var forced_activity = ""
 var smoke = false
 var run_metrics = false
@@ -231,6 +235,15 @@ func build_world() -> void:
 	Person.detail = "lo" if "lo_people" in debug_off else park.detail
 	viewport.add_child(park)
 	park.build()
+	pigeons = preload("res://scripts/pigeons.gd").new()
+	viewport.add_child(pigeons)
+	pigeons.build(Person.detail)
+	extras = preload("res://scripts/extras.gd").new()
+	viewport.add_child(extras)
+	extras.build(Person.detail)
+	ambience = preload("res://scripts/ambience.gd").new()
+	viewport.add_child(ambience)
+	ambience.build(park,pigeons)
 	camera = Camera3D.new()
 	camera.position.y = 1.6
 	camera.near = .08
@@ -272,6 +285,14 @@ func populate() -> void:
 			p.place()
 			p.animate(0)
 			people.append(p)
+	# One pedestrian of the bench path walks a dog (docs/futuro/19 §3).
+	for p in people:
+		if p.lane == 1 and not p.runner and p.traits.profile != 3:
+			p.has_dog = true
+			dog = preload("res://scripts/dog.gd").new()
+			viewport.add_child(dog)
+			dog.setup(p,77,Color("a8743f"))
+			break
 
 func style(color: Color, radius = 8, border = Color.TRANSPARENT) -> StyleBoxFlat:
 	var box = StyleBoxFlat.new()
@@ -626,6 +647,10 @@ func _process(dt: float) -> void:
 		park.update_weather(dt)
 		if not (sandbox and sandbox_paused):
 			for p in people: update_person(p,dt)
+			pigeons.update(dt,people,[dog] if dog else [])
+			extras.update(dt)
+			if dog: dog.update(dt)
+			ambience.update(dt)
 		meter_timer -= dt
 		if meter_timer <= 0:
 			meter_timer = .1
@@ -641,6 +666,9 @@ func _process(dt: float) -> void:
 		# --advance=N: let the crowd live N seconds before the capture (benches, chats, activities).
 		for step in int(advance_seconds*30):
 			for p in people: update_person(p,1.0/30)
+			pigeons.update(1.0/30,people,[dog] if dog else [])
+			if dog: dog.update(1.0/30)
+		if OS.has_environment("DOG_DEBUG") and dog: print("DOG theta %.1f r %.2f owner %s" % [fposmod(rad_to_deg(atan2(dog.position.x,-dog.position.z)),360),dog.position.length(),dog.walker.state])
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
 		for p in people:
@@ -648,7 +676,16 @@ func _process(dt: float) -> void:
 				p.state = "DETENIDO"
 				p.state_time = 999.0
 				p.face_target = PI-deg_to_rad(p.theta)
-			if p.state != "CAMINANDO": p.activity = forced_activity
+			if p.state != "CAMINANDO":
+				p.activity = forced_activity
+				p.state_time = 999.0
+		# A few seconds more so poses blend in and the pigeons reach anyone tossing crumbs.
+		for step in 240:
+			for p in people: update_person(p,1.0/30)
+			pigeons.update(1.0/30,people,[dog] if dog else [])
+		if OS.has_environment("PIGEON_DEBUG"):
+			for f in pigeons.flocks: print("FLOCK ",f.state," ",f.center," feeder ",f.feeder != null)
+			for p in people: if p.activity == "palomas": print("FEEDER ",p.state," w ",p.act_w," pos ",p.position)
 	if boot_frames == 100:
 		if smoke: smoke_test()
 		if screenshot_path != "": save_screenshot.call_deferred()
@@ -1370,13 +1407,18 @@ func smoke_test() -> void:
 		# 1.900 per pedestrian in the base pieces; 60.000 for the Blender mannequins with wig and clothes (docs/futuro/18).
 		assert(p.triangle_count <= (60000 if Person.detail == "hd" else 1900),Texts.get_text("presupuesto_por_viandante"))
 		triangles += p.triangle_count
+	# Meadow extras (hd only) and the pigeons count towards the scene budget too.
+	for p in extras.extras:
+		assert(p.ambient and p.colliders.is_empty(),"Meadow extras must have no colliders")
+		triangles += p.triangle_count
+	triangles += pigeons.triangle_count()
 	# Scene budget per profile (docs/futuro/17 §3): the park detail follows the renderer.
 	# The mesh detail sets the budget: a saved Ultra profile running in gl_compatibility builds "lo".
 	var budget = SCENE_TRIANGLES["Ultra"] if park.detail == "hd" else SCENE_TRIANGLES["Medio"]
 	assert(triangles <= budget,Texts.get_text("presupuesto_de_escena"))
 	var evidence = capture_evidence()
 	assert(Photo.evaluate(evidence) == Photo.evaluate(evidence))
-	print("SMOKE PASS: 21 viandantes, 20 huesos/persona, %d triángulos (límite %d, perfil %s, detalle %s, máximo por viandante %d), expediente determinista" % [triangles,budget,graphics_preset,park.detail,people.map(func(p): return p.triangle_count).max()])
+	print("SMOKE PASS: 21 viandantes (+%d figurantes, %d palomas), 20 huesos/persona, %d triángulos (límite %d, perfil %s, detalle %s, máximo por viandante %d), expediente determinista" % [extras.extras.size(),pigeons.birds.size(),triangles,budget,graphics_preset,park.detail,people.map(func(p): return p.triangle_count).max()])
 	if screenshot_path == "" and not run_metrics: get_tree().quit()
 
 func update_demo(dt: float) -> void:

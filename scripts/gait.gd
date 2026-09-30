@@ -179,6 +179,9 @@ func sit(e: float) -> void:
 	var b = p.nz*(.323-.03)
 	var ground = sole_support(0).x
 	var standing: float = p.rests[p.bones.caderas].origin.y
+	if p.seat_kind == "suelo":
+		sit_ground(e,a,b,ground,standing)
+		return
 	var seat = maxf(.47,b+ground)
 	var hip = lerpf(standing,seat,e)
 	p.rig.set_bone_pose_position(p.bones.caderas,Vector3(0,hip,0))
@@ -192,6 +195,22 @@ func sit(e: float) -> void:
 		p.pose_bone("antebrazo."+side,.12+.78*e)
 	# Lean forward while lowering (and rising), upright once seated.
 	p.pose_bone("lumbar",-.38*sin(PI*e)-.04*e)
+
+# Sitting on the grass: hips down to the ground, legs stretched forward with the knees a little
+# raised, leaning back on straight arms.
+func sit_ground(e: float, a: float, b: float, ground: float, standing: float) -> void:
+	var p = person
+	var hip = lerpf(standing,p.nz*.075,e)
+	p.rig.set_bone_pose_position(p.bones.caderas,Vector3(0,hip,0))
+	for side in ["I","D"]:
+		var sign_side = -1 if side == "I" else 1
+		var x = p.profile.hombros*.22*sign_side
+		var reach = (a+b)*lerpf(.2,.86,e)
+		var target = Vector3(x*1.15,lerpf(ground,ground+.02,e),-reach)
+		target.y = maxf(target.y,hip-sqrt(maxf(0.0,pow(a+b-.004,2)-reach*reach)))
+		solve_leg(side,target-Vector3(x,hip,0),Quaternion(Vector3.RIGHT,-.5*e),a,b)
+		arm(side,lerpf(0,-.55,e),-.1,.05,1.0)
+	p.pose_bone("lumbar",lerpf(0,.18,e)-.3*sin(PI*e))
 
 const WALKING_ACTIVITIES = ["movil"]
 
@@ -214,6 +233,7 @@ func head(pitch: float, yaw: float, weight_head: float) -> void:
 # walking, standing or seated pose; the legs are never touched.
 func activity() -> void:
 	var p = person
+	if p.has_dog: arm("I",.32,-.05,.5,1.0-p.seat)
 	var w: float = smoothstep(0,1,p.act_w)
 	if w <= 0: return
 	var t: float = p.act_time+p.act_seed
