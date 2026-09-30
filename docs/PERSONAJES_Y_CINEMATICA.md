@@ -165,6 +165,41 @@ Al alimentar $\Delta \text{distancia} = \|\mathbf{p}_{t} - \mathbf{p}_{t-1}\|$, 
   - Codos flexionados en ángulo pronunciado ($> 60^\circ$).
   - Fase aérea balística: periodo del ciclo donde ambos pies están en el aire simultáneamente.
 
+### 4.4 Paradas sin frenazo y orientación
+- Al detenerse, el peso de la marcha baja en $\approx 0.17\text{ s}$ (`weight`, $\times 6$ por segundo) y los pies se quedan apoyados; la velocidad ya llega casi a cero gracias a la frenada suave de `walk_step()` ([NAVEGACION_Y_COLISIONES.md §3](NAVEGACION_Y_COLISIONES.md)).
+- La orientación no se recalcula en cada fotograma: `turn_heading()` gira como mucho $75^\circ/\text{s}$ ($120^\circ/\text{s}$ los corredores) y, parado, $70^\circ/\text{s}$ hacia lo que mira (`face_target`).
+
+---
+
+## 4.bis Sentarse, Actividades y Objetos de Mano
+
+Añadido el 30-09-2026 con la vida en el parque ([futuro/19_VIDA_EN_EL_PARQUE.md](futuro/19_VIDA_EN_EL_PARQUE.md)).
+
+### 4.bis.1 Sentarse y levantarse (`gait.gd::sit`)
+`p.seat` pasa de 0 a 1 en $1.3\text{ s}$ mientras el estado es `SENTADO` (y vuelve a 0 en `LEVANTANDO`). La postura se resuelve con la misma cinemática inversa de la marcha (`solve_leg`): la cadera baja de su altura de pie a la del asiento (`max(0.47, b + suela)`) y los pies se quedan donde estaban, mientras `main.gd` lleva la raíz hacia atrás la longitud del muslo, del borde del banco ($r = 4.60\text{ m}$) al centro del asiento. El tronco se inclina hacia delante al bajar y al subir ($-0.38\cdot\sin(\pi e)$) y queda erguido una vez sentado. Las piernas cortas (el perfil infantil) no llegan al suelo: el muslo descansa en el asiento y la espinilla cuelga.
+
+**Sentado en el suelo** (`seat_kind = "suelo"`, figurantes de la pradera): la cadera baja a $0.075\cdot nz$, las piernas se estiran hacia delante con las rodillas algo levantadas y los brazos se apoyan detrás.
+
+### 4.bis.2 Capa de actividades (`gait.gd::activity`)
+Sobre la marcha, la postura de pie o la sentada se mezcla una capa de tren superior con peso `p.act_w` (sube y baja a $1.2$ por segundo). Solo toca brazos, antebrazos y cuello; las piernas nunca. `arm(lado, cabeceo, aducción, codo, peso)` y `head(cabeceo, giro, peso)` componen las rotaciones.
+
+| Actividad | Postura | Objeto | Dónde |
+|---|---|---|---|
+| `movil` | antebrazo derecho alzado, cabeza baja; parado, la otra mano también | teléfono con pantalla emisiva y luz | de pie, sentado o **andando** (más lento) |
+| `leer` | los dos brazos al frente, cabeza baja, leve vaivén | periódico abierto entre las manos | sentado |
+| `foto` | sube la cámara al ojo cada 7 s y mira alrededor entre tomas | cámara | parado |
+| `cafe` | vaso a la altura del pecho, sorbo cada 9 s | vaso de papel con funda y tapa | parado o sentado |
+| `charla` | gestos de la mano derecha, asentimientos | — | parado, frente a su pareja |
+| `mirar` | brazos cruzados, la cabeza barre el paisaje | — | parado |
+| `palomas` | echa migas cada 3,6 s | bolsa de pan en la izquierda | sentado |
+
+Quien pasea al perro lleva siempre la correa en la mano izquierda (`has_dog`).
+
+### 4.bis.3 Objetos de mano (`person.gd::make_prop`)
+Se construyen la primera vez que hacen falta, con primitivas y materiales compartidos, en un `BoneAttachment3D` de `mano.D` (la bolsa, de `mano.I`). El periódico se coloca cada fotograma entre las dos manos, de cara al lector. Se ven solo con `act_w > 0.3`. **No tienen colisionadores**: la puntuación no los ve.
+
+El **móvil** tiene una pantalla emisiva y una `OmniLight3D` de $0.5\text{ m}$, sin sombras, que ilumina la cara desde abajo; su intensidad sigue a `Pedestrian.screen_glow`, que fija `park.set_time_of_day()` (0 de día, 0,45 en la hora dorada, 1 de noche).
+
 ---
 
 ## 5. Reglas Éticas de Casting y Concordancia Gramatical
@@ -185,4 +220,4 @@ El generador de personajes en [scripts/casting.gd](../scripts/casting.gd) respet
 
 ## 6. Verificación Automatizada
 
-Suites `tests/test_art.gd` y `tests/test_gait.gd` (headless). Comandos, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+Suites `tests/test_art.gd` y `tests/test_gait.gd` (headless; incluye la postura sentada) y `tests/test_park_life.gd` (con display: sentarse sin teletransportes, objetos de mano). Hoja de evidencias `docs/evidencias/personajes_modelado/10_actividades.png` (`tools/capture_characters.gd -- --only=actividades`). Comandos, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).

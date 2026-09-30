@@ -30,12 +30,14 @@ El parque cuenta con **4 calzadas peatonales circulares concéntricas** donde ci
 
 | Carril | Radio Nominal ($r$) | Sub-offset ($\pm$) | Límites Físicos (`LANE_BOUNDS`) | Población | Aforo Máx. (`LANE_CAPACITIES`) | Función en el Juego |
 |:---:|:---:|:---:|:---:|:---:|:---:|---|
-| **0** | $1.8\text{ m}$ | $0.33\text{ m}$ | $[1.20, 2.40]\text{ m}$ (ancho: $1.20\text{ m}$) | 3 | 3 | Primer plano de oclusión dinámica |
+| **0** | $1.8\text{ m}$ | $0.33\text{ m}$ | $[1.05, 2.70]\text{ m}$ (ancho: $1.65\text{ m}$) | 3 | 3 | Primer plano de oclusión dinámica |
 | **1** | $4.0\text{ m}$ | $0.35\text{ m}$ | $[2.90, 4.85]\text{ m}$ (ancho: $1.95\text{ m}$) | 7 | 7 | Plaza central / Sujeto principal |
 | **2** | $7.0\text{ m}$ | $0.35\text{ m}$ | $[6.10, 7.90]\text{ m}$ (ancho: $1.80\text{ m}$) | 6 | 7 | Tránsito intermedio y encargos secundarios |
 | **3** | $11.5\text{ m}$ | $0.35\text{ m}$ | $[10.60, 12.40]\text{ m}$ (ancho: $1.80\text{ m}$) | 5 | 6 | Tránsito perimetral lejano |
 
 **Población** es el reparto inicial de `populate()` (`counts = [3, 7, 6, 5]`, 21 en total); **aforo** es el máximo que `try_change_lane()` admite tras los cambios de carril (`LANE_CAPACITIES = [3, 7, 7, 6]`).
+
+El carril 0 se ensanchó el 30-09-2026 de $[1.20, 2.40]$ a $[1.05, 2.70]\text{ m}$ (sigue sobre las losas de la plaza, que llegan a $2.8\text{ m}$): con los márgenes de $0.28\text{ m}$ de la marcha suave, el ancho antiguo dejaba $0.64\text{ m}$ útiles, menos que el espacio personal de $0.72\text{ m}$, y dos viandantes nunca podían cruzarse.
 
 ### Despeje de Calzadas y Obstáculos Físicos
 Para asegurar que la calzada del carril 1 mantenga más de $1.9\text{ m}$ de paso continuo sin barreras:
@@ -44,39 +46,46 @@ Para asegurar que la calzada del carril 1 mantenga más de $1.9\text{ m}$ de pas
 
 ---
 
-## 3. Navegación Continua 2D y Dirección Sensible al Espacio
+## 3. Marcha Suave: Navegación Continua 2D sin Temblequeo
 
-En cada fotograma, `update_person(p, dt)` calcula la trayectoria de avance anticipando obstáculos mediante tres fuerzas combinadas:
+Desde el 30-09-2026 la marcha por carril vive en `main.gd::walk_step(p, dt)` y busca que todo ocurra **más despacio pero con naturalidad**: nadie da bandazos, nadie se para en seco, nadie tiembla al cruzarse. La versión anterior probaba pasos alternativos de golpe en cada fotograma y recalculaba la orientación desde cero, y de ahí salía el temblequeo cuando dos personas se encontraban.
 
-### 3.1 Sub-carriles por Sentido de Marcha
-Los viandantes en sentido horario (`direction = 1`) tienden a su sub-radio exterior ($r_{\text{nom}} + \text{offset}$), mientras que los de sentido antihorario (`direction = -1`) tienden al interior ($r_{\text{nom}} - \text{offset}$).
-Esto proporciona una **separación natural de $\ge 0.70\text{ m}$**, permitiendo que dos viandantes en sentidos opuestos se crucen sin rozarse.
+### 3.1 Velocidades con aceleración limitada
+Cada viandante guarda una velocidad de avance `v_fwd` y una radial `v_rad` que solo cambian con aceleración acotada:
 
-### 3.2 Detección Frontal y Evasión Lateral Sensible al Espacio
-Para cada otro viandante visible, se considera "delante" si la distancia de arco en el sentido de marcha está en $(0.02, 2.5)\text{ m}$ y la distancia euclídea es menor de $2.5\text{ m}$. Con
-```gdscript
-var space_out = bounds.y - other.radius
-var space_in = other.radius - bounds.x
-```
-se elige un sentido de desvío por este orden:
-1. Si `space_out < 0.65` → hacia dentro; si `space_in < 0.65` → hacia fuera (el otro está pegado a un borde).
-2. **Mismo sentido (adelantamiento)**: hacia el lado con más holgura (`space_out >= space_in` → fuera).
-3. **Sentido opuesto con $|\Delta r| < 0.75\text{ m}$**: hacia el propio sub-carril (fuera si `direction > 0`).
+| Constante | Valor | Uso |
+|---|---|---|
+| `WALK_ACCEL` | $0.55\text{ m/s}^2$ ($\times 2.5$ en corredores) | arrancar y recuperar el paso |
+| `WALK_BRAKE` | $1.6\text{ m/s}^2$ | frenar ante alguien |
+| `LATERAL_MAX` | $0.32\text{ m/s}$ ($\times 1.9$ en corredores) | desplazamiento lateral máximo |
+| `PERSONAL_SPACE` | $0.72\text{ m}$ | distancia entre centros al cruzarse o adelantar |
+| `FOLLOW_GAP` | $1.3\text{ m}$ | distancia al seguir a alguien más lento |
 
-Cada obstáculo aporta su voto ponderado por cercanía, $w = (2.5 - \text{dist}) / 2.5$. Si la suma no es nula, el radio objetivo pasa a $r_{\text{nom}} \pm 0.38\text{ m}$ (carriles 0 y 1) o $\pm 0.48\text{ m}$ (carriles 2 y 3), acotado a `LANE_BOUNDS`. El radio se acerca al objetivo a $1.4 \cdot v$ m/s.
+`v_rad` persigue $(r_{\text{des}} - r)\cdot 1.4$, acotada a `LATERAL_MAX`, con una aceleración lateral de $1.2\text{ m/s}^2$. La velocidad configurada (caminantes $0.55$–$0.85$, corredores $2.6$–$3.0\text{ m/s}$) no cambia; lo que cambia es cómo se llega a ella.
 
-**Frenado**: si el obstáculo más cercano está a menos de $0.90\text{ m}$ y con $|\Delta r| < 0.52\text{ m}$, la velocidad se multiplica por $\text{clamp}((\text{dist} - 0.40)/0.50,\ 0.20,\ 1.0)$.
+### 3.2 Radio deseado y sub-carriles por sentido
+El radio deseado parte del sub-carril por sentido de marcha (`LANES[lane] + LANE_OFFSETS[lane]·direction`, es decir, cada uno por su derecha) acotado a `LANE_BOUNDS` con un margen de $0.28\text{ m}$. Junto a los bancos del carril 1 el borde exterior baja a $r = 4.43\text{ m}$, para que la cápsula de $0.30\text{ m}$ no roce sus patas.
 
-**Pasos de reserva**: si el paso 2D completo no es válido (`travel_clear`), se prueba en orden: solo radial, solo tangencial, tangencial con desvío de $+0.12\text{ m}$ y con $-0.12\text{ m}$. Si ninguno pasa, se acumula `stuck_time` (§5).
+### 3.3 Lado de paso fijado y adelantamientos
+Para cada viandante visible entre $0.9\text{ m}$ por detrás y $4.0\text{ m}$ por delante, con $|\Delta r| < 1.1\text{ m}$:
+- **A la par** (ya se están cruzando): solo se mantiene el lado de paso hasta dejarlo atrás.
+- **Sin acercamiento** (va igual o más rápido en el mismo sentido): se ignora.
+- **Se acercará a menos del espacio personal**: se elige **una vez** un lado de paso (`pass_side`) y se mantiene al menos $3\text{ s}$ (`pass_timer`). Quien viene de frente siempre se aparta por su derecha, aunque tuviera otro lado fijado de antes: así los dos eligen lados opuestos y nunca se imitan hasta bloquearse. En un adelantamiento se va hacia el lado con más hueco. El radio deseado se mezcla con el del lado de paso según la distancia (del todo a $1.5\text{ m}$).
+- Si no cabe por ningún lado, **sigue** a la otra persona a `FOLLOW_GAP`, y afloja el paso con antelación si tiene a alguien más lento justo delante.
 
-### 3.3 Transición Diagonal entre Carriles
+### 3.4 Pasos de reserva, orientación y atascos
+- Si el paso completo no es válido (`travel_clear`), prueba solo el lateral mientras frena; si tampoco, frena del todo y acumula `stuck_time`.
+- La **orientación** (`turn_heading`) sigue a la velocidad real cuando supera $0.12\text{ m/s}$, girando como mucho $75^\circ/\text{s}$ ($120^\circ/\text{s}$ los corredores). Parado, conserva la orientación y gira despacio ($70^\circ/\text{s}$) hacia lo que mira.
+- Con `stuck_time` $> 2\text{ s}$ prueba el otro lado (como mucho una vez cada $1.5\text{ s}$); con $> 3\text{ s}$ intenta cambiar de carril; con $> 5\text{ s}$ da media vuelta con suavidad.
+
+### 3.5 Transición Diagonal entre Carriles
 Cuando un viandante cambia de carril (`destination_lane >= 0`):
-- Avanza **diagonalmente**: radio hacia el sub-carril destino a $0.7 \cdot v$ m/s y avance tangencial a $0.5 \cdot v$.
+- Avanza **diagonalmente**: el avance frena con suavidad hasta $0.55 \cdot v$ y el radio se acerca al sub-carril destino a $\min(0.6 \cdot v,\ 0.45)$ m/s.
 - Si el paso diagonal no es válido prueba solo el radial y luego solo el tangencial. Se considera llegado a menos de $0.15\text{ m}$ del radio destino.
 - Si lleva más de $1.2\text{ s}$ bloqueado (`lane_change_blocked`), cancela el cambio y adopta el carril nominal más cercano a su radio actual.
-- Además, cada $8 - 18\text{ s}$ (`lane_timer`) intenta un cambio de carril espontáneo.
+- Además, cada $25 - 60\text{ s}$ (`lane_timer`) intenta un cambio de carril espontáneo o, con probabilidad $0.3$, saca el móvil y camina mirándolo durante $8 - 18\text{ s}$ (al $80\ \%$ de su velocidad).
 
-### 3.4 Control de Aforo (`LANE_CAPACITIES`)
+### 3.6 Control de Aforo (`LANE_CAPACITIES`)
 Antes de permitir un cambio de carril, `try_change_lane()` contabiliza cuántos viandantes ocupan o se dirigen al carril destino:
 ```gdscript
 if in_lane >= LANE_CAPACITIES[lane]: continue
@@ -90,8 +99,10 @@ Esto previene que el Carril 0 (de solo 11.3 m de perímetro) reciba demasiados v
 La función `travel_clear(p, from, to)` valida si un segmento de desplazamiento es seguro antes de comprometer la nueva posición del personaje:
 
 ```gdscript
-func travel_clear(p: Pedestrian, from: Vector3, to: Vector3) -> bool:
+func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true) -> bool:
 ```
+
+`static_check = false` omite el barrido contra el mundo estático en dos casos: el último tramo hasta un banco elegido (hay que meterse entre sus patas) y cuando alguien está fuera de la franja transitable (al levantarse del banco), para que pueda volver a ella.
 
 ### Componentes de Validación
 1. **Barrido de cápsula 3D (`CapsuleShape3D`) contra el mundo estático**:
@@ -99,36 +110,36 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3) -> bool:
    - Consulta de intersección y `cast_motion` en `collision_mask = 2` (árboles, bancos, papeleras, farolas).
 2. **Distancia mínima entre personajes ($0.58\text{ m}$)**:
    - Se obtiene el punto más cercano del segmento de avance respecto a los demás viandantes (`Geometry3D.get_closest_point_to_segment`).
-   - **Desbloqueo de pasos de separación**: Si la distancia final $d_{to}$ es mayor o igual que la distancia inicial $d_{from} - 0.005\text{ m}$, el paso se autoriza aunque los personajes estén cerca. Esto permite que los viandantes se separen libremente sin bloquearse mutuamente.
+   - **Desbloqueo de pasos de separación**: Si la distancia final $d_{to}$ es mayor o igual que la distancia inicial $d_{from} - 0.0005\text{ m}$, el paso se autoriza aunque los personajes estén cerca. Esto permite que los viandantes se separen libremente sin bloquearse mutuamente. La tolerancia era de $5\text{ mm}$ y con la marcha suave dejaba que dos personas lentas (menos de $0.15\text{ m/s}$) se fueran metiendo la una en la otra.
+3. **Figurantes, palomas y objetos de mano** no intervienen: no tienen colisionadores. El perro tiene uno en la capa 1 (fotos), fuera de la máscara 2 de la navegación.
 
 ---
 
-## 5. Máquina de Estados de Viandantes y Anti-Deadlock
+## 5. Máquina de Estados de Viandantes, Bancos y Actividades
 
-El estado vive en `person.gd::state` y se actualiza en `main.gd::update_person()`:
+El estado vive en `person.gd::state` y se actualiza en `main.gd::update_person()` (andando) y `update_still()` (parado):
 
 ```mermaid
 stateDiagram-v2
     [*] --> CAMINANDO
-    CAMINANDO --> DETENIDO: Nuevo sector de 30° (θ < 240°), p = 0.15, no corredor, POI libre
-    CAMINANDO --> SENTADO: Carril 1, junto a banco libre, p = 0.06 por fotograma, no corredor ni objetivo protegido
-    DETENIDO --> CAMINANDO: Tras 3–8 s
-    SENTADO --> CAMINANDO: Tras 20–60 s (libera el banco)
+    CAMINANDO --> CAMINANDO: frena con suavidad (pending_stop) o camina hasta un banco (bench_goal)
+    CAMINANDO --> DETENIDO: parado del todo, con su actividad
+    DETENIDO --> SENTADO: frente al banco y ya girado hacia el camino
+    SENTADO --> LEVANTANDO: acaba el tiempo, termina la actividad y hay hueco
+    LEVANTANDO --> CAMINANDO: de pie (arranca desde parado, a veces en sentido contrario)
+    DETENIDO --> CAMINANDO: tras 6–16 s (12–22 s si charla)
 ```
 
-- **DETENIDO** es una pausa de "punto de interés", no un mecanismo anti-atascos.
+- **Paradas**: al entrar en un sector nuevo de $30^\circ$ ($\theta < 240^\circ$) un caminante se para con probabilidad $0.12$ si no hay nadie parado a menos de $12^\circ$ en su carril. `plan_stop()` fija una parada pendiente (`pending_stop`): frena con la deceleración normal y, al pararse, empieza su **actividad** (`mirar`, `movil`, `foto` o `cafe`) mirando hacia el paisaje. Si viene de frente otro caminante a $1.4$–$3.6\text{ m}$, con probabilidad $0.55$ **se paran los dos a charlar**, frente a frente (`partner`).
+- **Bancos** (carril 1): cuando un banco libre queda a $2.5$–$3.2\text{ m}$ por delante, se decide una sola vez (probabilidad $0.4$) si sentarse. Lo reserva, se arrima a su borde ($r = 4.60\text{ m}$) frenando hasta pararse enfrente, gira hacia el camino y se sienta en $1.3\text{ s}$: la cadera retrocede hasta el centro del asiento mientras los pies se quedan quietos (`gait.gd::sit`, §6 de [PERSONAJES_Y_CINEMATICA.md](PERSONAJES_Y_CINEMATICA.md)). Sentado $25$–$70\text{ s}$ lee el periódico, mira el móvil, toma café, echa migas a las palomas o descansa. Para levantarse espera a que no haya nadie a menos de $0.9\text{ m}$ de su sitio. Si se pasa del banco o se atasca, renuncia y lo libera.
 - **RETIRADO**: `update_person()` y el sorteo de objetivos contemplan este estado (reaparición en $\theta = 296^\circ / 304^\circ$, detrás del jugador), pero **ningún código lo asigna actualmente**; la rama es inalcanzable en el juego.
+- Las actividades y sus posturas se describen en [futuro/19_VIDA_EN_EL_PARQUE.md](futuro/19_VIDA_EN_EL_PARQUE.md).
 
 ### Escalado Anti-Deadlock
-Cuando todos los pasos de §3.2 fallan, `stuck_time` crece con `dt` (y decrece cuando el viandante logra avanzar):
-1. **$t_{\text{stuck}} > 0.8\text{ s}$**: intenta cambiar a un carril con aforo libre (`try_change_lane()`, carriles ordenados por cercanía de radio).
-2. **$t_{\text{stuck}} > 2.5\text{ s}$**: invierte su sentido de marcha (`direction *= -1`) y reinicia `stuck_time`.
-
-### Puntos de Interés (POI) sin Congestión
-Antes de detenerse, el viandante comprueba que ningún otro en el mismo carril esté `DETENIDO` o `SENTADO` a menos de $12^\circ$.
+Ver §3.4: otro lado de paso a los $2\text{ s}$, cambio de carril a los $3\text{ s}$ y media vuelta a los $5\text{ s}$ de `stuck_time`. Esperar detrás de alguien no cuenta como atasco.
 
 ---
 
 ## 6. Verificación Determinista de Navegación
 
-Suites `tests/simulate_jams.gd` y `tests/test_navigation.gd` (requieren display). Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+Suites `tests/simulate_jams.gd`, `tests/test_navigation.gd`, `tests/test_crowd.gd` (60 s de multitud: giro $\le 125^\circ/\text{s}$, sin inversiones laterales rápidas, sin solapes y sin atascos) y `tests/test_park_life.gd` (ciclo del banco sin teletransportes y charla frente a frente). Todas requieren display. Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).

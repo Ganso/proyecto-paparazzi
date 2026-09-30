@@ -28,7 +28,8 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 | **Pruebas y Verificación** | [docs/TESTS_Y_VERIFICACION.md](docs/TESTS_Y_VERIFICACION.md) | **Fuente única** de comandos de prueba, opciones de arranque, herramientas de `tools/` y cifras de referencia medidas. Headless vs. Display y uso con Xvfb. |
 | **Salto Gráfico (Ultra, Blender)** | [docs/futuro/17_SALTO_GRAFICO_ULTRA.md](docs/futuro/17_SALTO_GRAFICO_ULTRA.md) | Perfiles y renderizador, niveles de detalle `hd`/`lo`, proceso de Blender (`tools/blender/`), texturas procedurales (`tools/texturas/`), reglas de coherencia de colisionadores, presupuestos y pendientes. |
 | **Personajes en Blender** | [docs/futuro/18_PERSONAJES_BLENDER.md](docs/futuro/18_PERSONAJES_BLENDER.md) | Maniquí, ropa, pelucas y tocados generados por `tools/blender/build_characters.py`, pesos suaves, `hides`, evidencias `tools/capture_characters.gd`. |
-| **Banco de Futuras Mejoras** | [docs/futuro/README.md](docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí (toon y diorama físico PBR realista), animación universal (Quaternius), modos de fotometría (matricial/spot) y autofoco avanzado (AF-C/AF-S), interfaz móvil utilizable, soporte de gamepad, variedad procedural de vegetación y personajes, y perfiles gráficos con Ultra para GPUs potentes. Empieza por la **hoja de ruta** ([docs/futuro/README.md §4](docs/futuro/README.md)); el paso 1 ([parque fusionado, oclusión horneada y atmósfera](docs/futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)) ya está completado. |
+| **Vida en el Parque** | [docs/futuro/19_VIDA_EN_EL_PARQUE.md](docs/futuro/19_VIDA_EN_EL_PARQUE.md) | Marcha suave sin temblequeo, bancos, paradas con actividad y objetos de mano (el móvil ilumina la cara), perro (`scripts/dog.gd`), palomas (`scripts/pigeons.gd`), figurantes de la pradera (`scripts/extras.gd`) y sonido ambiente (`scripts/ambience.gd`, `tools/audio/build_ambience.py`). |
+| **Banco de Futuras Mejoras** | [docs/futuro/README.md](docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí (toon y diorama físico PBR realista), animación universal (Quaternius), modos de fotometría (matricial/spot) y autofoco avanzado (AF-C/AF-S), interfaz móvil utilizable, soporte de gamepad, variedad procedural de vegetación y personajes, y perfiles gráficos con Ultra para GPUs potentes. Empieza por la **hoja de ruta** ([docs/futuro/README.md §4](docs/futuro/README.md)); los pasos 1 ([parque fusionado](docs/futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), 2 ([salto gráfico](docs/futuro/17_SALTO_GRAFICO_ULTRA.md) y [personajes](docs/futuro/18_PERSONAJES_BLENDER.md)) y 2c ([vida en el parque](docs/futuro/19_VIDA_EN_EL_PARQUE.md)) ya están completados. |
 
 ---
 
@@ -60,11 +61,12 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 
 ### 3.3 Sistema de Carriles y Navegación 2D
 - Origen en jugador: $(0, 1.60\text{ m}, 0)$.
-- **Carril 0**: $r = 1.8\text{ m}$ (aforo máx. 3).
+- **Carril 0**: $r = 1.8\text{ m}$ (aforo máx. 3). Calzada útil $[1.05, 2.70]\text{ m}$ (ensanchada el 30-09-2026 para que dos personas quepan al cruzarse).
 - **Carril 1**: $r = 4.0\text{ m}$ (aforo máx. 7). Calzada útil ancha $[2.9, 4.85]\text{ m}$ con 4 bancos exteriores a $r = 4.85\text{ m}$.
 - **Carril 2**: $r = 7.0\text{ m}$ (aforo máx. 7).
 - **Carril 3**: $r = 11.5\text{ m}$ (aforo máx. 6).
 - **Fondo vegetal**: Cortina densa de setos y arbolado entre $r = 13.2\text{ m}$ y $r = 17.5\text{ m}$.
+- **Figurantes, palomas y objetos de mano** no tienen colisionadores y los figurantes no están en `main.people` (siguen siendo 21 viandantes). El **perro** sí tiene colisionador, en la capa 1 (fotos) y fuera de la máscara 2 de la navegación.
 
 ### 3.4 Actualización Obligatoria e Inmediata de Documentación (Directiva Crítica)
 - **Documentación Viva e Inmediata**: Es **FUNDAMENTAL y OBLIGATORIO** actualizar la documentación técnica y las matrices de estado (`docs/`, `docs/futuro/README.md`, etc.) **inmediatamente después de cualquier cambio** de código, refactorización o resolución de tareas. Ningún desarrollo se considera completado si su estado documental no refleja con total exactitud la realidad del código y de las herramientas disponibles.
@@ -91,7 +93,7 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
 
 - **Headless**: `test_photography.gd`, `test_art.gd`, `test_equipment.gd`, `test_gait.gd`, `test_export.gd`.
 - **Exportación Android**: `./tools/export_android.sh` genera `build/paparazzi-debug.apk`, que **se versiona en git** (excepción en `.gitignore`). Si cambias el juego para una entrega móvil, recompila y haz commit del APK.
-- **Con display**: `test_navigation.gd`, `simulate_jams.gd`, `test_expansion.gd`, `test_game.gd`, `--smoke-test`, `./tools/run_evidence.sh`. En servidores sin pantalla se pueden ejecutar con `xvfb-run` (ver §1 del documento de pruebas).
+- **Con display**: `test_navigation.gd`, `test_crowd.gd`, `test_park_life.gd`, `simulate_jams.gd`, `test_expansion.gd`, `test_game.gd`, `--smoke-test`, `./tools/run_evidence.sh`. En esta máquina, con **`--disable-vsync`**: si la ventana queda tapada, Wayland deja de dar fotogramas y la prueba se cuelga. En servidores sin pantalla se pueden ejecutar con `xvfb-run` (ver §1 del documento de pruebas).
 - **Mínimo antes de cerrar una tarea**: `~/bin/godot-4-fp --path . -- --smoke-test`; si toca Android, también con `--rendering-method gl_compatibility`.
 
 ---
@@ -106,6 +108,12 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
   Porque los bancos se movieron al borde exterior a $r = 4.85\text{ m}$ y los viandantes usan navegación espacial continua 2D (`space_out` vs `space_in`) dentro de `LANE_BOUNDS`.
 - **¿Cómo añado un nuevo objeto al parque?**  
   Modélalo por código en `tools/blender/build_park_assets.py` (una función `build_<nombre>(lod)` que devuelva sus `Builder` por rol, registrada en `ASSETS`), regenera con `./tools/build_park_assets.sh --only <nombre>` y revísalo con `tools/blender/preview_assets.py`. En `scripts/park.gd::build()` colócalo con `visual("<nombre>", variante, padre)` y dale colisionador con las primitivas de siempre (`collider_only = true` y `cube()`/`cylinder()` con etiqueta) o con `landmark()`/`collider()` desde su malla `lo`. Si interactúa con el fotómetro o el AF, etiquétalo con `Texts.get_text(...)` y registra el texto en `data/textos.es.json`.
+- **¿Cómo añado una actividad nueva (p. ej. «hacer estiramientos»)?**  
+  Su postura va en `scripts/gait.gd::activity()` (un caso del `match` con `arm()` y `head()`; las piernas no se tocan). Si lleva un objeto, añádelo a `Person.PROP_FOR` y constrúyelo en `person.gd::make_prop()`. Luego haz que alguien la elija: `STAND_ACTIVITIES` o `SEAT_ACTIVITIES` en `main.gd` (o `WALKING_ACTIVITIES` en `gait.gd` si se hace andando). Revísala con `tools/capture_characters.gd -- --only=actividades` (añade el caso) y comprueba el objeto en `tests/test_park_life.gd`.
+- **¿Cómo veo la vida del parque en una captura?**  
+  `~/bin/godot-4-fp --path . --disable-vsync --rendering-method forward_plus --resolution 1600x900 -- --screenshot=/tmp/x.png --angle=125 --pitch=-5 --focal=40 --advance=60 --hud=0`. `--advance=N` simula N segundos antes de la captura y `--activity=palomas` (u otra) obliga a todos a hacerla. Los bancos están en $\theta = 35^\circ, 125^\circ, 215^\circ, 305^\circ$ y la pradera se ve por $\theta \approx 120^\circ$ (quiosco) y $245^\circ$ (estanque).
+- **¿Cómo cambio o regenero el sonido ambiente?**  
+  Edita `tools/audio/build_ambience.py` y ejecuta `python3 tools/audio/build_ambience.py` (escribe `assets/audio/ambiente/*.wav`). Dónde suena cada uno y a qué volumen está en `scripts/ambience.gd`. Graba una prueba con `--write-movie` y mide el nivel con `ffmpeg -af volumedetect`.
 - **¿Cómo genero el vídeo de evidencias?**  
   `./tools/capture_video.sh` (≈6 min, MP4 de 2 min en `build/video/`, con 8 secuencias en día, hora dorada y noche, y una telemétrica en enfoque manual que dispara y muestra el revelado). **Música de fondo de todos los vídeos del proyecto: `assets/audio/musica_videos.mp3`** (del usuario), con fundido de salida en los últimos 10 s. Solo bajo demanda y para cambios grandes. Detalle en [docs/TESTS_Y_VERIFICACION.md §4.2](docs/TESTS_Y_VERIFICACION.md).
 - **¿Cómo veo Ultra?**  

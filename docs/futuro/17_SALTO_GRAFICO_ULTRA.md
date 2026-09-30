@@ -53,7 +53,7 @@ tools/build_park_assets.sh          ejecuta los dos
 ### 2.3 Reglas de coherencia (obligatorias)
 1. **Los colisionadores no cambian con el perfil.** Siguen siendo las primitivas de siempre sin malla visible (`Park.collider_only`) o se sacan de la envolvente de la malla `lo` (árboles, quiosco, estanque). Los maniquíes `hd` construyen sus colisionadores con las piezas base.
 2. **Dentro de la zona jugable** ($r < 12.8\text{ m}$), la malla visible de cada objeto ocupa el mismo volumen que su colisionador.
-3. **Fuera de la zona jugable**, la geometría es libre. Lo que solo dibuja `hd` (segunda franja de arbolado a 46–52 m y matas de la pradera, `Park.hd_only`) conserva sus colisionadores en todos los perfiles: nunca tapa a un viandante y a esa distancia el sol rasante pasa por encima.
+3. **Fuera de la zona jugable**, la geometría es libre. Lo que solo dibuja `hd` (segunda franja de arbolado a 46–52 m, matas de la pradera y, desde el 30-09-2026, dos de cada tres árboles de la primera franja y tres de cada cuatro de los sueltos de la pradera, `Park.hd_only`; así Android se queda en 94.112 triángulos) conserva sus colisionadores en todos los perfiles: nunca tapa a un viandante y a esa distancia el sol rasante pasa por encima.
 4. Lo añadido por debajo de 0,3 m (hierba instanciada, bordillos) no lleva colisionador.
 
 ---

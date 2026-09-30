@@ -36,6 +36,8 @@ graph TD
     A --> K[shaders/develop.gdshader<br/>Simulación de Revelado Químico]
     F --> L[shaders/focus_aid.gdshader<br/>Ayuda de Enfoque Telemétrico/Prisma]
     C --> M[shaders/cel_shading.gdshader + cel_outline.gdshader<br/>Maniquí toon y contorno de tinta]
+    A --> N[pigeons.gd · dog.gd · extras.gd · ambience.gd<br/>Vida en el parque: palomas, perro, figurantes y sonido]
+    N --> C
 ```
 
 ### Responsabilidades por Módulo
@@ -46,11 +48,12 @@ graph TD
 | **Escenario** | [scripts/park.gd](../scripts/park.gd) | Parque (colisionadores de primitivas y mallas de Blender fusionadas por sectores), pradera con quiosco y estanque, suelo texturizado y hierba instanciada en `hd`, farolas con sombras, ciclo día/noche, nubes y efectos de Forward+ en Ultra. |
 | **Objetos de Blender** | [scripts/park_assets.gd](../scripts/park_assets.gd) | Lectura en tiempo de ejecución de `assets/parque/*.glb` (generados por `tools/blender/build_park_assets.py`) con `GLTFDocument`, por nivel de detalle `hd`/`lo` y rol (vidrio, bombillas, agua, ventanas, madera) ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)). |
 | **Viandantes** | [scripts/person.gd](../scripts/person.gd) | Ensamblado de piezas anatómicas, rig universal de 20 huesos, pesaje rígido y combinación en una sola superficie con colores de vértice. |
-| **Locomoción** | [scripts/gait.gd](../scripts/gait.gd) | Cinemática analítica de marcha y carrera, cálculo de altura de cadera, orientación de suela y pisada con deslizamiento cero (`drift = 0`). |
+| **Locomoción** | [scripts/gait.gd](../scripts/gait.gd) | Cinemática analítica de marcha y carrera, cálculo de altura de cadera, orientación de suela y pisada con deslizamiento cero (`drift = 0`); sentarse en un banco o en el suelo y capa de actividades del tren superior. |
 | **Casting** | [scripts/casting.gd](../scripts/casting.gd) | Generación aleatoria de rasgos de vestimenta, asignación de encargos y concordancia morfológica estricta de género y número en español. |
 | **Óptica y Foto** | [scripts/photography.gd](../scripts/photography.gd) | Fórmulas ópticas reales: CoC, profundidad de campo, triángulo de exposición, desenfoque por velocidad de obturación y calificación determinista. |
 | **Equipo** | [scripts/equipment.gd](../scripts/equipment.gd) | Catálogo de cuerpos (compacta, telemétrica, réflex), objetivos fotográficos (24 mm a 200 mm), pasos de diafragma y carretes analógicos. |
 | **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 colimadores AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
+| **Vida en el parque** | [scripts/pigeons.gd](../scripts/pigeons.gd), [scripts/dog.gd](../scripts/dog.gd), [scripts/extras.gd](../scripts/extras.gd), [scripts/ambience.gd](../scripts/ambience.gd) | Palomas (MultiMesh), perro con correa, figurantes de la pradera sin colisionadores y sonido ambiente sintetizado. Los actualiza `main.gd` cada fotograma junto a los viandantes ([futuro/19](futuro/19_VIDA_EN_EL_PARQUE.md)). |
 | **Localización** | [scripts/texts.gd](../scripts/texts.gd) | Resolución de claves localizadas desde `data/textos.es.json` con interpolación de variables. |
 
 ---

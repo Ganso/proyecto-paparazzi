@@ -45,7 +45,7 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
 - **4 especies por gramática** (`SPECIES` en `tools/blender/build_park_assets.py`), con **4 variantes** cada una: plátano (copa ancha), tilo (copa globosa), ciprés (huso de racimos apilados) y arce otoñal (oro y ámbar). Fuste curvo con cuello radicular, ramas en dos niveles (el segundo solo en `hd`) y racimos de follaje en las puntas: icosferas deformadas por ruido, más claras arriba y hacia fuera, con la oclusión ambiental horneada por Cycles.
 - `park.gd::build_tree()` conserva la variación por semilla (giro, inclinación y escala) y elige la variante con `semilla % 4`. Los **colisionadores** (tronco y copa, etiquetas `un_arbol` y `una_copa_de_arbol`) salen de la envolvente convexa de la malla `lo`, idéntica en todos los perfiles.
 - **Arbustos**: 6 variantes de radio 1, escaladas al elipsoide de siempre (`park.gd::bush()`), cuyo colisionador se mantiene.
-- Triángulos por árbol: ~2.500–4.000 en `hd` y ~150–300 en `lo`.
+- Triángulos por árbol: ~2.500–4.000 en `hd` y ~150–300 en `lo`. En `lo` (Android) solo se dibujan uno de cada tres árboles de la franja lejana y uno de cada cuatro de los sueltos de la pradera; los colisionadores están todos en cualquier perfil.
 
 ### 2.2 Pradera exterior (fuera de la zona jugable)
 - **Quiosco de música** octogonal (Ø 4,6 m): gradas, columnas torneadas, barandilla de balaustres, tejado con nervios y remate. De noche y en hora dorada se encienden una guirnalda de bombillas bajo el alero y un farol central (`meadow_lights`).
@@ -54,6 +54,14 @@ El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de rad
 - Las luces de la pradera no están en `lamps`: `illumination_ev()` no las ve y, a más de 20 m de los carriles, tampoco iluminan a los viandantes.
 - **Verja abierta** ante el quiosco y el estanque: faltan tres tramos (±7,5°) y un pilar marca cada lado.
 - **Torres** (6 estilos, `TOWER_STYLES`): volúmenes escalonados con remate; en `hd`, ventanas en `shaders/park_windows.gdshader`, que enciende de noche una de cada tres.
+
+### 2.2.bis Vida en la pradera y en el parque (desde el 30-09-2026)
+Detalle en [futuro/19_VIDA_EN_EL_PARQUE.md](futuro/19_VIDA_EN_EL_PARQUE.md). Resumen:
+- **Figurantes** (`scripts/extras.gd`, solo `hd`): 14 personas en las dos aberturas de la verja. Pasean alrededor del quiosco y del estanque (una de ellas con perro), hacen un pícnic con manta de cuadros y cesta, charlan, hacen fotos al quiosco, leen o miran el móvil sentadas en la hierba y hay un niño mirando el agua. Viven más allá de $r = 12.8\text{ m}$, **no tienen colisionadores** y no están en `main.people`: nunca son objetivo ni tapan una foto a efectos de puntuación.
+- **Palomas** (`scripts/pigeons.gd`, solo `hd`): dos bandadas de 9 en el anillo de césped de $r = 5.1$–$6.0\text{ m}$, dibujadas con 3 `MultiMesh` (cuerpo, cabeza y alas: 3 draw calls). Picotean, cabecean, se apartan a saltitos de la gente y del perro, a veces (probabilidad 0,3 por paso) huyen volando a los árboles cuando pasa un corredor y vuelven al cabo de 8–16 s, y acuden a quien les echa migas desde un banco. Miden menos de 0,3 m en el suelo y no tienen colisionadores.
+- **Perro** (`scripts/dog.gd`): un viandante del carril 1 lo pasea con correa. Tiene colisionador en la capa 1 con la etiqueta `un_perro`, para que tape en las fotos lo que tapa en pantalla; la navegación (máscara 2) no lo ve.
+- **Sonido ambiente** (`scripts/ambience.gd`): ver §3.4.
+- En `lo` (Android) no hay figurantes ni palomas, para no pasar de 100.000 triángulos; el perro sí está.
 
 ### 2.3 Suelo y césped (hd)
 - **Suelo texturizado** (`shaders/park_ground.gdshader`): losas en la plaza, asfalto, adoquín y grava en los paseos y césped, con texturas periódicas generadas por `tools/texturas/build_textures.py` (color, normal y ORM de 2048 px, `Texture2DArray`), mapeadas en coordenadas del mundo y con una segunda muestra girada para romper la repetición. El alfa del color de vértice elige la capa y el RGB conserva la oclusión de contacto.
@@ -110,6 +118,21 @@ Para evitar el ruido visual y el apiñamiento de planos entre viandantes y masa 
 
 ---
 
+### 3.4 Sonido ambiente (`scripts/ambience.gd`)
+Todo sintetizado por `tools/audio/build_ambience.py` (numpy y scipy, sin muestras de terceros) en `assets/audio/ambiente/` (WAV mono de 16 bits y 22,05 kHz, 2,5 MB), cargado en tiempo de ejecución con `AudioStreamWAV.load_from_file()` y exportado en el APK (`include_filter`).
+
+| Sonido | Fuente | Cuándo |
+|---|---|---|
+| `pajaros.wav` (carbonero, mirlo, petirrojo, gorrión) | 4 `AudioStreamPlayer3D` en las copas, a $r = 15\text{ m}$ y 5 m de altura, con tonos algo distintos | de día; −5 dB en la hora dorada; apagados de noche |
+| `grillos.wav` | 3 fuentes 3D entre los setos ($r = 10.5\text{ m}$) | solo de noche |
+| `fuente.wav` | 3D en el estanque | siempre (se oye más al mirar hacia él) |
+| `viento.wav`, `ciudad.wav` | no posicionales, bajos | siempre |
+| `zureo.wav`, `aleteo.wav` | 3D en cada bandada | zureo cada 3–10 s en el suelo; aleteo al alzar el vuelo |
+
+Los cambios de hora funden los volúmenes a 20 dB/s. Nivel medido en una grabación de día: −31 dB de media y −14 dB de pico.
+
+---
+
 ## 4. Parque Fusionado y Oclusión Horneada (`merge_static_meshes`)
 
 Implementado en el paso 1 de la hoja de ruta ([futuro/16](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que detalla parámetros, resultados y comparativas. Desde el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)):
@@ -130,7 +153,7 @@ Límites por nivel de detalle ([futuro/17 §3](futuro/17_SALTO_GRAFICO_ULTRA.md)
 
 | Métrica | `lo` (Bajo, Medio, Alto) | `hd` (Ultra, Forward+) | Cómo se verifica |
 |---|:---:|:---:|---|
-| **Triángulos en escena** | $\le 100.000$ | $\le 5.000.000$ | `--smoke-test` |
+| **Triángulos en escena** (incluye figurantes y palomas en `hd`) | $\le 100.000$ | $\le 5.000.000$ | `--smoke-test` |
 | **Triángulos por viandante** | $\le 1.900$ | $\le 60.000$ | `tests/test_art.gd` (`lo`), `--smoke-test` (`hd`) |
 | **Memoria de vídeo (VRAM)** | $< 60\text{ MB}$ | $< 8\text{ GiB}$ | `tests/test_game.gd` |
 | **Resolución del visor 3D** | 1280 × 720 | Nativa de la ventana | `main.gd::update_render_resolution()` |
@@ -144,4 +167,4 @@ Los valores medidos actuales (triángulos, VRAM, etc.) están en la tabla única
 
 ## 6. Verificación Automatizada
 
-`--smoke-test`, `tests/test_game.gd` y `tests/test_expansion.gd` (requieren display). Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+`--smoke-test`, `tests/test_game.gd`, `tests/test_expansion.gd` y `tests/test_park_life.gd` (requieren display). Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
