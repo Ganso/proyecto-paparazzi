@@ -79,11 +79,15 @@ func run() -> void:
 	p2.stuck_time = 0.0
 	p1.lane_timer = 999.0
 	p2.lane_timer = 999.0
+	p1.runner = false
+	p2.runner = true
 	p1.place()
 	p2.place()
 	
+	# Smooth walking (docs/NAVEGACION §2): speeds and side steps change gradually, so passing takes
+	# a little longer than with the old instant dodges.
 	var runner_overtook = false
-	for step in 16:
+	for step in 40:
 		game.update_person(p1, 0.1)
 		game.update_person(p2, 0.1)
 		if p2.theta > p1.theta and p2.theta < 340.0:
@@ -114,12 +118,14 @@ func run() -> void:
 	walker.stuck_time = 0.0
 	walker.place()
 	
-	for step in 30:
+	var max_shift = 0.0
+	for step in 60:
 		game.update_person(walker, 0.1)
+		max_shift = maxf(max_shift, absf(walker.radius - game.LANES[2]))
 	
 	check(walker.theta > 282.0, "Walker bypasses frontal obstacle")
 	check(walker.stuck_time < 0.2, "Walker bypasses obstacle without getting stuck")
-	check(absf(walker.radius - game.LANES[2]) > 0.15, "Walker shifted radius laterally to avoid obstacle")
+	check(max_shift > 0.15, "Walker shifted radius laterally to avoid obstacle")
 	
 	print("NAVIGATION TESTS: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)

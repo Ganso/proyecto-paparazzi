@@ -18,6 +18,31 @@ var direction = 1.0
 var phase = 0.0
 var state = "CAMINANDO"
 var state_time = 0.0
+# Smooth walking state (docs/NAVEGACION §2, «marcha suave»): forward speed along the path and
+# radial speed, both changed with limited acceleration, and a preferred place in the lane.
+var v_fwd = -1.0
+var v_rad = 0.0
+var pref_offset = 0.0
+# Side (+1 outward, -1 inward) chosen to pass someone; kept for a while so it never flip-flops.
+var pass_side = 0.0
+var pass_timer = 0.0
+var heading = 0.0
+var heading_ready = false
+# What the person is doing while stopped or seated ("", "mirar", "movil", "foto", "leer",
+# "charla", "palomas"…) and who they talk to.
+var activity = ""
+var partner = null
+# Pose blends driven by gait.gd: 0 standing … 1 seated, and the activity layer weight.
+var seat = 0.0
+var act_w = 0.0
+var act_time = 0.0
+var act_seed = 0.0
+# Heading to turn to while stopped (NAN = keep), a pending smooth stop and the bench walked to.
+var face_target = NAN
+var pending_stop = {}
+var bench_goal = -1
+var sit_from = Vector2.ZERO
+var props = {}
 var protected_target = false
 var rig: Skeleton3D
 var bones = {}
@@ -119,6 +144,7 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	stride = profile.zancada
 	joint = profile.radio
 	hip_y = nz*.542
+	act_seed = float(seed_value%97)*1.37
 	rng.seed = seed_value
 	runner = t.get("runner",false)
 	speed = rng.randf_range(2.6, 3.0) if runner else rng.randf_range(0.55, 0.85)
@@ -350,6 +376,142 @@ func pose_bone(id: String, angle: float) -> void:
 
 func animate(delta: float, traveled_distance = -1.0) -> void:
 	gait.pose(delta,traveled_distance)
+	update_props()
+
+# ---- Hand-held props (docs/futuro/19_VIDA_EN_EL_PARQUE.md) ----
+# Small objects shown while an activity is on: built on first use from primitives, attached to
+# the hand bones, visual only (no colliders, so scoring never sees them).
+const PROP_FOR = {"movil": ["telefono"], "leer": ["periodico"], "foto": ["camara"], "cafe": ["cafe"], "palomas": ["pan"]}
+static var prop_materials = {}
+# Phone screen glow by time of day (park.gd::set_time_of_day): 0 day … 1 night. The screen is
+# emissive and a tiny light (no shadows, 0.5 m) lights the face from below.
+static var screen_glow = .2
+
+func update_props() -> void:
+	if build_pass == "collision" or rig == null: return
+	var wanted: Array = PROP_FOR.get(activity,[]) if act_w > .3 else []
+	for key in props: props[key].visible = key in wanted
+	for key in wanted:
+		if not props.has(key): props[key] = make_prop(key)
+	if props.has("periodico") and props.periodico.visible:
+		var paper: Node3D = props.periodico.get_meta("sheet")
+		var hands = (global_transform*rig.get_bone_global_pose(bones["mano.D"]).origin+global_transform*rig.get_bone_global_pose(bones["mano.I"]).origin)*.5
+		paper.global_transform = Transform3D(global_basis*Basis(Vector3.RIGHT,-.35),hands+global_basis*Vector3(0,.06,-.05))
+	if props.has("telefono") and props.telefono.visible:
+		var light: OmniLight3D = props.telefono.get_meta("light")
+		light.light_energy = lerpf(.08,.4,screen_glow)*smoothstep(.3,1.0,act_w)
+		prop_materials["pantalla"].emission_energy_multiplier = lerpf(1.0,2.2,screen_glow)
+
+static func prop_material(key: String, color: Color, rough = .6, emission = Color.BLACK) -> StandardMaterial3D:
+	if not prop_materials.has(key):
+		var m = StandardMaterial3D.new()
+		m.albedo_color = color
+		m.roughness = rough
+		if emission != Color.BLACK:
+			m.emission_enabled = true
+			m.emission = emission
+			m.emission_energy_multiplier = .6
+		prop_materials[key] = m
+	return prop_materials[key]
+
+static func newspaper_material() -> StandardMaterial3D:
+	if not prop_materials.has("periodico"):
+		# Procedural newsprint: masthead, headline, photo block and columns of grey lines.
+		var img = Image.create(256,192,false,Image.FORMAT_RGB8)
+		img.fill(Color("ece7d8"))
+		var rng = RandomNumberGenerator.new()
+		rng.seed = 7
+		img.fill_rect(Rect2i(10,8,236,16),Color("2a2a2a"))
+		img.fill_rect(Rect2i(10,30,180,8),Color("505050"))
+		img.fill_rect(Rect2i(10,46,90,62),Color("8a8f93"))
+		for col in 4:
+			var x0 = 10+col*60
+			for row in 30:
+				var y = 46+row*4.8
+				if col == 0 and y < 112: continue
+				img.fill_rect(Rect2i(x0,int(y),int(rng.randf_range(38,54)),2),Color("9a9790"))
+		var m = StandardMaterial3D.new()
+		m.albedo_texture = ImageTexture.create_from_image(img)
+		m.roughness = .9
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		prop_materials["periodico"] = m
+	return prop_materials["periodico"]
+
+func prop_part(parent: Node3D, mesh: Mesh, material: Material, pos: Vector3, rot = Vector3.ZERO) -> MeshInstance3D:
+	var node = MeshInstance3D.new()
+	node.mesh = mesh
+	node.material_override = material
+	node.position = pos
+	node.rotation = rot
+	parent.add_child(node)
+	return node
+
+func make_prop(key: String) -> Node3D:
+	var attach = BoneAttachment3D.new()
+	attach.bone_name = "mano.I" if key == "pan" else "mano.D"
+	rig.add_child(attach)
+	var side = -1.0 if key == "pan" else 1.0
+	# Hand frame: fingers along -Y, palm facing the body's centre line (-X for the right hand).
+	var holder = Node3D.new()
+	holder.position = Vector3(-.02*side,-.075,0)
+	attach.add_child(holder)
+	match key:
+		"telefono":
+			var body = BoxMesh.new()
+			body.size = Vector3(.009,.15,.072)
+			prop_part(holder,body,prop_material("telefono",Color("1c1d21"),.35),Vector3.ZERO)
+			var screen = BoxMesh.new()
+			screen.size = Vector3(.002,.135,.062)
+			prop_part(holder,screen,prop_material("pantalla",Color("20303c"),.15,Color("7fa7c9")),Vector3(-.0055,0,0))
+			var light = OmniLight3D.new()
+			light.light_color = Color("cfe3ff")
+			light.omni_range = .5
+			light.omni_attenuation = 1.6
+			light.shadow_enabled = false
+			light.light_specular = .2
+			light.position = Vector3(-.06,0,0)
+			holder.add_child(light)
+			attach.set_meta("light",light)
+		"periodico":
+			# Held open between both hands, facing the reader (placed every frame in update_props()).
+			var sheet = BoxMesh.new()
+			sheet.size = Vector3(.42,.30,.003)
+			var paper = prop_part(holder,sheet,newspaper_material(),Vector3.ZERO)
+			paper.top_level = true
+			attach.set_meta("sheet",paper)
+		"camara":
+			var body = BoxMesh.new()
+			body.size = Vector3(.075,.12,.05)
+			prop_part(holder,body,prop_material("camara",Color("202224"),.45),Vector3(-.02,.0,-.02))
+			var lens = CylinderMesh.new()
+			lens.top_radius = .028
+			lens.bottom_radius = .031
+			lens.height = .06
+			prop_part(holder,lens,prop_material("objetivo",Color("111213"),.3),Vector3(-.02,.0,-.07),Vector3(PI*.5,0,0))
+		"cafe":
+			var cup = CylinderMesh.new()
+			cup.top_radius = .04
+			cup.bottom_radius = .031
+			cup.height = .11
+			cup.radial_segments = 16
+			prop_part(holder,cup,prop_material("vaso",Color("f2efe8"),.7),Vector3(-.035,.0,0),Vector3(PI,0,0))
+			var sleeve = CylinderMesh.new()
+			sleeve.top_radius = .037
+			sleeve.bottom_radius = .034
+			sleeve.height = .04
+			sleeve.radial_segments = 16
+			prop_part(holder,sleeve,prop_material("funda",Color("8a5a36"),.9),Vector3(-.035,.0,0),Vector3(PI,0,0))
+			var lid = CylinderMesh.new()
+			lid.top_radius = .036
+			lid.bottom_radius = .041
+			lid.height = .012
+			lid.radial_segments = 16
+			prop_part(holder,lid,prop_material("tapa",Color("2b2b2b"),.5),Vector3(-.035,-.06,0),Vector3(PI,0,0))
+		"pan":
+			var bag = BoxMesh.new()
+			bag.size = Vector3(.06,.14,.1)
+			prop_part(holder,bag,prop_material("bolsa",Color("b98d5a"),.95),Vector3(.02,-.02,0))
+	return attach
 
 func place() -> void:
 	position = Vector3(sin(deg_to_rad(theta))*radius,0,-cos(deg_to_rad(theta))*radius)

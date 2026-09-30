@@ -2,7 +2,7 @@ extends SceneTree
 # Evidence sheets of the character models (docs/evidencias/personajes_modelado/): every garment,
 # hairstyle, accessory and body profile in four views, joint close-ups in motion and walk/run
 # cycles to spot clipping. Uses Ultra's hd mannequins, so run it with Forward+:
-#   ~/bin/godot-4-fp --path . --rendering-method forward_plus --resolution 800x1000 --script tools/capture_characters.gd
+#   ~/bin/godot-4-fp --path . --disable-vsync --rendering-method forward_plus --resolution 800x1000 --script tools/capture_characters.gd
 # Optional: -- --only=torsos,cabezas  --out=<dir>
 const Person = preload("res://scripts/person.gd")
 const Cast = preload("res://scripts/casting.gd")
@@ -271,4 +271,23 @@ func run() -> void:
 				if step % 12 == 0 and step >= 24:
 					cells.append(await shot("%s · %.1f s%s" % [case[0], step * dt, " · parada" if step >= 90 else ""], false))
 		save_sheet("09_dinamica", cells, 5)
+	if wants("actividades"):
+		# Activities of the park life (docs/futuro/19): upper-body poses and hand-held props.
+		var cells = []
+		var cases = [["móvil (de pie)", "movil", "reposo", 0.0], ["móvil (sentado)", "movil", "sentado", 0.0], ["periódico", "leer", "sentado", 0.0], ["café", "cafe", "reposo", 0.0], ["foto", "foto", "reposo", 3.0], ["palomas", "palomas", "sentado", 0.9], ["charla", "charla", "reposo", 1.2], ["mirar", "mirar", "reposo", 0.0]]
+		for case in cases:
+			clear_people()
+			var t = base_traits()
+			t.merge({"upper": 1, "lower": 0, "hair": 1}, true)
+			var p = spawn(t)
+			p.activity = case[1]
+			p.act_seed = 0.0
+			p.act_time = case[3]
+			pose(p, case[2])
+			frame("cuerpo")
+			for view in [VIEWS[1], VIEWS[2]]:
+				p.rotation.y = deg_to_rad(view[1])
+				p.animate(0)
+				cells.append(await shot("%s · %s" % [case[0], view[0]]))
+		save_sheet("10_actividades", cells, 4)
 	quit()

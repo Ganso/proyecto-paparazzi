@@ -994,6 +994,7 @@ func apply_preset_values(preset: String) -> void:
 
 func set_time_of_day(tod: String) -> void:
 	time_of_day = tod
+	Pedestrian.screen_glow = {"day":0.0,"golden":.45,"night":1.0}.get(tod,0.0)
 	is_night = (tod == "night")
 	var is_golden = (tod == "golden")
 	if is_night:

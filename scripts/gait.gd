@@ -92,20 +92,22 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 	if has_last_position and p.position.distance_to(last_position) > p.stride*.7: reset_contacts()
 	last_position = p.position
 	has_last_position = true
+	# Sitting down / standing up takes ~1.3 s (docs/PERSONAJES_Y_CINEMATICA.md §6).
+	var seat_goal = 1.0 if p.state == "SENTADO" else 0.0
+	p.seat = move_toward(p.seat,seat_goal,delta/1.3) if live else seat_goal
+	var activity_goal = 1.0 if p.activity != "" and (p.state != "CAMINANDO" or p.activity in WALKING_ACTIVITIES) else 0.0
+	p.act_w = move_toward(p.act_w,activity_goal,delta*1.2) if live else activity_goal
+	if activity_goal > 0: p.act_time += delta
 	neutral()
-	if p.state == "SENTADO":
+	if p.seat > 0:
 		reset_contacts()
 		weight = 0
-		var seat = maxf(.47,p.nz*(.323-.03)+p.nz*.03)
-		p.rig.set_bone_pose_position(p.bones.caderas,Vector3(0,seat,0))
-		for side in ["I","D"]:
-			p.pose_bone("muslo."+side,PI*.5)
-			p.pose_bone("pierna."+side,-PI*.5)
-			p.pose_bone("brazo."+side,.15)
-			p.pose_bone("antebrazo."+side,.9)
+		sit(smoothstep(0,1,p.seat))
+		activity()
 		return
 	if weight == 0:
 		reset_contacts()
+		activity()
 		return
 	var neutral_rotations = {}
 	for id in ["lumbar","cuello","muslo.I","muslo.D","pierna.I","pierna.D","pie.I","pie.D","brazo.I","brazo.D","antebrazo.I","antebrazo.D"]:
@@ -167,6 +169,90 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 			for v in sole_outline: minimum = minf(minimum,(transform*Vector3(0,v.x,v.y)).y)
 		if minimum < 0:
 			p.rig.set_bone_pose_position(p.bones.caderas,p.rig.get_bone_pose_position(p.bones.caderas)-Vector3.UP*minimum)
+	activity()
+
+# Seated pose blended by e (0 standing, 1 seated). The feet stay where they are while the hips go
+# back and down onto the seat: main.gd moves the root back by the thigh length meanwhile.
+func sit(e: float) -> void:
+	var p = person
+	var a = p.nz*(.542-.323)
+	var b = p.nz*(.323-.03)
+	var ground = sole_support(0).x
+	var standing: float = p.rests[p.bones.caderas].origin.y
+	var seat = maxf(.47,b+ground)
+	var hip = lerpf(standing,seat,e)
+	p.rig.set_bone_pose_position(p.bones.caderas,Vector3(0,hip,0))
+	for side in ["I","D"]:
+		var sign_side = -1 if side == "I" else 1
+		var x = p.profile.hombros*.22*sign_side
+		# Short legs (children) dangle: thigh on the seat, shin hanging, feet off the ground.
+		var target = Vector3(x*1.1,lerpf(ground,maxf(ground,seat-b),e),-a*e)
+		solve_leg(side,target-Vector3(x,hip,0),Quaternion.IDENTITY,a,b)
+		p.pose_bone("brazo."+side,.15*e)
+		p.pose_bone("antebrazo."+side,.12+.78*e)
+	# Lean forward while lowering (and rising), upright once seated.
+	p.pose_bone("lumbar",-.38*sin(PI*e)-.04*e)
+
+const WALKING_ACTIVITIES = ["movil"]
+
+func arm(side: String, pitch: float, inward: float, elbow: float, weight_arm: float) -> void:
+	var p = person
+	var sign_side = -1 if side == "I" else 1
+	var bone: int = p.bones["brazo."+side]
+	var target = Quaternion(Vector3.UP,sign_side*inward)*Quaternion(Vector3.BACK,sign_side*p.arm_out[side])*Quaternion(Vector3.RIGHT,pitch)
+	p.rig.set_bone_pose_rotation(bone,p.rig.get_bone_pose_rotation(bone).slerp(target,weight_arm))
+	var fore: int = p.bones["antebrazo."+side]
+	p.rig.set_bone_pose_rotation(fore,p.rig.get_bone_pose_rotation(fore).slerp(Quaternion(Vector3.RIGHT,elbow),weight_arm))
+
+func head(pitch: float, yaw: float, weight_head: float) -> void:
+	var p = person
+	var bone: int = p.bones["cuello"]
+	var target = Quaternion(Vector3.UP,yaw)*Quaternion(Vector3.RIGHT,pitch)
+	p.rig.set_bone_pose_rotation(bone,p.rig.get_bone_pose_rotation(bone).slerp(target,weight_head))
+
+# Upper-body layer for what the person is doing (docs/futuro/19). Blended by p.act_w over the
+# walking, standing or seated pose; the legs are never touched.
+func activity() -> void:
+	var p = person
+	var w: float = smoothstep(0,1,p.act_w)
+	if w <= 0: return
+	var t: float = p.act_time+p.act_seed
+	match p.activity:
+		"movil":
+			arm("D",.78,.38,1.62+.05*sin(t*1.7),w)
+			if p.state != "CAMINANDO": arm("I",.45,.55,1.7,w*.8)
+			head(-.42,0,w)
+		"leer":
+			arm("D",.5,.38,1.55,w)
+			arm("I",.5,.38,1.55,w)
+			head(-.3+.04*sin(t*.4),.1*sin(t*.23),w)
+		"foto":
+			# Raise the camera to the eye every few seconds, look around between shots.
+			var up = smoothstep(.0,.25,fposmod(t,7.0)/7.0)*(1.0-smoothstep(.55,.7,fposmod(t,7.0)/7.0))
+			arm("D",lerpf(.3,1.05,up),lerpf(.25,.55,up),lerpf(1.3,2.35,up),w)
+			arm("I",lerpf(.1,.95,up),lerpf(0,.65,up),lerpf(.3,2.3,up),w*up)
+			head(lerpf(-.1,.05,up),lerpf(.35*sin(t*.5),0,up),w)
+		"charla":
+			var g = sin(t*1.3)*.5+.5
+			arm("D",.25+.35*g,.2,.9+.6*g,w*(.4+.6*smoothstep(-.2,.6,sin(t*.31))))
+			arm("I",.15+.15*sin(t*.9+1),.1,.5+.3*g,w*.5)
+			head(.06*sin(t*2.1),.12*sin(t*.37),w)
+		"mirar":
+			# Arms crossed, head sweeping the view slowly.
+			arm("D",.28,.62,1.95,w)
+			arm("I",.22,.55,2.05,w)
+			head(.02,.55*sin(t*.21),w)
+		"palomas":
+			# Tosses crumbs forward every few seconds.
+			var cycle = fposmod(t,3.6)/3.6
+			var toss = sin(PI*smoothstep(.0,.35,cycle))*(1.0-smoothstep(.35,.5,cycle))
+			arm("D",.2+.75*toss,.15,1.2-.8*toss,w)
+			arm("I",.35,.35,1.5,w*.8)
+			head(-.38,0,w)
+		"cafe":
+			var sip = smoothstep(.7,.8,fposmod(t,9.0)/9.0)*(1.0-smoothstep(.9,1.0,fposmod(t,9.0)/9.0))
+			arm("D",lerpf(.25,.7,sip),lerpf(.2,.45,sip),lerpf(1.65,2.5,sip),w)
+			head(lerpf(-.05,.15,sip),.2*sin(t*.3),w)
 
 func solve_leg(side: String, target: Vector3, foot_rotation: Quaternion, a: float, b: float) -> void:
 	var p = person
