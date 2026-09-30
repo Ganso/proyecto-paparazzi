@@ -99,6 +99,7 @@ var forced_activity = ""
 var stage = ""
 # --academy=<lección>:<teoria|demo|practica>[:página]: open a lesson directly (evidence captures).
 var academy_start = ""
+var academy_tour = ""
 var smoke = false
 var run_metrics = false
 var stress = false
@@ -176,6 +177,7 @@ func _ready() -> void:
 		if arg.begins_with("--activity="): forced_activity = arg.trim_prefix("--activity=")
 		if arg.begins_with("--stage="): stage = arg.trim_prefix("--stage=")
 		if arg.begins_with("--academy="): academy_start = arg.trim_prefix("--academy=")
+		if arg.begins_with("--academy-tour="): academy_tour = arg.trim_prefix("--academy-tour=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
@@ -699,6 +701,9 @@ func _process(dt: float) -> void:
 			intro()
 			return
 		academy.begin(int(parts[0]),parts[1] if parts.size() > 1 else "teoria")
+		if academy_tour != "":
+			academy.tour_seconds = float(academy_tour.get_slice(":",0))
+			academy.tour_pages = int(academy_tour.get_slice(":",1))
 		if parts.size() > 2:
 			academy.page = int(parts[2])-1
 			academy.update_panel()
@@ -877,7 +882,7 @@ func ahead_of(p: Pedestrian, theta: float) -> float:
 func plan_stop(p: Pedestrian) -> void:
 	var time = p.rng.randf_range(6,16)
 	for q in people:
-		if q == p or q.runner or q.protected_target or q.lane != p.lane or q.direction == p.direction: continue
+		if q == p or q.runner or q.protected_target or q.has_meta("staged") or q.lane != p.lane or q.direction == p.direction: continue
 		if q.state != "CAMINANDO" or q.destination_lane >= 0 or q.bench_goal >= 0 or not q.pending_stop.is_empty(): continue
 		var ahead = ahead_of(p,q.theta)
 		if ahead < 1.4 or ahead > 3.6 or absf(q.radius-p.radius) > 1.0: continue
@@ -993,6 +998,10 @@ func reset_walker(q: Pedestrian, lane: int, theta: float, direction: float) -> v
 	q.v_fwd = q.speed
 	q.lane_timer = 99.0
 	q.place()
+	# Facing where it walks right away (place() gives the path tangent).
+	q.heading = q.rotation.y
+	q.heading_ready = true
+	q.face_target = NAN
 
 func stage_scene(name: String) -> void:
 	match name:

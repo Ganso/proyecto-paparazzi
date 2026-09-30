@@ -20,7 +20,7 @@ const SETUP = {
 		"pages":["dof","dof","dof","dof"],"practice_diagram":"dof"},
 	3: {"time":"golden","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":70.0,"pitch":-4.0,"t":250,
 		"pages":["movimiento","movimiento","movimiento","pasos"],"practice_diagram":"movimiento"},
-	4: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":200.0,"pitch":-3.0,
+	4: {"time":"golden","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":122.0,"pitch":-3.0,
 		"pages":["tercios","tercios","tercios","tercios"],"practice_diagram":"tercios"},
 	5: {"time":"day","body":2,"lens":3,"focal":28.0,"auto":true,"focus":"AF puntual","angle":121.0,"pitch":-4.0,
 		"pages":["compresion","compresion","compresion","compresion"],"practice_diagram":"compresion"},
@@ -57,6 +57,10 @@ var practice_done_shown = false
 var highlight = ""
 var subtitle = ""
 var pulse = 0.0
+# Guided tour for the video (--academy-tour=<seconds>:<pages>): a few theory pages, the demo, the practice.
+var tour_seconds = 0.0
+var tour_pages = 0
+var tour_timer = 0.0
 # UI
 var panel: Panel
 var header: Label
@@ -848,6 +852,7 @@ func comparison_photos() -> Array:
 func update(dt: float) -> void:
 	if not active: return
 	pulse += dt
+	if tour_pages > 0: run_tour(dt)
 	if phase == "demo": run_demo(dt)
 	elif phase == "practica" and main.mode == "SEARCH": check_practice(dt)
 	elif phase == "teoria" and lesson == 3: loop_runner()
@@ -855,6 +860,20 @@ func update(dt: float) -> void:
 	track_frame_goal(dt)
 	diagram.queue_redraw()
 	queue_redraw()
+
+func run_tour(dt: float) -> void:
+	tour_timer += dt
+	match phase:
+		"teoria":
+			if tour_timer >= tour_seconds:
+				tour_timer = 0.0
+				if page+1 < mini(tour_pages,THEORY_PAGES[lesson]): go_next()
+				else: set_phase("demo")
+		"demo":
+			if not demo_done: tour_timer = 0.0
+			elif tour_timer >= 2.5:
+				tour_timer = 0.0
+				set_phase("practica")
 
 # Keep a person's head (or chest) at a fraction of the frame, like a camera operator would.
 func track_frame_goal(dt: float) -> void:
