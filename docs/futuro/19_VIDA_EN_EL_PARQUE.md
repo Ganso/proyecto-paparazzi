@@ -61,7 +61,7 @@ Son `Pedestrian` con `ambient = true`: solo se construye la malla visual, sin co
 
 ## 6. Sonido ambiente
 
-`scripts/ambience.gd` y `tools/audio/build_ambience.py`: todo sintetizado, sin muestras de terceros. Suenan pájaros en las copas (de día; más bajos en la hora dorada), grillos de noche, la fuente en 3D junto al estanque, viento y un rumor lejano de ciudad, más el zureo de las palomas y el aleteo cuando alzan el vuelo. Detalle en [ESCENARIO_Y_RENDIMIENTO.md §3.4](../ESCENARIO_Y_RENDIMIENTO.md).
+`scripts/ambience.gd` y `tools/audio/build_ambience.py`: todo sintetizado, sin muestras de terceros. Suenan pájaros en las copas (de día; más bajos en la hora dorada), grillos de noche, la fuente en 3D junto al estanque, más el zureo de las palomas y el aleteo cuando alzan el vuelo. Detalle en [ESCENARIO_Y_RENDIMIENTO.md §3.4](../ESCENARIO_Y_RENDIMIENTO.md).
 
 ## 7. Perfiles y presupuestos
 

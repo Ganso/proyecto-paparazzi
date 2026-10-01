@@ -6,8 +6,6 @@ Genera WAV mono de 16 bits y 22,05 kHz en assets/audio/ambiente/, sin muestras d
   pajaros.wav   20 s  gorjeos y trinos de varias especies (de día y en la hora dorada)
   fuente.wav    8 s   agua cayendo en el estanque (bucle sin costura)
   grillos.wav   6 s   grillos de noche (bucle)
-  viento.wav    12 s  viento suave entre las hojas (bucle)
-  ciudad.wav    10 s  rumor lejano de tráfico (bucle)
   zureo.wav     1,6 s zureo de paloma («cu-cuuu»), suelto
   aleteo.wav    1,2 s bandada que alza el vuelo, suelto
 
@@ -147,26 +145,6 @@ def crickets():
     return loopable(total)
 
 
-def wind():
-    x = t(12.5)
-    noise = rng.standard_normal(len(x))
-    swell = 0.55 + 0.45 * np.sin(2 * np.pi * x / 12.5 * 2 + 1.0) * np.sin(2 * np.pi * x / 12.5 * 3)
-    leaves = band(noise, 1800, 6000) * 0.25 * (swell ** 2)
-    body = lowpass(noise, 500) * swell
-    return loopable(body + leaves)
-
-
-def city():
-    x = t(10.5)
-    noise = rng.standard_normal(len(x))
-    hum = lowpass(noise, 180) * (0.8 + 0.2 * np.sin(2 * np.pi * 0.11 * x))
-    cars = np.zeros(len(x))
-    for _ in range(5):
-        c = rng.uniform(1, 9.5)
-        cars += np.exp(-((x - c) ** 2) / 1.2) * band(noise, 200, 900) * 0.5
-    return loopable(hum + cars)
-
-
 def coo():
     x = t(1.6)
     total = np.zeros(len(x))
@@ -194,7 +172,5 @@ if __name__ == "__main__":
     save("pajaros.wav", birds(), 0.7)
     save("fuente.wav", fountain(), 0.7)
     save("grillos.wav", crickets(), 0.5)
-    save("viento.wav", wind(), 0.6)
-    save("ciudad.wav", city(), 0.6)
     save("zureo.wav", coo(), 0.7)
     save("aleteo.wav", flutter(), 0.8)

@@ -6,7 +6,7 @@ Bienvenido a **Proyecto Paparazzi**. Este documento es el **punto de entrada pri
 
 ## 1. Identificación del Entorno y Motor
 
-- **Comando de Godot en esta máquina**: **`~/bin/godot-4-fp`** (binario oficial 4.7.2 con Vulkan). El snap `godot-4` no arranca Vulkan: cae a OpenGL y construye la escena de Android (`lo`).
+- **Comando de Godot en esta máquina**: **`~/bin/godot-4-fp`** (binario oficial 4.7.2 con Vulkan). Para jugar: **`./Jugar.sh`**, que busca un Godot con Vulkan y evita el snap. El snap `godot-4` no arranca Vulkan: cae a OpenGL y construye la escena de Android (`lo`).
 - **Versión de Godot**: Godot 4.4+ (validado con **Godot 4.7 Mono/Official**).
 - **Método de Renderizado**: **`forward_plus`** (Vulkan) en los cuatro perfiles de escritorio, que son subconjuntos de Ultra orientados al rendimiento y **nunca cambian el aspecto** ([docs/futuro/17 §2.4](docs/futuro/17_SALTO_GRAFICO_ULTRA.md)). **`gl_compatibility`** solo en el APK de Android y como respaldo sin Vulkan.
 - **Proporción de Pantalla**: Bloqueada a **16:9** (`1280x720` nativo, override `1440x810`), con modo de cámara `keep_aspect = Camera3D.KEEP_WIDTH` (ancho de sensor de referencia: **36 mm**).

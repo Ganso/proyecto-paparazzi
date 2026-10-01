@@ -16,10 +16,13 @@ El visor toma como referencia compositiva [`docs/futuro/referencia.jpg`](docs/fu
 
 ### Comandos de Ejecución
 
-En sistemas Linux con `godot-4` instalado:
+En Linux, lo más sencillo es el lanzador, que busca un Godot con Vulkan (el renderizador Forward+ de escritorio):
 ```bash
-# Lanzar el juego directamente desde el directorio del proyecto
-godot-4 --path .
+./Jugar.sh
+```
+Prueba, por este orden: `GODOT_BIN`, `GODOT_FP`, `~/bin/godot-4-fp`, un `Godot*linux*x86_64` en la carpeta del proyecto o en `~/Descargas`, `godot`/`godot-4` del `PATH` que no sean snap y el flatpak oficial. El snap `godot-4` no arranca Vulkan (cae a OpenGL y carga la escena de Android): solo se usa como último recurso y avisando. A mano:
+```bash
+~/bin/godot-4-fp --path .
 
 # En macOS o sistemas donde el ejecutable se llame 'godot':
 godot --path .

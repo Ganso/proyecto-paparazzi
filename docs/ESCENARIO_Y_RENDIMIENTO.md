@@ -126,10 +126,9 @@ Todo sintetizado por `tools/audio/build_ambience.py` (numpy y scipy, sin muestra
 | `pajaros.wav` (carbonero, mirlo, petirrojo, gorrión) | 4 `AudioStreamPlayer3D` en las copas, a $r = 15\text{ m}$ y 5 m de altura, con tonos algo distintos | de día; −5 dB en la hora dorada; apagados de noche |
 | `grillos.wav` | 3 fuentes 3D entre los setos ($r = 10.5\text{ m}$) | solo de noche |
 | `fuente.wav` | 3D en el estanque | siempre (se oye más al mirar hacia él) |
-| `viento.wav`, `ciudad.wav` | no posicionales, bajos | siempre |
 | `zureo.wav`, `aleteo.wav` | 3D en cada bandada | zureo cada 3–10 s en el suelo; aleteo al alzar el vuelo |
 
-Los cambios de hora funden los volúmenes a 20 dB/s. Nivel medido en una grabación de día: −31 dB de media y −14 dB de pico.
+Los cambios de hora funden los volúmenes a 20 dB/s. Nivel medido en una grabación de día: −31 dB de media y −14 dB de pico. El viento y el rumor de ciudad que sonaban siempre de fondo se quitaron el 01-10-2026: el usuario los encontraba muy molestos.
 
 ---
 
