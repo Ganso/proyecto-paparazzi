@@ -19,6 +19,7 @@ var scenario = "clasico"
 var time_of_day = "day"
 var cards = {}
 var chips = {}
+var theme_buttons = []
 var title_font: FontFile
 var body_font: FontFile
 var body_medium: FontFile
@@ -144,6 +145,26 @@ func build() -> void:
 	var row = [["menu_sandbox",func(): main.start_in(scenario,time_of_day,true)],["menu_academia",main.open_academy],["menu_equipo",main.show_equipment],["menu_graficos",main.show_graphics_settings]]
 	for k in row.size():
 		flat_button(self,Texts.get_text(row[k][0]),Rect2(x+k*145,550,135,44),row[k][1])
+	# Theme selector (top right).
+	text(self,Texts.get_text("menu_tema"),Vector2(1004,30),12,FAINT,body_medium)
+	for k in 2:
+		var dark = k == 1
+		var b = Button.new()
+		b.text = Texts.get_text("tema_oscuro" if dark else "tema_claro")
+		b.position = Vector2(1004+k*92,50)
+		b.size = Vector2(86,34)
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_override("font",body_medium)
+		b.add_theme_font_size_override("font_size",14)
+		var on = dark == UiStyle.dark
+		b.add_theme_color_override("font_color",Color.WHITE if on else SOFT)
+		b.add_theme_color_override("font_hover_color",Color.WHITE if on else SKY.darkened(.15))
+		b.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),17,Color.TRANSPARENT if on else LINE))
+		b.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),17,SKY.lightened(.35)))
+		b.add_theme_stylebox_override("pressed",box(SKY,17))
+		b.pressed.connect(func(): main.set_theme(dark))
+		add_child(b)
+		theme_buttons.append(b)
 	text(self,Texts.get_text("menu_pie"),Vector2(x,624),13,FAINT,light_font,570)
 	refresh()
 

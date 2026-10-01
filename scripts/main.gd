@@ -204,7 +204,7 @@ var max_frame = 0.0
 var fps_label: Label
 
 func _ready() -> void:
-	UiStyle.set_dark("--ui=oscuro" in OS.get_cmdline_user_args())
+	load_theme()
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="): screenshot_path = arg.trim_prefix("--screenshot=")
 		if arg == "--smoke-test": smoke = true
@@ -1895,6 +1895,24 @@ func set_interface(value: String) -> void:
 	place_view()
 	update_dof_pass()
 	refresh()
+
+# Interface theme (docs/futuro/20): light by default, dark on request; --ui=claro|oscuro overrides.
+func load_theme() -> void:
+	var config = ConfigFile.new()
+	var dark = config.load("user://interfaz.cfg") == OK and str(config.get_value("interfaz","tema","claro")) == "oscuro"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--ui="): dark = arg == "--ui=oscuro"
+	UiStyle.set_dark(dark)
+
+# The whole interface is built with the palette, so changing it reloads the game (only from the menu).
+func set_theme(dark: bool) -> void:
+	if dark == UiStyle.dark: return
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","tema","oscuro" if dark else "claro")
+	config.save("user://interfaz.cfg")
+	UiStyle.set_dark(dark)
+	get_tree().call_deferred("reload_current_scene")
 
 func load_interface() -> void:
 	var config = ConfigFile.new()

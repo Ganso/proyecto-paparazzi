@@ -13,6 +13,6 @@ Estilo limpio en tonos claros con resaltes celestes, en todo el juego salvo la i
 
 Evidencias: `tools/capture_screens.gd` → `docs/evidencias/interfaz/`.
 
-## Prueba inversa (`--ui=oscuro`)
+## Tema claro u oscuro
 
-Variante de prueba con textos claros sobre cristal oscuro: `UiStyle.set_dark(true)` cambia la paleta (tinta `eef4fa`, acentos `7cc6ff`, avisos `ff9a76`, superficies pizarra) y el tinte del cristal (`tint` en `frosted_glass.gdshader`). Por defecto sigue la interfaz clara. Capturas: `tools/capture_screens.gd -- --out=<dir> --ui=oscuro`.
+Selector **Tema: Claro / Oscuro** en la esquina superior derecha del menú principal. El oscuro pone textos claros sobre cristal oscuro: `UiStyle.set_dark()` cambia entre `LIGHT_PALETTE` y `DARK_PALETTE` (tinta `eef4fa`, acentos `7cc6ff`, avisos `ff9a76`, superficies pizarra) y el tinte del cristal (`tint` en `frosted_glass.gdshader`). La elección se guarda en `user://interfaz.cfg` (`[interfaz] tema`) y, como toda la interfaz se construye con la paleta, `main.gd::set_theme()` recarga la escena (solo se cambia desde el menú). `--ui=claro|oscuro` fuerza uno al arrancar. Por defecto, claro. Lo comprueba `tests/test_game.gd`; capturas con `tools/capture_screens.gd -- --out=<dir> --ui=oscuro`.

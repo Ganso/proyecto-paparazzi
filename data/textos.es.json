@@ -284,5 +284,8 @@
   "menu_academia": "Academia",
   "menu_equipo": "Equipo",
   "menu_graficos": "Gráficos",
+  "menu_tema": "TEMA",
+  "tema_claro": "Claro",
+  "tema_oscuro": "Oscuro",
   "menu_pie": "Tres disparos por encargo; cuenta tu mejor foto.  ·  Arrastra para mirar, rueda para el zoom, clic para enfocar, espacio para disparar."
 }

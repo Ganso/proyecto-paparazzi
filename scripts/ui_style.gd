@@ -2,7 +2,7 @@ extends RefCounted
 # Light interface style (docs/futuro/20_INTERFAZ_CLARA.md): clean, light tones with sky-blue
 # highlights, Quicksand for headings and buttons, Roboto for text. One Theme for the whole UI
 # and a mapping from the old dark palette, so every screen built with main.gd's helpers follows it.
-# Palette as variables: dark=true swaps to the inverse trial (light text on dark glass, --ui=oscuro).
+# Palette as variables: set_dark() swaps between the light and the dark theme (light text on dark glass).
 static var dark = false
 static var INK = Color("0e1924")
 static var SOFT = Color("26394a")
@@ -16,20 +16,19 @@ static var LINE = Color(.55,.72,.88,.6)
 static var SURFACE = Color(1,1,1)   # base of buttons, cards and panels
 static var GLASS_TINT = Color(.965,.98,1.0)
 
+const LIGHT_PALETTE = {"INK":Color("0e1924"),"SOFT":Color("26394a"),"FAINT":Color("3b4f62"),"SKY":Color("2f9be8"),
+	"SKY_DEEP":Color("155a8c"),"SKY_SOFT":Color("d6ecfb"),"WARN":Color("a13a1f"),"GLASS":Color(1,1,1,.74),
+	"LINE":Color(.55,.72,.88,.6),"SURFACE":Color(1,1,1),"GLASS_TINT":Color(.965,.98,1.0)}
+const DARK_PALETTE = {"INK":Color("eef4fa"),"SOFT":Color("c9d6e2"),"FAINT":Color("9fb1c2"),"SKY":Color("3aa5f0"),
+	"SKY_DEEP":Color("7cc6ff"),"SKY_SOFT":Color("1d3b55"),"WARN":Color("ff9a76"),"GLASS":Color(.07,.1,.14,.8),
+	"LINE":Color(.45,.6,.75,.45),"SURFACE":Color(.09,.13,.18),"GLASS_TINT":Color(.05,.075,.1)}
+
+# Light (default) or dark theme, chosen in the main menu and kept in user://interfaz.cfg.
 static func set_dark(on: bool) -> void:
 	dark = on
-	if not on: return
-	INK = Color("eef4fa")
-	SOFT = Color("c9d6e2")
-	FAINT = Color("9fb1c2")
-	SKY = Color("3aa5f0")
-	SKY_DEEP = Color("7cc6ff")
-	SKY_SOFT = Color("1d3b55")
-	WARN = Color("ff9a76")
-	GLASS = Color(.07,.1,.14,.8)
-	LINE = Color(.45,.6,.75,.45)
-	SURFACE = Color(.09,.13,.18)
-	GLASS_TINT = Color(.05,.075,.1)
+	var p = DARK_PALETTE if on else LIGHT_PALETTE
+	INK = p.INK; SOFT = p.SOFT; FAINT = p.FAINT; SKY = p.SKY; SKY_DEEP = p.SKY_DEEP; SKY_SOFT = p.SKY_SOFT
+	WARN = p.WARN; GLASS = p.GLASS; LINE = p.LINE; SURFACE = p.SURFACE; GLASS_TINT = p.GLASS_TINT
 
 # Surface colour with alpha (white in the light style, dark slate in the inverse one).
 static func surf(a: float) -> Color:

@@ -262,5 +262,16 @@ func run() -> void:
 	esc.pressed = true
 	game._unhandled_input(esc)
 	check(game.mode != "GRAPHICS","ESC exits graphics settings modal")
+	# Interface theme (docs/futuro/20): light by default, dark palette swaps and comes back intact.
+	var UiStyle = preload("res://scripts/ui_style.gd")
+	check(not UiStyle.dark and UiStyle.INK == Color("0e1924"),"Light theme by default")
+	UiStyle.set_dark(true)
+	check(UiStyle.lum(UiStyle.INK) > .85 and UiStyle.lum(UiStyle.SURFACE) < .2,"Dark theme: light ink on dark surfaces")
+	check(UiStyle.lum(UiStyle.text_color(Color("0e1924"))) > .85,"Dark theme maps dark text to light")
+	UiStyle.set_dark(false)
+	check(UiStyle.INK == Color("0e1924") and UiStyle.SURFACE == Color(1,1,1),"Light theme restored")
+	game.intro()
+	await process_frame
+	check(game.modal.theme_buttons.size() == 2,"Main menu shows the theme selector")
 	print("GAME TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)
