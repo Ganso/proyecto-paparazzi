@@ -47,7 +47,7 @@ func build(detail: String) -> void:
 	dog.setup(owner_node,91,Color("2b2622"),false)
 	dogs.append(dog)
 	# Picnic in front of the bandstand: blanket, basket and two people on the grass.
-	var picnic = polar(111.0,18.2)
+	var picnic = polar(116.5,18.4)   # inside the open bays of the fence (the pillars stand at ±7.5° from 120°)
 	add_blanket(picnic,facing(picnic,bandstand))
 	var side = (bandstand-picnic).normalized().cross(Vector3.UP)
 	day_only.append(add_still(picnic+side*.45,facing(picnic+side*.45,picnic-side*.6),"suelo","cafe"))
