@@ -113,3 +113,10 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
 ## 5. Verificación Automatizada
 
 Suite `tests/test_equipment.gd` (headless). Comando, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+
+---
+
+## Visores realistas por cuerpo (01-10-2026)
+
+Con la interfaz de cámara (por defecto en escritorio; se cambia en Equipo), cada cuerpo enseña su visor: la réflex un ocular de goma con pantalla esmerilada y LED rojos de 7 segmentos; la telemétrica un visor brillante y nítido con marco de líneas corregido por paralaje y exposímetro ▶ ● ◀; la compacta su pantalla LCD trasera con iconos. Los controles se pliegan y aparecen con Tab o llevando el ratón al borde. Nada de esto toca la foto ni la nota. Detalle en [futuro/07 §5](futuro/07_VISORES_REALISTAS_Y_MOVIL.md).
+

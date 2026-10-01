@@ -38,6 +38,7 @@ graph TD
     C --> M[shaders/cel_shading.gdshader + cel_outline.gdshader<br/>Maniquí toon y contorno de tinta]
     A --> N[pigeons.gd · dog.gd · extras.gd · ambience.gd<br/>Vida en el parque: palomas, perro, figurantes y sonido]
     A --> O[academy.gd · academy_diagram.gd<br/>Academia: lecciones, tutor sobre el visor, diagramas en vivo]
+    A --> P[camera_body.gd<br/>Visor real de cada cuerpo: ocular, LED, LCD, paralaje]
     N --> C
 ```
 
@@ -55,6 +56,7 @@ graph TD
 | **Equipo** | [scripts/equipment.gd](../scripts/equipment.gd) | Catálogo de cuerpos (compacta, telemétrica, réflex), objetivos fotográficos (24 mm a 200 mm), pasos de diafragma y carretes analógicos. |
 | **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 colimadores AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
 | **Vida en el parque** | [scripts/pigeons.gd](../scripts/pigeons.gd), [scripts/dog.gd](../scripts/dog.gd), [scripts/extras.gd](../scripts/extras.gd), [scripts/ambience.gd](../scripts/ambience.gd) | Palomas (MultiMesh), perro con correa, figurantes de la pradera sin colisionadores y sonido ambiente sintetizado. Los actualiza `main.gd` cada fotograma junto a los viandantes ([futuro/19](futuro/19_VIDA_EN_EL_PARQUE.md)). |
+| **Visores** | [scripts/camera_body.gd](../scripts/camera_body.gd) | Interfaz de cámara: lo que rodea la imagen (`main.gd::view_rect`) y los datos de cada visor, dibujado fuera de la captura ([futuro/07 §5](futuro/07_VISORES_REALISTAS_Y_MOVIL.md)). |
 | **Academia** | [scripts/academy.gd](../scripts/academy.gd), [scripts/academy_diagram.gd](../scripts/academy_diagram.gd) | Modo tutor sobre la sesión de sandbox: panel sobre el visor con teoría, demostraciones guionizadas (subtítulos, resaltado de controles, fotos en miniatura) y prácticas con tareas y pistas; progreso en `user://academia.cfg` ([futuro/06](futuro/06_MODO_TUTOR_ACADEMIA.md)). |
 | **Localización** | [scripts/texts.gd](../scripts/texts.gd) | Resolución de claves localizadas desde `data/textos.es.json` con interpolación de variables. |
 

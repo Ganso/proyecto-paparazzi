@@ -14,7 +14,7 @@ mkdir -p "$OUT"
 # nombre ángulo inclinación focal hora [opciones extra: vida del parque]
 while read -r name angle pitch focal time extra; do
 	"$GODOT" --path "$PROJECT_DIR" --disable-vsync --rendering-method forward_plus --resolution 2560x1440 -- \
-		--screenshot="$OUT/$name.png" --angle="$angle" --pitch="$pitch" --focal="$focal" --time="$time" $extra 2>&1 | grep -E "SCREENSHOT|ERROR" || true
+		--screenshot="$OUT/$name.png" --angle="$angle" --pitch="$pitch" --focal="$focal" --time="$time" ${extra:---interface=clasica} 2>&1 | grep -E "SCREENSHOT|ERROR" || true
 done <<'VIEWS'
 01_quiosco_dia 120 3 24 day
 02_estanque_dia 245 3 24 day
@@ -27,6 +27,10 @@ done <<'VIEWS'
 10_banco_palomas 125 -12 40 day --advance=60 --activity=palomas --hud=0
 11_picnic_hora_dorada 110 -3 100 golden --advance=10 --hud=0 --af --lens=2,1
 12_moviles_noche 125 -2 50 night --advance=60 --activity=movil --hud=0
+13_visor_reflex 125 -5 50 golden --interface=camara --lens=2,2 --advance=40 --activity=leer
+14_visor_telemetrica 120 -3 35 day --interface=camara --lens=1,0
+15_visor_compacta 200 -3 35 day --interface=camara --lens=0,0
+16_visor_telemetrica_noche 120 -3 35 night --interface=camara --lens=1,0 --advance=60 --activity=movil
 VIEWS
 # Maniquíes de Ultra (hd, texturas de madera y tela) en primer plano.
 "$GODOT" --path "$PROJECT_DIR" --disable-vsync --rendering-method forward_plus --resolution 2560x1440 --script "$PROJECT_DIR/tools/preview_people.gd" -- \
