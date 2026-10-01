@@ -1,4 +1,7 @@
-# Especificación Futura: Protagonista Controlable y Mapa Abierto
+# Especificación: Protagonista Controlable y Mapa Abierto
+
+> [!NOTE]
+> **Estado (01-10-2026): 🟡 Alternativa C implementada como escenario adicional («parque grande»)**, por decisión del usuario, sin pasar por A ni B. El parque clásico sigue igual y es el de la Academia. Ver §6.
 
 Este documento detalla el diseño conceptual, la arquitectura técnica y el esquema de controles para una futura iteración en la que el protagonista pueda desplazarse libremente por el entorno.
 
@@ -92,3 +95,44 @@ Se proponen tres alternativas según la profundidad del cambio deseado:
   2. La evidencia usa la posición real de la cámara (`d` en `capture_evidence()`), y la puntuación es determinista con el puesto incluido en la entrada.
   3. Aforos y carriles intactos: `test_navigation.gd` y `simulate_jams.gd` pasan sin cambios.
   4. `test_game.gd` añade un cambio de puesto y comprueba `camera.global_position` y el encuadre del encargo siguiente.
+
+---
+
+## 6. Implementación: el parque grande (01-10-2026)
+
+Decisiones del usuario: movimiento libre con WASD como en cualquier juego en primera persona; **sacar la cámara es un interruptor** (no hay que mantener pulsado) y solo entonces aparece la interfaz de cámara, hasta que se baja; escenario nuevo y adicional, un parque ampliado con una red de caminos; el clásico se mantiene para el tutor; se elige en la pantalla de inicio.
+
+### 6.1 Piezas
+
+| Pieza | Qué hace |
+|---|---|
+| `scripts/park_grande.gd` | Hereda de `park.gd` (entorno, luz, clima, modelos de Blender, texturas de suelo, fusión de mallas) y cambia la disposición: parque de 120 × 90 m con verja, plaza central con fuente (r = 10 m), avenida de plátanos norte–sur, caminos este–oeste, cuatro diagonales, paseo de ronda, quiosco en su plazoleta, zona de juegos (columpio, tobogán, arenero), 17 bancos con papelera junto a los caminos y unas 40 farolas. Define el **grafo de caminos** (`nodes`, `edges`, `neighbours`) y `path_distance()`. Sectores de fusión en una rejilla de 20 m; de noche solo proyectan sombra las farolas más cercanas al fotógrafo (6 en Ultra, 3 en Alto). |
+| `scripts/crowd_graph.gd` | 45 viandantes por el grafo con la **misma marcha suave** del parque clásico (aceleraciones limitadas, lado de paso fijado, giro acotado), en el marco de la arista: avance a lo largo y desplazamiento lateral, por la derecha. En cada nodo eligen la siguiente arista al azar (sin volver atrás salvo en un callejón). Al entrar en una arista pueden pararse con una actividad, charlar con quien viene de frente, ir a sentarse a un banco cercano o sacar el móvil. Esquivan al fotógrafo y **reaccionan a una cámara levantada a menos de 2,5 m**: le miran, se tapan la cara (`taparse`) o aceleran. |
+| `scripts/player_proxy.gd` | El fotógrafo tal como lo ven los viandantes y `travel_clear()`. |
+| `scripts/main.gd` | `scenario` («clasico»/«grande»), `start_in()`/`reload_with()` (cambiar de escenario recarga la escena conservando el equipo), `populate_grande()`, `update_photographer()` (paseo con colisiones contra la capa 2, sin atravesar a nadie), `photographer_input()`, `toggle_raise()`/`eye_ready()` (gesto de 0,35 s), cámara colgada que solo se ve durante el gesto, campo de visión natural de 72° al pasear. |
+
+### 6.2 Controles
+
+| Acción | Teclado y ratón | Mando |
+|---|---|---|
+| Andar / correr / agacharse | WASD o flechas / Mayús / Ctrl (ojos a 1,05 m) | Stick izquierdo |
+| Mirar | Ratón (capturado mientras se pasea) | Stick derecho |
+| Sacar o guardar la cámara (interruptor) | Clic derecho | Y (`camara_al_ojo`) |
+| Con la cámara en el ojo | Los controles de siempre (Tab muestra las barras) | Los de siempre |
+
+Con la cámara en el ojo el fotógrafo se queda quieto; con ella bajada no se puede disparar.
+
+### 6.3 Encargos y presupuestos
+
+Los mismos encargos (5, con 3 disparos), sin límite de tiempo: el objetivo pasea por todo el parque y encontrarlo forma parte del reto. La evidencia ya usaba la posición real de la cámara, así que la puntuación no cambia de fórmula. Solo escritorio (Forward+). Medido: 3.503.056 triángulos (límite 5.000.000) y unos 4,2 ms de GPU a 1440p en Ultra.
+
+### 6.4 Pendiente
+
+- Escenas preparadas del vídeo y de la Academia en el parque grande (la Academia sigue en el clásico, por decisión del usuario).
+- Más vida propia del parque grande: niños en los columpios, figurantes fuera de la verja.
+- Reacción social con efecto en la nota, interfaz táctil y Android.
+
+### 6.5 Pruebas
+
+`tests/test_big_park.gd` (con display): el grafo es conexo y cada arista está pavimentada; 60 s de multitud sin atascos (> 5,5 s), sin salirse de los caminos ni solaparse y repartida por toda la red; alguien se sienta y alguien se para; se empieza paseando y sin interfaz; sin fotos con la cámara bajada; W avanza y la verja frena; el interruptor tarda el gesto y devuelve la interfaz; con la cámara en el ojo no hay paseo y se puede disparar; al bajarla se vuelve a pasear; una cámara a 1,8 m provoca una reacción.
+

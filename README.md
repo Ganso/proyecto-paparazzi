@@ -28,6 +28,7 @@ Prueba, por este orden: `GODOT_BIN`, `GODOT_FP`, `~/bin/godot-4-fp`, un `Godot*l
 godot --path .
 ```
 
+- **Escenarios**: el *parque clásico* (fotografías desde su centro; es el de la Academia) y el *parque grande*, que se recorre a pie con WASD y el ratón. Allí el clic derecho saca la cámara al ojo (y la guarda), y solo entonces aparece el visor.
 - **Interfaz**: por defecto, la de la cámara (el visor real de cada cuerpo, con los datos dentro). **Tab** o llevar el ratón al borde de la pantalla muestra los controles; en *Equipo* se puede volver a la interfaz clásica.
 - **En macOS**: También puedes hacer doble clic en `Jugar.command`.
 - **En Windows**: Doble clic en `Jugar.bat`. Si hay un `Godot*_win64.exe` en la raíz del proyecto (ignorado por git), se usa ese; si no, `godot-4`/`godot` del `PATH`.

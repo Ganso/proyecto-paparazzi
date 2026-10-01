@@ -7,6 +7,8 @@ Este documento describe la arquitectura geométrica del parque procedural, la il
 
 ---
 
+> **Dos escenarios** (01-10-2026): este documento describe el **parque clásico**, cilíndrico y centrado en el fotógrafo. El **parque grande**, de paseo libre, reutiliza su entorno, su luz y sus modelos con otra disposición: [futuro/01 §6](futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md).
+
 ## 1. Disposición Cilíndrica del Parque
 
 El escenario es un parque urbano procedural concéntrico de $45\text{ m}$ de radio modelado en coordenadas cilíndricas $(r, \theta)$ con la cámara del jugador situada en el centro exacto $(0, 1.60\text{ m}, 0)$.

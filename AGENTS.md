@@ -31,6 +31,7 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 | **Vida en el Parque** | [docs/futuro/19_VIDA_EN_EL_PARQUE.md](docs/futuro/19_VIDA_EN_EL_PARQUE.md) | Marcha suave sin temblequeo, bancos, paradas con actividad y objetos de mano (el móvil ilumina la cara), perro (`scripts/dog.gd`), palomas (`scripts/pigeons.gd`), figurantes de la pradera (`scripts/extras.gd`) y sonido ambiente (`scripts/ambience.gd`, `tools/audio/build_ambience.py`). |
 | **Academia de Fotografía (tutor)** | [docs/futuro/06_MODO_TUTOR_ACADEMIA.md](docs/futuro/06_MODO_TUTOR_ACADEMIA.md) §6 | Cinco lecciones (exposición, profundidad de campo, movimiento, composición, focal) con teoría sobre el visor, demostración guiada y práctica (`scripts/academy.gd`, `scripts/academy_diagram.gd`); exámenes pendientes; progreso en `user://academia.cfg`. |
 | **Visores realistas** | [docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md](docs/futuro/07_VISORES_REALISTAS_Y_MOVIL.md) §5 | Interfaz de cámara (por defecto en escritorio): `scripts/camera_body.gd` (ocular, LED, LCD, marco con paralaje), `view_rect`/`image_position()` en `main.gd`, efectos del visor en `shaders/viewfinder_lens.gdshader`, sonidos en `tools/audio/build_camera_sounds.py`. Nada toca la foto ni la nota (`tests/test_finders.gd`). |
+| **Parque grande (paseo libre)** | [docs/futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md](docs/futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md) §6 | Escenario adicional: `scripts/park_grande.gd` (disposición y grafo de caminos), `scripts/crowd_graph.gd` (45 viandantes por el grafo), paseo con WASD y cámara al ojo como interruptor en `main.gd` (`update_photographer()`, `toggle_raise()`). El parque clásico y sus invariantes de carriles no cambian. |
 | **Banco de Futuras Mejoras** | [docs/futuro/README.md](docs/futuro/README.md) | Especificaciones técnicas de mapa abierto, TLR, nuevos escenarios, academia, estilos de maniquí (toon y diorama físico PBR realista), animación universal (Quaternius), modos de fotometría (matricial/spot) y autofoco avanzado (AF-C/AF-S), interfaz móvil utilizable, soporte de gamepad, variedad procedural de vegetación y personajes, y perfiles gráficos con Ultra para GPUs potentes. Empieza por la **hoja de ruta** ([docs/futuro/README.md §4](docs/futuro/README.md)); los pasos 1 ([parque fusionado](docs/futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), 2 ([salto gráfico](docs/futuro/17_SALTO_GRAFICO_ULTRA.md) y [personajes](docs/futuro/18_PERSONAJES_BLENDER.md)) y 2c ([vida en el parque](docs/futuro/19_VIDA_EN_EL_PARQUE.md)) ya están completados. |
 
 ---
@@ -40,7 +41,7 @@ Para no tener que analizar el código fuente en detalle antes de cada tarea, con
 Cualquier cambio o extensión en este repositorio **debe respetar estrictamente estos límites**:
 
 ### 3.1 Presupuestos de Geometría y Memoria
-- **Población en escena**: Exactamente **21 viandantes** (`counts = [3, 7, 6, 5]`).
+- **Población en escena**: Exactamente **21 viandantes** (`counts = [3, 7, 6, 5]`) en el parque clásico; el parque grande tiene 45 (`GRANDE_PEOPLE`) y sus propias reglas ([docs/futuro/01 §6](docs/futuro/01_MAPA_ABIERTO_Y_PROTAGONISTA.md)).
 - **Presupuestos por nivel de detalle** (justificación en [docs/futuro/17 §3](docs/futuro/17_SALTO_GRAFICO_ULTRA.md)):
 
   | Nivel | Perfiles | Triángulos por viandante | Triángulos en escena | VRAM | Renderizador |
@@ -95,7 +96,7 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
 
 - **Headless**: `test_photography.gd`, `test_art.gd`, `test_equipment.gd`, `test_gait.gd`, `test_export.gd`.
 - **Exportación Android**: `./tools/export_android.sh` genera `build/paparazzi-debug.apk`, que **se versiona en git** (excepción en `.gitignore`). Si cambias el juego para una entrega móvil, recompila y haz commit del APK.
-- **Con display**: `test_navigation.gd`, `test_crowd.gd`, `test_park_life.gd`, `test_academy.gd`, `test_automatisms.gd`, `test_finders.gd`, `simulate_jams.gd`, `test_expansion.gd`, `test_game.gd`, `--smoke-test`, `./tools/run_evidence.sh`. En esta máquina, con **`--disable-vsync`**: si la ventana queda tapada, Wayland deja de dar fotogramas y la prueba se cuelga. En servidores sin pantalla se pueden ejecutar con `xvfb-run` (ver §1 del documento de pruebas).
+- **Con display**: `test_navigation.gd`, `test_crowd.gd`, `test_park_life.gd`, `test_academy.gd`, `test_automatisms.gd`, `test_finders.gd`, `test_big_park.gd`, `simulate_jams.gd`, `test_expansion.gd`, `test_game.gd`, `--smoke-test`, `./tools/run_evidence.sh`. En esta máquina, con **`--disable-vsync`**: si la ventana queda tapada, Wayland deja de dar fotogramas y la prueba se cuelga. En servidores sin pantalla se pueden ejecutar con `xvfb-run` (ver §1 del documento de pruebas).
 - **Mínimo antes de cerrar una tarea**: `~/bin/godot-4-fp --path . -- --smoke-test`; si toca Android, también con `--rendering-method gl_compatibility`.
 
 ---

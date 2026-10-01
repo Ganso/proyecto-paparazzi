@@ -39,6 +39,8 @@ graph TD
     A --> N[pigeons.gd · dog.gd · extras.gd · ambience.gd<br/>Vida en el parque: palomas, perro, figurantes y sonido]
     A --> O[academy.gd · academy_diagram.gd<br/>Academia: lecciones, tutor sobre el visor, diagramas en vivo]
     A --> P[camera_body.gd<br/>Visor real de cada cuerpo: ocular, LED, LCD, paralaje]
+    A --> Q[park_grande.gd · crowd_graph.gd<br/>Parque grande: caminos en grafo y paseo libre]
+    Q --> B
     N --> C
 ```
 
