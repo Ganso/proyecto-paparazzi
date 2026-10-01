@@ -83,8 +83,8 @@ func build(park_node, pigeons_node) -> void:
 # Per time of day: birds by day (quieter at golden hour), crickets at night.
 func apply_time(immediate = false, dt = 0.0) -> void:
 	var tod = park.time_of_day
-	var bird_db = {"day":0.0,"golden":-5.0,"night":-80.0}.get(tod,0.0)
-	var cricket_db = -80.0 if tod != "night" else 0.0
+	var bird_db = {"day":0.0,"golden":-5.0,"blue":-14.0,"night":-80.0}.get(tod,0.0)
+	var cricket_db = {"night":0.0,"blue":-8.0}.get(tod,-80.0)
 	for b in birds: fade(b,b.get_meta("db")+bird_db,immediate,dt)
 	for c in crickets: fade(c,c.get_meta("db")+cricket_db,immediate,dt)
 

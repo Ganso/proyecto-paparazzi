@@ -689,7 +689,7 @@ func refresh() -> void:
 	counter_label.text = Texts.get_text("encargo_02d_05") % (assignment+1)
 	counter_label.visible = not sandbox
 	sandbox_button.visible = sandbox and not (academy and academy.active)
-	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("NUBES" if park.cloud_cover > .4 else "SOL"))
+	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("HORA AZUL" if time_of_day == "blue" else ("NUBES" if park.cloud_cover > .4 else "SOL")))
 	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + ("sin límite" if sandbox else "%d disparos" % shots)
 
 func update_camera() -> void:
@@ -731,10 +731,11 @@ func intro() -> void:
 		label(root,Texts.get_text("escenario_"+which),Rect2(75,y+6,250,24),15,Color("e2e7d6"))
 		label(root,Texts.get_text("escenario_"+which+"_detalle"),Rect2(75,y+30,250,22),12,Color("8f9f86"))
 		var primary = which == scenario
-		button(root,Texts.get_text("intro_dia"),Rect2(330,y,190,54),func(): start_in(which,"day",false),primary)
-		button(root,Texts.get_text("intro_dorada"),Rect2(530,y,210,54),func(): start_in(which,"golden",false))
-		button(root,Texts.get_text("intro_noche"),Rect2(750,y,190,54),func(): start_in(which,"night",false))
-		button(root,"Sandbox",Rect2(950,y,255,54),func(): start_in(which,"day",true))
+		button(root,Texts.get_text("intro_dia"),Rect2(330,y,150,54),func(): start_in(which,"day",false),primary)
+		button(root,Texts.get_text("intro_dorada"),Rect2(488,y,180,54),func(): start_in(which,"golden",false))
+		button(root,Texts.get_text("intro_azul"),Rect2(676,y,170,54),func(): start_in(which,"blue",false))
+		button(root,Texts.get_text("intro_noche"),Rect2(854,y,150,54),func(): start_in(which,"night",false))
+		button(root,"Sandbox",Rect2(1012,y,193,54),func(): start_in(which,"day",true))
 	button(root,"Equipo / modos",Rect2(75,590,250,48),show_equipment)
 	button(root,Texts.get_text("academia_boton_inicio"),Rect2(330,590,410,48),open_academy,true)
 	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,652,1070,60),15,Color("8f9f86"))
@@ -790,6 +791,10 @@ func start_session(time_mode = "day", free_play = false) -> void:
 		n_index = 2
 		t_index = 3
 		iso_index = 1
+	elif time_of_day == "blue":
+		n_index = 1
+		t_index = 4
+		iso_index = 3
 	else:
 		n_index = 3
 		t_index = 2
@@ -2846,8 +2851,8 @@ func show_sandbox_controls() -> void:
 	label(root,"Sandbox · prepara la escena",Rect2(75,65,1100,60),38)
 	label(root,"Sin encargos, sin puntuación y sin límite de disparos.",Rect2(75,145,1100,40),23)
 	label(root,"Iluminación",Rect2(75,250,250,40),22)
-	option(root,["Día","Hora dorada","Noche"],1 if time_of_day == "golden" else (2 if night else 0),Rect2(350,245,650,48),func(i):
-		time_of_day = ["day","golden","night"][i]
+	option(root,["Día","Hora dorada","Hora azul","Noche"],["day","golden","blue","night"].find(time_of_day),Rect2(350,245,650,48),func(i):
+		time_of_day = ["day","golden","blue","night"][i]
 		night = (time_of_day == "night")
 		park.set_time_of_day(time_of_day)
 		update_meter()

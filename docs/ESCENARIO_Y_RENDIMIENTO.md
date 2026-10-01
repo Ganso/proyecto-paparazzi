@@ -100,6 +100,8 @@ Detalle en [futuro/19_VIDA_EN_EL_PARQUE.md](futuro/19_VIDA_EN_EL_PARQUE.md). Res
   - 12 farolas ornamentales de fundición de hierro con pedestal moldurado, 4 paneles de cristal transparente (`TRANSPARENCY_ALPHA`), bombilla con filamento incandescente de emisión activa y luminarias omnidireccionales cálidas (`ffcd82`, radio de alcance $6.0\text{ m}$) que proyectan sombras directas (`light_energy = 2.2`).
   - Luz incidente: **$EV = 2.0$** lejos de farolas; bajo farola $\approx 8.4$ a 1 m, $5.2$ a 3 m y $2.9$ a 5 m.
 
+**Hora azul** (`set_time_of_day("blue")`, 01-10-2026): el sol bajo el horizonte; la luz viene de todo el cielo, fría y sin sombras duras (`sun.shadow_enabled = false`, un sol cenital tenue y azulado y ambiente `7f93c4`), cielo de `142553` a `7d8fbf` con un resto cálido en el horizonte, farolas, guirnalda del quiosco y el 75 % de las ventanas encendidas, exposición del tonemap ×1,7 y LUT propia (sombras azules, luces cálidas). Exposímetro: cielo EV 9, escena unos EV 8 más las farolas (`illumination_ev()`). Pájaros a −14 dB y grillos empezando (−8 dB); las pantallas de los móviles brillan al 80 %. Se elige en el inicio («Hora azul») y en el sandbox.
+
 ### 3.2 Sistema Meteorológico de Nubes
 El parque cuenta con un sistema de nubes procedurales cúbicas de baja altura:
 - **Ciclo de 45 s** (`park.gd`, `WEATHER_CYCLE`, `weather_time`): un frente pasa de vez en cuando; `cloud_cover` sube de 0 a 1 entre los segundos 6,0 y 6,5 del ciclo, se mantiene hasta el 8,5 y baja a 0 entre el 8,5 y el 9,0 (antes, cada 18 s y durante 6 s). El frente no se dibuja: solo oscurece la luz del sol y el fotómetro (las nubes cercanas parecían misiles bajo el cielo).

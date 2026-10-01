@@ -887,6 +887,7 @@ func update_lamp_shadows() -> void:
 # highlights. Night: blue shadows, warm lamplight, slightly desaturated.
 const GRADES = {
 	"day": {"shadows": Vector3(-.012,.0,.028), "highlights": Vector3(.022,.012,-.012), "contrast": .16, "saturation": 1.06},
+	"blue": {"shadows": Vector3(-.03,-.005,.05), "highlights": Vector3(.04,.015,-.02), "contrast": .14, "saturation": 1.05},
 	"golden": {"shadows": Vector3(-.02,.006,.04), "highlights": Vector3(.05,.02,-.03), "contrast": .2, "saturation": 1.08},
 	"night": {"shadows": Vector3(-.012,.0,.045), "highlights": Vector3(.04,.02,-.02), "contrast": .1, "saturation": .9},
 }
@@ -972,7 +973,8 @@ func apply_preset_values(preset: String) -> void:
 	var meadow = ParkAssets.available("quiosco")
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	# A brighter golden hour: the low sun alone left the park too dark.
-	env.tonemap_exposure = 0.90 * (1.2 if time_of_day == "golden" else 1.0)
+	# Blue hour: no sun at all, only the sky: lift it so the park reads (as the eye adapts).
+	env.tonemap_exposure = 0.90 * {"golden":1.2,"blue":1.7}.get(time_of_day,1.0)
 	env.tonemap_white = 1.45
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.03
@@ -1009,6 +1011,8 @@ func apply_preset_values(preset: String) -> void:
 			sun.directional_shadow_blend_splits = true
 			sun.shadow_bias = 0.015
 			sun.shadow_normal_bias = .6
+	# Blue hour: the light comes from the whole sky, there are no hard sun shadows.
+	if time_of_day == "blue": sun.shadow_enabled = false
 	apply_forward_effects(preset)
 	# Without SDFGI (Bajo) the flat ambient reaches every shaded face that SDFGI would occlude: it is
 	# scaled per time of day to keep Ultra's exposure (calibrated on the same shot).
@@ -1020,7 +1024,7 @@ func apply_preset_values(preset: String) -> void:
 
 func set_time_of_day(tod: String) -> void:
 	time_of_day = tod
-	Pedestrian.screen_glow = {"day":0.0,"golden":.45,"night":1.0}.get(tod,0.0)
+	Pedestrian.screen_glow = {"day":0.0,"golden":.45,"blue":.8,"night":1.0}.get(tod,0.0)
 	is_night = (tod == "night")
 	var is_golden = (tod == "golden")
 	if is_night:
@@ -1047,6 +1051,31 @@ func set_time_of_day(tod: String) -> void:
 			bulb_material.emission_enabled = true
 			bulb_material.emission = Color("ffcd82")
 			bulb_material.emission_energy_multiplier = 4.5
+	elif tod == "blue":
+		# Blue hour: the sun is below the horizon; the deep blue sky lights everything with a soft,
+		# cold, shadowless light, a last warm glow on the horizon, lamps and windows already on.
+		sun.rotation_degrees = Vector3(-80,-48,0)
+		sun.light_energy = .45
+		sun.light_color = Color("6f8fd8")
+		environment.environment.ambient_light_color = Color("7f93c4")
+		base_ambient = 1.35
+		environment.environment.ambient_light_energy = base_ambient
+		environment.environment.ambient_light_sky_contribution = 0.0
+		environment.environment.fog_light_color = Color("3c5590")
+		environment.environment.tonemap_exposure = 1.0
+		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
+		sky_mat.sky_top_color = Color("142553")
+		sky_mat.sky_horizon_color = Color("7d8fbf")
+		sky_mat.ground_horizon_color = Color("c58a6a")
+		sky_mat.ground_bottom_color = Color("10162a")
+		for light in lamps:
+			light.light_energy = 1.8
+			light.light_color = Color("ffcd82")
+			light.visible = true
+		if bulb_material:
+			bulb_material.emission_enabled = true
+			bulb_material.emission = Color("ffcd82")
+			bulb_material.emission_energy_multiplier = 3.6
 	elif is_golden:
 		# Spectacular low-angle golden hour lighting (pitch -15 deg, azimuth -48 deg)
 		sun.rotation_degrees = Vector3(-15,-48,0)
@@ -1101,11 +1130,11 @@ func set_time_of_day(tod: String) -> void:
 
 # Bandstand garland, pond lamps and lit skyline windows follow the time of day.
 func update_meadow_lights(tod: String) -> void:
-	var level = {"night":1.0,"golden":.55}.get(tod,0.0)
+	var level = {"night":1.0,"blue":.85,"golden":.55}.get(tod,0.0)
 	for light in meadow_lights:
 		light.visible = level > 0
 		light.light_energy = float(light.get_meta("energy"))*level
-	if windows_material: windows_material.set_shader_parameter("lit",{"night":1.0,"golden":.35}.get(tod,0.0))
+	if windows_material: windows_material.set_shader_parameter("lit",{"night":1.0,"blue":.75,"golden":.35}.get(tod,0.0))
 
 func set_night(night: bool) -> void:
 	set_time_of_day("night" if night else "day")
@@ -1261,13 +1290,13 @@ func light_visible(point: Vector3, toward: Vector3, person = null) -> bool:
 
 func illumination_ev(point: Vector3, tod_or_night: Variant, person = null) -> float:
 	var mode_str = str(tod_or_night)
-	var mode_name = "night" if (mode_str == "true" or mode_str == "night") else ("golden" if mode_str == "golden" else "day")
-	var intensity = pow(2.0, 2.0 if mode_name == "night" else (9.5 if mode_name == "golden" else 11.0))
+	var mode_name = "night" if (mode_str == "true" or mode_str == "night") else (mode_str if mode_str in ["golden","blue"] else "day")
+	var intensity = pow(2.0, {"night":2.0,"blue":8.0,"golden":9.5}.get(mode_name,11.0))
 	var toward_sun = point + sun.global_basis.z * 80
-	if mode_name != "night" and light_visible(point, toward_sun, person):
+	if not mode_name in ["night","blue"] and light_visible(point, toward_sun, person):
 		var sun_ev = 13.9 if mode_name == "golden" else 14.7
 		intensity += pow(2.0, sun_ev) * sun_transmission()
-	if mode_name == "night" or mode_name == "golden":
+	if mode_name in ["night","golden","blue"]:
 		for light in lamps:
 			var distance = point.distance_to(light.global_position)
 			if distance < light.omni_range and light_visible(point, light.global_position, person):
@@ -1290,7 +1319,7 @@ var time_of_day: String = "day"
 # Ambient energy of the time of day; the profile scales it (apply_preset_values()).
 var base_ambient = .22
 const LO_EXPOSURE = 0.72
-const NO_GI_AMBIENT = {"day": .55, "golden": .1, "night": .3}
+const NO_GI_AMBIENT = {"day": .55, "golden": .1, "blue": .3, "night": .3}
 
 func build_clouds() -> void:
 	clouds = Node3D.new()
@@ -1328,6 +1357,8 @@ func update_weather(dt: float) -> void:
 		sun.light_energy = MOONLIGHT
 	elif time_of_day == "golden":
 		sun.light_energy = 2.6 * sun_transmission()
+	elif time_of_day == "blue":
+		sun.light_energy = .45
 	else:
 		sun.light_energy = 1.4 * sun_transmission()
 	if is_instance_valid(clouds):
@@ -1390,6 +1421,7 @@ func update_sky_clouds(dt: float) -> void:
 	var tint = Color(1,1,1)
 	if is_night: tint = Color("2a3450")
 	elif time_of_day == "golden": tint = Color("f3b07a")
+	elif time_of_day == "blue": tint = Color("6a7fb4")
 	sky_cloud_material.albedo_color = tint
 	sky_cloud_material.emission = tint*(.25 if is_night else 1.0)
 
@@ -1398,7 +1430,8 @@ func sun_transmission() -> float:
 
 func sky_ev(tod_or_night: Variant) -> float:
 	var mode_str = str(tod_or_night)
-	var mode_name = "night" if (mode_str == "true" or mode_str == "night") else ("golden" if mode_str == "golden" else "day")
+	var mode_name = "night" if (mode_str == "true" or mode_str == "night") else (mode_str if mode_str in ["golden","blue"] else "day")
 	if mode_name == "night": return 3.0
+	elif mode_name == "blue": return 9.0
 	elif mode_name == "golden": return 12.8 + log(sun_transmission()) / log(2.0)
 	return 15.0 + log(sun_transmission()) / log(2.0)
