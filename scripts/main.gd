@@ -116,6 +116,8 @@ var camera_raised = true            # always true in the classic park
 var raise_anim = 1.0                # 0 hanging from the neck … 1 at the eye
 var eye_height = 1.6
 var walk_phase = 0.0
+var walk_demo = -1.0                # --walk-demo: a scripted stroll for the evidence video
+var demo_keys = {}
 var viewmodel: Node3D
 var walk_label: Label
 var walk_hint: Label
@@ -214,6 +216,7 @@ func _ready() -> void:
 		if arg.begins_with("--academy-tour="): academy_tour = arg.trim_prefix("--academy-tour=")
 		if arg.begins_with("--scenario="): scenario = arg.trim_prefix("--scenario=")
 		if arg == "--raised": pending_start["raised"] = true
+		if arg == "--walk-demo": walk_demo = 0.0
 		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
@@ -1508,6 +1511,7 @@ func toggle_raise() -> void:
 # appears; lowering it brings the walking view back.
 var was_eye_ready = true
 func update_photographer(dt: float) -> void:
+	if walk_demo >= 0 and mode in ["SEARCH","RESULT"]: run_walk_demo(dt)
 	var before = raise_anim
 	raise_anim = move_toward(raise_anim,1.0 if camera_raised else 0.0,dt/.35)
 	var moving = false
@@ -1515,6 +1519,7 @@ func update_photographer(dt: float) -> void:
 		var input = Vector2(
 			float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
 			float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN))-float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
+		if walk_demo >= 0: input = demo_keys.get("move",Vector2.ZERO)
 		var pad = Vector2(Input.get_joy_axis(0,JOY_AXIS_LEFT_X),Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
 		if pad.length() > .2: input += pad
 		var look = Vector2(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X),Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
@@ -1574,6 +1579,31 @@ func update_photographer(dt: float) -> void:
 		walk_label.text = briefing.text if not sandbox else Texts.get_text("paseo_sandbox")
 	var want = Input.MOUSE_MODE_CAPTURED if walking_view and not camera_raised and get_window().has_focus() else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != want and not smoke and screenshot_path == "": Input.mouse_mode = want
+
+# Walk up the avenue towards the plaza, look round, raise the camera, shoot, lower it, walk on.
+func run_walk_demo(dt: float) -> void:
+	if walk_demo == 0.0:
+		equipment.auto_exposure = true
+		refresh()
+	walk_demo += dt
+	var t = walk_demo
+	demo_keys.move = Vector2(0,-1) if (t < 6.0 or (t > 15.5 and t < 19.0)) else Vector2.ZERO
+	if t > 5.0 and t < 7.0: angle = fposmod(angle-dt*10.0,360)
+	if t >= 7.0 and not demo_keys.has("raised"):
+		demo_keys.raised = true
+		toggle_raise()
+	if t >= 8.5 and t < 11.0 and eye_ready():
+		focal = move_toward(focal,minf(equipment.lens().max,105.0),dt*30)
+		update_camera()
+		if fmod(t,.5) < dt: autofocus()
+	if t >= 11.0 and not demo_keys.has("shot"):
+		demo_keys.shot = true
+		demo_keys.result_at = t
+		take_photo()
+	if demo_keys.has("result_at") and t > demo_keys.result_at+2.5 and mode == "RESULT": resume_search()
+	if t >= 14.5 and not demo_keys.has("lowered"):
+		demo_keys.lowered = true
+		toggle_raise()
 
 func photographer_input(event: InputEvent) -> bool:
 	var toggle = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or event.is_action_pressed("camara_al_ojo")
