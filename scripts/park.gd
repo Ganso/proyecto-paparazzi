@@ -316,6 +316,11 @@ func build_grass() -> void:
 	rng.seed = 9091
 	var bandstand = polar(BANDSTAND.x,BANDSTAND.y)
 	var pond = polar(POND.x,POND.y)
+	var buckets = grass_samples(rng,bandstand,pond)
+	add_grass(tuft,buckets)
+
+# Tuft transforms by merge sector (classic: the three lawn rings around the photographer).
+func grass_samples(rng: RandomNumberGenerator, bandstand: Vector3, pond: Vector3) -> Dictionary:
 	var buckets = {}
 	for lawn in GRASS_LAWNS:
 		var r = lawn.x
@@ -333,6 +338,9 @@ func build_grass() -> void:
 				var shade = rng.randf_range(.82,1.12)
 				buckets[key].append([Transform3D(basis,pos),Color(shade*rng.randf_range(.95,1.08),shade,shade*rng.randf_range(.85,1.0))])
 			r = r1
+	return buckets
+
+func add_grass(tuft: ArrayMesh, buckets: Dictionary) -> void:
 	var per_tuft = tuft.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size()/3
 	var shuffle = RandomNumberGenerator.new()
 	shuffle.seed = 4242
@@ -648,6 +656,12 @@ func polar(theta: float, radius: float) -> Vector3:
 	return Vector3(sin(deg_to_rad(theta))*radius,0,-cos(deg_to_rad(theta))*radius)
 
 func build() -> void:
+	build_environment()
+	build_layout()
+	finish_build()
+
+# Sky, fog, tone mapping and the sun: shared by every layout (park_grande.gd too).
+func build_environment() -> void:
 	environment = WorldEnvironment.new()
 	environment.environment = Environment.new()
 	add_child(environment)
@@ -685,6 +699,9 @@ func build() -> void:
 	sun.shadow_bias = 0.025
 	sun.shadow_normal_bias = 1.2
 	add_child(sun)
+
+# The classic cylindrical park around the photographer (docs/ESCENARIO_Y_RENDIMIENTO.md §1).
+func build_layout() -> void:
 	var ground = StaticBody3D.new()
 	ground.set_meta("label",Texts.get_text("el_suelo"))
 	add_child(ground)
@@ -828,6 +845,8 @@ func build() -> void:
 			cylinder(.09,.14,planter+Vector3((j-2)*.15,.43,0),[Color("d6ac4b"),Color("b45c78"),Color("e8dac0")][i%3])
 		if collider_only: visual("jardinera",str(i%3),self,Transform3D(Basis.IDENTITY,planter))
 		collider_only = false
+
+func finish_build() -> void:
 	merge_static_meshes()
 	# The source meshes now live inside the merged sectors: free their GPU buffers.
 	ParkAssets.cache.clear()

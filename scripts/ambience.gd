@@ -10,6 +10,10 @@ const CRICKET_SPOTS = [60.0, 180.0, 300.0]
 
 var park
 var pigeons
+# Where the sounds come from (the big park passes its own; defaults: the classic park).
+var fountain_pos = Vector3.ZERO
+var bird_points: Array = []
+var cricket_points: Array = []
 var streams = {}
 var birds: Array[AudioStreamPlayer3D] = []
 var crickets: Array[AudioStreamPlayer3D] = []
@@ -53,15 +57,18 @@ func build(park_node, pigeons_node) -> void:
 	pigeons = pigeons_node
 	rng.seed = 5150
 	if stream("pajaros",true) == null: return   # no audio files (e.g. a trimmed export)
-	for i in BIRD_SPOTS.size():
-		var b = player3d("pajaros",polar(BIRD_SPOTS[i],15.0)+Vector3.UP*5.0,true,10.0,3.0)
-		b.pitch_scale = [1.0,.93,1.07,.97][i]
+	if bird_points.is_empty(): bird_points = BIRD_SPOTS.map(func(a): return polar(a,15.0)+Vector3.UP*5.0)
+	if cricket_points.is_empty(): cricket_points = CRICKET_SPOTS.map(func(a): return polar(a,10.5)+Vector3.UP*.3)
+	if fountain_pos == Vector3.ZERO: fountain_pos = polar(245.0,21.0)+Vector3.UP*.8
+	for i in bird_points.size():
+		var b = player3d("pajaros",bird_points[i],true,10.0,3.0)
+		b.pitch_scale = [1.0,.93,1.07,.97,1.03,.95][i%6]
 		birds.append(b)
-	for i in CRICKET_SPOTS.size():
-		var c = player3d("grillos",polar(CRICKET_SPOTS[i],10.5)+Vector3.UP*.3,true,7.0,-2.0)
-		c.pitch_scale = [1.0,1.04,.96][i]
+	for i in cricket_points.size():
+		var c = player3d("grillos",cricket_points[i],true,7.0,-2.0)
+		c.pitch_scale = [1.0,1.04,.96][i%3]
 		crickets.append(c)
-	fountain = player3d("fuente",polar(245.0,21.0)+Vector3.UP*.8,true,12.0,4.0)
+	fountain = player3d("fuente",fountain_pos,true,12.0,4.0)
 	if pigeons and not pigeons.flocks.is_empty():
 		for f in pigeons.flocks.size():
 			var p = player3d("zureo",pigeons.flocks[f].center,false,4.0,0.0)

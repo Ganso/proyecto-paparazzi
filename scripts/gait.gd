@@ -212,7 +212,7 @@ func sit_ground(e: float, a: float, b: float, ground: float, standing: float) ->
 		arm(side,lerpf(0,-.55,e),-.1,.05,1.0)
 	p.pose_bone("lumbar",lerpf(0,.18,e)-.3*sin(PI*e))
 
-const WALKING_ACTIVITIES = ["movil"]
+const WALKING_ACTIVITIES = ["movil","taparse"]
 
 func arm(side: String, pitch: float, inward: float, elbow: float, weight_arm: float) -> void:
 	var p = person
@@ -233,6 +233,8 @@ func head(pitch: float, yaw: float, weight_head: float) -> void:
 # walking, standing or seated pose; the legs are never touched.
 func activity() -> void:
 	var p = person
+	# A glance (the photographer, a partner on the bench) turns the head whatever the activity.
+	if absf(p.look_yaw) > .01 and p.activity != "charla": head(0,p.look_yaw,1.0)
 	if p.has_dog: arm("I",.32,-.05,.5,1.0-p.seat)
 	var w: float = smoothstep(0,1,p.act_w)
 	if w <= 0: return
@@ -280,6 +282,10 @@ func activity() -> void:
 			arm("D",.2+.75*toss,.15,1.2-.8*toss,w)
 			arm("I",.35,.35,1.5,w*.8)
 			head(-.38,0,w)
+		"taparse":
+			# Shielding the face from a camera pointed at them (big park, crowd_graph.gd).
+			arm("D",1.25,.75,2.2,w)
+			head(-.15,-.35,w)
 		"cafe":
 			var sip = smoothstep(.7,.8,fposmod(t,9.0)/9.0)*(1.0-smoothstep(.9,1.0,fposmod(t,9.0)/9.0))
 			arm("D",lerpf(.25,.7,sip),lerpf(.2,.45,sip),lerpf(1.65,2.5,sip),w)

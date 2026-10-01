@@ -258,5 +258,18 @@
   "visor_compacta_marca": "DIGITAL  ·  6.0 MP  ·  3× ZOOM",
   "visor_interfaz": "Interfaz",
   "visor_interfaz_camara": "Cámara · el visor real de cada cuerpo (Tab muestra los controles)",
-  "visor_interfaz_clasica": "Clásica · controles siempre a la vista"
+  "visor_interfaz_clasica": "Clásica · controles siempre a la vista",
+  "escenario_clasico": "PARQUE CLÁSICO",
+  "escenario_clasico_detalle": "Desde el centro del parque",
+  "escenario_grande": "PARQUE GRANDE",
+  "escenario_grande_detalle": "Paseo libre por sus caminos",
+  "intro_dia": "Día",
+  "intro_dorada": "Hora dorada",
+  "intro_noche": "Noche",
+  "paseo_ayuda": "WASD: andar · Mayús: correr · Ctrl: agacharse · Ratón: mirar · Clic derecho: sacar la cámara · Esc: ayuda",
+  "paseo_sandbox": "Paseo libre · saca la cámara con el clic derecho",
+  "una_fuente": "una fuente",
+  "un_columpio": "un columpio",
+  "un_tobogan": "un tobogán",
+  "una_papelera": "una papelera"
 }

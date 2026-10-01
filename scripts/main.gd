@@ -100,6 +100,29 @@ var stage = ""
 # --academy=<lección>:<teoria|demo|practica>[:página]: open a lesson directly (evidence captures).
 var academy_start = ""
 var academy_tour = ""
+# ---- Scenarios (docs/futuro/01 Alternativa C) ----
+# "clasico": the photographer stands in the centre of the cylindrical park (and the Academy uses it).
+# "grande": the big park with a path network, walked freely; the camera is raised to the eye with a
+# toggle (right click / Y) and only then the camera interface appears.
+# Changing scenario reloads the scene; these statics survive the reload.
+static var scenario = "clasico"
+static var pending_start = {}
+static var equipment_state = {}
+const GRANDE_PEOPLE = 45
+var crowd                           # crowd_graph.gd in the big park
+var player: CharacterBody3D
+var player_proxy                    # what pedestrians avoid (player_proxy.gd)
+var camera_raised = true            # always true in the classic park
+var raise_anim = 1.0                # 0 hanging from the neck … 1 at the eye
+var eye_height = 1.6
+var walk_phase = 0.0
+var viewmodel: Node3D
+var walk_label: Label
+var walk_hint: Label
+var raise_flash: ColorRect
+const WALK_SPEED = 1.4
+const RUN_SPEED = 3.2
+const WALK_FOV = 72.0
 # ---- Realistic camera finders (docs/futuro/07 §1, scripts/camera_body.gd) ----
 # view_rect: where the camera image sits on screen (ui coordinates). In the classic interface it is
 # the whole screen; with the camera interface each body frames it its own way (eyepiece, LCD…).
@@ -189,6 +212,9 @@ func _ready() -> void:
 		if arg.begins_with("--stage="): stage = arg.trim_prefix("--stage=")
 		if arg.begins_with("--academy="): academy_start = arg.trim_prefix("--academy=")
 		if arg.begins_with("--academy-tour="): academy_tour = arg.trim_prefix("--academy-tour=")
+		if arg.begins_with("--scenario="): scenario = arg.trim_prefix("--scenario=")
+		if arg == "--raised": pending_start["raised"] = true
+		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
@@ -215,6 +241,12 @@ func _ready() -> void:
 		var back = InputEventJoypadButton.new()
 		back.button_index = JOY_BUTTON_BACK
 		InputMap.action_add_event("camara_controles",back)
+	if not InputMap.has_action("camara_al_ojo"):
+		# Big park: raise / lower the camera (a toggle). Right click is handled in photographer_input().
+		InputMap.add_action("camara_al_ojo")
+		var y_button = InputEventJoypadButton.new()
+		y_button.button_index = JOY_BUTTON_Y
+		InputMap.action_add_event("camara_al_ojo",y_button)
 	populate()
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
@@ -222,7 +254,21 @@ func _ready() -> void:
 	await warm_up_view()
 	update_camera()
 	apply_graphics_preset(graphics_preset)
+	if not equipment_state.is_empty():
+		equipment.body = equipment_state.body
+		equipment.lens_index = equipment_state.lens
+		equipment.focus_mode = equipment_state.focus
+		equipment.auto_exposure = equipment_state.auto
+		equipment.film = equipment_state.film
+		equipment.film_iso_index = equipment_state.film_iso
+		equipment.ev_comp_index = equipment_state.ev
+		apply_equipment()
 	intro()
+	if pending_start.has("time"):
+		start_session(pending_start.time,pending_start.get("sandbox",false))
+	elif pending_start.has("academy"):
+		show_academy()
+	for key in ["time","sandbox","academy"]: pending_start.erase(key)
 	if run_metrics:
 		# Measure the real cost, not the vsync cap.
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -266,18 +312,26 @@ func build_world() -> void:
 	container.add_child(viewport)
 	update_render_resolution()
 	get_window().size_changed.connect(update_render_resolution)
-	park = ParkScene.new()
+	park = (preload("res://scripts/park_grande.gd") if scenario == "grande" else ParkScene).new()
 	park.detail = "hd" if ParkScene.forward_plus() else "lo"
 	Person.detail = "lo" if "lo_people" in debug_off else park.detail
 	viewport.add_child(park)
 	park.build()
 	pigeons = preload("res://scripts/pigeons.gd").new()
+	if scenario == "grande":
+		# Two flocks on the lawns beside the plaza.
+		pigeons.homes = [Vector3(14,0,-5),Vector3(-14,0,5)].map(func(v): return Vector2(fposmod(rad_to_deg(atan2(v.x,-v.z)),360.0),Vector2(v.x,v.z).length()))
 	viewport.add_child(pigeons)
 	pigeons.build(Person.detail)
 	extras = preload("res://scripts/extras.gd").new()
 	viewport.add_child(extras)
-	extras.build(Person.detail)
+	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.
+	if scenario == "clasico": extras.build(Person.detail)
 	ambience = preload("res://scripts/ambience.gd").new()
+	if scenario == "grande":
+		ambience.fountain_pos = Vector3(0,.8,0)
+		ambience.bird_points = [Vector3(-30,5,20),Vector3(30,5,-24),Vector3(-40,5,-30),Vector3(36,5,32),Vector3(4,5,-24),Vector3(-6,5,26)]
+		ambience.cricket_points = [Vector3(-20,.3,14),Vector3(20,.3,-14),Vector3(0,.3,-40),Vector3(-48,.3,0),Vector3(48,.3,8)]
 	viewport.add_child(ambience)
 	ambience.build(park,pigeons)
 	camera = Camera3D.new()
@@ -307,6 +361,9 @@ func build_world() -> void:
 		camera.add_child(dof_pass)
 
 func populate() -> void:
+	if scenario == "grande":
+		populate_grande()
+		return
 	var counts = [3, 7, 6, 5]
 	var radii = [1.8,4.0,7.0,11.5]
 	for lane in 4:
@@ -329,6 +386,48 @@ func populate() -> void:
 			viewport.add_child(dog)
 			dog.setup(p,77,Color("a8743f"))
 			break
+
+# Big park: 45 pedestrians spread over the path graph (crowd_graph.gd), and the photographer.
+func populate_grande() -> void:
+	crowd = preload("res://scripts/crowd_graph.gd").new(self)
+	var rng = RandomNumberGenerator.new()
+	rng.seed = 2610
+	for i in GRANDE_PEOPLE:
+		var p = Person.new()
+		viewport.add_child(p)
+		p.setup(casting.generate(people.size()%7 == 0),casting.catalog,people.size()+905)
+		p.lane = 1
+		p.pref_offset = rng.randf_range(-.15,.25)
+		crowd.spawn(p,rng)
+		p.animate(0)
+		people.append(p)
+	for p in people:
+		if not p.runner and p.traits.profile != 3:
+			p.has_dog = true
+			dog = preload("res://scripts/dog.gd").new()
+			viewport.add_child(dog)
+			dog.setup(p,77,Color("a8743f"))
+			break
+	player = CharacterBody3D.new()
+	player.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
+	player.collision_layer = 0
+	player.collision_mask = 2
+	var shape = CollisionShape3D.new()
+	var capsule = CapsuleShape3D.new()
+	capsule.radius = .3
+	capsule.height = 1.7
+	shape.shape = capsule
+	shape.position.y = .85
+	player.add_child(shape)
+	player.position = Vector3(0,0,15)
+	viewport.add_child(player)
+	player_proxy = preload("res://scripts/player_proxy.gd").new()
+	player_proxy.position = player.position
+	viewport.add_child(player_proxy)
+	angle = 0.0
+	camera_raised = false
+	raise_anim = 0.0
+	build_viewmodel()
 
 func style(color: Color, radius = 8, border = Color.TRANSPARENT) -> StyleBoxFlat:
 	var box = StyleBoxFlat.new()
@@ -445,9 +544,26 @@ func build_ui() -> void:
 	toast.add_theme_constant_override("shadow_offset_x",1)
 	toast.add_theme_constant_override("shadow_offset_y",2)
 	fps_label = label(ui,"",Rect2(27,586,200,23),12,Color("d2ddc6"))
+	# Big park walking view: the assignment on top, the controls below, and a quick dark blink when
+	# the camera reaches the eye or leaves it.
+	walk_label = label(ui,"",Rect2(40,18,1200,30),18,Color("eef2e6"))
+	walk_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	walk_label.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
+	walk_label.add_theme_constant_override("shadow_offset_y",2)
+	walk_label.visible = false
+	walk_hint = label(ui,Texts.get_text("paseo_ayuda"),Rect2(40,676,1200,24),14,Color("d8dfd0"))
+	walk_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	walk_hint.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
+	walk_hint.add_theme_constant_override("shadow_offset_y",2)
+	walk_hint.visible = false
+	raise_flash = ColorRect.new()
+	raise_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	raise_flash.color = Color(0,0,0,0)
+	raise_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(raise_flash)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
-		if child in [camera_body,focus_aid,finder,toast,fps_label]: continue
+		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash]: continue
 		if child is Control:
 			if child.position.y < 300: hud_top.append(child)
 			else: hud_bottom.append(child)
@@ -574,7 +690,8 @@ func update_camera() -> void:
 	pitch = clampf(pitch,-75,75)
 	focal = clampf(focal,equipment.lens().min,equipment.lens().max)
 	camera.rotation = Vector3(deg_to_rad(pitch),-deg_to_rad(angle),0)
-	camera.fov = rad_to_deg(2*atan(36.0/(2.0*focal)))
+	# Walking in the big park the eye sees a natural field of view; the lens only at the eye.
+	camera.fov = WALK_FOV if not eye_ready() else rad_to_deg(2*atan(36.0/(2.0*focal)))
 	refresh()
 
 func close_modal() -> void:
@@ -599,15 +716,43 @@ func intro() -> void:
 	var desc = label(root,Texts.get_text("encuentra_a_quien_describe_el_encargo_y_consigue_la_fotografia_t"),Rect2(75,302,780,72),22,Color("b7c5ad"))
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,Texts.get_text("05_encargos_03_disparos_por_encargo_tu_mejor_foto_cuenta"),Rect2(75,413,1100,28),13,Color("a7c683"))
-	button(root,Texts.get_text("parque_dia"),Rect2(75,477,210,65),func(): start_session("day"),true)
-	button(root,Texts.get_text("parque_dorada"),Rect2(295,477,240,65),func(): start_session("golden"))
-	button(root,Texts.get_text("parque_noche"),Rect2(545,477,210,65),func(): start_session("night"))
-	button(root,"Equipo / modos",Rect2(765,477,210,65),show_equipment)
-	button(root,"Sandbox",Rect2(985,477,220,65),func(): start_session("day",true))
-	button(root,Texts.get_text("academia_boton_inicio"),Rect2(75,556,460,52),show_academy,true)
-	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,622,1070,60),16,Color("8f9f86"))
+	# Two scenarios: the classic park (you stand in its centre) and the big park (you walk it).
+	for row in 2:
+		var which = ["clasico","grande"][row]
+		var y = 452+row*66
+		label(root,Texts.get_text("escenario_"+which),Rect2(75,y+6,250,24),15,Color("e2e7d6"))
+		label(root,Texts.get_text("escenario_"+which+"_detalle"),Rect2(75,y+30,250,22),12,Color("8f9f86"))
+		var primary = which == scenario
+		button(root,Texts.get_text("intro_dia"),Rect2(330,y,190,54),func(): start_in(which,"day",false),primary)
+		button(root,Texts.get_text("intro_dorada"),Rect2(530,y,210,54),func(): start_in(which,"golden",false))
+		button(root,Texts.get_text("intro_noche"),Rect2(750,y,190,54),func(): start_in(which,"night",false))
+		button(root,"Sandbox",Rect2(950,y,255,54),func(): start_in(which,"day",true))
+	button(root,"Equipo / modos",Rect2(75,590,250,48),show_equipment)
+	button(root,Texts.get_text("academia_boton_inicio"),Rect2(330,590,410,48),open_academy,true)
+	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,652,1070,60),15,Color("8f9f86"))
 	label(root,Texts.get_text("m"),Rect2(950,161,245,130),95,Color("b8d78c"))
 	label(root,"PROYECTO\nPAPARAZZI",Rect2(955,305,230,70),26,Color("a7b897"))
+
+# Start a session in a scenario; another scenario reloads the scene with it (the equipment kept).
+func start_in(which: String, time_mode: String, free_play: bool) -> void:
+	if which == scenario:
+		start_session(time_mode,free_play)
+		return
+	reload_with(which,{"time":time_mode,"sandbox":free_play})
+
+func reload_with(which: String, start: Dictionary) -> void:
+	equipment_state = {"body":equipment.body,"lens":equipment.lens_index,"focus":equipment.focus_mode,"auto":equipment.auto_exposure,"film":equipment.film,"film_iso":equipment.film_iso_index,"ev":equipment.ev_comp_index}
+	scenario = which
+	pending_start = start
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_tree().reload_current_scene()
+
+# The Academy uses the classic park (its lessons are staged around the photographer).
+func open_academy() -> void:
+	if scenario != "clasico":
+		reload_with("clasico",{"academy":true})
+		return
+	show_academy()
 
 func start_session(time_mode = "day", free_play = false) -> void:
 	close_modal()
@@ -647,6 +792,17 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	focus_distance = 4
 	angle = 120
 	pan_velocity = 0
+	if crowd:
+		angle = 0.0
+		pitch = 0.0
+		set_raised(bool(pending_start.get("raised",false)))
+		raise_anim = 1.0 if camera_raised else 0.0
+		if pending_start.has("at"):
+			# --at=x,z[,azimuth]: put the photographer somewhere (evidence captures).
+			var at = str(pending_start.at).split(",")
+			player.position = Vector3(float(at[0]),0,float(at[1]))
+			if at.size() > 2: angle = float(at[2])
+		free_player_spot()
 	update_camera()
 	if sandbox:
 		if is_instance_valid(target): target.protected_target = false
@@ -682,13 +838,15 @@ func _process(dt: float) -> void:
 	boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
+	if crowd: update_photographer(dt)
 	if mode == "SEARCH" and not shooting:
-		var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
-		angle = fposmod(angle+axis*dt*42*24/focal+pan_velocity*dt,360)
-		pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/focal
-		pan_velocity = move_toward(pan_velocity,0,dt*180)
-		if Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
-		if Input.is_physical_key_pressed(KEY_S): focal = clampf(focal-dt*30,equipment.lens().min,equipment.lens().max)
+		if eye_ready():
+			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
+			angle = fposmod(angle+axis*dt*42*24/focal+pan_velocity*dt,360)
+			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/focal
+			pan_velocity = move_toward(pan_velocity,0,dt*180)
+			if Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
+			if Input.is_physical_key_pressed(KEY_S): focal = clampf(focal-dt*30,equipment.lens().min,equipment.lens().max)
 		if run_metrics:
 			angle = 120.0
 			focal = 24.0
@@ -777,6 +935,9 @@ func _process(dt: float) -> void:
 		get_tree().quit()
 
 func update_person(p: Pedestrian, dt: float) -> void:
+	if crowd:
+		crowd.update(p,dt)
+		return
 	var previous_position = p.position
 	var previous_heading = p.rotation.y
 	if p.state == "RETIRADO":
@@ -1306,13 +1467,187 @@ func turn_heading(p: Pedestrian, dt: float, previous: float) -> void:
 	p.heading = p.heading+clampf(diff,-max_turn,max_turn)
 	p.rotation.y = p.heading
 
+# ---- The photographer in the big park (docs/futuro/01 Alternativa C) ----
+# Camera at the eye: the classic park always; the big park only after the toggle and its gesture.
+func eye_ready() -> bool:
+	return crowd == null or (camera_raised and raise_anim >= 1.0)
+
+# Never start inside a lamp, a bench or a trunk: step out in a widening spiral.
+func free_player_spot() -> void:
+	var shape = CapsuleShape3D.new()
+	shape.radius = .32
+	shape.height = 1.7
+	var query = PhysicsShapeQueryParameters3D.new()
+	query.shape = shape
+	query.collision_mask = 2
+	var space = viewport.world_3d.direct_space_state
+	var origin = player.position
+	for k in 60:
+		var a = k*2.39996
+		var pos = origin+Vector3(cos(a),0,sin(a))*(.35*sqrt(k))
+		query.transform = Transform3D(Basis.IDENTITY,pos+Vector3.UP*.85)
+		if space.intersect_shape(query,1).is_empty():
+			player.position = pos
+			return
+
+func set_raised(value: bool) -> void:
+	camera_raised = value
+	if player:
+		player.velocity = Vector3.ZERO
+	if player_proxy:
+		player_proxy.state = "DETENIDO"
+		player_proxy.actual_velocity = Vector3.ZERO
+
+func toggle_raise() -> void:
+	set_raised(not camera_raised)
+	if is_instance_valid(raise_flash): raise_flash.color.a = 0.0
+	play_tone(420 if camera_raised else 300,.03)
+
+# Walking: WASD (or the arrows), Shift to run, Ctrl to crouch; the mouse looks around (captured).
+# Raising the camera takes 0.35 s (the camera comes up to the eye), then the camera interface
+# appears; lowering it brings the walking view back.
+var was_eye_ready = true
+func update_photographer(dt: float) -> void:
+	var before = raise_anim
+	raise_anim = move_toward(raise_anim,1.0 if camera_raised else 0.0,dt/.35)
+	var moving = false
+	if mode == "SEARCH" and not camera_raised and raise_anim <= 0.0:
+		var input = Vector2(
+			float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
+			float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN))-float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
+		var pad = Vector2(Input.get_joy_axis(0,JOY_AXIS_LEFT_X),Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
+		if pad.length() > .2: input += pad
+		var look = Vector2(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X),Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
+		if look.length() > .2:
+			angle = fposmod(angle+look.x*dt*110,360)
+			pitch = clampf(pitch-look.y*dt*80,-70,70)
+		var yaw = deg_to_rad(angle)
+		var forward = Vector3(sin(yaw),0,-cos(yaw))
+		var right = Vector3(cos(yaw),0,sin(yaw))
+		var wish = forward*(-input.y)+right*input.x
+		var crouching = Input.is_physical_key_pressed(KEY_CTRL)
+		var speed = (RUN_SPEED if Input.is_physical_key_pressed(KEY_SHIFT) else WALK_SPEED)*(.55 if crouching else 1.0)
+		var target_velocity = wish.limit_length(1.0)*speed
+		var walk_velocity = player.velocity.move_toward(target_velocity,dt*9.0)
+		var start = player.position
+		# Explicit motion for this frame, sliding along whatever it hits (fence, benches, trunks).
+		player.velocity = walk_velocity
+		var motion = walk_velocity*dt
+		for bounce in 3:
+			if motion.length() < .00001: break
+			var hit = player.move_and_collide(motion)
+			if hit == null: break
+			var normal = hit.get_normal()
+			normal.y = 0
+			motion = hit.get_remainder().slide(normal.normalized()) if normal.length() > .01 else Vector3.ZERO
+		player.position.y = 0.0
+		# Never through anyone: step back out of a pedestrian's personal circle.
+		for q in people:
+			if not q.visible: continue
+			var away = Vector3(player.position.x-q.position.x,0,player.position.z-q.position.z)
+			if away.length() < .55: player.position = Vector3(q.position.x,0,q.position.z)+away.normalized()*.55
+		var moved = player.position.distance_to(start)
+		moving = moved > .0005
+		walk_phase += moved*TAU/1.5
+		eye_height = move_toward(eye_height,1.05 if crouching else 1.6,dt*2.5)
+		update_camera()
+	player_proxy.position = player.position
+	player_proxy.actual_velocity = player.velocity if moving else Vector3.ZERO
+	player_proxy.state = "CAMINANDO" if moving else "DETENIDO"
+	var bob = sin(walk_phase)*.025*clampf(player.velocity.length()/WALK_SPEED,0,1.4) if not camera_raised else 0.0
+	camera.position = player.position+Vector3.UP*(eye_height+bob)
+	park.follow_view(camera.position,dt)
+	update_viewmodel(dt)
+	# Walking view ⇄ camera interface.
+	var ready = eye_ready()
+	if ready != was_eye_ready:
+		was_eye_ready = ready
+		place_view()
+		update_dof_pass()
+		update_camera()
+		if is_instance_valid(raise_flash): raise_flash.color.a = .85
+	if is_instance_valid(raise_flash): raise_flash.color.a = move_toward(raise_flash.color.a,0.0,dt*5.0)
+	var walking_view = mode == "SEARCH" and not ready
+	if is_instance_valid(walk_label):
+		walk_label.visible = walking_view
+		walk_hint.visible = walking_view
+		walk_label.text = briefing.text if not sandbox else Texts.get_text("paseo_sandbox")
+	var want = Input.MOUSE_MODE_CAPTURED if walking_view and not camera_raised and get_window().has_focus() else Input.MOUSE_MODE_VISIBLE
+	if Input.mouse_mode != want and not smoke and screenshot_path == "": Input.mouse_mode = want
+
+func photographer_input(event: InputEvent) -> bool:
+	var toggle = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or event.is_action_pressed("camara_al_ojo")
+	if toggle:
+		toggle_raise()
+		return true
+	if camera_raised: return false
+	# While walking only looking around, help and Escape reach the rest of the game.
+	if event is InputEventMouseMotion:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			angle = fposmod(angle+event.relative.x*.11,360)
+			pitch = clampf(pitch-event.relative.y*.11,-70,70)
+			update_camera()
+		return true
+	if event is InputEventMouseButton: return true
+	if event is InputEventKey and event.pressed and event.keycode in [KEY_ESCAPE,KEY_H,KEY_QUESTION,KEY_ENTER]: return false
+	return event is InputEventKey
+
+# The camera hanging from the neck, bobbing as you walk, and coming up to the eye.
+func build_viewmodel() -> void:
+	viewmodel = Node3D.new()
+	camera.add_child(viewmodel)
+	var dark = StandardMaterial3D.new()
+	dark.albedo_color = Color("1d1f22")
+	dark.roughness = .7
+	var chrome = StandardMaterial3D.new()
+	chrome.albedo_color = Color("8d9094")
+	chrome.metallic = .35
+	chrome.roughness = .55
+	var body = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = Vector3(.14,.09,.065)
+	body.mesh = box
+	body.material_override = dark
+	viewmodel.add_child(body)
+	var top = MeshInstance3D.new()
+	var plate = BoxMesh.new()
+	plate.size = Vector3(.142,.012,.067)
+	top.mesh = plate
+	top.material_override = chrome
+	top.position = Vector3(0,.051,0)
+	viewmodel.add_child(top)
+	var lens = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = .028
+	cyl.bottom_radius = .031
+	cyl.height = .07
+	lens.mesh = cyl
+	lens.material_override = dark
+	lens.rotation.x = PI*.5
+	lens.position = Vector3(.01,-.004,-.065)
+	viewmodel.add_child(lens)
+	for node in viewmodel.get_children(): node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	viewmodel.visible = false
+
+func update_viewmodel(_dt: float) -> void:
+	if not is_instance_valid(viewmodel): return
+	var e = smoothstep(0.0,1.0,raise_anim)
+	# Seen only while it travels to the eye or back (hanging at the chest it looked like a box).
+	viewmodel.visible = mode == "SEARCH" and raise_anim > 0.0 and raise_anim < 1.0
+	var sway = Vector3(cos(walk_phase*.5)*.008,absf(sin(walk_phase*.5))*.01,0)*clampf(player.velocity.length()/WALK_SPEED,0,1.4)
+	var rest = Vector3(.15,-.215,-.55)+sway
+	var eye = Vector3(0,-.01,-.11)
+	viewmodel.position = rest.lerp(eye,e)
+	viewmodel.rotation = Vector3(lerpf(.35,0,e),lerpf(-.25,0,e),lerpf(.1,0,e))
+
 # ---- Camera interface (docs/futuro/07 §1) ----
 func place_view() -> void:
 	if not is_instance_valid(viewport_container): return
 	if is_instance_valid(camera_body):
-		view_rect = camera_body.view_rect_for(equipment.body,interface_mode)
+		var walking = not eye_ready()
+		view_rect = camera_body.view_rect_for(equipment.body,"walk" if walking else interface_mode)
 		camera_body.body = equipment.body
-		camera_body.mode = interface_mode
+		camera_body.mode = "walk" if walking else interface_mode
 	viewport_container.position = view_rect.position
 	viewport_container.scale = view_rect.size/Vector2(viewport.size)
 	if is_instance_valid(focus_aid):
@@ -1324,6 +1659,7 @@ func place_view() -> void:
 	if is_instance_valid(finder):
 		finder.view = Rect2(view_rect.position+view_shift,view_rect.size)
 		finder.classic = interface_mode != "camara"
+		finder.visible = eye_ready()
 	update_finder_shader()
 
 # Shutter sound of each body (tools/audio/build_camera_sounds.py): SLR mirror clack, rangefinder
@@ -1353,7 +1689,7 @@ func update_dof_pass() -> void:
 	# The pass always runs in Forward+: besides the blur, it repairs non-finite pixels before the
 	# glow (otherwise each one flares into a white blob). Only the blur depends on profile and body.
 	dof_pass.visible = not ("dof" in debug_off)
-	set_dof_blur(dof_allowed() and not (interface_mode == "camara" and equipment.body == 1))
+	set_dof_blur(dof_allowed() and eye_ready() and not (interface_mode == "camara" and equipment.body == 1))
 
 func set_dof_blur(value: bool) -> void:
 	dof_blur = value
@@ -1364,7 +1700,7 @@ func dof_allowed() -> bool:
 
 func update_finder_shader() -> void:
 	if lens_material == null: return
-	var body_code = equipment.body if interface_mode == "camara" else -1
+	var body_code = equipment.body if interface_mode == "camara" and eye_ready() else -1
 	lens_material.set_shader_parameter("finder_body",body_code)
 	var shift = view_shift/view_rect.size if view_rect.size.x > 0 else Vector2.ZERO
 	lens_material.set_shader_parameter("parallax",shift)
@@ -1397,11 +1733,12 @@ func update_hud_visibility(dt: float) -> void:
 	if hud_top.is_empty(): return
 	hud_hover = maxf(0.0,hud_hover-dt)
 	var show = interface_mode != "camara" or controls_shown or hud_hover > 0 or (academy and academy.active) or mode != "SEARCH"
+	if mode == "SEARCH" and not eye_ready(): show = false
 	for node in hud_top+hud_bottom:
 		node.visible = show
 	# The parallax of the rangefinder follows the focus distance.
 	var shift = Vector2.ZERO
-	if interface_mode == "camara" and equipment.body == 1: shift = camera_body.parallax()*view_rect.size
+	if interface_mode == "camara" and equipment.body == 1 and eye_ready(): shift = camera_body.parallax()*view_rect.size
 	if not shift.is_equal_approx(view_shift):
 		view_shift = shift
 		place_view()
@@ -1491,6 +1828,7 @@ func capture_evidence() -> Dictionary:
 
 func take_photo() -> void:
 	if mode != "SEARCH" or (not sandbox and shots <= 0) or shooting: return
+	if not eye_ready(): return
 	if equipment.focus_mode != "MF": autofocus()
 	update_meter()
 	if equipment.auto_exposure: auto_expose()
@@ -1659,6 +1997,7 @@ func show_help() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
+	if crowd and mode == "SEARCH" and photographer_input(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
 		controls_shown = not controls_shown
@@ -1766,7 +2105,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		update_camera()
 
 func smoke_test() -> void:
-	assert(people.size() == 21)
+	assert(people.size() == (GRANDE_PEOPLE if scenario == "grande" else 21))
 	assert(target.protected_target)
 	var triangles = park.triangle_count
 	for p in people:
@@ -1785,7 +2124,7 @@ func smoke_test() -> void:
 	assert(triangles <= budget,Texts.get_text("presupuesto_de_escena"))
 	var evidence = capture_evidence()
 	assert(Photo.evaluate(evidence) == Photo.evaluate(evidence))
-	print("SMOKE PASS: 21 viandantes (+%d figurantes, %d palomas), 20 huesos/persona, %d triángulos (límite %d, perfil %s, detalle %s, máximo por viandante %d), expediente determinista" % [extras.extras.size(),pigeons.birds.size(),triangles,budget,graphics_preset,park.detail,people.map(func(p): return p.triangle_count).max()])
+	print("SMOKE PASS: %d viandantes (+%d figurantes, %d palomas), 20 huesos/persona, %d triángulos (límite %d, perfil %s, detalle %s, máximo por viandante %d), expediente determinista" % [people.size(),extras.extras.size(),pigeons.birds.size(),triangles,budget,graphics_preset,park.detail,people.map(func(p): return p.triangle_count).max()])
 	if screenshot_path == "" and not run_metrics: get_tree().quit()
 
 func update_demo(dt: float) -> void:
@@ -2074,7 +2413,7 @@ func adjust_focus(step: int) -> void:
 	adjust_focus_delta(-step * 0.004)
 
 func update_focus_aid(dt: float) -> void:
-	if equipment.focus_mode != "MF" or mode != "SEARCH":
+	if equipment.focus_mode != "MF" or mode != "SEARCH" or not eye_ready():
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
 		return
@@ -2195,7 +2534,8 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true
 	if static_check:
 		if not space.intersect_shape(query,1).is_empty(): return false
 		if space.cast_motion(query)[0] < 1.0: return false
-	for other in people:
+	var others = people+([player_proxy] if player_proxy else [])
+	for other in others:
 		if other == p or not other.visible: continue
 		var nearest = Geometry3D.get_closest_point_to_segment(other.position,from,to)
 		var near_dist = nearest.distance_to(other.position)
@@ -2233,8 +2573,12 @@ func settle_population() -> void:
 	for p in people:
 		for attempt in 180:
 			if travel_clear(p,p.position,p.position): break
-			p.theta = fposmod(p.theta+2,360)
-			p.place()
+			if crowd:
+				var f = crowd.frame(p)
+				p.position += f.dir*.6
+			else:
+				p.theta = fposmod(p.theta+2,360)
+				p.place()
 
 func show_assignment() -> void:
 	mode = "BRIEFING"

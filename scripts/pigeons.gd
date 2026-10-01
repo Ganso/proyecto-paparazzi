@@ -7,6 +7,7 @@ extends Node3D
 
 const FLOCK_HOMES = [Vector2(80.0, 5.55), Vector2(262.0, 5.55)]   # (azimuth °, radius m): lawn ring 5.1–6.0
 const PER_FLOCK = 9
+var homes: Array = FLOCK_HOMES        # (azimuth, radius) of each flock; the big park sets its own
 const WALK_SPEED = .22
 var rng = RandomNumberGenerator.new()
 var birds: Array[Dictionary] = []
@@ -29,11 +30,11 @@ func build(detail = "hd") -> void:
 	material.vertex_color_is_srgb = true
 	material.roughness = .8
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED   # the left wing is the right one mirrored
-	body_mm = add_multimesh(body_mesh(),material,PER_FLOCK*FLOCK_HOMES.size())
-	head_mm = add_multimesh(head_mesh(),material,PER_FLOCK*FLOCK_HOMES.size())
-	wing_mm = add_multimesh(wing_mesh(),material,PER_FLOCK*FLOCK_HOMES.size()*2)
-	for f in FLOCK_HOMES.size():
-		var home = polar(FLOCK_HOMES[f].x,FLOCK_HOMES[f].y)
+	body_mm = add_multimesh(body_mesh(),material,PER_FLOCK*homes.size())
+	head_mm = add_multimesh(head_mesh(),material,PER_FLOCK*homes.size())
+	wing_mm = add_multimesh(wing_mesh(),material,PER_FLOCK*homes.size()*2)
+	for f in homes.size():
+		var home = polar(homes[f].x,homes[f].y)
 		flocks.append({"home":home,"center":home,"state":"suelo","timer":0.0,"feeder":null,"next":"suelo"})
 		for i in PER_FLOCK:
 			var pos = home+Vector3(rng.randf_range(-1,1),0,rng.randf_range(-1,1))*.9
