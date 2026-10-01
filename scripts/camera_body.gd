@@ -109,10 +109,10 @@ func seg_char(pos: Vector2, ch: String, h: float, color: Color, dim: Color) -> f
 	for k in lines:
 		var a = pos+lines[k][0]
 		var b = pos+lines[k][1]
-		if dim.a > 0: draw_line(a,b,dim,t)
+		if dim.a > 0: draw_line(a,b,dim,t,true)
 		if on.contains(k):
-			draw_line(a,b,Color(color.r,color.g,color.b,.35),t*2.0)
-			draw_line(a,b,color,t)
+			draw_line(a,b,Color(color.r,color.g,color.b,.3),t*2.2,true)
+			draw_line(a,b,color,t,true)
 	return w+t*2.6
 
 func seg_text(pos: Vector2, text_value: String, h: float, color: Color, dim = Color(0,0,0,0)) -> float:
@@ -162,6 +162,15 @@ func meter_delta() -> float:
 	return main.finder.delta_ev
 
 func draw_slr(r: Rect2) -> void:
+	# Focusing screen of a manual SLR: microprism collar around the split-image circle (the split
+	# image itself works in MF, see viewfinder.gd and focus_aid.gdshader).
+	var c = r.get_center()
+	var ring = r.size.y*.078
+	draw_arc(c,ring*1.75,0,TAU,72,Color(1,1,1,.16),ring*.9*0.08+1.0,true)
+	draw_arc(c,ring*1.02,0,TAU,64,Color(1,1,1,.22),1.2,true)
+	for k in 48:
+		var a0 = TAU*k/48.0
+		draw_line(c+Vector2.from_angle(a0)*ring*1.12,c+Vector2.from_angle(a0)*ring*1.68,Color(1,1,1,.05),1.0)
 	# LED strip under the focusing screen (red 7-segment, unlit segments faintly visible).
 	var y = r.end.y+30
 	var x = r.position.x+40

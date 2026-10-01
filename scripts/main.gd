@@ -145,7 +145,7 @@ func apply_debug_off() -> void:
 			"sdfgi": env.sdfgi_enabled = false
 			"glow": env.glow_enabled = false
 			"volumetric": env.volumetric_fog_enabled = false
-			"dof": if is_instance_valid(dof_pass): dof_pass.visible = false
+			"dof": if is_instance_valid(dof_pass): set_dof_blur(false)
 			"textured": Person.mannequin_material().set_shader_parameter("textured",false)
 			"clearcoat": Person.mannequin_material().set_shader_parameter("clearcoat_amount",0.0)
 			"rim": Person.mannequin_material().set_shader_parameter("rim_amount",0.0)
@@ -1350,8 +1350,14 @@ func shutter_sound() -> void:
 # the pass on for the capture frame).
 func update_dof_pass() -> void:
 	if not is_instance_valid(dof_pass): return
-	var allowed = graphics_preset in ["Ultra","Alto"] and not ("dof" in debug_off)
-	dof_pass.visible = allowed and not (interface_mode == "camara" and equipment.body == 1)
+	# The pass always runs in Forward+: besides the blur, it repairs non-finite pixels before the
+	# glow (otherwise each one flares into a white blob). Only the blur depends on profile and body.
+	dof_pass.visible = not ("dof" in debug_off)
+	set_dof_blur(dof_allowed() and not (interface_mode == "camara" and equipment.body == 1))
+
+func set_dof_blur(value: bool) -> void:
+	dof_blur = value
+	if is_instance_valid(dof_pass): (dof_pass.material_override as ShaderMaterial).set_shader_parameter("enabled",value)
 
 func dof_allowed() -> bool:
 	return is_instance_valid(dof_pass) and graphics_preset in ["Ultra","Alto"] and not ("dof" in debug_off)
@@ -1490,7 +1496,7 @@ func take_photo() -> void:
 	if equipment.auto_exposure: auto_expose()
 	shooting = true
 	pan_velocity = 0
-	if dof_allowed() and not dof_pass.visible: dof_pass.visible = true   # rangefinder: blur only in the photo
+	if dof_allowed() and not dof_blur: set_dof_blur(true)   # rangefinder: blur only in the photo
 	# Freeze first, then wait for physics and the render to represent precisely this state.
 	await get_tree().physics_frame
 	var evidence = capture_sandbox_evidence() if sandbox else capture_evidence()
@@ -1523,8 +1529,9 @@ func lens_strengths(focal_mm: float) -> Vector2:
 	var wide = clampf((50.0-focal_mm)/26.0,0.0,1.0)
 	return Vector2(.22+.26*wide,.14+.24*wide)
 
+var dof_blur = false
 func dof_active() -> bool:
-	return is_instance_valid(dof_pass) and dof_pass.visible
+	return is_instance_valid(dof_pass) and dof_pass.visible and dof_blur
 
 func update_lens_effects() -> void:
 	if not is_instance_valid(camera): return
@@ -1646,7 +1653,7 @@ func show_help() -> void:
 	mode = "HELP"
 	var root = create_modal()
 	label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
-	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento."
+	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar. Tab: muestra u oculta los controles sobre el visor.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento."
 	label(root,text_value,Rect2(65,128,1130,490),18)
 	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = previous; intro() if previous == "INTRO" else close_modal(),true)
 

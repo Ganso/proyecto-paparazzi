@@ -61,7 +61,8 @@ func run() -> void:
 	game.focus_distance = 30.0
 	await frames(4)
 	check(game.view_shift.length() < far_shift.length()*.1,"Rangefinder: almost no parallax far away")
-	check(not game.dof_active() or not game.dof_allowed(),"Rangefinder: the finder itself shows no depth-of-field blur")
+	check(not game.dof_active(),"Rangefinder: the finder itself shows no depth-of-field blur")
+	if game.dof_allowed(): check(game.dof_pass.visible,"Rangefinder: the pass still runs (it repairs non-finite pixels)")
 	# The photo and its score do not depend on the interface.
 	for body in 3:
 		game.equipment.preset(body)

@@ -435,8 +435,8 @@ func update_props() -> void:
 		props.migas.get_meta("particles").emitting = props.migas.visible and cycle > .2 and cycle < .36
 	if props.has("telefono") and props.telefono.visible:
 		var light: OmniLight3D = props.telefono.get_meta("light")
-		light.light_energy = lerpf(.08,.4,screen_glow)*smoothstep(.3,1.0,act_w)
-		prop_materials["pantalla"].emission_energy_multiplier = lerpf(.35,2.2,screen_glow)
+		light.light_energy = lerpf(.04,.16,screen_glow)*smoothstep(.3,1.0,act_w)
+		prop_materials["pantalla"].emission_energy_multiplier = lerpf(.35,.55,screen_glow)
 
 static func prop_material(key: String, color: Color, rough = .6, emission = Color.BLACK) -> StandardMaterial3D:
 	if not prop_materials.has(key):
@@ -501,10 +501,10 @@ func make_prop(key: String) -> Node3D:
 			prop_part(holder,screen,prop_material("pantalla",Color("20303c"),.15,Color("7fa7c9")),Vector3(-.0055,0,0))
 			var light = OmniLight3D.new()
 			light.light_color = Color("cfe3ff")
-			light.omni_range = .5
-			light.omni_attenuation = 1.6
+			light.omni_range = .45
+			light.omni_attenuation = 0.0   # no inverse-square: at 1–2 cm from the clothes it blew out into a white blob
 			light.shadow_enabled = false
-			light.light_specular = .2
+			light.light_specular = 0.0   # a varnished head under a tiny close light flared into a glow blob
 			light.position = Vector3(-.06,0,0)
 			holder.add_child(light)
 			attach.set_meta("light",light)
