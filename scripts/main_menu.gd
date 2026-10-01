@@ -5,9 +5,9 @@ extends Control
 # secondary entries (sandbox, academy, equipment, graphics).
 const Texts = preload("res://scripts/texts.gd")
 
-const INK = Color("1d2c3a")
-const SOFT = Color("5d7184")
-const FAINT = Color("8fa1b2")
+const INK = Color("0e1924")
+const SOFT = Color("26394a")
+const FAINT = Color("3b4f62")
 const SKY = Color("3aa5f0")
 const SKY_SOFT = Color("d6ecfb")
 const CARD = Color(1,1,1,.62)
@@ -105,7 +105,7 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 
 func build() -> void:
 	var x = 96.0
-	text(self,Texts.get_text("menu_estudio"),Vector2(x,70),13,SKY.darkened(.1),body_medium)
+	text(self,Texts.get_text("menu_estudio"),Vector2(x,70),13,Color("155a8c"),body_medium)
 	text(self,"Proyecto Paparazzi",Vector2(x-4,88),62,INK,title_font)
 	text(self,Texts.get_text("menu_lema"),Vector2(x,168),17,SOFT,light_font,560)
 	# Scenario cards.

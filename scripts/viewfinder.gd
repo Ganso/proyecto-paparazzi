@@ -69,11 +69,11 @@ func _draw() -> void:
 	var center = Vector2(size.x*.505,46)
 	for i in range(-8,9):
 		var x = center.x+i*12
-		draw_line(Vector2(x,center.y),Vector2(x,center.y+(7 if i%4 == 0 else 3)),Color("809276"),1)
-	for i in range(-2,3): draw_string(font,Vector2(center.x+i*48-6,37),str(i) if i <= 0 else "+"+str(i),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color("c5cdbb"))
+		draw_line(Vector2(x,center.y),Vector2(x,center.y+(7 if i%4 == 0 else 3)),Color("3b4f62"),1)
+	for i in range(-2,3): draw_string(font,Vector2(center.x+i*48-6,37),str(i) if i <= 0 else "+"+str(i),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color("26394a"))
 	var needle = center.x+clampf(delta_ev,-2,2)*48
 	draw_colored_polygon(PackedVector2Array([Vector2(needle-4,58),Vector2(needle+4,58),Vector2(needle,51)]),green if abs(delta_ev) <= .5 else Color("e3ac6a"))
 	# Battery, purely cosmetic: there is no battery economy in the prototype.
-	draw_rect(Rect2(size.x-61,28,32,16),Color("b9c5af"),false,2)
+	draw_rect(Rect2(size.x-61,28,32,16),Color("26394a"),false,2)
 	draw_rect(Rect2(size.x-57,32,24,8),green)
-	draw_rect(Rect2(size.x-28,33,3,6),Color("b9c5af"))
+	draw_rect(Rect2(size.x-28,33,3,6),Color("26394a"))

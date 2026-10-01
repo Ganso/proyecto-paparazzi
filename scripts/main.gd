@@ -5,6 +5,7 @@ const Person = preload("res://scripts/person.gd")
 const Cast = preload("res://scripts/casting.gd")
 const ParkScene = preload("res://scripts/park.gd")
 const Finder = preload("res://scripts/viewfinder.gd")
+const UiStyle = preload("res://scripts/ui_style.gd")
 const Develop = preload("res://shaders/develop.gdshader")
 
 var equipment = preload("res://scripts/equipment.gd").new()
@@ -453,7 +454,8 @@ func panel(parent: Control, rect: Rect2, color: Color, radius = 8) -> Panel:
 	var node = Panel.new()
 	node.position = rect.position
 	node.size = rect.size
-	node.add_theme_stylebox_override("panel",style(color,radius))
+	# Light theme (docs/futuro/20): dark panels become white glass with a soft sky-blue edge.
+	node.add_theme_stylebox_override("panel",UiStyle.box(UiStyle.panel_color(color),maxi(radius,12) if radius > 0 else 0,UiStyle.LINE if radius > 0 else Color.TRANSPARENT))
 	parent.add_child(node)
 	return node
 
@@ -463,7 +465,9 @@ func label(parent: Control, text_value: String, rect: Rect2, font_size = 18, col
 	node.position = rect.position
 	node.size = rect.size
 	node.add_theme_font_size_override("font_size",font_size)
-	node.add_theme_color_override("font_color",color)
+	node.add_theme_color_override("font_color",UiStyle.text_color(color))
+	# Big headings in Quicksand, the rest in Roboto (theme default).
+	if font_size >= 26: node.add_theme_font_override("font",UiStyle.font("Quicksand-Regular"))
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(node)
 	return node
@@ -475,10 +479,7 @@ func button(parent: Control, text_value: String, rect: Rect2, callback: Callable
 	node.size = rect.size
 	node.focus_mode = Control.FOCUS_NONE
 	node.add_theme_font_size_override("font_size",16)
-	node.add_theme_color_override("font_color",Color("19251e") if primary else Color("dfe7d6"))
-	node.add_theme_stylebox_override("normal",style(Color("b8d78c") if primary else Color("26342d"),8,Color("425044")))
-	node.add_theme_stylebox_override("hover",style(Color("cee8ab") if primary else Color("35483b"),8,Color("82906f")))
-	node.add_theme_stylebox_override("pressed",style(Color("95b966") if primary else Color("1a2721"),8))
+	if primary: UiStyle.primary(node)
 	node.pressed.connect(callback)
 	parent.add_child(node)
 	return node
@@ -489,6 +490,7 @@ func build_ui() -> void:
 	ui = Control.new()
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.theme = UiStyle.theme()
 	layer.add_child(ui)
 	# The camera body (eyecup, finder data) lies under the HUD: the HUD bars fold over it.
 	camera_body = preload("res://scripts/camera_body.gd").new(self)
@@ -548,6 +550,7 @@ func build_ui() -> void:
 	button(ui,Texts.get_text("disparar"),Rect2(1005,642,248,59),take_photo,true)
 	toast = label(ui,"",Rect2(290,574,700,35),16,Color("e2e8d4"))
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast.add_theme_color_override("font_color",Color("f4f8fc"))
 	toast.add_theme_color_override("font_shadow_color",Color.BLACK)
 	toast.add_theme_constant_override("shadow_offset_x",1)
 	toast.add_theme_constant_override("shadow_offset_y",2)
@@ -556,11 +559,13 @@ func build_ui() -> void:
 	# the camera reaches the eye or leaves it.
 	walk_label = label(ui,"",Rect2(40,18,1200,30),18,Color("eef2e6"))
 	walk_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	walk_label.add_theme_color_override("font_color",Color("f4f8fc"))
 	walk_label.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
 	walk_label.add_theme_constant_override("shadow_offset_y",2)
 	walk_label.visible = false
 	walk_hint = label(ui,Texts.get_text("paseo_ayuda"),Rect2(40,676,1200,24),14,Color("d8dfd0"))
 	walk_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	walk_hint.add_theme_color_override("font_color",Color("eef3f8"))
 	walk_hint.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
 	walk_hint.add_theme_constant_override("shadow_offset_y",2)
 	walk_hint.visible = false
@@ -711,7 +716,14 @@ func create_modal() -> Control:
 	modal = Control.new()
 	modal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.add_child(modal)
-	panel(modal,Rect2(0,0,1280,720),Color(.035,.058,.043,1.0),0)
+	# Every screen: the park behind frosted white glass, as the main menu.
+	var glass = ColorRect.new()
+	glass.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var glass_material = ShaderMaterial.new()
+	glass_material.shader = preload("res://shaders/frosted_glass.gdshader")
+	glass_material.set_shader_parameter("wash",.6)
+	glass.material = glass_material
+	modal.add_child(glass)
 	return modal
 
 # Main menu (scripts/main_menu.gd, docs/futuro/20): the live park behind frosted glass.
@@ -2108,14 +2120,14 @@ func show_results() -> void:
 		var reason = Label.new()
 		reason.text = r.reason
 		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		reason.add_theme_color_override("font_color",Color("f0b087"))
+		reason.add_theme_color_override("font_color",UiStyle.WARN)
 		reason.add_theme_font_size_override("font_size",16)
 		column.add_child(reason)
 	for line in r.lines:
 		var text_label = Label.new()
 		text_label.text = line
 		text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text_label.add_theme_color_override("font_color",Color("d4dfca"))
+		text_label.add_theme_color_override("font_color",UiStyle.INK)
 		text_label.add_theme_font_size_override("font_size",16)
 		column.add_child(text_label)
 	if shots > 0: button(root,Texts.get_text("reintentar_d") % shots,Rect2(803,642,204,52),resume_search)

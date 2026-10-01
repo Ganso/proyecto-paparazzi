@@ -7,6 +7,7 @@ extends Control
 const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
 const Diagram = preload("res://scripts/academy_diagram.gd")
+const UiStyle = preload("res://scripts/ui_style.gd")
 var progress_path = "user://academia.cfg"   # tests point it elsewhere
 const LESSONS = 5
 const PHASES = ["teoria","demo","practica"]
@@ -123,6 +124,8 @@ func practices_done() -> int:
 
 # ---- UI ----
 func style(color: Color, radius = 8, border = Color.TRANSPARENT) -> StyleBoxFlat:
+	color = UiStyle.panel_color(color) if UiStyle.lum(color) < .5 else color
+	border = UiStyle.LINE if border.a > 0 else border
 	var box = StyleBoxFlat.new()
 	box.bg_color = color
 	box.set_corner_radius_all(radius)
@@ -139,7 +142,7 @@ func make_label(parent: Control, rect: Rect2, size: int, color: Color, wrap = fa
 	node.position = rect.position
 	node.size = rect.size
 	node.add_theme_font_size_override("font_size",size)
-	node.add_theme_color_override("font_color",color)
+	node.add_theme_color_override("font_color",UiStyle.text_color(color))
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if wrap: node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	parent.add_child(node)
@@ -152,12 +155,7 @@ func make_button(parent: Control, text_value: String, rect: Rect2, callback: Cal
 	node.size = rect.size
 	node.focus_mode = Control.FOCUS_NONE
 	node.add_theme_font_size_override("font_size",14)
-	node.add_theme_color_override("font_color",Color("19251e") if primary else Color("dfe7d6"))
-	node.add_theme_color_override("font_disabled_color",Color("6d7a68"))
-	node.add_theme_stylebox_override("normal",style(Color("b8d78c") if primary else Color("26342d"),8,Color("425044")))
-	node.add_theme_stylebox_override("hover",style(Color("cee8ab") if primary else Color("35483b"),8,Color("82906f")))
-	node.add_theme_stylebox_override("pressed",style(Color("95b966") if primary else Color("1a2721"),8))
-	node.add_theme_stylebox_override("disabled",style(Color("1b2520"),8,Color("2c3a31")))
+	if primary: UiStyle.primary(node)
 	node.pressed.connect(callback)
 	parent.add_child(node)
 	return node
@@ -194,9 +192,9 @@ func build_ui() -> void:
 	subtitle_panel.position = Vector2(40,556)
 	subtitle_panel.size = Vector2(840,58)
 	subtitle_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	subtitle_panel.add_theme_stylebox_override("panel",style(Color(0,0,0,.62),8))
+	subtitle_panel.add_theme_stylebox_override("panel",UiStyle.box(Color(1,1,1,.84),12,UiStyle.LINE))
 	add_child(subtitle_panel)
-	subtitle_label = make_label(subtitle_panel,Rect2(14,6,812,46),20,Color("f2f4ec"),true)
+	subtitle_label = make_label(subtitle_panel,Rect2(14,6,812,46),20,UiStyle.INK,true)
 	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
@@ -397,7 +395,7 @@ func update_panel() -> void:
 				l.visible = true
 				l.position.y = 122+k*42
 				l.text = "%s  %s" % [text("academia_hecho") if tasks[k] else text("academia_pendiente"),lesson_text("p%d" % (k+1))]
-				l.add_theme_color_override("font_color",Color("b8d78c") if tasks[k] else Color("c9d4bf"))
+				l.add_theme_color_override("font_color",UiStyle.SKY_DEEP if tasks[k] else UiStyle.INK)
 			hint_label.visible = hint != ""
 			hint_label.text = hint
 			hint_label.position.y = 252

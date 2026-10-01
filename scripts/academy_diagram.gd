@@ -11,21 +11,21 @@ const Photo = preload("res://scripts/photography.gd")
 var academy
 var kind = "triangulo"
 var font: Font
-var ink = Color("c9d4bf")
-var dim = Color("5d6b58")
-var green = Color("b8d78c")
-var amber = Color("f0c16a")
+var ink = Color("15222e")
+var dim = Color("41566a")
+var green = Color("155a8c")
+var amber = Color("c4671c")
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	font = ThemeDB.fallback_font
 
-func txt(pos: Vector2, s: String, size = 12, color = Color("c9d4bf"), align = HORIZONTAL_ALIGNMENT_LEFT, width = -1.0) -> void:
+func txt(pos: Vector2, s: String, size = 12, color = Color("15222e"), align = HORIZONTAL_ALIGNMENT_LEFT, width = -1.0) -> void:
 	draw_string(font,pos,s,align,width,size,color)
 
 func _draw() -> void:
 	if academy == null or academy.main == null: return
-	draw_rect(Rect2(Vector2.ZERO,size),Color(0,0,0,.25))
+	draw_rect(Rect2(Vector2.ZERO,size),Color(1,1,1,.45))
 	match kind:
 		"triangulo": draw_triangle()
 		"pasos": draw_scales("")
@@ -91,12 +91,12 @@ func draw_dof() -> void:
 	# Lanes of the park for reference.
 	for lane in [1.8,4.0,7.0,11.5]:
 		var lx = to_x.call(lane)
-		draw_line(Vector2(lx,y-26),Vector2(lx,y+26),Color(1,1,1,.07),6)
+		draw_line(Vector2(lx,y-26),Vector2(lx,y+26),Color(.2,.4,.6,.08),6)
 	var near_x = to_x.call(range.x)
 	var far_x = to_x.call(range.y if not is_inf(range.y) else max_d)
 	var band = Rect2(near_x,y-18,maxf(4,far_x-near_x),36)
-	draw_rect(band,Color(.72,.84,.55,.4))
-	draw_rect(band,Color(.72,.84,.55,.9),false,1)
+	draw_rect(band,Color(.18,.6,.91,.25))
+	draw_rect(band,Color(.18,.6,.91,.8),false,1)
 	draw_line(Vector2(x0,y),Vector2(x0+w,y),dim,1)
 	# Camera.
 	draw_colored_polygon(PackedVector2Array([Vector2(8,y-9),Vector2(24,y-9),Vector2(24,y+9),Vector2(8,y+9)]),ink)
@@ -143,8 +143,8 @@ func draw_thirds() -> void:
 		frame.position.x = (size.x-frame.size.x)*.5
 	draw_rect(frame,dim,false,1)
 	for k in [1,2]:
-		draw_line(Vector2(frame.position.x+frame.size.x*k/3,frame.position.y),Vector2(frame.position.x+frame.size.x*k/3,frame.end.y),Color(1,1,1,.25),1)
-		draw_line(Vector2(frame.position.x,frame.position.y+frame.size.y*k/3),Vector2(frame.end.x,frame.position.y+frame.size.y*k/3),Color(1,1,1,.25),1)
+		draw_line(Vector2(frame.position.x+frame.size.x*k/3,frame.position.y),Vector2(frame.position.x+frame.size.x*k/3,frame.end.y),Color(.2,.4,.6,.35),1)
+		draw_line(Vector2(frame.position.x,frame.position.y+frame.size.y*k/3),Vector2(frame.end.x,frame.position.y+frame.size.y*k/3),Color(.2,.4,.6,.35),1)
 	for cx in [1,2]:
 		for cy in [1,2]:
 			draw_circle(frame.position+Vector2(frame.size.x*cx/3,frame.size.y*cy/3),3,amber)
@@ -176,7 +176,7 @@ func draw_compression() -> void:
 	var half = atan(12.0/m.focal)   # vertical half angle of the 16:9 frame
 	var reach = tree_x-cam_x
 	var spread = minf(tan(half)*reach,y-40)
-	draw_colored_polygon(PackedVector2Array([Vector2(cam_x+10,y-18),Vector2(tree_x,y-18-spread),Vector2(tree_x,y-18+minf(spread,16))]),Color(.72,.84,.55,.15))
+	draw_colored_polygon(PackedVector2Array([Vector2(cam_x+10,y-18),Vector2(tree_x,y-18-spread),Vector2(tree_x,y-18+minf(spread,16))]),Color(.18,.6,.91,.15))
 	draw_rect(Rect2(cam_x,y-24,12,10),ink)
 	draw_circle(Vector2(subj_x,y-36),5,green)
 	draw_line(Vector2(subj_x,y-31),Vector2(subj_x,y-10),green,3)
