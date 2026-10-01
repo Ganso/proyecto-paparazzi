@@ -701,8 +701,13 @@ func start_practice() -> void:
 	for b in extra_buttons: b.queue_free()
 	extra_buttons = []
 	if lesson == 5:
+		# Someone far for the telephoto: a person standing on the outer path (11.5 m) in view.
+		stand_person(3,SETUP[5].angle-10.0,11.5)
 		extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "28 mm",Rect2(12,314,168,32),func(): set_lens(3,28.0)))
 		extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "135 mm",Rect2(186,314,167,32),func(): set_lens(5,135.0)))
+	# The scene holds still while practising (the pause button resumes it), except in the lesson
+	# on movement, where the runner has to run.
+	set_scene_pause(lesson != 3)
 	update_panel()
 
 func set_lens(index: int, f: float) -> void:
@@ -821,6 +826,14 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 			if tasks[0] and main.academy_last_thirds == "listo": tasks[2] = true
 			elif tasks[0]: notes.append(lesson_text("pista_foto_no"))
 		5:
+			# Anyone the player sees counts, also the meadow extras behind the outer path: they have no
+			# colliders (docs/futuro/19), so look for one under the focus point on screen.
+			if not e.get("person",true):
+				var far = extra_at_focus()
+				if far > 0.0:
+					e = e.duplicate()
+					e.d = far
+					e.person = true
 			var fill = person_fill(e) if e.get("person",true) else 0.0
 			if e.f <= 35.0 and e.d < 4.5 and fill >= .45 and fill <= 1.3: tasks[0] = true
 			elif e.f <= 35.0 and e.d >= 4.5: notes.append(lesson_text("pista_cerca"))
@@ -831,6 +844,25 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 	complete_if_done()
 	update_panel()
 	return notes
+
+# Distance to a meadow extra under the active focus point (−1 if none): its screen box from the
+# feet to the head, about a third of its height wide.
+func extra_at_focus() -> float:
+	if not main.extras: return -1.0
+	var point: Vector2 = main.image_position(main.finder.points()[main.finder.active])
+	var best = -1.0
+	for p in main.extras.extras:
+		if not p.visible: continue
+		var feet: Vector3 = p.global_position
+		var head: Vector3 = feet+Vector3.UP*p.height
+		if main.camera.is_position_behind(head): continue
+		var top = main.camera.unproject_position(head)
+		var bottom = main.camera.unproject_position(feet)
+		var half = absf(bottom.y-top.y)*.18+6.0
+		if point.y >= top.y-6.0 and point.y <= bottom.y+6.0 and absf(point.x-(top.x+bottom.x)*.5) <= half:
+			var d = main.camera.global_position.distance_to(feet+Vector3.UP*p.height*.6)
+			if best < 0.0 or d < best: best = d
+	return best
 
 # Fraction of the frame height a standing person would fill at the photo's distance and focal
 # (16:9 frame of a 36 mm wide sensor: 20.25 mm tall).
