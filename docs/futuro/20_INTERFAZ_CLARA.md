@@ -12,3 +12,7 @@ Estilo limpio en tonos claros con resaltes celestes, en todo el juego salvo la i
 - **Contraste**: tinta `0e1924`, texto secundario `26394a`; ningún texto gris claro sobre blanco.
 
 Evidencias: `tools/capture_screens.gd` → `docs/evidencias/interfaz/`.
+
+## Prueba inversa (`--ui=oscuro`)
+
+Variante de prueba con textos claros sobre cristal oscuro: `UiStyle.set_dark(true)` cambia la paleta (tinta `eef4fa`, acentos `7cc6ff`, avisos `ff9a76`, superficies pizarra) y el tinte del cristal (`tint` en `frosted_glass.gdshader`). Por defecto sigue la interfaz clara. Capturas: `tools/capture_screens.gd -- --out=<dir> --ui=oscuro`.

@@ -2,15 +2,38 @@ extends RefCounted
 # Light interface style (docs/futuro/20_INTERFAZ_CLARA.md): clean, light tones with sky-blue
 # highlights, Quicksand for headings and buttons, Roboto for text. One Theme for the whole UI
 # and a mapping from the old dark palette, so every screen built with main.gd's helpers follows it.
-const INK = Color("0e1924")
-const SOFT = Color("26394a")
-const FAINT = Color("3b4f62")
-const SKY = Color("2f9be8")
-const SKY_DEEP = Color("155a8c")
-const SKY_SOFT = Color("d6ecfb")
-const WARN = Color("a13a1f")
-const GLASS = Color(1,1,1,.74)
-const LINE = Color(.55,.72,.88,.6)
+# Palette as variables: dark=true swaps to the inverse trial (light text on dark glass, --ui=oscuro).
+static var dark = false
+static var INK = Color("0e1924")
+static var SOFT = Color("26394a")
+static var FAINT = Color("3b4f62")
+static var SKY = Color("2f9be8")
+static var SKY_DEEP = Color("155a8c")
+static var SKY_SOFT = Color("d6ecfb")
+static var WARN = Color("a13a1f")
+static var GLASS = Color(1,1,1,.74)
+static var LINE = Color(.55,.72,.88,.6)
+static var SURFACE = Color(1,1,1)   # base of buttons, cards and panels
+static var GLASS_TINT = Color(.965,.98,1.0)
+
+static func set_dark(on: bool) -> void:
+	dark = on
+	if not on: return
+	INK = Color("eef4fa")
+	SOFT = Color("c9d6e2")
+	FAINT = Color("9fb1c2")
+	SKY = Color("3aa5f0")
+	SKY_DEEP = Color("7cc6ff")
+	SKY_SOFT = Color("1d3b55")
+	WARN = Color("ff9a76")
+	GLASS = Color(.07,.1,.14,.8)
+	LINE = Color(.45,.6,.75,.45)
+	SURFACE = Color(.09,.13,.18)
+	GLASS_TINT = Color(.05,.075,.1)
+
+# Surface colour with alpha (white in the light style, dark slate in the inverse one).
+static func surf(a: float) -> Color:
+	return Color(SURFACE.r,SURFACE.g,SURFACE.b,a)
 
 static var fonts = {}
 static func font(name: String) -> FontFile:
@@ -41,6 +64,11 @@ static func lum(c: Color) -> float:
 
 # Old (dark theme) text colour → light theme text colour.
 static func text_color(c: Color) -> Color:
+	if dark:
+		if lum(c) < .45: return INK
+		if c.r > c.g+.08 and c.r > c.b+.1: return WARN
+		if c.g > c.r+.05 and c.g > c.b+.02: return SKY_DEEP
+		return INK if lum(c) > .7 else SOFT
 	if lum(c) < .45: return c
 	if c.r > c.g+.08 and c.r > c.b+.1: return WARN
 	if c.g > c.r+.05 and c.g > c.b+.02: return SKY_DEEP
@@ -48,8 +76,8 @@ static func text_color(c: Color) -> Color:
 
 # Old dark panel colour → white glass (keeps translucent panels translucent).
 static func panel_color(c: Color) -> Color:
-	if lum(c) > .5: return c
-	return Color(1,1,1,.8*c.a+.06)
+	if lum(c) > .5 and not dark: return c
+	return surf(.8*c.a+.06)
 
 static func theme() -> Theme:
 	var t = Theme.new()
@@ -62,17 +90,17 @@ static func theme() -> Theme:
 		t.set_color("font_hover_color",kind,SKY_DEEP)
 		t.set_color("font_pressed_color",kind,SKY_DEEP)
 		t.set_color("font_disabled_color",kind,Color(.36,.44,.52))
-		t.set_stylebox("normal",kind,box(Color(1,1,1,.62),12,LINE))
-		t.set_stylebox("hover",kind,box(Color(1,1,1,.92),12,SKY.lightened(.3),1,8))
+		t.set_stylebox("normal",kind,box(surf(.62),12,LINE))
+		t.set_stylebox("hover",kind,box(surf(.92),12,SKY.lightened(.3),1,8))
 		t.set_stylebox("pressed",kind,box(SKY_SOFT,12,SKY.lightened(.1)))
-		t.set_stylebox("disabled",kind,box(Color(1,1,1,.3),12,LINE))
+		t.set_stylebox("disabled",kind,box(surf(.3),12,LINE))
 		t.set_stylebox("focus",kind,StyleBoxEmpty.new())
-	t.set_stylebox("panel","PopupMenu",box(Color(.98,.99,1,.97),10,LINE,1,10))
+	t.set_stylebox("panel","PopupMenu",box(surf(.97),10,LINE,1,10))
 	t.set_color("font_color","PopupMenu",INK)
 	t.set_color("font_hover_color","PopupMenu",SKY_DEEP)
 	t.set_stylebox("hover","PopupMenu",box(SKY_SOFT,8))
 	t.set_font("font","PopupMenu",font("Roboto-Regular"))
-	var track = box(Color(.72,.82,.92,.9),4)
+	var track = box(Color(.72,.82,.92,.9) if not dark else Color(.25,.34,.44,.9),4)
 	track.content_margin_top = 2
 	track.content_margin_bottom = 2
 	t.set_stylebox("slider","HSlider",track)

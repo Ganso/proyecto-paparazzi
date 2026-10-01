@@ -204,6 +204,7 @@ var max_frame = 0.0
 var fps_label: Label
 
 func _ready() -> void:
+	UiStyle.set_dark("--ui=oscuro" in OS.get_cmdline_user_args())
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="): screenshot_path = arg.trim_prefix("--screenshot=")
 		if arg == "--smoke-test": smoke = true
@@ -722,6 +723,7 @@ func create_modal() -> Control:
 	var glass_material = ShaderMaterial.new()
 	glass_material.shader = preload("res://shaders/frosted_glass.gdshader")
 	glass_material.set_shader_parameter("wash",.6)
+	glass_material.set_shader_parameter("tint",UiStyle.GLASS_TINT)
 	glass.material = glass_material
 	modal.add_child(glass)
 	return modal

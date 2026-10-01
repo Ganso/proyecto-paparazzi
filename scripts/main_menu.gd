@@ -5,13 +5,14 @@ extends Control
 # secondary entries (sandbox, academy, equipment, graphics).
 const Texts = preload("res://scripts/texts.gd")
 
-const INK = Color("0e1924")
-const SOFT = Color("26394a")
-const FAINT = Color("3b4f62")
-const SKY = Color("3aa5f0")
-const SKY_SOFT = Color("d6ecfb")
-const CARD = Color(1,1,1,.62)
-const LINE = Color(.62,.78,.92,.55)
+const UiStyle = preload("res://scripts/ui_style.gd")
+var INK = UiStyle.INK
+var SOFT = UiStyle.SOFT
+var FAINT = UiStyle.FAINT
+var SKY = Color("3aa5f0")
+var SKY_SOFT = UiStyle.SKY_SOFT
+var CARD = UiStyle.surf(.62)
+var LINE = UiStyle.LINE if UiStyle.dark else Color(.62,.78,.92,.55)
 
 var main
 var scenario = "clasico"
@@ -43,6 +44,7 @@ func _ready() -> void:
 	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mat = ShaderMaterial.new()
 	mat.shader = preload("res://shaders/frosted_glass.gdshader")
+	mat.set_shader_parameter("tint",UiStyle.GLASS_TINT)
 	glass.material = mat
 	add_child(glass)
 	build()
@@ -96,8 +98,8 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 			b.add_theme_color_override("font_color",SOFT)
 			b.add_theme_color_override("font_hover_color",SKY.darkened(.15))
 			b.add_theme_color_override("font_pressed_color",SKY.darkened(.25))
-			b.add_theme_stylebox_override("normal",box(Color(1,1,1,.42),12,LINE))
-			b.add_theme_stylebox_override("hover",box(Color(1,1,1,.8),12,SKY.lightened(.35),1,10))
+			b.add_theme_stylebox_override("normal",box(UiStyle.surf(.42),12,LINE))
+			b.add_theme_stylebox_override("hover",box(UiStyle.surf(.8),12,SKY.lightened(.35),1,10))
 			b.add_theme_stylebox_override("pressed",box(SKY_SOFT,12,SKY.lightened(.2)))
 	b.pressed.connect(callback)
 	parent.add_child(b)
@@ -105,7 +107,7 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 
 func build() -> void:
 	var x = 96.0
-	text(self,Texts.get_text("menu_estudio"),Vector2(x,70),13,Color("155a8c"),body_medium)
+	text(self,Texts.get_text("menu_estudio"),Vector2(x,70),13,UiStyle.SKY_DEEP,body_medium)
 	text(self,"Proyecto Paparazzi",Vector2(x-4,88),62,INK,title_font)
 	text(self,Texts.get_text("menu_lema"),Vector2(x,168),17,SOFT,light_font,560)
 	# Scenario cards.
@@ -158,14 +160,14 @@ func refresh() -> void:
 	for which in cards:
 		var on = which == scenario
 		var card: Button = cards[which]
-		card.add_theme_stylebox_override("normal",box(Color(1,1,1,.86) if on else CARD,16,SKY if on else LINE,2 if on else 1,16 if on else 0))
-		card.add_theme_stylebox_override("hover",box(Color(1,1,1,.92),16,SKY.lightened(.2) if not on else SKY,2 if on else 1,14))
+		card.add_theme_stylebox_override("normal",box(UiStyle.surf(.86) if on else CARD,16,SKY if on else LINE,2 if on else 1,16 if on else 0))
+		card.add_theme_stylebox_override("hover",box(UiStyle.surf(.92),16,SKY.lightened(.2) if not on else SKY,2 if on else 1,14))
 		card.add_theme_stylebox_override("pressed",box(SKY_SOFT,16,SKY,2))
 	for tod in chips:
 		var on = tod == time_of_day
 		var chip: Button = chips[tod]
 		chip.add_theme_color_override("font_color",Color.WHITE if on else SOFT)
 		chip.add_theme_color_override("font_hover_color",Color.WHITE if on else SKY.darkened(.15))
-		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else Color(1,1,1,.5),21,Color.TRANSPARENT if on else LINE,1,10 if on else 0))
-		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else Color(1,1,1,.85),21,SKY.lightened(.35),1,8))
+		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),21,Color.TRANSPARENT if on else LINE,1,10 if on else 0))
+		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),21,SKY.lightened(.35),1,8))
 		chip.add_theme_stylebox_override("pressed",box(SKY,21))

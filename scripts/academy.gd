@@ -192,7 +192,7 @@ func build_ui() -> void:
 	subtitle_panel.position = Vector2(40,556)
 	subtitle_panel.size = Vector2(840,58)
 	subtitle_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	subtitle_panel.add_theme_stylebox_override("panel",UiStyle.box(Color(1,1,1,.84),12,UiStyle.LINE))
+	subtitle_panel.add_theme_stylebox_override("panel",UiStyle.box(UiStyle.surf(.84),12,UiStyle.LINE))
 	add_child(subtitle_panel)
 	subtitle_label = make_label(subtitle_panel,Rect2(14,6,812,46),20,UiStyle.INK,true)
 	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
