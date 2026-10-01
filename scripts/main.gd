@@ -118,6 +118,8 @@ var eye_height = 1.6
 var walk_phase = 0.0
 var walk_demo = -1.0                # --walk-demo: a scripted stroll for the evidence video
 var demo_keys = {}
+# --photo-walk: stroll along the paths and photograph people now and then (evidence video).
+var photo_walk = {}
 var viewmodel: Node3D
 var walk_label: Label
 var walk_hint: Label
@@ -217,6 +219,8 @@ func _ready() -> void:
 		if arg.begins_with("--scenario="): scenario = arg.trim_prefix("--scenario=")
 		if arg == "--raised": pending_start["raised"] = true
 		if arg == "--walk-demo": walk_demo = 0.0
+		if arg == "--photo-walk": photo_walk = {"t":0.0,"phase":"walk","timer":3.0}
+		if arg == "--sandbox": pending_start["sandbox_demo"] = true
 		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
@@ -281,8 +285,9 @@ func _ready() -> void:
 		var parts = str(demo.lens).split(",")
 		equipment.preset(int(parts[0]))
 		equipment.lens_index = int(parts[1]) if parts.size() > 1 else 0
-	if smoke or screenshot_path != "" or run_metrics or not demo.is_empty():
-		start_session(start_time_of_day)
+		if "--manual" in OS.get_cmdline_user_args(): equipment.auto_exposure = false
+	if smoke or screenshot_path != "" or run_metrics or not demo.is_empty() or not photo_walk.is_empty():
+		start_session(start_time_of_day,bool(pending_start.get("sandbox_demo",false)))
 		begin_assignment()
 		if not demo.is_empty():
 			apply_equipment()
@@ -1512,6 +1517,7 @@ func toggle_raise() -> void:
 var was_eye_ready = true
 func update_photographer(dt: float) -> void:
 	if walk_demo >= 0 and mode in ["SEARCH","RESULT"]: run_walk_demo(dt)
+	if not photo_walk.is_empty() and mode in ["SEARCH","RESULT"]: run_photo_walk(dt)
 	var before = raise_anim
 	raise_anim = move_toward(raise_anim,1.0 if camera_raised else 0.0,dt/.35)
 	var moving = false
@@ -1519,7 +1525,7 @@ func update_photographer(dt: float) -> void:
 		var input = Vector2(
 			float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
 			float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN))-float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
-		if walk_demo >= 0: input = demo_keys.get("move",Vector2.ZERO)
+		if walk_demo >= 0 or not photo_walk.is_empty(): input = demo_keys.get("move",Vector2.ZERO)
 		var pad = Vector2(Input.get_joy_axis(0,JOY_AXIS_LEFT_X),Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
 		if pad.length() > .2: input += pad
 		var look = Vector2(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X),Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
@@ -1604,6 +1610,117 @@ func run_walk_demo(dt: float) -> void:
 	if t >= 14.5 and not demo_keys.has("lowered"):
 		demo_keys.lowered = true
 		toggle_raise()
+
+func run_photo_walk(dt: float) -> void:
+	var w = photo_walk
+	w.t += dt
+	w.timer -= dt
+	match w.phase:
+		"walk":
+			# Head for the next node of the path graph, turning smoothly.
+			if not w.has("goal") or player.position.distance_to(park.nodes[w.goal]) < 2.0:
+				var here = w.get("goal","")
+				var options: Array = park.neighbours[here].filter(func(n): return n != w.get("prev","")) if here != "" else park.nodes.keys()
+				if here == "":
+					options.sort_custom(func(a,b): return park.nodes[a].distance_to(player.position) < park.nodes[b].distance_to(player.position))
+					options = [options[0]]
+				w.prev = here
+				w.goal = options[photo_walk_rng().randi()%options.size()]
+			var to = park.nodes[w.goal]-player.position
+			var want = rad_to_deg(atan2(to.x,-to.z))
+			angle = fposmod(angle+clampf(angle_difference(deg_to_rad(angle),deg_to_rad(want))*57.3,-60*dt,60*dt),360)
+			pitch = move_toward(pitch,-2.0,dt*10)
+			demo_keys.move = Vector2(0,-1)
+			update_camera()
+			if w.timer <= 0:
+				var subject = photo_walk_subject()
+				if subject:
+					w.subject = subject
+					w.phase = "turn"
+					w.timer = 1.4
+					demo_keys.move = Vector2.ZERO
+				else: w.timer = 1.5
+		"turn":
+			var subject = w.subject
+			if not is_instance_valid(subject): w.phase = "walk"; return
+			aim_at(subject,dt*3.0)
+			if w.timer <= 0:
+				toggle_raise()
+				w.phase = "frame"
+				w.timer = 2.6
+				w.rack = 0.0
+		"frame":
+			var subject = w.subject
+			if not is_instance_valid(subject): w.phase = "lower"; w.timer = .1; return
+			aim_at(subject,dt*4.0)
+			if eye_ready():
+				var d = camera.global_position.distance_to(subject.control_points()[1])
+				var want_f = clampf(.62*20.25*d/subject.height,equipment.lens().min,equipment.lens().max)
+				focal = move_toward(focal,want_f,dt*40)
+				update_camera()
+				if equipment.focus_mode == "MF":
+					# Turn the focusing ring towards the subject (the double image comes together).
+					w.rack = minf(1.0,w.rack+dt/1.6)
+					var start = w.get("rack_from",2.0)
+					if not w.has("rack_from"): w.rack_from = focus_distance if not is_inf(focus_distance) else 30.0
+					set_manual_focus(lerpf(w.rack_from,d,smoothstep(0,1,w.rack)))
+				elif fmod(w.t,.4) < dt:
+					finder.active = 4
+					autofocus()
+				if not equipment.auto_exposure and fmod(w.t,.3) < dt:
+					expose_for(park.illumination_ev(subject.control_points()[1],time_of_day,subject))
+					refresh()
+			if w.timer <= 0:
+				finder.active = 4
+				w.phase = "shoot"
+				w.erase("rack_from")
+				take_photo()
+				w.timer = 3.0
+		"shoot":
+			if w.timer <= 0:
+				if mode == "RESULT": resume_search()
+				toggle_raise()
+				w.phase = "lower"
+				w.timer = .6
+		"lower":
+			if w.timer <= 0:
+				w.phase = "walk"
+				w.timer = photo_walk_rng().randf_range(3.5,5.0)
+
+func photo_walk_rng() -> RandomNumberGenerator:
+	if not photo_walk.has("rng"):
+		photo_walk.rng = RandomNumberGenerator.new()
+		photo_walk.rng.seed = 33
+	return photo_walk.rng
+
+# Someone 4–13 m away, roughly ahead, with a clear line of sight to the chest.
+func photo_walk_subject():
+	var best = null
+	var best_score = INF
+	var fwd = Vector3(sin(deg_to_rad(angle)),0,-cos(deg_to_rad(angle)))
+	for p in people:
+		if not p.visible: continue
+		var to = p.position-player.position
+		to.y = 0
+		var d = to.length()
+		if d < 3.5 or d > 10.0: continue
+		if fwd.dot(to/d) < .3: continue
+		var hit = ray_to(p.control_points()[1])
+		if hit.is_empty() or not hit.collider.has_meta("person") or hit.collider.get_meta("person") != p: continue
+		var score = absf(d-6.0)-fwd.dot(to/d)*3.0
+		if score < best_score:
+			best_score = score
+			best = p
+	return best
+
+func aim_at(p, rate: float) -> void:
+	var chest = p.control_points()[1]+p.actual_velocity*.25
+	var to = chest-camera.global_position
+	var want_yaw = rad_to_deg(atan2(to.x,-to.z))
+	var want_pitch = rad_to_deg(atan2(to.y,Vector2(to.x,to.z).length()))
+	angle = fposmod(angle+angle_difference(deg_to_rad(angle),deg_to_rad(want_yaw))*57.3*minf(1.0,rate),360)
+	pitch = lerpf(pitch,want_pitch,minf(1.0,rate))
+	update_camera()
 
 func photographer_input(event: InputEvent) -> bool:
 	var toggle = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or event.is_action_pressed("camara_al_ojo")
