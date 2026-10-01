@@ -7,6 +7,7 @@
 # con el Movie Maker de Godot (--write-movie, 30 FPS fijos) y las monta con ffmpeg en un MP4 rotulado.
 #
 #   ./tools/capture_video.sh [--only 1,3] [--res 1920x1080] [--out build/video/evidencias.mp4]
+#                            [--sequences <fichero>]   (otras secuencias: una por línea, «título|segundos|argumentos»)
 #
 # Necesita un Godot con Vulkan (GODOT_FP o ~/bin/godot-4-fp) y ffmpeg con libx264. El MP4 va a
 # build/video/ (ignorado por git). Tarda unos 15 min. Lleva de fondo la música del proyecto
@@ -19,11 +20,13 @@ GODOT="${GODOT_FP:-$HOME/bin/godot-4-fp}"
 RES="1920x1080"
 OUT="$PROJECT_DIR/build/video/evidencias_$(date +%Y%m%d_%H%M).mp4"
 ONLY=""
+SEQ_FILE=""
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--only) ONLY="$2"; shift 2 ;;
 		--res) RES="$2"; shift 2 ;;
 		--out) OUT="$2"; shift 2 ;;
+		--sequences) SEQ_FILE="$2"; shift 2 ;;
 		*) echo "Opción desconocida: $1"; exit 1 ;;
 	esac
 done
@@ -55,6 +58,7 @@ SEQUENCES=(
 	"De noche, el móvil ilumina las caras|8|--time=night --advance=60 --activity=movil --angle=120 --pitch=-3 --focal=40 --pan=1 --af"
 )
 
+if [ -n "$SEQ_FILE" ]; then mapfile -t SEQUENCES < <(grep -v '^\s*\(#\|$\)' "$SEQ_FILE"); fi
 list="$WORK/list.txt"
 : > "$list"
 index=0
