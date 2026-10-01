@@ -50,6 +50,8 @@ Para asegurar que la calzada del carril 1 mantenga más de $1.9\text{ m}$ de pas
 
 Desde el 30-09-2026 la marcha por carril vive en `main.gd::walk_step(p, dt)` y busca que todo ocurra **más despacio pero con naturalidad**: nadie da bandazos, nadie se para en seco, nadie tiembla al cruzarse. La versión anterior probaba pasos alternativos de golpe en cada fotograma y recalculaba la orientación desde cero, y de ahí salía el temblequeo cuando dos personas se encontraban.
 
+**Temblor contra otro (01-10-2026).** Quien se queda bloqueado por alguien a ratos (un fotograma avanza, el siguiente no) hacía que la animación mezclara las piernas entre «andando» y «quieto» en cada fotograma, y eso se veía como un temblor. Ahora `gait.gd::pose()` solo apaga la marcha tras **0,6 s sin moverse** (`idle_time`). `tests/test_crowd.gd` mide ese vaivén de la mezcla (como mucho una parada y arranque en 2 s; antes llegaba a 8 cambios).
+
 ### 3.1 Velocidades con aceleración limitada
 Cada viandante guarda una velocidad de avance `v_fwd` y una radial `v_rad` que solo cambian con aceleración acotada:
 

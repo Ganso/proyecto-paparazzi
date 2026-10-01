@@ -80,6 +80,7 @@ func neutral() -> void:
 		p.rig.set_bone_pose_rotation(p.bones["brazo."+side],Quaternion(Vector3.BACK,sign_side*p.arm_out[side]))
 		p.pose_bone("antebrazo."+side,.12)
 
+var idle_time = 0.0
 func pose(delta: float, traveled_distance = -1.0) -> void:
 	var p = person
 	var live = traveled_distance >= 0
@@ -87,7 +88,12 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 	if moving:
 		var distance = traveled_distance if live else p.speed*delta
 		p.phase = fposmod(p.phase+maxf(0,distance)*TAU/p.stride,TAU)
-	var desired_weight = 1.0 if moving and (not live or traveled_distance > .00001) else 0.0
+	# The walk blends out only after a real stop (0.6 s without moving): a walker held up for a
+	# frame now and then by someone in the way kept blending its legs in and out, which looked
+	# like trembling against them.
+	if live and traveled_distance > .00001: idle_time = 0.0
+	elif live: idle_time += delta
+	var desired_weight = 1.0 if moving and (not live or idle_time < .6) else 0.0
 	weight = move_toward(weight,desired_weight,delta*6) if live else desired_weight
 	if has_last_position and p.position.distance_to(last_position) > p.stride*.7: reset_contacts()
 	last_position = p.position

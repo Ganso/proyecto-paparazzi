@@ -90,7 +90,7 @@ func run() -> void:
 			var phase_before = p.phase
 			p.animate(.005,p.stride*.02)
 			check(absf(angle_difference(phase_before,p.phase)-TAU*.02)<.00001,"Cadence follows actual distance, independent of delta")
-			for i in 40: p.animate(1.0/120,0.0)
+			for i in 120: p.animate(1.0/120,0.0)   # 0.6 s of real stop, then the blend (gait.gd idle_time)
 			check(p.gait.weight == 0,"Blocked pedestrian settles to standing")
 			for side in ["I","D"]: check(absf(min_shoe(p,side,soles[side]))<.002,"Stopped shoes are on the ground")
 			p.state = "SENTADO"
