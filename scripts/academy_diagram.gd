@@ -67,7 +67,7 @@ func draw_scales(stress: String) -> void:
 		txt(Vector2(6,y+4),row[1],11,ink if strong else dim)
 		var items: Array = row[2]
 		var x0 = 76.0
-		var step = (size.x-x0-8)/maxf(1,items.size()-1)
+		var step = (size.x-x0-24)/maxf(1,items.size()-1)
 		draw_line(Vector2(x0,y),Vector2(x0+step*(items.size()-1),y),dim,1)
 		for i in items.size():
 			var x = x0+i*step
@@ -94,7 +94,9 @@ func draw_dof() -> void:
 		draw_line(Vector2(lx,y-26),Vector2(lx,y+26),Color(1,1,1,.07),6)
 	var near_x = to_x.call(range.x)
 	var far_x = to_x.call(range.y if not is_inf(range.y) else max_d)
-	draw_rect(Rect2(near_x,y-18,maxf(2,far_x-near_x),36),Color(.72,.84,.55,.35))
+	var band = Rect2(near_x,y-18,maxf(4,far_x-near_x),36)
+	draw_rect(band,Color(.72,.84,.55,.4))
+	draw_rect(band,Color(.72,.84,.55,.9),false,1)
 	draw_line(Vector2(x0,y),Vector2(x0+w,y),dim,1)
 	# Camera.
 	draw_colored_polygon(PackedVector2Array([Vector2(8,y-9),Vector2(24,y-9),Vector2(24,y+9),Vector2(8,y+9)]),ink)
@@ -152,9 +154,9 @@ func draw_thirds() -> void:
 	draw_line(head+Vector2(0,6),head+Vector2(0,36),green,3)
 	draw_line(head+Vector2(0,36),head+Vector2(-8,56),green,3)
 	draw_line(head+Vector2(0,36),head+Vector2(8,56),green,3)
-	draw_line(head+Vector2(-14,20),head+Vector2(-60,20),amber,2)
-	draw_colored_polygon(PackedVector2Array([head+Vector2(-66,20),head+Vector2(-58,15),head+Vector2(-58,25)]),amber)
-	txt(head+Vector2(-120,40),"aire delante",11,amber)
+	draw_line(head+Vector2(-14,22),head+Vector2(-60,22),amber,2)
+	draw_colored_polygon(PackedVector2Array([head+Vector2(-66,22),head+Vector2(-58,17),head+Vector2(-58,27)]),amber)
+	txt(head+Vector2(-70,12),"aire delante",11,amber)
 	if academy.phase == "practica" and academy.lesson == 4:
 		var state = m.academy_last_thirds
 		txt(Vector2(8,size.y-4),{"":"Nadie cerca en el encuadre","cruce":"Cabeza fuera de los cruces","aire":"Cruce correcto, pero sin aire delante","listo":"¡Perfecto!"}.get(state,""),11,green if state == "listo" else ink)
@@ -171,9 +173,10 @@ func draw_compression() -> void:
 	var cam_x = 10.0 if tele else 150.0
 	var subj_x = 210.0
 	# Camera and field of view reaching the trees.
-	var half = atan(18.0/m.focal)
+	var half = atan(12.0/m.focal)   # vertical half angle of the 16:9 frame
 	var reach = tree_x-cam_x
-	draw_colored_polygon(PackedVector2Array([Vector2(cam_x+10,y-18),Vector2(tree_x,y-18-tan(half)*reach),Vector2(tree_x,y-18+tan(half)*reach)]),Color(.72,.84,.55,.15))
+	var spread = minf(tan(half)*reach,y-40)
+	draw_colored_polygon(PackedVector2Array([Vector2(cam_x+10,y-18),Vector2(tree_x,y-18-spread),Vector2(tree_x,y-18+minf(spread,16))]),Color(.72,.84,.55,.15))
 	draw_rect(Rect2(cam_x,y-24,12,10),ink)
 	draw_circle(Vector2(subj_x,y-36),5,green)
 	draw_line(Vector2(subj_x,y-31),Vector2(subj_x,y-10),green,3)
