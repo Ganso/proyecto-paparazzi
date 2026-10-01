@@ -30,7 +30,7 @@ func run() -> void:
 	game.begin_assignment()
 	game.mode = "SEARCH"
 	var screen = Rect2(0,0,1280,720)
-	for body in 3:
+	for body in 4:
 		game.equipment.preset(body)
 		game.apply_equipment()
 		game.set_interface("camara")
@@ -51,6 +51,18 @@ func run() -> void:
 		check(game.hud_top.all(func(n): return n.visible) and game.hud_bottom.all(func(n): return n.visible),"Body %d: Tab shows the controls" % body)
 		game.controls_shown = false
 		await frames(2)
+	# TLR: the waist-level finder is mirrored, so a point on the left of the finder is on the right
+	# of the photo; the finder shows only the central square (docs/futuro/21 §3).
+	game.equipment.preset(3)
+	game.apply_equipment()
+	await frames(3)
+	var rt: Rect2 = game.view_rect
+	check(game.image_position(rt.position+Vector2(10,rt.size.y*.5)).x > game.viewport.size.x*.95,"TLR: the finder is mirrored left to right")
+	check(game.lens_material.get_shader_parameter("mirror") and game.lens_material.get_shader_parameter("square"),"TLR: mirrored square ground glass")
+	game.equipment.preset(0)
+	game.apply_equipment()
+	await frames(2)
+	check(not game.lens_material.get_shader_parameter("mirror"),"Other bodies are not mirrored")
 	# Parallax of the rangefinder: grows at close range and is undone when mapping clicks.
 	game.equipment.preset(1)
 	game.apply_equipment()
@@ -64,7 +76,7 @@ func run() -> void:
 	check(not game.dof_active(),"Rangefinder: the finder itself shows no depth-of-field blur")
 	if game.dof_allowed(): check(game.dof_pass.visible,"Rangefinder: the pass still runs (it repairs non-finite pixels)")
 	# The photo and its score do not depend on the interface.
-	for body in 3:
+	for body in 4:
 		game.equipment.preset(body)
 		game.apply_equipment()
 		game.angle = 120.0
@@ -83,7 +95,7 @@ func run() -> void:
 		check(scores[0] == scores[1],"Body %d: same score with the classic and the camera interface (%s)" % [body,str(scores)])
 	game.set_sandbox_pause(false)
 	# A real shot through each finder: the blackout and the shutter sound are interface only.
-	for body in 3:
+	for body in 4:
 		game.equipment.preset(body)
 		game.apply_equipment()
 		game.set_interface("camara")
@@ -93,7 +105,7 @@ func run() -> void:
 		await game.take_photo()
 		check(game.mode == "RESULT","Body %d: shooting through the finder works" % body)
 		if body == 1 and game.dof_allowed(): check(game.current_result.evidence.get("rendered_dof",false),"Rangefinder: the photo does get the depth of field")
-		check(FileAccess.file_exists("res://assets/audio/camara/%s.wav" % ["compacta","telemetrica","reflex"][body]),"Body %d: its shutter sound exists" % body)
+		check(FileAccess.file_exists("res://assets/audio/camara/%s.wav" % ["compacta","telemetrica","reflex","telemetrica"][body]),"Body %d: its shutter sound exists" % body)
 		game.resume_search()
 	# The classic interface is the full screen HUD, as before.
 	game.set_interface("clasica")

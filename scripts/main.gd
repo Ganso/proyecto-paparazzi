@@ -6,6 +6,8 @@ const Cast = preload("res://scripts/casting.gd")
 const ParkScene = preload("res://scripts/park.gd")
 const Finder = preload("res://scripts/viewfinder.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
+const Arcade = preload("res://scripts/arcade.gd")
+const Conditions = preload("res://scripts/conditions.gd")
 const Develop = preload("res://shaders/develop.gdshader")
 
 var equipment = preload("res://scripts/equipment.gd").new()
@@ -101,6 +103,14 @@ var stage = ""
 # --academy=<lección>:<teoria|demo|practica>[:página]: open a lesson directly (evidence captures).
 var academy_start = ""
 var academy_tour = ""
+# ---- Arcade (docs/futuro/21) ----
+var arcade_level = -1               # level being played (-1: sandbox, Academy or a scripted session)
+var level_time = 0.0                # seconds left (levels with a time limit)
+var level_over = false
+# ---- TLR (docs/futuro/21 §3) ----
+var tlr_frames = 12                 # 120 film: 12 frames (counted in the sandbox)
+var tlr_wound = true                # the crank advances the film before every shot
+var tlr_loupe = false               # L: 3× loupe over the ground glass
 # ---- Scenarios (docs/futuro/01 Alternativa C) ----
 # "clasico": the photographer stands in the centre of the cylindrical park (and the Academy uses it).
 # "grande": the big park with a path network, walked freely; the camera is raised to the eye with a
@@ -223,6 +233,7 @@ func _ready() -> void:
 		if arg == "--walk-demo": walk_demo = 0.0
 		if arg == "--photo-walk": photo_walk = {"t":0.0,"phase":"walk","timer":3.0}
 		if arg == "--sandbox": pending_start["sandbox_demo"] = true
+		if arg.begins_with("--level="): pending_start["level"] = int(arg.trim_prefix("--level="))-1
 		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
@@ -273,11 +284,13 @@ func _ready() -> void:
 		equipment.ev_comp_index = equipment_state.ev
 		apply_equipment()
 	intro()
-	if pending_start.has("time"):
+	if pending_start.has("level"):
+		start_level(int(pending_start.level))
+	elif pending_start.has("time"):
 		start_session(pending_start.time,pending_start.get("sandbox",false))
 	elif pending_start.has("academy"):
 		show_academy()
-	for key in ["time","sandbox","academy"]: pending_start.erase(key)
+	for key in ["time","sandbox","academy","level"]: pending_start.erase(key)
 	if run_metrics:
 		# Measure the real cost, not the vsync cap.
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -679,7 +692,7 @@ func refresh() -> void:
 	if is_instance_valid(camera_body) and camera_body.body != equipment.body:
 		place_view()
 		update_dof_pass()
-	focus_aid.visible = equipment.focus_mode == "MF" and mode == "SEARCH"
+	focus_aid.visible = equipment.focus_mode == "MF" and mode == "SEARCH" and not tlr_loupe
 	focus_aid.material.set_shader_parameter("body",equipment.body)
 	aperture_button.text = Texts.get_text("1f") % apertures()[n_index]
 	shutter_button.text = Texts.get_text("1_d") % Photo.DENOMINATORS[t_index]
@@ -692,11 +705,13 @@ func refresh() -> void:
 	finder.delta_ev = -Photo.ev(apertures()[n_index],1.0/Photo.DENOMINATORS[t_index],Photo.ISOS[iso_index],measured_ev)
 	focus_slider.set_value_no_signal(1 if is_inf(focus_distance) else 1-.8/focus_distance)
 	lens_slider.set_value_no_signal(focal)
-	counter_label.text = Texts.get_text("encargo_02d_05") % (assignment+1)
+	counter_label.text = Texts.get_text("arcade_nivel_d") % (arcade_level+1) if arcade_level >= 0 else "ENCARGO %02d" % (assignment+1)
 	counter_label.visible = not sandbox
 	sandbox_button.visible = sandbox and not (academy and academy.active)
 	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("HORA AZUL" if time_of_day == "blue" else ("NUBES" if park.cloud_cover > .4 else "SOL")))
-	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + ("sin límite" if sandbox else "%d disparos" % shots)
+	var frames_text = "sin límite" if sandbox else "%d disparos" % shots
+	if sandbox and equipment.tlr(): frames_text = "%d / 12" % tlr_frames
+	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + frames_text + (" · "+clock_text() if arcade_level >= 0 and level_limit() > 0 and not sandbox else "")
 
 func update_camera() -> void:
 	if not is_instance_valid(camera): return
@@ -704,6 +719,8 @@ func update_camera() -> void:
 	pitch = clampf(pitch,-75,75)
 	focal = clampf(focal,equipment.lens().min,equipment.lens().max)
 	camera.rotation = Vector3(deg_to_rad(pitch),-deg_to_rad(angle),0)
+	# The TLR is held at the waist and looked into from above (1.10 m instead of the eye's 1.60 m).
+	if not crowd: camera.position.y = 1.1 if equipment.tlr() else 1.6
 	# Walking in the big park the eye sees a natural field of view; the lens only at the eye.
 	camera.fov = WALK_FOV if not eye_ready() else rad_to_deg(2*atan(36.0/(2.0*focal)))
 	refresh()
@@ -767,6 +784,7 @@ func preview_time(tod: String) -> void:
 
 # Start a session in a scenario; another scenario reloads the scene with it (the equipment kept).
 func start_in(which: String, time_mode: String, free_play: bool) -> void:
+	arcade_level = -1
 	if which == scenario:
 		start_session(time_mode,free_play)
 		return
@@ -781,6 +799,7 @@ func reload_with(which: String, start: Dictionary) -> void:
 
 # The Academy uses the classic park (its lessons are staged around the photographer).
 func open_academy() -> void:
+	arcade_level = -1
 	if scenario != "clasico":
 		reload_with("clasico",{"academy":true})
 		return
@@ -791,6 +810,12 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	mode = "STARTING"
 	place_view()
 	sandbox = free_play
+	if free_play: arcade_level = -1
+	level_over = false
+	level_time = level_limit()
+	tlr_frames = 12
+	tlr_wound = true
+	tlr_loupe = false
 	sandbox_paused = false
 	shot_serial = 0
 	park.weather_time = 0
@@ -853,7 +878,11 @@ func start_session(time_mode = "day", free_play = false) -> void:
 
 func new_assignment() -> void:
 	if is_instance_valid(target): target.protected_target = false
+	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
 	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO")
+	if level.get("target","") == "runner":
+		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO")
+		if not runners.is_empty(): candidates = runners
 	if candidates.is_empty(): candidates = people.filter(func(p): return p.visible)
 	var all_traits = people.map(func(p): return p.traits)
 	target = candidates[casting.rng.randi_range(0,candidates.size()-1)]
@@ -861,7 +890,11 @@ func new_assignment() -> void:
 	assert(not predicates.is_empty(),Texts.get_text("el_encargo_debe_identificar_un_sujeto_unico"))
 	target.protected_target = true
 	briefing.text = Texts.get_text("busca")+", ".join(predicates)+"."
-	shots = 3
+	shots = int(level.get("shots",3))
+	if not level.is_empty() and not level.cond.is_empty():
+		var conds = []
+		for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]).to_lower())
+		briefing.text += "  ·  "+", ".join(conds)
 	best = {}
 	show_assignment()
 	refresh()
@@ -878,6 +911,12 @@ func _process(dt: float) -> void:
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)
 	if crowd and mode != "INTRO": update_photographer(dt)
+	# Arcade clock: it runs while searching; at zero the level ends with the best photo so far.
+	if mode == "SEARCH" and arcade_level >= 0 and level_limit() > 0 and not level_over:
+		level_time = maxf(0.0,level_time-dt)
+		if level_time <= 0.0:
+			level_over = true
+			end_level()
 	if mode == "SEARCH" and not shooting:
 		if eye_ready():
 			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
@@ -1591,7 +1630,7 @@ func update_photographer(dt: float) -> void:
 		var moved = player.position.distance_to(start)
 		moving = moved > .0005
 		walk_phase += moved*TAU/1.5
-		eye_height = move_toward(eye_height,1.05 if crouching else 1.6,dt*2.5)
+		eye_height = move_toward(eye_height,1.05 if crouching else (1.1 if equipment.tlr() and camera_raised else 1.6),dt*2.5)
 		update_camera()
 	player_proxy.position = player.position
 	player_proxy.actual_velocity = player.velocity if moving else Vector3.ZERO
@@ -1845,7 +1884,7 @@ func place_view() -> void:
 var shutter_player: AudioStreamPlayer
 var shutter_streams = {}
 func shutter_sound() -> void:
-	var name = ["compacta","telemetrica","reflex"][equipment.body]
+	var name = ["compacta","telemetrica","reflex","telemetrica"][equipment.body]   # TLR: leaf shutter, soft like the rangefinder's
 	if not shutter_streams.has(name):
 		var path = "res://assets/audio/camara/%s.wav" % name
 		shutter_streams[name] = AudioStreamWAV.load_from_file(path) if FileAccess.file_exists(path) else null
@@ -1880,6 +1919,11 @@ func update_finder_shader() -> void:
 	if lens_material == null: return
 	var body_code = equipment.body if interface_mode == "camara" and eye_ready() else -1
 	lens_material.set_shader_parameter("finder_body",body_code)
+	var tlr_view = equipment.tlr() and eye_ready() and mode != "INTRO"
+	lens_material.set_shader_parameter("mirror",tlr_view)
+	lens_material.set_shader_parameter("square",tlr_view)
+	lens_material.set_shader_parameter("loupe",3.0 if tlr_view and tlr_loupe else 1.0)
+	if is_instance_valid(focus_aid): focus_aid.material.set_shader_parameter("mirror",tlr_view)
 	var shift = view_shift/view_rect.size if view_rect.size.x > 0 else Vector2.ZERO
 	lens_material.set_shader_parameter("parallax",shift)
 	# Compact LCD noise grows in dim light (scene EV below ~9).
@@ -1946,7 +1990,9 @@ func update_hud_visibility(dt: float) -> void:
 # ui point (inside view_rect) → viewport pixel. The rangefinder's parallax shifts what the finder
 # shows (camera_body.gd), so the shift is undone here and clicks still land where they look.
 func image_position(point: Vector2) -> Vector2:
-	return (point-view_rect.position-view_shift)*Vector2(viewport.size)/view_rect.size
+	var local = (point-view_rect.position-view_shift)/view_rect.size
+	if equipment.tlr(): local.x = 1.0-local.x       # the waist-level finder is mirrored
+	return local*Vector2(viewport.size)
 
 func nearest_af(point: Vector2) -> void:
 	if equipment.focus_mode == "MF": return
@@ -1985,6 +2031,42 @@ func autofocus() -> void:
 		play_tone(230,.12)
 		notify_player(Texts.get_text("sin_superficie_bajo_ese_punto_el_enfoque_se_mantiene"))
 
+# TLR crank (K): advances the film one frame with a ratchet sound; with the roll finished, loads a
+# new one (sandbox; in the arcade the film winds itself).
+func wind_film() -> void:
+	if not equipment.tlr() or mode != "SEARCH": return
+	if tlr_frames <= 0:
+		tlr_frames = 12
+		tlr_wound = true
+		notify_player(Texts.get_text("tlr_carrete_cargado"))
+		ratchet_sound(10)
+	elif not tlr_wound:
+		tlr_wound = true
+		ratchet_sound(6)
+	refresh()
+
+func ratchet_sound(clicks: int) -> void:
+	var rate = 22050
+	var data = PackedByteArray()
+	var rng = RandomNumberGenerator.new()
+	rng.seed = clicks
+	var length = int(rate*.07*clicks)
+	data.resize(length*2)
+	for i in length:
+		var t = fmod(float(i)/rate,.07)
+		var v = rng.randf_range(-1,1)*exp(-t*160.0)*.55+sin(t*TAU*1900.0)*exp(-t*90.0)*.25
+		data.encode_s16(i*2,int(clampf(v,-1,1)*32000))
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = rate
+	stream.data = data
+	var player_node = AudioStreamPlayer.new()
+	player_node.stream = stream
+	player_node.volume_db = -6.0
+	add_child(player_node)
+	player_node.play()
+	player_node.finished.connect(player_node.queue_free)
+
 func play_tone(frequency: float, duration: float) -> void:
 	var stream = AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
@@ -2022,11 +2104,51 @@ func capture_evidence() -> Dictionary:
 	var velocity = target.actual_velocity if target.state == "CAMINANDO" else Vector3.ZERO
 	var view_axis = -camera.global_basis.z
 	var perpendicular = (velocity-view_axis*velocity.dot(view_axis)).length()
-	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],time_of_day,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
+	var e = {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],time_of_day,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
+	# The subject is judged on its eyes, as photographers do (docs/futuro/21 §2): focus distance and
+	# position of the eyes, halfway up the head.
+	var eyes_world = target.global_transform*(head_pose*Vector3(0,.5*target.height/target.profile.relacion_cabeza,0))
+	e["eyes"] = camera.unproject_position(eyes_world)/Vector2(viewport.size)
+	e["d_eyes"] = camera.global_position.distance_to(eyes_world)
+	# Everyone else who shows in the frame (conditions "aislado" and "acompanado").
+	var others = []
+	for p in people:
+		if p == target or not p.visible: continue
+		var chest_world: Vector3 = p.control_points()[1]
+		if camera.is_position_behind(chest_world): continue
+		var chest = camera.unproject_position(chest_world)/Vector2(viewport.size)
+		var top = camera.unproject_position(p.global_position+Vector3.UP*p.height)/Vector2(viewport.size)
+		var bottom = camera.unproject_position(p.global_position)/Vector2(viewport.size)
+		if chest.x < -.2 or chest.x > 1.2 or chest.y < -.2 or chest.y > 1.2: continue
+		var hit = ray_to(chest_world)
+		var seen = hit.is_empty() or (hit.collider.has_meta("person") and hit.collider.get_meta("person") == p)
+		others.append({"chest":chest,"h":absf(bottom.y-top.y),"visible":seen})
+	e["others"] = others
+	if equipment.tlr(): square_evidence(e)
+	return e
+
+# The TLR takes a square: positions are measured on the central square of the 16:9 image, so a
+# subject outside the square is out of the frame (docs/futuro/21 §3).
+func square_evidence(e: Dictionary) -> void:
+	var aspect = float(viewport.size.x)/viewport.size.y
+	var to_square = func(v: Vector2) -> Vector2: return Vector2(.5+(v.x-.5)*aspect,v.y)
+	for key in ["head","feet","chest","eyes"]:
+		if e.has(key): e[key] = to_square.call(e[key])
+	for o in e.get("others",[]): o.chest = to_square.call(o.chest)
+	e["square"] = true
 
 func take_photo() -> void:
-	if mode != "SEARCH" or (not sandbox and shots <= 0) or shooting: return
+	if mode != "SEARCH" or (not sandbox and shots <= 0) or shooting or level_over: return
 	if not eye_ready(): return
+	# TLR in the sandbox: 12 frames per roll and the crank between shots (in the arcade the level's
+	# shots rule and the film winds itself).
+	if equipment.tlr() and sandbox and not (academy and academy.active):
+		if tlr_frames <= 0:
+			notify_player(Texts.get_text("tlr_carrete_acabado"))
+			return
+		if not tlr_wound:
+			notify_player(Texts.get_text("tlr_manivela"))
+			return
 	if equipment.focus_mode != "MF": autofocus()
 	update_meter()
 	if equipment.auto_exposure: auto_expose()
@@ -2039,10 +2161,18 @@ func take_photo() -> void:
 	evidence["rendered_dof"] = dof_active()
 	current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
+	if arcade_level >= 0 and not sandbox: Conditions.apply(current_result,evidence,Arcade.LEVELS[arcade_level].cond)
+	if equipment.tlr() and sandbox:
+		tlr_frames -= 1
+		tlr_wound = false
 	shot_serial += 1
 	if not sandbox: shots -= 1
 	await RenderingServer.frame_post_draw
 	var clean_image = viewport.get_texture().get_image()
+	if equipment.tlr():
+		# The TLR negative is square, and the right way round (only the finder is mirrored).
+		var side = clean_image.get_height()
+		clean_image = clean_image.get_region(Rect2i((clean_image.get_width()-side)/2,0,side,side))
 	current_photo = ImageTexture.create_from_image(clean_image)
 	if not sandbox and (best.is_empty() or current_result.score > best.score):
 		best = current_result.duplicate(true)
@@ -2117,7 +2247,8 @@ func show_results() -> void:
 		show_sandbox_result()
 		return
 	var root = create_modal()
-	label(root,Texts.get_text("revelado_encargo_02d") % (assignment+1),Rect2(25,18,700,25),14,Color("a9c487"))
+	var header = (Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level)) if arcade_level >= 0 else Texts.get_text("revelado_encargo_02d") % (assignment+1)
+	label(root,header,Rect2(25,18,700,25),14,Color("a9c487"))
 	label(root,Texts.get_text("cada_ajuste_deja_una_huella"),Rect2(25,50,770,45),30)
 	photo_preview(root,current_photo,current_result,Rect2(25,112,750,422))
 	var r = current_result
@@ -2126,7 +2257,7 @@ func show_results() -> void:
 	label(root,Texts.get_text("d_creditos") % r.credits,Rect2(598,557,180,32),18,Color("b7c5a9"))
 	var evidence: Dictionary = r.evidence
 	label(root,Texts.get_text("0f_mm_1f_1_d_s_iso_d_foco_s") % [evidence.f,evidence.n,roundi(1/evidence.t),evidence.iso,Texts.get_text("infinito") if is_inf(evidence.s) else Texts.get_text("2f_m") % evidence.s],Rect2(25,606,760,26),15,Color("b5c5a8"))
-	label(root,Texts.get_text("mejor_del_encargo_d_100_quedan_d_disparos") % [best.score,shots],Rect2(25,646,745,30),16)
+	label(root,Texts.get_text("mejor_del_encargo_d_100_quedan_d_disparos") % [best.score,shots]+(" · %s" % clock_text() if arcade_level >= 0 and level_limit() > 0 else ""),Rect2(25,646,745,30),16)
 	var scroll = ScrollContainer.new()
 	scroll.position = Vector2(803,105)
 	scroll.size = Vector2(453,509)
@@ -2136,6 +2267,13 @@ func show_results() -> void:
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation",15)
 	scroll.add_child(column)
+	for c in r.get("conditions",[]):
+		var cond_label = Label.new()
+		cond_label.text = ("✓ " if c.ok else "✗ ")+c.text
+		cond_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		cond_label.add_theme_color_override("font_color",UiStyle.SKY_DEEP if c.ok else UiStyle.WARN)
+		cond_label.add_theme_font_size_override("font_size",16)
+		column.add_child(cond_label)
 	if r.rejected:
 		var reason = Label.new()
 		reason.text = r.reason
@@ -2150,46 +2288,116 @@ func show_results() -> void:
 		text_label.add_theme_color_override("font_color",UiStyle.INK)
 		text_label.add_theme_font_size_override("font_size",16)
 		column.add_child(text_label)
+	if arcade_level >= 0:
+		var more = shots > 0 and not level_over
+		if more: button(root,Texts.get_text("arcade_otra_foto_d") % shots,Rect2(803,642,204,52),resume_search)
+		button(root,Texts.get_text("arcade_terminar") if more else Texts.get_text("arcade_ver_resultado"),Rect2(1020 if more else 803,642,234 if more else 451,52),end_level,true)
+		return
 	if shots > 0: button(root,Texts.get_text("reintentar_d") % shots,Rect2(803,642,204,52),resume_search)
-	button(root,Texts.get_text("siguiente") if assignment < 4 else Texts.get_text("resumen"),Rect2(1020 if shots > 0 else 803,642,234 if shots > 0 else 451,52),finish_assignment,true)
+	button(root,Texts.get_text("siguiente"),Rect2(1020 if shots > 0 else 803,642,234 if shots > 0 else 451,52),finish_assignment,true)
 
 func resume_search() -> void:
 	close_modal()
 	mode = "SEARCH"
 	refresh()
 
+# Scripted sessions without a level (evidence, tests): one assignment after another.
 func finish_assignment() -> void:
 	if sandbox: resume_search(); return
+	if arcade_level >= 0:
+		end_level()
+		return
 	records.append(best)
 	assignment += 1
-	if assignment >= 5: summary()
-	else: new_assignment()
+	new_assignment()
 
-func summary() -> void:
-	mode = "SUMMARY"
+# ---- Arcade (docs/futuro/21 §1) ----
+func level_title(n: int) -> String:
+	return Texts.get_text("arcade_nivel_%d_titulo" % (n+1))
+
+func level_limit() -> float:
+	return float(Arcade.LEVELS[arcade_level].limit) if arcade_level >= 0 else 0.0
+
+func clock_text() -> String:
+	var t = ceili(level_time)
+	return "⏱ %d:%02d" % [t/60,t%60]
+
+func show_arcade() -> void:
+	mode = "ARCADE"
+	arcade_level = -1
 	var root = create_modal()
-	var credits = 0
-	var passed = 0
-	var best_index = 0
-	for i in records.size():
-		credits += records[i].credits
-		if records[i].stars >= 3: passed += 1
-		if records[i].score > records[best_index].score: best_index = i
-	label(root,Texts.get_text("fin_de_la_sesion"),Rect2(50,38,650,25),14,Color("b8d78c"))
-	label(root,Texts.get_text("tu_mirada_en_cinco_fotos"),Rect2(48,82,1180,55),43)
-	photo_preview(root,records[best_index].photo,records[best_index],Rect2(50,180,710,400))
-	label(root,Texts.get_text("mejor_fotografia_encargo_02d") % (best_index+1),Rect2(50,597,710,26),15,Color("b8d78c"))
-	label(root,Texts.get_text("d_5_superados_d_creditos") % [passed,credits],Rect2(805,185,410,120),36,Color("b8d78c"))
-	for i in records.size():
-		label(root,Texts.get_text("02d_3d_100_s") % [i+1,records[i].score,"★".repeat(records[i].stars) if not records[i].rejected else Texts.get_text("rechazada_2")],Rect2(809,337+i*39,410,31),20)
-	button(root,Texts.get_text("otra_sesion"),Rect2(805,593,402,59),intro,true)
+	label(root,Texts.get_text("arcade_titulo"),Rect2(65,26,600,55),38)
+	label(root,Texts.get_text("arcade_subtitulo"),Rect2(65,82,1100,26),16,Color("b5c3ad"))
+	var progress = Arcade.load_progress()
+	for block in 4:
+		var y = 128+block*124
+		label(root,Texts.get_text(Arcade.BLOCKS[block]),Rect2(65,y,1100,22),13,Color("b8d78c"))
+		for k in 5:
+			var n = block*5+k
+			var open = Arcade.unlocked(n,progress)
+			var card = Button.new()
+			card.position = Vector2(65+k*232,y+24)
+			card.size = Vector2(220,88)
+			card.focus_mode = Control.FOCUS_NONE
+			card.disabled = not open
+			card.pressed.connect(func(): start_level(n))
+			root.add_child(card)
+			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,8,190,18),11,Color("b8d78c"))
+			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,26,196,26),18)
+			var stars = int(progress[n].stars) if progress.has(n) else 0
+			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else "🔒",Rect2(14,56,196,24),16,Color("c9d790"))
+	button(root,Texts.get_text("arcade_menu"),Rect2(1035,640,180,52),intro)
+
+# A level fixes scenario, light and equipment; another scenario reloads the scene first.
+func start_level(n: int) -> void:
+	var level: Dictionary = Arcade.LEVELS[n]
+	if level.scenario != scenario:
+		pending_start = {}
+		reload_with(level.scenario,{"level":n})
+		return
+	equipment.preset(level.body)
+	equipment.lens_index = level.lens
+	equipment.auto_exposure = level.auto
+	if level.has("focus"): equipment.focus_mode = level.focus
+	if level.has("iso"):
+		equipment.film = true
+		equipment.film_iso_index = level.iso
+	arcade_level = n
+	start_session(level.time,false)
+
+func end_level() -> void:
+	if arcade_level < 0 or mode == "LEVEL_END": return
+	level_over = true
+	mode = "LEVEL_END"
+	var level: Dictionary = Arcade.LEVELS[arcade_level]
+	var passed = not best.is_empty() and not best.rejected and best.score >= level.min
+	var stars = Arcade.stars_for(best.score,level.min) if passed else 0
+	if passed: Arcade.save_result(arcade_level,best.score,stars)
+	var root = create_modal()
+	label(root,Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level),Rect2(50,38,900,25),14,Color("b8d78c"))
+	label(root,Texts.get_text("arcade_superado") if passed else Texts.get_text("arcade_no_superado"),Rect2(48,72,1180,55),43,Color("b8d78c") if passed else Color("efaf83"))
+	var why = ""
+	if not passed:
+		if best.is_empty() or best.rejected:
+			why = (Texts.get_text("arcade_tiempo_agotado")+" " if level_limit() > 0 and level_time <= 0 else "")+(best.reason if not best.is_empty() and best.reason != "" else Texts.get_text("arcade_sin_foto_valida"))
+		else: why = Texts.get_text("arcade_nota_insuficiente_d_d") % [best.score,level.min]
+	if not best.is_empty() and best.has("photo"):
+		photo_preview(root,best.photo,best,Rect2(50,150,710,430))
+	var info = label(root,(Texts.get_text("arcade_mejor_foto_d") % best.score if not best.is_empty() else Texts.get_text("arcade_sin_foto_valida"))+("\n"+"★".repeat(stars)+"☆".repeat(5-stars) if passed else "")+("\n\n"+why if why != "" else ""),Rect2(805,160,410,300),24)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.set_deferred("size",Vector2(410,300))
+	button(root,Texts.get_text("arcade_repetir"),Rect2(805,520,195,56),func(): start_level(arcade_level))
+	var n = arcade_level
+	if passed and n+1 < Arcade.LEVELS.size():
+		button(root,Texts.get_text("arcade_siguiente"),Rect2(1012,520,203,56),func(): start_level(n+1),true)
+	button(root,Texts.get_text("arcade_niveles"),Rect2(805,592,410,52),show_arcade,not passed)
 
 func show_help() -> void:
 	var previous = mode
 	mode = "HELP"
 	var root = create_modal()
 	label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
-	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar. Tab: muestra u oculta los controles sobre el visor.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento."
+	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar. Tab: muestra u oculta los controles sobre el visor.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento.\nTLR: se mira desde arriba y el visor invierte izquierda y derecha. L: lupa 3×. K: manivela (en el sandbox, 12 fotos por carrete).\nArcade: cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones; Intro en el menú abre los niveles."
 	label(root,text_value,Rect2(65,128,1130,490),18)
 	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = previous; intro() if previous == "INTRO" else close_modal(),true)
 
@@ -2220,7 +2428,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ENTER:
 			if mode == "RESULT": resume_search() if shots > 0 else finish_assignment()
 			elif mode == "BRIEFING": begin_assignment()
-			elif mode == "INTRO": start_session(false)
+			elif mode == "INTRO": show_arcade()
 			return
 		if mode != "SEARCH": return
 		match event.physical_keycode:
@@ -2237,6 +2445,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_R: adjust_focus(-1)
 			KEY_T: adjust_focus(1)
 			KEY_G: finder.thirds = not finder.thirds
+			KEY_K: wind_film()
+			KEY_L:
+				if equipment.tlr():
+					tlr_loupe = not tlr_loupe
+					update_finder_shader()
+					refresh()
 		if event.keycode == KEY_QUESTION or event.physical_keycode == KEY_H: show_help()
 		if event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9: finder.active = event.physical_keycode-KEY_1
 	if mode != "SEARCH": return
@@ -2429,11 +2643,20 @@ func show_equipment() -> void:
 	mode = "EQUIPMENT"
 	var root = create_modal()
 	label(root,"Elige tu equipo",Rect2(75,25,1100,60),38)
-	for i in 3:
-		button(root,["Fácil · todo automático","Calle · telemétrica manual","Acción · réflex AF puntual"][i],Rect2(75+i*380,95,360,52),func(): equipment.preset(i); apply_equipment(); show_equipment())
+	if arcade_level >= 0 and not sandbox:
+		# The arcade level fixes the camera: only the interface and the graphics can change.
+		label(root,Texts.get_text("arcade_equipo_fijo"),Rect2(75,100,1100,30),18,Color("b8d78c"))
+		label(root,Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],Rect2(75,150,1100,30),20)
+		label(root,Texts.get_text("visor_interfaz"),Rect2(75,225,250,35),20)
+		option(root,[Texts.get_text("visor_interfaz_camara"),Texts.get_text("visor_interfaz_clasica")],0 if interface_mode == "camara" else 1,Rect2(330,220,700,45),func(i): set_interface("camara" if i == 0 else "clasica"); show_equipment())
+		button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
+		button(root,"Volver",Rect2(880,630,320,55),restore_equipment_screen,true)
+		return
+	for i in 4:
+		button(root,["Fácil · todo automático","Calle · telemétrica manual","Acción · réflex AF puntual","Clásica · TLR 6×6"][i],Rect2(75+i*285,95,270,52),func(): equipment.preset(i); apply_equipment(); show_equipment())
 	label(root,"Selección manual de equipo",Rect2(75,166,1100,35),24)
 	label(root,"Cámara",Rect2(75,225,200,35),20)
-	option(root,equipment.CAMERAS,equipment.body,Rect2(330,220,700,45),func(i): equipment.body = i; equipment.lens_index = 0; apply_equipment(); show_equipment())
+	option(root,equipment.CAMERAS,equipment.body,Rect2(330,220,700,45),func(i): equipment.body = i; equipment.lens_index = 0; equipment.film = equipment.film or i == 3; apply_equipment(); show_equipment())
 	label(root,"Objetivo (equiv. 35 mm)",Rect2(75,285,250,35),20)
 	option(root,equipment.LENSES[equipment.body].map(func(l): return l.name),equipment.lens_index,Rect2(330,280,700,45),func(i): equipment.lens_index = i; apply_equipment(); show_equipment())
 	label(root,"Enfoque",Rect2(75,345,200,35),20)
@@ -2615,7 +2838,7 @@ func update_focus_aid(dt: float) -> void:
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
 		return
-	focus_aid.visible = true
+	focus_aid.visible = not tlr_loupe
 	var center_pixel = view_rect.get_center()
 	var best_dist = INF
 	var person_dist = INF
@@ -2782,7 +3005,10 @@ func show_assignment() -> void:
 	mode = "BRIEFING"
 	var root = create_modal()
 	label(root,"Éste es tu encargo",Rect2(65,40,1120,65),42)
-	label(root,"ENCARGO %02d / 05" % (assignment+1),Rect2(65,115,1100,30),16,Color("b8d78c"))
+	if arcade_level >= 0:
+		label(root,Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level),Rect2(65,115,1100,30),16,Color("b8d78c"))
+	else:
+		label(root,"ENCARGO %02d" % (assignment+1),Rect2(65,115,1100,30),16,Color("b8d78c"))
 	var container = SubViewportContainer.new()
 	container.position = Vector2(65,170)
 	container.size = Vector2(450,465)
@@ -2820,11 +3046,29 @@ func show_assignment() -> void:
 	portrait_camera.position = Vector3(0,brief_preview.height*.53,-4)
 	portrait_camera.look_at(Vector3(0,brief_preview.height*.53,0))
 	portrait_camera.current = true
+	if arcade_level >= 0:
+		show_level_briefing(root)
+		return
 	var description = label(root,"Busca a esta persona en el parque.\n\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,190,640,285),24)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,"Corre con ropa deportiva: cuida la velocidad de obturación." if target.runner else "Recuerda su ropa, peinado y accesorios.",Rect2(565,505,635,65),18,Color("b8d78c")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,"Entrar en la fase · Intro",Rect2(750,625,455,60),begin_assignment,true)
 	button(root,"Menú",Rect2(565,625,165,60),intro)
+
+# Arcade briefing: who, then the level's rules (camera, shots, time, pass mark, conditions).
+func show_level_briefing(root: Control) -> void:
+	var level: Dictionary = Arcade.LEVELS[arcade_level]
+	var description = label(root,Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1))+"\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,165,640,190),20)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var rules = [Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],
+		(Texts.get_text("arcade_un_disparo") if level.shots == 1 else Texts.get_text("arcade_disparos_d") % level.shots)+" · "+(Texts.get_text("arcade_tiempo_d") % level.limit if level.limit > 0 else Texts.get_text("arcade_sin_tiempo"))+" · "+Texts.get_text("arcade_nota_minima_d") % level.min]
+	label(root,"\n".join(rules),Rect2(565,365,640,56),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,430,640,24),15,Color("b8d78c"))
+	var conds = []
+	for key in level.cond: conds.append("• "+Conditions.describe(key,level.cond[key]))
+	label(root,"\n".join(conds) if not conds.is_empty() else Texts.get_text("arcade_sin_condiciones"),Rect2(565,456,640,150),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
+	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)
 
 func begin_assignment() -> void:
 	if mode != "BRIEFING": return

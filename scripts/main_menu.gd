@@ -1,8 +1,8 @@
 extends Control
-# Main menu (docs/futuro/20_INTERFAZ_CLARA.md): clean, light and airy. The live park keeps running
+# Main menu (docs/futuro/20_INTERFAZ_CLARA.md, modes in docs/futuro/21): clean, light and airy. The live park keeps running
 # behind a block of frosted white glass (shaders/frosted_glass.gdshader) while the camera drifts
-# slowly; the menu sits on the left: scenario cards, time of day chips, a big start button and the
-# secondary entries (sandbox, academy, equipment, graphics).
+# slowly; the menu sits on the left: the Arcade button, the sandbox (scenario cards, time of day
+# chips) and the secondary entries (Academy, equipment, graphics).
 const Texts = preload("res://scripts/texts.gd")
 
 const UiStyle = preload("res://scripts/ui_style.gd")
@@ -111,28 +111,28 @@ func build() -> void:
 	text(self,Texts.get_text("menu_estudio"),Vector2(x,70),13,UiStyle.SKY_DEEP,body_medium)
 	text(self,"Proyecto Paparazzi",Vector2(x-4,88),62,INK,title_font)
 	text(self,Texts.get_text("menu_lema"),Vector2(x,168),17,SOFT,light_font,560)
-	# Scenario cards.
-	text(self,Texts.get_text("menu_escenario"),Vector2(x,236),12,FAINT,body_medium)
-	var y = 258.0
+	# Arcade: the main entry (the level fixes scenario, light and camera).
+	flat_button(self,Texts.get_text("menu_arcade"),Rect2(x,236,570,64),main.show_arcade,"primary")
+	# Sandbox: choose scenario and light, then play freely.
+	text(self,Texts.get_text("menu_sandbox_titulo"),Vector2(x,322),12,FAINT,body_medium)
+	var y = 344.0
 	for k in 2:
 		var which = ["clasico","grande"][k]
 		var card = Button.new()
 		card.position = Vector2(x+k*292,y)
-		card.size = Vector2(278,92)
+		card.size = Vector2(278,80)
 		card.focus_mode = Control.FOCUS_NONE
 		card.pressed.connect(func(): select_scenario(which))
 		add_child(card)
-		text(card,Texts.get_text("escenario_"+which).capitalize(),Vector2(20,16),21,INK,body_medium)
-		text(card,Texts.get_text("menu_"+which+"_detalle"),Vector2(20,48),13,SOFT,light_font,238)
+		text(card,Texts.get_text("escenario_"+which).capitalize(),Vector2(20,12),20,INK,body_medium)
+		text(card,Texts.get_text("menu_"+which+"_detalle"),Vector2(20,42),13,SOFT,light_font,238)
 		cards[which] = card
-	# Time of day chips.
-	text(self,Texts.get_text("menu_luz"),Vector2(x,372),12,FAINT,body_medium)
 	var times = [["day","intro_dia"],["golden","intro_dorada"],["blue","intro_azul"],["night","intro_noche"]]
 	for k in times.size():
 		var chip = Button.new()
 		chip.text = Texts.get_text(times[k][1])
-		chip.position = Vector2(x+k*143,394)
-		chip.size = Vector2(133,42)
+		chip.position = Vector2(x+k*143,436)
+		chip.size = Vector2(133,40)
 		chip.focus_mode = Control.FOCUS_NONE
 		chip.add_theme_font_override("font",body_medium)
 		chip.add_theme_font_size_override("font_size",15)
@@ -140,11 +140,11 @@ func build() -> void:
 		chip.pressed.connect(func(): select_time(tod))
 		add_child(chip)
 		chips[tod] = chip
-	flat_button(self,Texts.get_text("menu_empezar"),Rect2(x,468,570,64),func(): main.start_in(scenario,time_of_day,false),"primary")
+	flat_button(self,Texts.get_text("menu_sandbox"),Rect2(x,488,570,48),func(): main.start_in(scenario,time_of_day,true))
 	# Secondary entries.
-	var row = [["menu_sandbox",func(): main.start_in(scenario,time_of_day,true)],["menu_academia",main.open_academy],["menu_equipo",main.show_equipment],["menu_graficos",main.show_graphics_settings]]
+	var row = [["menu_academia",main.open_academy],["menu_equipo",main.show_equipment],["menu_graficos",main.show_graphics_settings]]
 	for k in row.size():
-		flat_button(self,Texts.get_text(row[k][0]),Rect2(x+k*145,550,135,44),row[k][1])
+		flat_button(self,Texts.get_text(row[k][0]),Rect2(x+k*193,552,183,44),row[k][1])
 	# Theme selector (top right).
 	text(self,Texts.get_text("menu_tema"),Vector2(1004,30),12,FAINT,body_medium)
 	for k in 2:
@@ -165,7 +165,7 @@ func build() -> void:
 		b.pressed.connect(func(): main.set_theme(dark))
 		add_child(b)
 		theme_buttons.append(b)
-	text(self,Texts.get_text("menu_pie"),Vector2(x,624),13,FAINT,light_font,570)
+	text(self,Texts.get_text("menu_pie"),Vector2(x,616),13,FAINT,light_font,570)
 	refresh()
 
 func select_scenario(which: String) -> void:

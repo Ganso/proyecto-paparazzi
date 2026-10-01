@@ -7,6 +7,8 @@ extends Control
 #   Telemétrica (1960s rangefinder): bright glass finder, bright-line frame of the focal length with
 #     parallax correction, small red LED meter ▶ ● ◀ and shutter digits under the frame.
 #   Compacta (2000s digital): rear LCD in a plastic body, white status icons, green AF box, zoom bar.
+#   TLR (1950s 6×6, docs/futuro/21 §3): waist-level hood seen from above, square ground glass with
+#     its grid, mirrored image (viewfinder_lens.gdshader), frame counter and a hand-held meter.
 # The classic interface (interface_mode "clasica") hides all of it and shows the full-screen HUD.
 const Photo = preload("res://scripts/photography.gd")
 const Texts = preload("res://scripts/texts.gd")
@@ -24,7 +26,11 @@ var led_dim = Color(.25,.03,.02)
 var lcd_white = Color(.95,.97,1.0)
 
 # Image rectangle per body (1280×720 canvas, always 16:9 so the photo is never cropped).
-const RECTS = {0: Rect2(70,82,904,508.5), 1: Rect2(96,40,1088,612), 2: Rect2(152,30,976,549)}
+const RECTS = {0: Rect2(70,82,904,508.5), 1: Rect2(96,40,1088,612), 2: Rect2(152,30,976,549), 3: Rect2(152,40,1024,576)}
+
+# The TLR window: the central square of its image.
+static func square_of(r: Rect2) -> Rect2:
+	return Rect2(r.position.x+(r.size.x-r.size.y)*.5,r.position.y,r.size.y,r.size.y)
 
 func _init(owner_main) -> void:
 	main = owner_main
@@ -53,6 +59,7 @@ func mask(b: int) -> ImageTexture:
 	var h = 360
 	var img = Image.create(w,h,false,Image.FORMAT_RGBA8)
 	var r: Rect2 = RECTS[b]
+	if b == 3: r = square_of(r)
 	var rect = Rect2(r.position*.5,r.size*.5)
 	var rng = RandomNumberGenerator.new()
 	rng.seed = 77+b
@@ -61,7 +68,7 @@ func mask(b: int) -> ImageTexture:
 			var p = Vector2(x+.5,y+.5)
 			var c = Color(0,0,0,0)
 			# Signed distance to the rounded image window (negative inside).
-			var radius = 10.0 if b == 2 else (6.0 if b == 1 else 3.0)
+			var radius = 10.0 if b == 2 else (6.0 if b == 1 else (2.0 if b == 3 else 3.0))
 			var q = (p-rect.get_center()).abs()-(rect.size*.5-Vector2(radius,radius))
 			var d = Vector2(maxf(q.x,0),maxf(q.y,0)).length()+minf(maxf(q.x,q.y),0.0)-radius
 			match b:
@@ -82,6 +89,14 @@ func mask(b: int) -> ImageTexture:
 						c = Color(g,g,g,1.0)
 					else:
 						c = Color(0,0,0,clampf(1.0-(-d)/6.0,0,1)*.35)
+				3:
+					# Folding hood of a TLR seen from above: black crinkle metal with the four
+					# side flaps catching a little light towards the window.
+					if d > 0:
+						var flap = .02+.06*(1.0-smoothstep(0.0,60.0,d))+rng.randf()*.015
+						c = Color(flap,flap,flap*1.04,1.0)
+					else:
+						c = Color(0,0,0,clampf(1.0-(-d)/10.0,0,1)*.5)
 				0:
 					# Plastic body of a compact around the LCD, with a slight texture and a bevel.
 					if d > 0:
@@ -143,6 +158,7 @@ func _draw() -> void:
 		2: draw_slr(r)
 		1: draw_rangefinder(r)
 		0: draw_compact(r)
+		3: draw_tlr(r)
 	draw_assignment(r)
 	if blackout_time > 0:
 		draw_rect(r,Color(0,0,0,clampf(blackout_time/maxf(blackout_total,.001)*1.6,0,1)))
@@ -245,6 +261,37 @@ func draw_rangefinder(r: Rect2) -> void:
 	seg_text(Vector2(cx+80,y-12),shutter_digits(),24,led_red,Color(0,0,0,0))
 	seg_text(Vector2(cx-200,y-12),aperture_digits(),24,Color(.95,.85,.6,.75),Color(0,0,0,0))
 	draw_string(font,Vector2(cx-232,y+10),"f/",HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color(.95,.85,.6,.75))
+
+func draw_tlr(r: Rect2) -> void:
+	var sq = square_of(r)
+	# Ground glass grid (thin dark lines in thirds) and the clear central spot.
+	for k in [1,2]:
+		var gx = sq.position.x+sq.size.x*k/3.0
+		var gy = sq.position.y+sq.size.y*k/3.0
+		draw_line(Vector2(gx,sq.position.y),Vector2(gx,sq.end.y),Color(0,0,0,.28),1.0)
+		draw_line(Vector2(sq.position.x,gy),Vector2(sq.end.x,gy),Color(0,0,0,.28),1.0)
+	if main.tlr_loupe:
+		draw_string(font,sq.position+Vector2(12,24),Texts.get_text("tlr_lupa")+" 3×",HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color(1,1,1,.7))
+	# Frame counter window (right) and crank state; hand-held meter (left): a needle over −2…+2.
+	var cream = Color(.92,.88,.78)
+	var frames = main.tlr_frames if main.sandbox else main.shots
+	var cx = sq.end.x+90
+	draw_circle(Vector2(cx,sq.position.y+110),34,Color(.08,.08,.085))
+	draw_arc(Vector2(cx,sq.position.y+110),34,0,TAU,40,Color(.3,.3,.32),2)
+	draw_string(font,Vector2(cx-30,sq.position.y+122),str(frames),HORIZONTAL_ALIGNMENT_CENTER,60,30,cream)
+	draw_string(font,Vector2(cx-60,sq.position.y+168),"Nº",HORIZONTAL_ALIGNMENT_CENTER,120,14,Color(cream.r,cream.g,cream.b,.6))
+	if main.sandbox and not main.tlr_wound:
+		draw_string(font,Vector2(cx-80,sq.position.y+220),"K ↻",HORIZONTAL_ALIGNMENT_CENTER,160,22,Color(1,.6,.4))
+	var mx = sq.position.x-150
+	var my = sq.position.y+150
+	draw_rect(Rect2(mx-60,my-70,120,110),Color(.12,.12,.13))
+	draw_rect(Rect2(mx-52,my-62,104,70),cream)
+	for i in range(-2,3):
+		var a = deg_to_rad(-90+i*22)
+		draw_line(Vector2(mx,my)+Vector2.from_angle(a)*48,Vector2(mx,my)+Vector2.from_angle(a)*56,Color(.15,.15,.15),2)
+	var needle = deg_to_rad(-90+clampf(meter_delta(),-2.5,2.5)*22)
+	draw_line(Vector2(mx,my),Vector2(mx,my)+Vector2.from_angle(needle)*54,Color(.75,.1,.08),2)
+	draw_string(font,Vector2(mx-60,my+30),"%s · f/%s" % [shutter_digits(),aperture_digits()],HORIZONTAL_ALIGNMENT_CENTER,120,13,cream)
 
 func draw_compact(r: Rect2) -> void:
 	var white = lcd_white

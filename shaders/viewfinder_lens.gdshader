@@ -16,6 +16,11 @@ uniform int finder_body = -1;
 uniform vec2 parallax = vec2(0.0);
 uniform float lcd_noise : hint_range(0.0, 1.0) = 0.0;
 uniform bool lens_off = false;   // Bajo: no vignetting or chromatic aberration
+// TLR (docs/futuro/21 §3): the waist-level finder shows the ground glass mirrored left to right,
+// only the central square (6×6) and, with the loupe, the centre magnified.
+uniform bool mirror = false;
+uniform bool square = false;
+uniform float loupe = 1.0;
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -23,6 +28,8 @@ float hash(vec2 p) {
 
 void fragment() {
 	vec2 uv = UV - parallax;
+	if (mirror) uv.x = 1.0 - uv.x;
+	uv = vec2(0.5) + (uv - vec2(0.5)) / loupe;
 	vec2 centred = uv - vec2(0.5);
 	float r2 = dot(centred * vec2(1.0, 0.5625), centred * vec2(1.0, 0.5625));
 	vec2 shift = lens_off ? vec2(0.0) : centred * r2 * 0.015 * chromatic_aberration;
@@ -30,7 +37,7 @@ void fragment() {
 	float vignette = smoothstep(0.0, 1.0, clamp(1.0 - r2 * 2.4 * vignette_amount, 0.0, 1.0));
 	if (!lens_off) color *= mix(0.70, 1.0, vignette);
 	vec2 px = UV / TEXTURE_PIXEL_SIZE;
-	if (finder_body == 2) {
+	if (finder_body == 2 || finder_body == 3) {
 		// Ground glass: fine fixed grain, a soft brighter centre (Fresnel lens) and dust specks.
 		float grain = hash(floor(px * 0.75)) - 0.5;
 		color *= 1.0 + grain * 0.07;
@@ -57,5 +64,6 @@ void fragment() {
 		color += n * lcd_noise * 0.22;
 		color *= grid;
 	}
+	if (square && abs(UV.x - 0.5) * 1.777778 > 0.5) color = vec3(0.012);
 	COLOR = vec4(color, 1.0);
 }

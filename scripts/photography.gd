@@ -24,7 +24,8 @@ static func inside(p: Vector2) -> bool:
 	return p.x >= 0 and p.x <= 1 and p.y >= 0 and p.y <= 1
 
 static func evaluate(e: Dictionary) -> Dictionary:
-	var blur = coc(e.f, e.n, e.d, e.s)
+	# Focus is judged on the eyes when the evidence has them (docs/futuro/21 §2).
+	var blur = coc(e.f, e.n, e.get("d_eyes", e.d), e.s)
 	var delta = ev(e.n, e.t, e.iso, e.scene_ev)
 	var ratio: float = e.t*e.f
 	var drag: float = e.v*e.t*e.f/e.d
@@ -52,7 +53,7 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	for denom in DENOMINATORS:
 		if 1.0/denom <= 1.0/e.f and e.v/denom*e.f/e.d <= C: shutter_needed = denom
 	var lines = [
-		Texts.get_text("enfoque_d_coc_3f_mm_nitido_0_030_foco_a_s_sujeto_a_2f_m_s") % [roundi(focus*100), blur, Texts.get_text("infinito") if is_inf(e.s) else Texts.get_text("2f_m") % e.s, e.d, Texts.get_text("vuelve_a_enfocar_sobre_el_sujeto") if focus < 1 else Texts.get_text("el_sujeto_esta_dentro_de_la_nitidez_aceptable")],
+		Texts.get_text("enfoque_d_coc_3f_mm_nitido_0_030_foco_a_s_sujeto_a_2f_m_s") % [roundi(focus*100), blur, Texts.get_text("infinito") if is_inf(e.s) else Texts.get_text("2f_m") % e.s, e.get("d_eyes", e.d), Texts.get_text("vuelve_a_enfocar_sobre_el_sujeto") if focus < 1 else Texts.get_text("el_sujeto_esta_dentro_de_la_nitidez_aceptable")],
 		Texts.get_text("exposicion_d_ev_2f_s_s") % [roundi(exposure*100), delta, Texts.get_text("subexpuesta") if delta > .5 else Texts.get_text("sobreexpuesta") if delta < -.5 else Texts.get_text("correcta"), Texts.get_text("abre_diafragma_sube_iso_o_alarga_el_tiempo") if delta > .5 else Texts.get_text("cierra_diafragma_baja_iso_o_acorta_el_tiempo") if delta < -.5 else Texts.get_text("dentro_de_la_tolerancia_de_medio_paso")],
 		Texts.get_text("movimiento_d_pulso_tf_2f_arrastre_3f_mm_s") % [roundi(movement*100), ratio, drag, Texts.get_text("usa_1_d_s_o_mas_rapido_para_congelar_este_movimiento") % shutter_needed if movement < 1 else Texts.get_text("velocidad_suficiente_para_pulso_y_sujeto")],
 		Texts.get_text("oclusion_d_d_5_puntos_libres_s") % [roundi(occlusion*100), 5-e.blockers.size(), Texts.get_text("obstaculos")+", ".join(e.blockers)+Texts.get_text("espera_a_que_despejen_la_vista") if not e.blockers.is_empty() else Texts.get_text("cabeza_pecho_cadera_y_ambas_rodillas_visibles")],

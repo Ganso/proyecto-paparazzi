@@ -1,10 +1,12 @@
 shader_type canvas_item;
 uniform float offset = 0.0;
 uniform int body = 2;
+uniform bool mirror = false;   // TLR: the ground glass is seen mirrored
 void fragment() {
 	vec2 p = (UV - vec2(0.5)) * vec2(1.777778, 1.0);
 	bool inside = body == 1 ? abs(p.x) < 0.095 && abs(p.y) < 0.048 : length(p) < 0.078;
 	vec2 uv = UV;
+	if (mirror) uv.x = 1.0 - uv.x;
 	vec4 c = texture(TEXTURE, uv);
 	if (inside) {
 		if (body == 1) {

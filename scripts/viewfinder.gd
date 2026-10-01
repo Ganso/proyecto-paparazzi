@@ -39,11 +39,13 @@ func _draw() -> void:
 		draw_line(p,p+Vector2(56*direction.x,0),ink,2)
 		draw_line(p,p+Vector2(0,40*direction.y),ink,2)
 	if thirds:
+		# The TLR frames a square: its thirds are those of the central square.
+		var frame = Rect2(view.position.x+(view.size.x-view.size.y)*.5,view.position.y,view.size.y,view.size.y) if body == 3 else view
 		for k in [1,2]:
-			var gx = view.position.x+view.size.x*k/3
-			var gy = view.position.y+view.size.y*k/3
-			draw_line(Vector2(gx,view.position.y),Vector2(gx,view.end.y),Color(1,1,1,.22),1)
-			draw_line(Vector2(view.position.x,gy),Vector2(view.end.x,gy),Color(1,1,1,.22),1)
+			var gx = frame.position.x+frame.size.x*k/3
+			var gy = frame.position.y+frame.size.y*k/3
+			draw_line(Vector2(gx,frame.position.y),Vector2(gx,frame.end.y),Color(1,1,1,.22),1)
+			draw_line(Vector2(frame.position.x,gy),Vector2(frame.end.x,gy),Color(1,1,1,.22),1)
 	var pts = points()
 	for i in pts.size():
 		if af_mode == "MF": continue

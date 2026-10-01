@@ -17,7 +17,7 @@ func run() -> void:
 	game.pitch = 100
 	game.update_camera()
 	check(is_equal_approx(game.angle,1) and game.pitch == 75,"Unbounded yaw, bounded pitch")
-	for body in 3:
+	for body in 4:
 		game.equipment.preset(body)
 		for lens in game.equipment.LENSES[body].size():
 			game.equipment.lens_index = lens
@@ -166,4 +166,9 @@ func run() -> void:
 		var t = game.casting.generate()
 		check(not (game.casting.catalog.piezas.cabeza[t.hair].style == "bald" and (t.profile == 3 or t.gender == "f")),"Appearance compatibility")
 	print("EQUIPMENT TESTS: %d checks, %d failures" % [checks,failures])
+	# TLR (docs/futuro/21 §3): film, manual focus only, 80 mm on 6×6 = 50 mm equivalent.
+	game.equipment.preset(3)
+	check(game.equipment.tlr() and game.equipment.film and game.equipment.focus_modes() == ["MF"] and not game.equipment.auto_exposure,"TLR preset: film, MF only, manual exposure")
+	check(game.equipment.lens().min == 50.0 and game.equipment.lens().max == 50.0 and game.equipment.lens().wide == 2.8,"TLR lens: 80 mm f/2.8 (50 mm equivalent)")
+	game.equipment.preset(0)
 	quit(0 if failures == 0 else 1)

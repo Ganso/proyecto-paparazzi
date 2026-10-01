@@ -43,6 +43,25 @@ func run() -> void:
 	game.resume_search()
 	await game.take_photo()
 	await shot("10_sandbox_resultado")
+	# Arcade (docs/futuro/21): level select, a TLR level's briefing, its finder, a photo and the end.
+	game.show_arcade()
+	await shot("11_arcade")
+	game.start_level(15)
+	await shot("12_nivel_encargo")
 	game.set_interface("camara")
-	game.resume_search()
+	game.begin_assignment()
+	for i in 30: await process_frame
+	await shot("13_tlr_visor")
+	game.tlr_loupe = true
+	game.update_finder_shader()
+	await shot("14_tlr_lupa")
+	game.tlr_loupe = false
+	game.update_finder_shader()
+	game.set_interface("clasica")
+	await shot("15_tlr_clasica")
+	await game.take_photo()
+	await shot("16_tlr_resultado")
+	game.end_level()
+	await shot("17_fin_nivel")
+	game.set_interface("camara")
 	quit()

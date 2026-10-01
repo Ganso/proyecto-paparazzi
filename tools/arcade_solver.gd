@@ -1,0 +1,132 @@
+extends SceneTree
+# Plays every arcade level automatically to prove it can be passed (docs/futuro/21 §4). It aims at
+# the subject, frames it for the level's conditions, focuses on the eyes and, every half second,
+# tries every aperture, shutter and ISO on the live evidence: it only shoots when a combination
+# passes the conditions and the pass mark, then applies it and takes the real photo through the
+# game. In the big park it starts a few metres from the subject (walking there is not the test).
+#   ~/bin/godot-4-fp --path . --disable-vsync --script tools/arcade_solver.gd [-- --only=1,16]
+# Prints «LEVEL n: PASS score/min» or «LEVEL n: FAIL …» and ARCADE SOLVER: passed/total.
+const Main = preload("res://main.tscn")
+const MainScript = preload("res://scripts/main.gd")
+const Arcade = preload("res://scripts/arcade.gd")
+const Conditions = preload("res://scripts/conditions.gd")
+const Photo = preload("res://scripts/photography.gd")
+var game
+
+func _initialize() -> void: call_deferred("run")
+
+func frames(n: int) -> void:
+	for i in n: await process_frame
+
+func make_game(which: String) -> void:
+	if is_instance_valid(game): game.queue_free()
+	await frames(2)
+	MainScript.scenario = which
+	game = Main.instantiate()
+	root.add_child(game)
+	await frames(20)
+
+# Brute force of the exposure settings on a copy of the evidence: the best passing combination.
+func best_settings(e: Dictionary, level: Dictionary) -> Dictionary:
+	var best = {}
+	var stops = game.apertures()
+	var isos = [game.equipment.film_iso_index] if game.equipment.film else range(Photo.ISOS.size())
+	for n in stops.size():
+		for t in Photo.DENOMINATORS.size():
+			for iso in isos:
+				var trial = e.duplicate()
+				trial.n = stops[n]
+				trial.t = 1.0/Photo.DENOMINATORS[t]
+				trial.iso = Photo.ISOS[iso]
+				var r = Photo.evaluate(trial)
+				Conditions.apply(r,trial,level.cond)
+				if not r.rejected and r.score >= level.min and (best.is_empty() or r.score > best.score):
+					best = {"score":r.score,"n":n,"t":t,"iso":iso}
+	return best
+
+func solve(n: int) -> String:
+	var level: Dictionary = Arcade.LEVELS[n]
+	if MainScript.scenario != level.scenario or not is_instance_valid(game): await make_game(level.scenario)
+	game.start_level(n)
+	await frames(3)
+	game.begin_assignment()
+	var target = game.target
+	if game.crowd:
+		var away = Vector3(sin(game.angle),0,cos(game.angle))
+		game.player.position = target.global_position+Vector3(4.5,0,3.0)
+		game.set_raised(true)
+		game.raise_anim = 1.0
+	var want_h = .7
+	if level.cond.has("grande"): want_h = maxf(want_h,float(level.cond.grande)+.12)
+	if level.cond.has("aislado"): want_h = .85
+	if level.cond.has("fondo"): want_h = maxf(want_h,.8)
+	var sweep = [.75,.55,.4,.3,.22,.6,.45] if level.cond.has("acompanado") else [want_h]
+	var aim_offset = 0.0
+	var budget = float(level.limit) if level.limit > 0 else 90.0
+	var elapsed = 0.0
+	var tries = 0
+	while elapsed < budget and game.mode in ["SEARCH","RESULT"]:
+		if game.mode == "RESULT":
+			if game.current_result.rejected or game.current_result.score < level.min:
+				if game.shots > 0: game.resume_search()
+				else: break
+			else: break
+		await frames(15)
+		elapsed += .25
+		if not is_instance_valid(target) or game.mode != "SEARCH": continue
+		if game.crowd and game.player.position.distance_to(target.global_position) > 9.0:
+			game.player.position = target.global_position+Vector3(4.5,0,3.0)
+		game.aim_at(target,1.0)
+		var h_goal: float = sweep[tries % sweep.size()]
+		var d = game.camera.global_position.distance_to(target.control_points()[1])
+		var want_f = h_goal*20.25*d/target.height
+		if level.cond.has("focal_min"): want_f = maxf(want_f,float(level.cond.focal_min))
+		game.focal = clampf(want_f,game.equipment.lens().min,game.equipment.lens().max)
+		game.update_camera()
+		# Golden section: turn so the chest sits on the 38 % line (on the square for the TLR).
+		if level.cond.has("aurea"):
+			var e0 = game.capture_evidence()
+			var hfov = 2*atan(36.0/(2.0*game.focal))
+			var width_frac = 9.0/16.0 if game.equipment.tlr() else 1.0
+			aim_offset = (e0.chest.x-.382)*rad_to_deg(hfov)*width_frac
+			game.angle += aim_offset
+			game.update_camera()
+		await physics_frame
+		var e = game.capture_evidence()
+		game.focus_distance = e.get("d_eyes",e.d)
+		e.s = game.focus_distance
+		tries += 1
+		var best = best_settings(e,level)
+		if best.is_empty(): continue
+		if game.equipment.auto_exposure:
+			# Automatic bodies: trust the camera's own exposure (the photo is re-checked anyway).
+			pass
+		else:
+			game.n_index = best.n
+			game.t_index = best.t
+			if not game.equipment.film: game.iso_index = best.iso
+		game.refresh()
+		await game.take_photo()
+	if game.mode == "RESULT": game.end_level()
+	elif game.mode == "SEARCH": game.end_level()
+	var passed = not game.best.is_empty() and not game.best.rejected and game.best.score >= level.min
+	if passed: return "PASS %d/%d" % [game.best.score,level.min]
+	return "FAIL %s (best %s, %d tries)" % [game.best.get("reason","") if not game.best.is_empty() else "no photo",str(game.best.get("score","-")),tries]
+
+func run() -> void:
+	Arcade.SAVE = "user://arcade_solver.cfg"
+	var only = []
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--only="): only = Array(arg.trim_prefix("--only=").split(",")).map(func(x): return int(x)-1)
+	Engine.time_scale = 2.0
+	var passed = 0
+	var total = 0
+	for n in Arcade.LEVELS.size():
+		if not only.is_empty() and not n in only: continue
+		var verdict = await solve(n)
+		total += 1
+		if verdict.begins_with("PASS"): passed += 1
+		print("LEVEL %d: %s" % [n+1,verdict])
+	print("ARCADE SOLVER: %d/%d" % [passed,total])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Arcade.SAVE))
+	quit(0 if passed == total else 1)

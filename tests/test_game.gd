@@ -144,15 +144,10 @@ func run() -> void:
 	check(game.current_result.movement == 0,"Long exposure degrades movement")
 	check(game.best.score >= first_score,"Best shot retained")
 	await screenshot("movida")
-	# Finish all five jobs through the same production transitions.
+	# Scripted sessions (no level) chain assignments; the arcade replaced the five-job session.
 	game.finish_assignment()
 	check(game.assignment == 1 and game.shots == 3 and game.mode == "BRIEFING","Next assignment replenishes shots")
-	for i in range(1,5):
-		game.begin_assignment()
-		await game.take_photo()
-		game.finish_assignment()
-	check(game.mode == "SUMMARY" and game.records.size() == 5,"Five-job session reaches summary")
-	await screenshot("resumen")
+	game.begin_assignment()
 	print("SESSION VIDEO MEMORY: %.2f MiB, textures %.2f, buffers %.2f, photo %s" % [Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED)/1048576.0,Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)/1048576.0,Performance.get_monitor(Performance.RENDER_BUFFER_MEM_USED)/1048576.0,game.current_photo.get_size()])
 	# Per-profile budget (docs/futuro/17 §3): 60 MB in gl_compatibility, 8 GiB for Ultra in Forward+.
 	var vram_limit = 8.0*1073741824.0 if RenderingServer.get_current_rendering_method() == "forward_plus" else 60000000.0
@@ -273,5 +268,58 @@ func run() -> void:
 	game.intro()
 	await process_frame
 	check(game.modal.theme_buttons.size() == 2,"Main menu shows the theme selector")
+	# Arcade (docs/futuro/21): levels fix the equipment, spend shots, run the clock and end.
+	var Arcade = preload("res://scripts/arcade.gd")
+	Arcade.SAVE = "user://arcade_test.cfg"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Arcade.SAVE))
+	game.start_level(0)
+	check(game.arcade_level == 0 and game.shots == 5 and game.mode == "BRIEFING" and game.equipment.body == 0 and game.equipment.auto_exposure,"Level 1: automatic compact and 5 shots")
+	game.begin_assignment()
+	await game.take_photo()
+	check(game.mode == "RESULT" and game.shots == 4,"An arcade photo spends one of the level's shots")
+	game.end_level()
+	check(game.mode == "LEVEL_END" and game.level_over,"The level ends on demand")
+	game.start_level(3)
+	game.begin_assignment()
+	game.level_time = .02
+	await frames(4)
+	check(game.mode == "LEVEL_END","The time limit ends the level")
+	game.start_level(9)
+	check(game.target.runner and not game.equipment.auto_exposure and game.equipment.body == 2,"Level 10 sets a running subject and manual SLR")
+	check(game.briefing.text.contains("congelado"),"The search line lists the level's conditions")
+	# TLR: waist level, square photo measured on the square, film, manual focus.
+	game.start_level(15)
+	check(game.equipment.tlr() and game.equipment.film and game.equipment.focus_mode == "MF","Level 16: TLR with film and manual focus")
+	check(is_equal_approx(game.camera.position.y,1.1),"The TLR is held at the waist (1.10 m)")
+	game.begin_assignment()
+	await frames(3)
+	await game.take_photo()
+	check(game.current_photo.get_width() == game.current_photo.get_height(),"The TLR photo is square")
+	check(game.current_result.evidence.get("square",false) and game.current_result.has("conditions"),"TLR evidence is measured on the square")
+	game.equipment.preset(2)
+	game.apply_equipment()
+	check(is_equal_approx(game.camera.position.y,1.6),"Other bodies return to eye level")
+	# TLR in the sandbox: 12 frames and the crank between shots.
+	game.equipment.preset(3)
+	game.apply_equipment()
+	game.start_session("day",true)
+	await game.take_photo()
+	check(game.tlr_frames == 11 and not game.tlr_wound,"A TLR frame is spent and the film needs winding")
+	game.resume_search()
+	await game.take_photo()
+	check(game.tlr_frames == 11,"No shot without winding the crank")
+	game.wind_film()
+	check(game.tlr_wound,"The crank winds the film")
+	game.tlr_frames = 0
+	game.tlr_wound = true
+	await game.take_photo()
+	game.wind_film()
+	check(game.tlr_frames == 12,"A finished roll is replaced by a new one of 12")
+	game.equipment.preset(0)
+	game.apply_equipment()
+	game.show_arcade()
+	await process_frame
+	check(game.mode == "ARCADE","The level select screen opens")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Arcade.SAVE))
 	print("GAME TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

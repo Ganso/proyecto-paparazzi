@@ -1,6 +1,6 @@
 extends RefCounted
 # Focal lengths are 35 mm equivalents, matching the simulator's reference sensor.
-const CAMERAS = ["Compacta", "Telemétrica", "Réflex"]
+const CAMERAS = ["Compacta", "Telemétrica", "Réflex", "TLR 6×6"]
 const LENSES = [
 	[{"name":"Zoom 24–120 · f/2.8–5.6", "min":24.0,"max":120.0,"wide":2.8,"long":5.6,"stop":8.0},
 	 {"name":"Fijo 35 · f/2.8", "min":35.0,"max":35.0,"wide":2.8,"long":2.8,"stop":8.0}],
@@ -13,7 +13,10 @@ const LENSES = [
 	 # Added for the Academy (docs/futuro/06): wide-angle perspective, portrait bokeh, compression.
 	 {"name":"Fijo 28 · f/2.8", "min":28.0,"max":28.0,"wide":2.8,"long":2.8,"stop":22.0},
 	 {"name":"Fijo 105 · f/1.8", "min":105.0,"max":105.0,"wide":1.8,"long":1.8,"stop":22.0},
-	 {"name":"Fijo 135 · f/2", "min":135.0,"max":135.0,"wide":2.0,"long":2.0,"stop":22.0}]
+	 {"name":"Fijo 135 · f/2", "min":135.0,"max":135.0,"wide":2.0,"long":2.0,"stop":22.0}],
+	# TLR (docs/futuro/21 §3): 80 mm f/2.8 on 6×6. Its 56 mm square frame spans the field of a 50 mm
+	# on the 36 mm reference width, so it is a 50 mm equivalent here.
+	[{"name":"Planar 80 · f/2.8 (6×6)", "min":50.0,"max":50.0,"wide":2.8,"long":2.8,"stop":22.0}]
 ]
 const STOPS = [1.4,1.8,2.0,2.8,4.0,5.6,8.0,11.0,16.0,22.0]
 const EV_COMPENSATIONS = [-2.0, -1.7, -1.3, -1.0, -0.7, -0.3, 0.0, 0.3, 0.7, 1.0, 1.3, 1.7, 2.0]
@@ -29,7 +32,9 @@ func lens() -> Dictionary:
 func zoom() -> bool:
 	return lens().min != lens().max
 func focus_modes() -> Array:
-	return ["MF"] if body == 1 else ["AF matricial", "AF puntual", "MF"]
+	return ["MF"] if body in [1,3] else ["AF matricial", "AF puntual", "MF"]
+func tlr() -> bool:
+	return body == 3
 func apertures(focal: float) -> Array:
 	var l = lens()
 	var minimum = lerpf(l.wide,l.long,inverse_lerp(l.min,l.max,focal)) if zoom() else float(l.wide)
@@ -39,9 +44,10 @@ func exposure_compensation() -> float:
 func change_exposure_compensation(direction: int) -> void:
 	ev_comp_index = clampi(ev_comp_index + direction, 0, EV_COMPENSATIONS.size() - 1)
 func preset(index: int) -> void:
-	film = false
+	film = index == 3        # the TLR takes 120 film: fixed ISO
+	if film: film_iso_index = 2
 	body = index
 	lens_index = 0
 	ev_comp_index = 6
-	focus_mode = ["AF matricial","MF","AF puntual"][index]
+	focus_mode = ["AF matricial","MF","AF puntual","MF"][index]
 	auto_exposure = index == 0
