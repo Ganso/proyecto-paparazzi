@@ -9,6 +9,15 @@ uniform float shot_seed = 0.0;
 uniform float vignette_amount : hint_range(0.0, 1.0) = 0.38;
 uniform float chromatic_aberration : hint_range(0.0, 1.0) = 0.28;
 
+vec3 srgb_to_linear(vec3 c) {
+	return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
+}
+
+vec3 linear_to_srgb(vec3 c) {
+	c = clamp(c, vec3(0.0), vec3(1.0));
+	return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
+}
+
 float random(vec2 p) {
 	return fract(sin(dot(p, vec2(12.9898, 78.233)) + shot_seed) * 43758.5453);
 }
@@ -33,8 +42,18 @@ void fragment() {
 	}
 	color /= 17.0;
 
-	// Exposure compensation
-	color = pow(max(color, vec3(0.0)), vec3(1.0 + clamp(exposure, -3.0, 3.0) * 0.06)) * exp2(-exposure);
+	// Exposure, in linear light (the capture is sRGB-encoded). Multiplying the encoded values and
+	// clipping each channel on its own turned overexposed photos yellow, magenta and blue: like film
+	// or a sensor, the highlights now roll off and lose saturation towards white instead.
+	vec3 lin = srgb_to_linear(max(color, vec3(0.0))) * exp2(-exposure);
+	float peak = max(max(lin.r, lin.g), lin.b);
+	if (peak > 1.0) {
+		// Keep the hue at full brightness and fade it to white as it burns (identity up to 1.0,
+		// so a correctly exposed photo is untouched).
+		lin /= peak;
+		lin = mix(lin, vec3(1.0), clamp((peak - 1.0) / 2.5, 0.0, 1.0));
+	}
+	color = linear_to_srgb(lin);
 
 	// Optical lens vignetting (natural cos^4 falloff simulation)
 	float vig = clamp(1.0 - r2 * 2.4 * vignette_amount, 0.0, 1.0);

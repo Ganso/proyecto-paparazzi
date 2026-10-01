@@ -89,7 +89,7 @@ Shader `canvas_item` aplicado a la captura del Viewport. `main.gd` le pasa estos
 
 Funcionamiento:
 1. **17 muestras en espiral** (ángulo áureo) que combinan disco de CoC, estela de movimiento y trepidación en una sola pasada.
-2. **Exposición**: `pow(color, 1 + ΔEV·0.06) · 2^(−ΔEV)` (con ΔEV acotado a ±3 en el exponente). Es una curva gamma simple, no una curva sensitométrica completa.
+2. **Exposición, en luz lineal** (desde el 01-10-2026): la captura se pasa de sRGB a lineal, se multiplica por $2^{-\Delta EV}$ y vuelve a sRGB. Cuando un píxel pasa del blanco, conserva su tono a plena luz y se funde hacia el blanco a medida que se quema (fundido completo 2,5 veces por encima del máximo); hasta el máximo es la identidad, así que una foto bien expuesta no cambia. Antes la exposición multiplicaba los valores ya codificados y recortaba cada canal por separado, y las fotos sobreexpuestas salían con amarillos, magentas y azules falsos.
 3. **Grano**: ruido pseudoaleatorio uniforme, mayor cuanto mayor es el ISO (0 a ISO 100, 0.175 a ISO 3200).
 
 ### 4.2 Ayuda de Enfoque Manual (`shaders/focus_aid.gdshader`)
