@@ -6,14 +6,14 @@ Este documento detalla los cuerpos de cámara, el catálogo de objetivos, el sis
 
 ## 1. Cuerpos de Cámara
 
-El simulador define 3 cuerpos (`Equipment.CAMERAS`). Todos comparten el mismo sensor de referencia de **36 mm de ancho** (formato completo): las focales se expresan siempre como equivalentes de 35 mm.
+El simulador define 4 cuerpos (`Equipment.CAMERAS`); la TLR 6×6 (`body = 3`) se detalla en [futuro/21 §3](futuro/21_ARCADE_CONDICIONES_TLR.md). Todos comparten el mismo sensor de referencia de **36 mm de ancho** (formato completo): las focales se expresan siempre como equivalentes de 35 mm.
 
-| Característica | Compacta (`body = 0`) | Telemétrica (`body = 1`) | Réflex (`body = 2`) |
-|---|:---:|:---:|:---:|
-| **Objetivos** | Zoom 24–120 o fijo 35 | Fijos 35 / 50 / 90 | Zoom 24–105, zoom 70–200 o fijos 50 / 28 / 105 / 135 |
-| **Modos de foco** (`focus_modes()`) | AF matricial, AF puntual, MF | **Solo MF** | AF matricial, AF puntual, MF |
-| **Ayuda en MF** (`focus_aid.gdshader`) | Imagen partida circular (ayuda digital) | Parche rectangular de doble imagen superpuesta | Imagen partida circular |
-| **Exposición** | Automática o manual | Automática o manual | Automática o manual |
+| Característica | Compacta (`body = 0`) | Telemétrica (`body = 1`) | Réflex (`body = 2`) | TLR 6×6 (`body = 3`) |
+|---|:---:|:---:|:---:|:---:|
+| **Objetivos** | Zoom 24–120 o fijo 35 | Fijos 35 / 50 / 90 | Zoom 24–105, zoom 70–200 o fijos 50 / 28 / 105 / 135 | Planar 80 f/2.8 (equivalente 50 mm) |
+| **Modos de foco** (`focus_modes()`) | AF matricial, AF puntual, MF | **Solo MF** | AF matricial, AF puntual, MF | **Solo MF**, lupa 3× (L) |
+| **Ayuda en MF** (`focus_aid.gdshader`) | Imagen partida circular (ayuda digital) | Parche rectangular de doble imagen superpuesta | Imagen partida circular | Imagen partida circular, espejada |
+| **Exposición** | Automática o manual | Automática o manual | Automática o manual | Manual, carrete de ISO fijo (12 fotos) |
 
 ### Preajustes de la pantalla «Elige tu equipo» (`Equipment.preset()`)
 
@@ -22,8 +22,9 @@ El simulador define 3 cuerpos (`Equipment.CAMERAS`). Todos comparten el mismo se
 | **Fácil · todo automático** | Compacta | AF matricial | Automática |
 | **Calle · telemétrica manual** | Telemétrica | MF | Manual |
 | **Acción · réflex AF puntual** | Réflex | AF puntual | Manual |
+| **Clásica · TLR 6×6** | TLR | MF | Manual, carrete ISO 400 |
 
-Tras elegir un preajuste, la sección «Selección manual de equipo» permite cambiar por separado cuerpo, objetivo, modo de foco, exposición (manual/automática) y soporte (digital/carrete).
+En el modo arcade el nivel fija el equipo y esta pantalla solo deja cambiar la interfaz y los gráficos. Tras elegir un preajuste, la sección «Selección manual de equipo» permite cambiar por separado cuerpo, objetivo, modo de foco, exposición (manual/automática) y soporte (digital/carrete).
 
 ---
 

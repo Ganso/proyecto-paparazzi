@@ -6,6 +6,8 @@ Este documento detalla el diseño mecánico, óptico y de interfaz para tres nue
 
 ## 1. Cámara TLR (Twin-Lens Reflex / Rolleiflex) — [Mecánica Clásica Invertida]
 
+> **✅ Implementada el 01-10-2026** en [21 §3](21_ARCADE_CONDICIONES_TLR.md): cintura a 1,10 m, visor espejado y cuadrado con lupa, evaluación sobre el cuadrado, carrete de 12 con manivela en el sandbox. Decisión del usuario: el objetivo es un 80 mm f/2.8 (equivalente 50 mm). Los criterios de aceptación del §5 están cubiertos por `test_game.gd`, `test_finders.gd` y `test_equipment.gd`.
+
 La cámara réflex de objetivos gemelos de formato medio ($6 \times 6\text{ cm}$) introduce una de las mecánicas fotográficas más singulares y desafiantes de la historia de la fotografía.
 
 ```

@@ -302,7 +302,8 @@ func _ready() -> void:
 		equipment.lens_index = int(parts[1]) if parts.size() > 1 else 0
 		if "--manual" in OS.get_cmdline_user_args(): equipment.auto_exposure = false
 	if smoke or screenshot_path != "" or run_metrics or not demo.is_empty() or not photo_walk.is_empty():
-		start_session(start_time_of_day,bool(pending_start.get("sandbox_demo",false)))
+		# With --level the level already set scenario, light and equipment: just enter it.
+		if arcade_level < 0: start_session(start_time_of_day,bool(pending_start.get("sandbox_demo",false)))
 		begin_assignment()
 		if not demo.is_empty():
 			apply_equipment()
@@ -982,6 +983,7 @@ func _process(dt: float) -> void:
 			academy.page = int(parts[2])-1
 			academy.update_panel()
 	if boot_frames == 20 and stage != "": stage_scene(stage)
+	if boot_frames == 12 and "--arcade" in OS.get_cmdline_user_args(): show_arcade()
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
 		for p in people:
@@ -2548,7 +2550,7 @@ func update_demo(dt: float) -> void:
 			# The assignment moves to a pedestrian of the outer lane: at 90 mm and ~11.5 m a whole
 			# body fills about two thirds of the frame, the framing the score asks for.
 			var outer = people.filter(func(p): return p.lane == 3 and p.visible and p.state != "RETIRADO")
-			if not outer.is_empty():
+			if not outer.is_empty() and arcade_level < 0:   # an arcade level keeps its subject
 				if is_instance_valid(target): target.protected_target = false
 				target = outer[0]
 				target.protected_target = true

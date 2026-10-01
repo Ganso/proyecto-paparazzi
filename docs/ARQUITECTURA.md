@@ -71,14 +71,16 @@ El flujo se gestiona en `main.gd` con la variable `mode`. El sandbox **no es un 
 ```mermaid
 stateDiagram-v2
     [*] --> INTRO: Arranque
-    INTRO --> BRIEFING: Parque · Día / Noche (start_session)
+    INTRO --> ARCADE: Arcade (show_arcade)
+    ARCADE --> BRIEFING: Nivel (start_level)
+    RESULT --> LEVEL_END: Terminar el nivel / tiempo o disparos agotados (end_level)
+    LEVEL_END --> BRIEFING: Repetir / siguiente nivel
+    LEVEL_END --> ARCADE: Niveles
     INTRO --> SEARCH: Sandbox (sandbox = true)
     BRIEFING --> SEARCH: Aceptar encargo (Intro / botón)
     SEARCH --> RESULT: Disparo
     RESULT --> SEARCH: Reintentar (quedan disparos) o volver en sandbox
-    RESULT --> BRIEFING: Siguiente encargo (1 a 5)
-    RESULT --> SUMMARY: Tras el 5.º encargo
-    SUMMARY --> INTRO: Otra sesión
+    RESULT --> BRIEFING: Siguiente encargo (sesiones guionizadas sin nivel)
     SEARCH --> HELP: H / ? / Esc
     HELP --> SEARCH: Cerrar ayuda
     SEARCH --> SANDBOX_SETTINGS: «Sandbox · escena» (solo sandbox)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Vídeo de evidencias (bajo demanda, para cambios grandes): el proyecto entero en unos 180 s.
-# Menú principal, las cuatro luces (día, hora dorada, hora azul y noche), los dos escenarios
+# Menú principal y arcade (niveles, una condición, la TLR), las cuatro luces, los dos escenarios
 # (parque clásico y parque grande a pie), la vida del parque (bancos, palomas, perro, figurantes,
 # móviles de noche), los tres cuerpos con su visor real (compacta, telemétrica con enfoque manual,
 # réflex con teleobjetivo), disparo y revelado, el modo sandbox y la Academia. Graba cada secuencia
@@ -40,22 +40,24 @@ MUSIC="${MUSIC:-$PROJECT_DIR/assets/audio/musica_videos.mp3}"
 
 # título | segundos | argumentos del juego (tras --); sin argumentos de demo arranca el menú
 SEQUENCES=(
-	"Proyecto Paparazzi · menú principal sobre el parque vivo|10|"
-	"Parque clásico de día · 21 viandantes, gran angular 24 mm|10|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
-	"Hora dorada · el estanque a 35 mm|9|--time=golden --lens=0,0 --angle=200 --pitch=3 --focal=35 --pan=4 --af"
-	"Hora azul · el parque se enciende|9|--time=blue --lens=0,0 --angle=120 --pitch=3 --focal=28 --pan=4 --af"
-	"Noche · farolas y quiosco iluminado|9|--time=night --lens=0,0 --angle=90 --pitch=4 --focal=24 --pan=5 --af"
-	"Vida en el parque · bancos de dos plazas y charlas|10|--time=day --stage=banco --angle=125 --pitch=-7 --focal=40 --af"
-	"Palomas que acuden a las migas|9|--time=day --stage=palomas --angle=125 --pitch=-12 --focal=40 --af"
-	"Paseando al perro|8|--time=day --stage=perro --pitch=-12 --focal=24 --af"
-	"La pradera · pícnic, balón y figurantes|8|--time=golden --angle=112 --pitch=-1 --focal=60 --pan=1.5 --lens=2,1 --af"
-	"Compacta · su visor real y zoom 24–120|8|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
-	"Réflex · teleobjetivo siguiendo a un viandante|10|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
-	"Telemétrica 90 mm · enfoque manual, disparo y revelado|14|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=9"
-	"Parque grande · paseo libre y cámara al ojo|20|--scenario=grande --time=golden --photo-walk"
-	"Modo sandbox · fotografía libre, sin encargo|10|--sandbox --time=day --lens=2,0 --angle=150 --pitch=-2 --focal=50 --pan=3 --af"
-	"Academia de fotografía · teoría, demostración y práctica|22|--academy=2:teoria --academy-tour=4:2"
-	"De noche, el móvil ilumina las caras|8|--time=night --advance=60 --activity=movil --angle=120 --pitch=-3 --focal=40 --pan=1 --af"
+	"Proyecto Paparazzi · menú: Arcade, Sandbox y Academia|9|"
+	"Arcade · veinte niveles en cuatro bloques|6|--arcade"
+	"Parque clásico de día · 21 viandantes, gran angular 24 mm|8|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
+	"Hora dorada · el estanque a 35 mm|8|--time=golden --lens=0,0 --angle=200 --pitch=3 --focal=35 --pan=4 --af"
+	"Hora azul · el parque se enciende|8|--time=blue --lens=0,0 --angle=120 --pitch=3 --focal=28 --pan=4 --af"
+	"Noche · farolas y quiosco iluminado|8|--time=night --lens=0,0 --angle=90 --pitch=4 --focal=24 --pan=5 --af"
+	"Vida en el parque · bancos de dos plazas y charlas|8|--time=day --stage=banco --angle=125 --pitch=-7 --focal=40 --af"
+	"Palomas que acuden a las migas|7|--time=day --stage=palomas --angle=125 --pitch=-12 --focal=40 --af"
+	"Paseando al perro|7|--time=day --stage=perro --pitch=-12 --focal=24 --af"
+	"La pradera · pícnic, balón y figurantes|7|--time=golden --angle=112 --pitch=-1 --focal=60 --pan=1.5 --lens=2,1 --af"
+	"Compacta · su visor real y zoom 24–120|7|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
+	"Réflex · teleobjetivo siguiendo a un viandante|8|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
+	"Telemétrica 90 mm · enfoque manual, disparo y revelado|12|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=8"
+	"Nivel 8 · condición: ojos nítidos con AF puntual|11|--level=8 --interface=camara --follow-target --expose --shoot-at=6"
+	"TLR 6×6 · a la cintura, visor espejado y foto cuadrada|14|--level=16 --interface=camara --follow-target --mf-rack --expose --shoot-at=8"
+	"Parque grande · paseo libre y cámara al ojo|16|--scenario=grande --time=golden --photo-walk"
+	"Modo sandbox · fotografía libre, sin encargo|8|--sandbox --time=day --lens=2,0 --angle=150 --pitch=-2 --focal=50 --pan=3 --af"
+	"Academia de fotografía · teoría, demostración y práctica|18|--academy=2:teoria --academy-tour=4:2"
 )
 
 if [ -n "$SEQ_FILE" ]; then mapfile -t SEQUENCES < <(grep -v '^\s*\(#\|$\)' "$SEQ_FILE"); fi
