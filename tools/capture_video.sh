@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Vídeo de evidencias (bajo demanda, para cambios grandes): graba varias secuencias de 15 s del
-# juego en distintas condiciones con el Movie Maker de Godot (--write-movie, fotogramas fijos a
-# 30 FPS, sin depender de la velocidad del equipo) y las monta con ffmpeg en un MP4 rotulado.
+# Vídeo de evidencias (bajo demanda, para cambios grandes): el proyecto entero en unos 180 s.
+# Menú principal, las cuatro luces (día, hora dorada, hora azul y noche), los dos escenarios
+# (parque clásico y parque grande a pie), la vida del parque (bancos, palomas, perro, figurantes,
+# móviles de noche), los tres cuerpos con su visor real (compacta, telemétrica con enfoque manual,
+# réflex con teleobjetivo), disparo y revelado, el modo sandbox y la Academia. Graba cada secuencia
+# con el Movie Maker de Godot (--write-movie, 30 FPS fijos) y las monta con ffmpeg en un MP4 rotulado.
 #
 #   ./tools/capture_video.sh [--only 1,3] [--res 1920x1080] [--out build/video/evidencias.mp4]
 #
 # Necesita un Godot con Vulkan (GODOT_FP o ~/bin/godot-4-fp) y ffmpeg con libx264. El MP4 va a
-# build/video/ (ignorado por git). Cada secuencia tarda de 1 a 3 min en grabarse. La última usa la
-# telemétrica con enfoque manual (anillo de 1,2 m al sujeto con la imagen partida), mide la luz del
-# sujeto, dispara y muestra el revelado. Tres secuencias enseñan la vida del parque (bancos,
-# palomas, perro, figurantes y móviles de noche). Lleva de fondo la música del proyecto
+# build/video/ (ignorado por git). Tarda unos 15 min. Lleva de fondo la música del proyecto
 # (assets/audio/musica_videos.mp3, o la variable MUSIC) con fundido de salida de 10 s, mezclada
 # sobre el sonido del juego (ambiente y clic del obturador).
 set -euo pipefail
@@ -29,26 +29,32 @@ while [ $# -gt 0 ]; do
 done
 FPS=30
 LEAD=4          # segundos iniciales que se descartan (carga y reposo de los muelles)
-LENGTH=15
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/paparazzi-video.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$(dirname "$OUT")"
 FONT="$(fc-match -f '%{file}' 'sans:bold')"
 MUSIC="${MUSIC:-$PROJECT_DIR/assets/audio/musica_videos.mp3}"
 
-# título | argumentos del juego (tras --)
+# título | segundos | argumentos del juego (tras --); sin argumentos de demo arranca el menú
 SEQUENCES=(
-	"Día · gran angular 24 mm, paneo|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
-	"Día · teleobjetivo 150 mm siguiendo a un viandante|--time=day --lens=2,1 --angle=40 --focal=150 --follow --af"
-	"Hora dorada · 35 mm, paneo hacia el estanque|--time=golden --lens=0,0 --angle=200 --pitch=3 --focal=35 --pan=4 --af"
-	"Noche · 24 mm, farolas y quiosco iluminado|--time=night --lens=0,0 --angle=90 --pitch=4 --focal=24 --pan=5 --af"
-	"Vida en el parque · bancos, palomas y perro|--time=day --lens=0,0 --angle=118 --pitch=-7 --focal=35 --pan=1.2 --advance=75 --af"
-	"Pradera · figurantes junto al quiosco, 70 mm|--time=golden --lens=2,1 --angle=108 --pitch=-1 --focal=70 --pan=1.5 --advance=20 --af"
-	"Noche · el móvil ilumina las caras|--time=night --lens=0,0 --angle=120 --pitch=-3 --focal=40 --pan=1 --advance=60 --activity=movil --af"
-	"Telemétrica 90 mm · enfoque manual, disparo y revelado|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=9"
+	"Proyecto Paparazzi · menú principal sobre el parque vivo|10|"
+	"Parque clásico de día · 21 viandantes, gran angular 24 mm|10|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
+	"Hora dorada · el estanque a 35 mm|9|--time=golden --lens=0,0 --angle=200 --pitch=3 --focal=35 --pan=4 --af"
+	"Hora azul · el parque se enciende|9|--time=blue --lens=0,0 --angle=120 --pitch=3 --focal=28 --pan=4 --af"
+	"Noche · farolas y quiosco iluminado|9|--time=night --lens=0,0 --angle=90 --pitch=4 --focal=24 --pan=5 --af"
+	"Vida en el parque · bancos de dos plazas y charlas|10|--time=day --stage=banco --angle=125 --pitch=-7 --focal=40 --af"
+	"Palomas que acuden a las migas|9|--time=day --stage=palomas --angle=125 --pitch=-12 --focal=40 --af"
+	"Paseando al perro|8|--time=day --stage=perro --pitch=-12 --focal=24 --af"
+	"La pradera · pícnic, balón y figurantes|8|--time=golden --angle=112 --pitch=-1 --focal=60 --pan=1.5 --lens=2,1 --af"
+	"Compacta · su visor real y zoom 24–120|8|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
+	"Réflex · teleobjetivo siguiendo a un viandante|10|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
+	"Telemétrica 90 mm · enfoque manual, disparo y revelado|14|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=9"
+	"Parque grande · paseo libre y cámara al ojo|20|--scenario=grande --time=golden --photo-walk"
+	"Modo sandbox · fotografía libre, sin encargo|10|--sandbox --time=day --lens=2,0 --angle=150 --pitch=-2 --focal=50 --pan=3 --af"
+	"Academia de fotografía · teoría, demostración y práctica|22|--academy=2:teoria --academy-tour=4:2"
+	"De noche, el móvil ilumina las caras|8|--time=night --advance=60 --activity=movil --angle=120 --pitch=-3 --focal=40 --pan=1 --af"
 )
 
-frames=$(( (LEAD + LENGTH) * FPS ))
 list="$WORK/list.txt"
 : > "$list"
 index=0
@@ -56,7 +62,10 @@ for entry in "${SEQUENCES[@]}"; do
 	index=$((index + 1))
 	if [ -n "$ONLY" ] && [[ ",$ONLY," != *",$index,"* ]]; then continue; fi
 	title="${entry%%|*}"
-	args="${entry#*|}"
+	rest="${entry#*|}"
+	LENGTH="${rest%%|*}"
+	args="${rest#*|}"
+	frames=$(( (LEAD + LENGTH) * FPS ))
 	echo "=== [$index/${#SEQUENCES[@]}] $title"
 	raw="$WORK/raw_$index.avi"
 	# shellcheck disable=SC2086
