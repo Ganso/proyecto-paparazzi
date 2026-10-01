@@ -27,6 +27,14 @@ var body = 0
 var lens_index = 0
 var focus_mode = "AF matricial"
 var auto_exposure = true
+# Semi-automatic exposure (docs/futuro/21 §5): with auto_exposure on, "A" leaves the aperture to the
+# player (the camera sets shutter and ISO) and "S" the shutter; "" is the full program.
+var priority = ""
+func exposure_mode() -> String:
+	return "M" if not auto_exposure else (priority if priority != "" else "P")
+func set_exposure_mode(m: String) -> void:
+	auto_exposure = m != "M"
+	priority = m if m in ["A","S"] else ""
 func lens() -> Dictionary:
 	return LENSES[body][lens_index]
 func zoom() -> bool:
@@ -51,3 +59,4 @@ func preset(index: int) -> void:
 	ev_comp_index = 6
 	focus_mode = ["AF matricial","MF","AF puntual","MF"][index]
 	auto_exposure = index == 0
+	priority = ""

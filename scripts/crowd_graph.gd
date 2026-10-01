@@ -120,7 +120,7 @@ func walk(p, dt: float) -> void:
 	var half = f.width*.5
 	var lo = -half+.25
 	var hi = half-.25
-	var v_des: float = p.speed
+	var v_des: float = p.speed*(1.0 if p.runner else main.walk_pace)
 	if not p.pending_stop.is_empty(): v_des = 0.0
 	if p.activity == "movil": v_des *= .8
 	var lat_des = clampf(f.width*.2+p.pref_offset,lo,hi)

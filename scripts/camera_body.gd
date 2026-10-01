@@ -209,7 +209,8 @@ func draw_slr(r: Rect2) -> void:
 	draw_string(font,Vector2(x+64,y+26),"−",HORIZONTAL_ALIGNMENT_LEFT,-1,30,led_red if minus_on else led_dim)
 	x += 120
 	if auto:
-		draw_string(font,Vector2(x,y+26),"A",HORIZONTAL_ALIGNMENT_LEFT,-1,24,led_red)
+		# Exposure mode letter: P program, A aperture priority, S shutter priority.
+		draw_string(font,Vector2(x,y+26),main.equipment.exposure_mode(),HORIZONTAL_ALIGNMENT_LEFT,-1,24,led_red)
 		x += 26
 		var comp = main.equipment.exposure_compensation()
 		if not is_zero_approx(comp):
@@ -300,7 +301,7 @@ func draw_compact(r: Rect2) -> void:
 		draw_string(font,pos+Vector2(1,1),s,align,width,size,shadow)
 		draw_string(font,pos,s,align,width,size,color)
 	var auto = main.equipment.auto_exposure
-	txt.call(r.position+Vector2(16,28),"P" if auto else "M",22)
+	txt.call(r.position+Vector2(16,28),main.equipment.exposure_mode(),22)
 	txt.call(r.position+Vector2(46,27),Texts.get_text("visor_compacta_" + ("af" if main.equipment.focus_mode != "MF" else "mf")),14)
 	# Battery and shots left, top right.
 	var bx = r.end.x-62

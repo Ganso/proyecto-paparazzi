@@ -105,12 +105,14 @@ var academy_start = ""
 var academy_tour = ""
 # ---- Arcade (docs/futuro/21) ----
 var arcade_level = -1               # level being played (-1: sandbox, Academy or a scripted session)
+var walk_pace = 1.0                 # walkers' pace in this level (runners keep theirs)
 var level_time = 0.0                # seconds left (levels with a time limit)
 var level_over = false
 # ---- TLR (docs/futuro/21 §3) ----
 var tlr_frames = 12                 # 120 film: 12 frames (counted in the sandbox)
 var tlr_wound = true                # the crank advances the film before every shot
 var tlr_loupe = false               # L: 3× loupe over the ground glass
+var control_help                    # on-screen help (scripts/control_help.gd), F1
 # ---- Scenarios (docs/futuro/01 Alternativa C) ----
 # "clasico": the photographer stands in the centre of the cylindrical park (and the Academy uses it).
 # "grande": the big park with a path network, walked freely; the camera is raised to the eye with a
@@ -279,6 +281,7 @@ func _ready() -> void:
 		equipment.lens_index = equipment_state.lens
 		equipment.focus_mode = equipment_state.focus
 		equipment.auto_exposure = equipment_state.auto
+		equipment.priority = equipment_state.get("priority","")
 		equipment.film = equipment_state.film
 		equipment.film_iso_index = equipment_state.film_iso
 		equipment.ev_comp_index = equipment_state.ev
@@ -584,6 +587,8 @@ func build_ui() -> void:
 	walk_hint.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
 	walk_hint.add_theme_constant_override("shadow_offset_y",2)
 	walk_hint.visible = false
+	control_help = preload("res://scripts/control_help.gd").new(self)
+	ui.add_child(control_help)
 	raise_flash = ColorRect.new()
 	raise_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	raise_flash.color = Color(0,0,0,0)
@@ -591,7 +596,7 @@ func build_ui() -> void:
 	ui.add_child(raise_flash)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
-		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash]: continue
+		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help]: continue
 		if child is Control:
 			if child.position.y < 300: hud_top.append(child)
 			else: hud_bottom.append(child)
@@ -658,20 +663,22 @@ func change_parameter(parameter: String, direction: int) -> void:
 			auto_expose()
 			refresh()
 		return
-	if equipment.auto_exposure: return
+	if equipment.auto_exposure and not ((parameter == "n" and equipment.priority == "A") or (parameter == "t" and equipment.priority == "S")): return
+	# The dials stop at their ends (wrapping from f/22 back to f/1.4 was disorienting).
 	match parameter:
-		"n": n_index = posmod(n_index+direction,apertures().size())
-		"t": t_index = posmod(t_index+direction,Photo.DENOMINATORS.size())
+		"n": n_index = clampi(n_index+direction,0,apertures().size()-1)
+		"t": t_index = clampi(t_index+direction,0,Photo.DENOMINATORS.size()-1)
 		"iso":
-			if not equipment.film: iso_index = posmod(iso_index+direction,Photo.ISOS.size())
+			if not equipment.film: iso_index = clampi(iso_index+direction,0,Photo.ISOS.size()-1)
+	if equipment.auto_exposure: auto_expose()
 	refresh()
 
 func refresh() -> void:
 	if not is_instance_valid(aperture_button): return
 	if equipment.film: iso_index = equipment.film_iso_index
 	n_index = clampi(n_index,0,apertures().size()-1)
-	aperture_button.disabled = equipment.auto_exposure
-	shutter_button.disabled = equipment.auto_exposure
+	aperture_button.disabled = equipment.auto_exposure and equipment.priority != "A"
+	shutter_button.disabled = equipment.auto_exposure and equipment.priority != "S"
 	iso_button.disabled = equipment.auto_exposure or equipment.film
 	lens_slider.editable = equipment.zoom()
 	focus_slider.editable = equipment.focus_mode == "MF"
@@ -679,7 +686,8 @@ func refresh() -> void:
 	equipment_label.text = equipment.CAMERAS[equipment.body]
 	if equipment.auto_exposure:
 		var ev_c = equipment.exposure_compensation()
-		exposure_button.text = "AUTO ±0.0" if is_zero_approx(ev_c) else ("AUTO %+.1f" % ev_c)
+		var tag = {"A":"A","S":"S"}.get(equipment.priority,"AUTO")
+		exposure_button.text = tag+(" ±0.0" if is_zero_approx(ev_c) else (" %+.1f" % ev_c))
 		exposure_button.disabled = false
 	else:
 		exposure_button.text = "M"
@@ -792,7 +800,7 @@ func start_in(which: String, time_mode: String, free_play: bool) -> void:
 	reload_with(which,{"time":time_mode,"sandbox":free_play})
 
 func reload_with(which: String, start: Dictionary) -> void:
-	equipment_state = {"body":equipment.body,"lens":equipment.lens_index,"focus":equipment.focus_mode,"auto":equipment.auto_exposure,"film":equipment.film,"film_iso":equipment.film_iso_index,"ev":equipment.ev_comp_index}
+	equipment_state = {"body":equipment.body,"lens":equipment.lens_index,"focus":equipment.focus_mode,"auto":equipment.auto_exposure,"priority":equipment.priority,"film":equipment.film,"film_iso":equipment.film_iso_index,"ev":equipment.ev_comp_index}
 	scenario = which
 	pending_start = start
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -814,6 +822,7 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	if free_play: arcade_level = -1
 	level_over = false
 	level_time = level_limit()
+	walk_pace = float(Arcade.LEVELS[arcade_level].get("pace",1.0)) if arcade_level >= 0 and not free_play else 1.0
 	tlr_frames = 12
 	tlr_wound = true
 	tlr_loupe = false
@@ -892,6 +901,9 @@ func new_assignment() -> void:
 	target.protected_target = true
 	briefing.text = Texts.get_text("busca")+", ".join(predicates)+"."
 	shots = int(level.get("shots",3))
+	# Manual exposure in the arcade starts metered for the subject: the player fine-tunes it.
+	if not level.is_empty() and equipment.exposure_mode() != "P":
+		expose_for(park.illumination_ev(target.control_points()[1],time_of_day,target))
 	if not level.is_empty() and not level.cond.is_empty():
 		var conds = []
 		for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]).to_lower())
@@ -1403,7 +1415,7 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 	var lo = bounds.x+margin
 	var hi = bounds.y-margin
 	if p.v_fwd < 0: p.v_fwd = p.speed
-	var v_des = p.speed
+	var v_des = p.speed*(1.0 if p.runner else walk_pace)
 	# Preferred place across the lane: keep-right by direction plus a personal offset.
 	var keep_right = LANE_OFFSETS[p.lane]*p.direction
 	var r_des = clampf(lane_center(p)+keep_right+p.pref_offset,lo,hi)
@@ -2359,7 +2371,7 @@ func start_level(n: int) -> void:
 		return
 	equipment.preset(level.body)
 	equipment.lens_index = level.lens
-	equipment.auto_exposure = level.auto
+	equipment.set_exposure_mode({true:"P",false:"M"}.get(level.auto,str(level.auto)))
 	if level.has("focus"): equipment.focus_mode = level.focus
 	if level.has("iso"):
 		equipment.film = true
@@ -2399,7 +2411,7 @@ func show_help() -> void:
 	mode = "HELP"
 	var root = create_modal()
 	label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
-	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar. Tab: muestra u oculta los controles sobre el visor.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento.\nTLR: se mira desde arriba y el visor invierte izquierda y derecha. L: lupa 3×. K: manivela (en el sandbox, 12 fotos por carrete).\nArcade: cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones; Intro en el menú abre los niveles."
+	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar. Tab: muestra u oculta los controles sobre el visor.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento.\nTLR: se mira desde arriba y el visor invierte izquierda y derecha. L: lupa 3×. K: manivela (en el sandbox, 12 fotos por carrete).\nArcade: cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones; Intro en el menú abre los niveles.\nF1 o el botón «Ayuda en pantalla»: muestra los controles de la cámara, su tecla y si los llevas tú (MAN) o la cámara (AUTO). Modos A y S: tú eliges el diafragma o el tiempo y la cámara el resto."
 	label(root,text_value,Rect2(65,128,1130,490),18)
 	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = previous; intro() if previous == "INTRO" else close_modal(),true)
 
@@ -2412,6 +2424,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "SEARCH" and academy and academy.handle_key(event): return
+		if event.physical_keycode == KEY_F1 and mode == "SEARCH":
+			control_help.set_enabled(not control_help.enabled)
+			return
 		if mode == "SEARCH" and event.is_action_pressed("camara_controles"):
 			controls_shown = not controls_shown
 			return
@@ -2486,7 +2501,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif dragging:
 			if event.position.distance_to(mouse_origin) > 6: dragged = true
 			if dragged:
-				var pan_delta = -event.relative.x*.065*24/focal
+				# The view follows the mouse on both axes (it used to drag the scene sideways but
+				# follow the mouse vertically, which felt inverted).
+				var pan_delta = event.relative.x*.065*24/focal
 				angle = fposmod(angle+pan_delta,360)
 				pitch -= event.relative.y*.065*24/focal
 				pan_velocity = clampf(pan_delta*40,-80,80)
@@ -2664,7 +2681,7 @@ func show_equipment() -> void:
 	label(root,"Enfoque",Rect2(75,345,200,35),20)
 	option(root,equipment.focus_modes(),equipment.focus_modes().find(equipment.focus_mode),Rect2(330,340,700,45),func(i): equipment.focus_mode = equipment.focus_modes()[i]; apply_equipment(); show_equipment())
 	label(root,"Exposición / medición",Rect2(75,405,250,35),20)
-	option(root,["Manual · lectura del exposímetro","Automática · ajuste de exposición"],1 if equipment.auto_exposure else 0,Rect2(330,400,700,45),func(i): equipment.auto_exposure = i == 1; apply_equipment(); show_equipment())
+	option(root,["Manual · lectura del exposímetro","Automática · ajuste de exposición","Prioridad a la apertura (A) · tú eliges el diafragma","Prioridad a la velocidad (S) · tú eliges el tiempo"],["M","P","A","S"].find(equipment.exposure_mode()),Rect2(330,400,700,45),func(i): equipment.set_exposure_mode(["M","P","A","S"][i]); apply_equipment(); show_equipment())
 	label(root,"Soporte",Rect2(75,465,200,35),20)
 	option(root,["Digital · ISO variable","Carrete · ISO fijo"],1 if equipment.film else 0,Rect2(330,460,700,45),func(i): equipment.film = i == 1; apply_equipment(); show_equipment())
 	if equipment.film:
@@ -2929,8 +2946,11 @@ func auto_expose() -> void:
 	var target_ev = measured_ev-equipment.exposure_compensation()
 	var best_cost = INF
 	var stops = apertures()
-	for n in stops.size():
-		for t in Photo.DENOMINATORS.size():
+	# Aperture or shutter priority: the player's choice stays, the camera sets the rest.
+	var n_range = [n_index] if equipment.priority == "A" else range(stops.size())
+	var t_range = [t_index] if equipment.priority == "S" else range(Photo.DENOMINATORS.size())
+	for n in n_range:
+		for t in t_range:
 			for iso in ([equipment.film_iso_index] if equipment.film else range(Photo.ISOS.size())):
 				var delta = absf(Photo.ev(stops[n],1.0/Photo.DENOMINATORS[t],Photo.ISOS[iso],target_ev))
 				var cost = delta*10 + maxf(0,focal/Photo.DENOMINATORS[t]-1)*2 + iso*.12 + n*.03

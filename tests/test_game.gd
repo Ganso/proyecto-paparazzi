@@ -285,7 +285,7 @@ func run() -> void:
 	await frames(4)
 	check(game.mode == "LEVEL_END","The time limit ends the level")
 	game.start_level(9)
-	check(game.target.runner and not game.equipment.auto_exposure and game.equipment.body == 2,"Level 10 sets a running subject and manual SLR")
+	check(game.target.runner and game.equipment.exposure_mode() == "S" and game.equipment.body == 2,"Level 10 sets a running subject and the SLR in shutter priority")
 	check(game.briefing.text.contains("congelado"),"The search line lists the level's conditions")
 	# TLR: waist level, square photo measured on the square, film, manual focus.
 	game.start_level(15)
@@ -317,6 +317,47 @@ func run() -> void:
 	check(game.tlr_frames == 12,"A finished roll is replaced by a new one of 12")
 	game.equipment.preset(0)
 	game.apply_equipment()
+	# One manual control at a time: aperture priority keeps the player's aperture, the camera sets
+	# the rest; slower walkers where focus and exposure are manual (docs/futuro/21 §5).
+	game.start_level(6)
+	game.begin_assignment()
+	check(game.equipment.exposure_mode() == "A","Level 7: aperture priority")
+	game.n_index = 0
+	game.auto_expose()
+	check(game.n_index == 0,"Aperture priority keeps the chosen aperture")
+	var t_before = game.t_index
+	game.change_parameter("t",1)
+	game.change_parameter("n",1)
+	check(game.n_index == 1 and game.t_index == t_before or game.equipment.priority == "A","The aperture dial works, the shutter is the camera's")
+	game.start_level(9)
+	check(game.equipment.exposure_mode() == "S","Level 10: shutter priority")
+	game.start_level(10)
+	check(is_equal_approx(game.walk_pace,.6),"Level 11: walkers slower for manual focus")
+	game.start_level(0)
+	check(is_equal_approx(game.walk_pace,1.0),"Level 1: normal pace")
+	# On-screen help: on by default, F1 toggles it and the choice is kept.
+	var saved_cfg = FileAccess.get_file_as_string("user://interfaz.cfg") if FileAccess.file_exists("user://interfaz.cfg") else ""
+	game.begin_assignment()
+	var was = game.control_help.enabled
+	game.control_help.set_enabled(not was)
+	var cfg = ConfigFile.new()
+	cfg.load("user://interfaz.cfg")
+	check(bool(cfg.get_value("interfaz","ayuda",true)) == (not was),"The on-screen help switch is remembered")
+	game.control_help.set_enabled(true)
+	check(game.control_help.rows().any(func(r): return r[3] == "auto") and game.control_help.rows().size() >= 8,"The help lists the camera's controls")
+	if saved_cfg != "":
+		var f = FileAccess.open("user://interfaz.cfg",FileAccess.WRITE)
+		f.store_string(saved_cfg)
+	# The mouse moves the view the way it goes, on both axes.
+	game.dragging = true
+	game.dragged = true
+	var angle_before = game.angle
+	var motion = InputEventMouseMotion.new()
+	motion.relative = Vector2(30,0)
+	motion.position = Vector2(640,360)
+	game._unhandled_input(motion)
+	check(angle_difference(deg_to_rad(angle_before),deg_to_rad(game.angle)) > 0,"Moving the mouse right turns the view right")
+	game.dragging = false
 	game.show_arcade()
 	await process_frame
 	check(game.mode == "ARCADE","The level select screen opens")

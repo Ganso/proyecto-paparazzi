@@ -13,7 +13,7 @@ El simulador define 4 cuerpos (`Equipment.CAMERAS`); la TLR 6×6 (`body = 3`) se
 | **Objetivos** | Zoom 24–120 o fijo 35 | Fijos 35 / 50 / 90 | Zoom 24–105, zoom 70–200 o fijos 50 / 28 / 105 / 135 | Planar 80 f/2.8 (equivalente 50 mm) |
 | **Modos de foco** (`focus_modes()`) | AF matricial, AF puntual, MF | **Solo MF** | AF matricial, AF puntual, MF | **Solo MF**, lupa 3× (L) |
 | **Ayuda en MF** (`focus_aid.gdshader`) | Imagen partida circular (ayuda digital) | Parche rectangular de doble imagen superpuesta | Imagen partida circular | Imagen partida circular, espejada |
-| **Exposición** | Automática o manual | Automática o manual | Automática o manual | Manual, carrete de ISO fijo (12 fotos) |
+| **Exposición** | Programa (P), prioridad A o S, o manual | Programa, A, S o manual | Programa, A, S o manual | Manual, carrete de ISO fijo (12 fotos) |
 
 ### Preajustes de la pantalla «Elige tu equipo» (`Equipment.preset()`)
 

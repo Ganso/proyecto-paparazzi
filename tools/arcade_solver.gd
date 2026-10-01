@@ -97,10 +97,21 @@ func solve(n: int) -> String:
 		e.s = game.focus_distance
 		tries += 1
 		var best = best_settings(e,level)
-		if best.is_empty(): continue
-		if game.equipment.auto_exposure:
-			# Automatic bodies: trust the camera's own exposure (the photo is re-checked anyway).
-			pass
+		if best.is_empty():
+			if OS.has_environment("SOLVER_DEBUG") and tries % 40 == 1:
+				var r = Photo.evaluate(e)
+				Conditions.apply(r,e,level.cond)
+				print("  try %d: d %.1f f %.0f h %.2f reason %s score %d" % [tries,e.d,e.f,absf(e.feet.y-e.head.y),r.reason,r.score])
+			continue
+		var m = game.equipment.exposure_mode()
+		if m == "A":
+			game.n_index = best.n
+			game.auto_expose()
+		elif m == "S":
+			game.t_index = best.t
+			game.auto_expose()
+		elif m == "P":
+			pass   # the camera's own exposure (the photo is re-checked anyway)
 		else:
 			game.n_index = best.n
 			game.t_index = best.t

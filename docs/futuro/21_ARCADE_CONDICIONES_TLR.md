@@ -10,9 +10,9 @@
   | Bloque | Cámara | Escenarios y luz | Disparos | Tiempo | Nota mínima |
   |---|---|---|---|---|---|
   | 1 · Primeros pasos | Compacta automática | Clásico, día y hora dorada | 5 → 3 | sin límite → 90 s | 50 → 60 |
-  | 2 · La réflex | Réflex AF, automática y luego manual | Clásico | 4 → 3 | 90 → 75 s | 60 → 65 |
-  | 3 · Calle | Telemétrica manual (MF) | Clásico y parque grande, día, hora dorada, azul y noche | 3 → 2 | 120 → 75 s | 65 → 70 |
-  | 4 · La TLR | TLR 6×6 con carrete | Clásico, día, hora dorada y azul | 3 → 1 | 90 → 45 s | 70 → 80 |
+  | 2 · La réflex | Réflex AF: programa, prioridad a la apertura (A) y a la velocidad (S) | Clásico | 4 → 3 | 120 → 90 s | 55 → 65 |
+  | 3 · Calle | Telemétrica MF: exposición automática, luego A, luego manual; gente más lenta | Clásico y parque grande, día, hora dorada, azul y noche | 3 → 2 | sin límite → 120 s | 65 → 70 |
+  | 4 · La TLR | TLR 6×6 con carrete, todo manual; gente más lenta | Clásico, día, hora dorada y azul | 3 → 1 | sin límite → 60 s | 70 → 75 |
 
 - **Flujo**: menú → niveles (`show_arcade()`) → encargo del nivel con cámara, disparos, tiempo, nota mínima y condiciones (`show_level_briefing()`) → búsqueda con el reloj (`level_time`, en la barra de estado) y las condiciones en la línea del encargo → resultado de cada foto con las condiciones marcadas ✓/✗ → **Nivel superado / no superado** (`end_level()`) con la mejor foto, el motivo y Repetir · Siguiente nivel · Niveles.
 - **Fallo**: si se acaban el tiempo o los disparos sin una foto que cumpla, «Nivel no superado» y reintento inmediato, sin vidas.
@@ -59,6 +59,21 @@ El límite de tiempo es una restricción más del nivel (`limit`).
 - `tools/arcade_solver.gd`: juega los 20 niveles solo y comprueba que **todos se pueden superar** (20/20).
 - Capturas: `tools/capture_screens.gd` (`11_arcade` a `17_fin_nivel`). `--level=N` abre un nivel al arrancar.
 
-## 5. Pendiente
+## 5. Un control manual cada vez (02-10-2026)
+
+Tras probar el usuario el primer nivel manual («demasiado complicado: cámara, foco y exposición a la vez»):
+
+- **Modos de prioridad** en `equipment.gd` (`priority`, `exposure_mode()`, `set_exposure_mode()`): **A**, tú eliges el diafragma y la cámara el tiempo y el ISO; **S**, al revés. `auto_expose()` respeta el control del jugador. También en la pantalla de equipo y con la letra del modo en los visores (P, A, S, M).
+- **Curva rehecha**: el bloque 2 introduce A (nivel 7, fondo desenfocado) y S (nivel 10, congelar al corredor); el bloque 3 empieza con enfoque manual y exposición automática (11 y 12), luego A (13) y por fin todo manual (14 y 15). La nota mínima sube de 50 a 75 y puede bajar al estrenar cámara. Tiempos más holgados (120–150 s en los niveles manuales; el primero de la telemétrica y el de la TLR, sin límite).
+- **Personajes más lentos** donde enfoque y exposición son manuales: `pace` del nivel (0,5–0,7) multiplica la velocidad de los caminantes (`main.walk_pace`, también en el parque grande); los corredores mantienen la suya. Es una excepción deliberada al rango de velocidades de AGENTS §3.2, solo dentro de esos niveles.
+- **Exposición de partida medida**: en los niveles con exposición manual o semiautomática la cámara empieza ajustada para el sujeto; el jugador la afina.
+- Los diales se detienen en sus extremos (antes pasaban de f/22 a f/1.4).
+
+## 6. Ratón y ayuda en pantalla (02-10-2026)
+
+- **El ratón mueve la vista hacia donde va**, en los dos ejes (antes el giro lateral arrastraba la escena y el vertical seguía al ratón). El táctil no cambia.
+- **Ayuda en pantalla** (`scripts/control_help.gd`): un interruptor siempre visible sobre la imagen y la tecla **F1** muestran un panel con los controles de la cámara montada, su tecla, su valor y si los llevas tú (**MAN**, resaltado) o la cámara (**AUTO**); los fijos (objetivo fijo, ISO del carrete) aparecen apagados, y con exposición manual el exposímetro en verde o naranja. En la interfaz clásica la tecla aparece también sobre cada botón. Va en su propio cristal oscuro (igual en tema claro y oscuro) y se recuerda en `user://interfaz.cfg`. Activada por defecto.
+
+## 7. Pendiente
 
 Barrido (`congelado` exige congelar; el barrido sigue en [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)), insignias de [05 §3](05_DESAFIOS_Y_MODOS_JUEGO.md), condiciones de luz y de punto de interés (fuente, quiosco), sonido propio del obturador central de la TLR y la manivela animada.

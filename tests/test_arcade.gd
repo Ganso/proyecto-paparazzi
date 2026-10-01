@@ -22,15 +22,21 @@ func _initialize() -> void:
 	# Level data: 20 levels in 4 blocks, the curve tightens.
 	check(Arcade.LEVELS.size() == 20 and Arcade.BLOCKS.size() == 4,"20 levels in 4 blocks")
 	check(Arcade.LEVELS[0].shots == 5 and Arcade.LEVELS[19].shots == 1,"Shots go from 5 to 1")
-	check(Arcade.LEVELS[0].min == 50 and Arcade.LEVELS[19].min == 80,"The pass mark goes from 50 to 80")
+	check(Arcade.LEVELS[0].min == 50 and Arcade.LEVELS[19].min == 75,"The pass mark goes from 50 to 75")
 	check(Arcade.LEVELS[0].limit == 0 and Arcade.LEVELS[19].limit > 0,"The clock appears along the way")
 	var ok_order = true
 	for n in range(1,20):
-		if Arcade.LEVELS[n].min < Arcade.LEVELS[n-1].min or Arcade.LEVELS[n].shots > Arcade.LEVELS[n-1].shots+1: ok_order = false
-	check(ok_order,"Pass marks never drop and shots never jump up")
+		var same_block = Arcade.block_of(n) == Arcade.block_of(n-1)
+		if (same_block and Arcade.LEVELS[n].min < Arcade.LEVELS[n-1].min) or Arcade.LEVELS[n].shots > Arcade.LEVELS[n-1].shots+1: ok_order = false
+	check(ok_order,"Pass marks never drop within a block (a new camera may start lower) and shots never jump up")
 	check(Arcade.LEVELS.slice(0,5).all(func(l): return l.body == 0 and l.auto),"Block 1: automatic compact")
 	check(Arcade.LEVELS.slice(15,20).all(func(l): return l.body == 3),"Block 4: the TLR")
 	check(Arcade.LEVELS.any(func(l): return l.scenario == "grande"),"Some levels in the big park")
+	# One manual control at a time: aperture priority and shutter priority come before full manual,
+	# and wherever focus and exposure are both manual, walkers go slower.
+	var first = func(m): return Arcade.LEVELS.find(Arcade.LEVELS.filter(func(l): return str(l.auto) == m)[0])
+	check(first.call("A") < first.call("false") and first.call("S") < first.call("false"),"Priority modes come before full manual")
+	check(Arcade.LEVELS.all(func(l): return not (str(l.auto) == "false" and l.body in [1,3]) or l.get("pace",1.0) < 1.0 or l.get("target","") == "runner"),"Manual focus + manual exposure levels slow the walkers")
 	for n in 20:
 		check(Texts.get_text("arcade_nivel_%d_titulo" % (n+1)) != "arcade_nivel_%d_titulo" % (n+1),"Level %d has a title" % (n+1))
 		for key in Arcade.LEVELS[n].cond:
