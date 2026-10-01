@@ -714,33 +714,42 @@ func create_modal() -> Control:
 	panel(modal,Rect2(0,0,1280,720),Color(.035,.058,.043,1.0),0)
 	return modal
 
+# Main menu (scripts/main_menu.gd, docs/futuro/20): the live park behind frosted glass.
 func intro() -> void:
 	mode = "INTRO"
 	if academy and academy.active: academy.stop()
-	var root = create_modal()
-	label(root,Texts.get_text("estudio_de_fotografia_01"),Rect2(75,70,600,28),14,Color("a7c683"))
-	label(root,Texts.get_text("cada_persona_una_oportunidad"),Rect2(70,115,790,160),64,Color("e6ebdb"))
-	graphics_button_intro = button(root,"Gráficos · " + graphics_preset,Rect2(985,55,220,40),show_graphics_settings)
-	var desc = label(root,Texts.get_text("encuentra_a_quien_describe_el_encargo_y_consigue_la_fotografia_t"),Rect2(75,302,780,72),22,Color("b7c5ad"))
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label(root,Texts.get_text("05_encargos_03_disparos_por_encargo_tu_mejor_foto_cuenta"),Rect2(75,413,1100,28),13,Color("a7c683"))
-	# Two scenarios: the classic park (you stand in its centre) and the big park (you walk it).
-	for row in 2:
-		var which = ["clasico","grande"][row]
-		var y = 452+row*66
-		label(root,Texts.get_text("escenario_"+which),Rect2(75,y+6,250,24),15,Color("e2e7d6"))
-		label(root,Texts.get_text("escenario_"+which+"_detalle"),Rect2(75,y+30,250,22),12,Color("8f9f86"))
-		var primary = which == scenario
-		button(root,Texts.get_text("intro_dia"),Rect2(330,y,150,54),func(): start_in(which,"day",false),primary)
-		button(root,Texts.get_text("intro_dorada"),Rect2(488,y,180,54),func(): start_in(which,"golden",false))
-		button(root,Texts.get_text("intro_azul"),Rect2(676,y,170,54),func(): start_in(which,"blue",false))
-		button(root,Texts.get_text("intro_noche"),Rect2(854,y,150,54),func(): start_in(which,"night",false))
-		button(root,"Sandbox",Rect2(1012,y,193,54),func(): start_in(which,"day",true))
-	button(root,"Equipo / modos",Rect2(75,590,250,48),show_equipment)
-	button(root,Texts.get_text("academia_boton_inicio"),Rect2(330,590,410,48),open_academy,true)
-	label(root,Texts.get_text("arrastra_para_mirar_rueda_para_acercarte_clic_para_enfocar_espac"),Rect2(75,652,1070,60),15,Color("8f9f86"))
-	label(root,Texts.get_text("m"),Rect2(950,161,245,130),95,Color("b8d78c"))
-	label(root,"PROYECTO\nPAPARAZZI",Rect2(955,305,230,70),26,Color("a7b897"))
+	close_modal()
+	modal = preload("res://scripts/main_menu.gd").new(self)
+	ui.add_child(modal)
+	menu_park_ready()
+	place_view()
+	update_finder_shader()
+
+# Behind the menu the park lives: people walk, the camera drifts slowly at eye level.
+func menu_park_ready() -> void:
+	if crowd: camera.position = Vector3(0,1.6,16)
+	pitch = 2.0
+	focal = equipment.lens().min
+	update_camera()
+
+func update_menu_background(dt: float) -> void:
+	for p in people: update_person(p,dt)
+	pigeons.update(dt,people,[dog] if dog else [])
+	if extras: extras.update(dt)
+	if dog: dog.update(dt)
+	ambience.update(dt)
+	angle = fposmod(angle+dt*2.2,360)
+	update_camera()
+
+# Choosing the light in the menu changes the park behind the glass at once.
+func preview_time(tod: String) -> void:
+	time_of_day = tod
+	night = tod == "night"
+	park.set_time_of_day(tod)
+	if pigeons:
+		pigeons.night = night
+		if night: pigeons.settle_night()
+	if extras: extras.set_time_of_day(tod)
 
 # Start a session in a scenario; another scenario reloads the scene with it (the equipment kept).
 func start_in(which: String, time_mode: String, free_play: bool) -> void:
@@ -765,6 +774,8 @@ func open_academy() -> void:
 
 func start_session(time_mode = "day", free_play = false) -> void:
 	close_modal()
+	mode = "STARTING"
+	place_view()
 	sandbox = free_play
 	sandbox_paused = false
 	shot_serial = 0
@@ -851,7 +862,8 @@ func _process(dt: float) -> void:
 	boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
-	if crowd: update_photographer(dt)
+	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)
+	if crowd and mode != "INTRO": update_photographer(dt)
 	if mode == "SEARCH" and not shooting:
 		if eye_ready():
 			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
@@ -1796,7 +1808,7 @@ func update_viewmodel(_dt: float) -> void:
 func place_view() -> void:
 	if not is_instance_valid(viewport_container): return
 	if is_instance_valid(camera_body):
-		var walking = not eye_ready()
+		var walking = not eye_ready() or mode == "INTRO"
 		view_rect = camera_body.view_rect_for(equipment.body,"walk" if walking else interface_mode)
 		camera_body.body = equipment.body
 		camera_body.mode = "walk" if walking else interface_mode
@@ -1886,6 +1898,8 @@ func update_hud_visibility(dt: float) -> void:
 	hud_hover = maxf(0.0,hud_hover-dt)
 	var show = interface_mode != "camara" or controls_shown or hud_hover > 0 or (academy and academy.active) or mode != "SEARCH"
 	if mode == "SEARCH" and not eye_ready(): show = false
+	if mode == "INTRO": show = false
+	finder.visible = eye_ready() and mode != "INTRO"
 	for node in hud_top+hud_bottom:
 		node.visible = show
 	# The parallax of the rangefinder follows the focus distance.

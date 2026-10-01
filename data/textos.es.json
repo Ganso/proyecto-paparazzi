@@ -272,5 +272,17 @@
   "un_columpio": "un columpio",
   "un_tobogan": "un tobogán",
   "una_papelera": "una papelera",
-  "intro_azul": "Hora azul"
+  "intro_azul": "Hora azul",
+  "menu_estudio": "ESTUDIO DE FOTOGRAFÍA",
+  "menu_lema": "Cada persona, una oportunidad. Encuentra a quien describe el encargo y consigue la foto: el encuadre, el enfoque y la luz son cosa tuya.",
+  "menu_escenario": "ESCENARIO",
+  "menu_luz": "LUZ",
+  "menu_clasico_detalle": "Desde el centro del parque, la gente pasa ante ti",
+  "menu_grande_detalle": "Recórrelo a pie y saca la cámara cuando quieras",
+  "menu_empezar": "Empezar · 5 encargos",
+  "menu_sandbox": "Sandbox",
+  "menu_academia": "Academia",
+  "menu_equipo": "Equipo",
+  "menu_graficos": "Gráficos",
+  "menu_pie": "Tres disparos por encargo; cuenta tu mejor foto.  ·  Arrastra para mirar, rueda para el zoom, clic para enfocar, espacio para disparar."
 }
