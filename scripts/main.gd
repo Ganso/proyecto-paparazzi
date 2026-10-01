@@ -100,6 +100,17 @@ var stage = ""
 # --academy=<lección>:<teoria|demo|practica>[:página]: open a lesson directly (evidence captures).
 var academy_start = ""
 var academy_tour = ""
+# ---- Realistic camera finders (docs/futuro/07 §1, scripts/camera_body.gd) ----
+# view_rect: where the camera image sits on screen (ui coordinates). In the classic interface it is
+# the whole screen; with the camera interface each body frames it its own way (eyepiece, LCD…).
+var view_rect = Rect2(0,0,1280,720)
+var view_shift = Vector2.ZERO       # rangefinder parallax (ui pixels), see image_position()
+var interface_mode = "camara"       # "camara" (immersive) or "clasica"
+var camera_body
+var hud_top: Array = []
+var hud_bottom: Array = []
+var controls_shown = false          # Tab: show the camera's controls over the finder
+var hud_hover = 0.0
 var smoke = false
 var run_metrics = false
 var stress = false
@@ -196,6 +207,14 @@ func _ready() -> void:
 	academy = preload("res://scripts/academy.gd").new(self)
 	ui.add_child(academy)
 	preload("res://scripts/academy.gd").register_actions()
+	if not InputMap.has_action("camara_controles"):
+		InputMap.add_action("camara_controles")
+		var tab = InputEventKey.new()
+		tab.physical_keycode = KEY_TAB
+		InputMap.action_add_event("camara_controles",tab)
+		var back = InputEventJoypadButton.new()
+		back.button_index = JOY_BUTTON_BACK
+		InputMap.action_add_event("camara_controles",back)
 	populate()
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
@@ -364,6 +383,9 @@ func build_ui() -> void:
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(ui)
+	# The camera body (eyecup, finder data) lies under the HUD: the HUD bars fold over it.
+	camera_body = preload("res://scripts/camera_body.gd").new(self)
+	ui.add_child(camera_body)
 	panel(ui,Rect2(0,0,1280,78),Color("141d18"),0)
 	label(ui,Texts.get_text("afotando"),Rect2(25,12,150,25),20,Color("e2e7d6"))
 	label(ui,Texts.get_text("p_a_p_a_r_a_z_z_i"),Rect2(26,39,160,20),11,Color("91a482"))
@@ -385,6 +407,7 @@ func build_ui() -> void:
 	focus_aid = TextureRect.new()
 	focus_aid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	focus_aid.texture = viewport.get_texture()
+	focus_aid.expand_mode = TextureRect.EXPAND_IGNORE_SIZE   # it follows view_rect, smaller than the texture
 	focus_aid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	focus_aid.material = ShaderMaterial.new()
 	focus_aid.material.shader = preload("res://shaders/focus_aid.gdshader")
@@ -422,6 +445,13 @@ func build_ui() -> void:
 	toast.add_theme_constant_override("shadow_offset_x",1)
 	toast.add_theme_constant_override("shadow_offset_y",2)
 	fps_label = label(ui,"",Rect2(27,586,200,23),12,Color("d2ddc6"))
+	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
+	for child in ui.get_children():
+		if child in [camera_body,focus_aid,finder,toast,fps_label]: continue
+		if child is Control:
+			if child.position.y < 300: hud_top.append(child)
+			else: hud_bottom.append(child)
+	load_interface()
 	refresh()
 
 func parameter_input(event: InputEvent, parameter: String) -> void:
@@ -456,6 +486,10 @@ func parameter_click(parameter: String) -> void:
 	skip_parameter_click = false
 
 func _input(event: InputEvent) -> void:
+	# Moving the pointer to the top or bottom edge unfolds the HUD bars for a moment (camera interface).
+	if event is InputEventMouseMotion and is_instance_valid(ui):
+		var y = ui.get_local_mouse_position().y
+		if y < 70 or y > 640: hud_hover = 1.5
 	# Releases can be consumed by an overlaid button after a scene drag.
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		end_mouse_drag.call_deferred()
@@ -512,6 +546,9 @@ func refresh() -> void:
 		control_hint.text = "Mirar: arrastrar · Foto: Espacio · H: ayuda\nClic: AF"+(" · Rueda: zoom" if equipment.zoom() else " · Objetivo fijo")
 	finder.af_mode = equipment.focus_mode
 	finder.body = equipment.body
+	if is_instance_valid(camera_body) and camera_body.body != equipment.body:
+		place_view()
+		update_dof_pass()
 	focus_aid.visible = equipment.focus_mode == "MF" and mode == "SEARCH"
 	focus_aid.material.set_shader_parameter("body",equipment.body)
 	aperture_button.text = Texts.get_text("1f") % apertures()[n_index]
@@ -675,6 +712,7 @@ func _process(dt: float) -> void:
 			if dog: dog.update(dt)
 		ambience.update(dt)
 		if academy: academy.update(dt)
+		update_hud_visibility(dt)
 		meter_timer -= dt
 		if meter_timer <= 0:
 			meter_timer = .1
@@ -1268,8 +1306,106 @@ func turn_heading(p: Pedestrian, dt: float, previous: float) -> void:
 	p.heading = p.heading+clampf(diff,-max_turn,max_turn)
 	p.rotation.y = p.heading
 
+# ---- Camera interface (docs/futuro/07 §1) ----
+func place_view() -> void:
+	if not is_instance_valid(viewport_container): return
+	if is_instance_valid(camera_body):
+		view_rect = camera_body.view_rect_for(equipment.body,interface_mode)
+		camera_body.body = equipment.body
+		camera_body.mode = interface_mode
+	viewport_container.position = view_rect.position
+	viewport_container.scale = view_rect.size/Vector2(viewport.size)
+	if is_instance_valid(focus_aid):
+		focus_aid.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		focus_aid.position = view_rect.position+view_shift
+		focus_aid.size = view_rect.size
+	if is_instance_valid(toast):
+		toast.position = Vector2(view_rect.get_center().x-350,view_rect.end.y-(100 if interface_mode == "camara" else 146))
+	if is_instance_valid(finder):
+		finder.view = Rect2(view_rect.position+view_shift,view_rect.size)
+		finder.classic = interface_mode != "camara"
+	update_finder_shader()
+
+# Shutter sound of each body (tools/audio/build_camera_sounds.py): SLR mirror clack, rangefinder
+# cloth shutter, compact's electronic click. Falls back to the old tone if the files are missing.
+var shutter_player: AudioStreamPlayer
+var shutter_streams = {}
+func shutter_sound() -> void:
+	var name = ["compacta","telemetrica","reflex"][equipment.body]
+	if not shutter_streams.has(name):
+		var path = "res://assets/audio/camara/%s.wav" % name
+		shutter_streams[name] = AudioStreamWAV.load_from_file(path) if FileAccess.file_exists(path) else null
+	if shutter_streams[name] == null:
+		play_tone(100,.09)
+		return
+	if shutter_player == null:
+		shutter_player = AudioStreamPlayer.new()
+		shutter_player.volume_db = -4.0
+		add_child(shutter_player)
+	shutter_player.stream = shutter_streams[name]
+	shutter_player.play()
+
+# The exact depth of field is drawn in Ultra and Alto. A rangefinder's finder is a plain window onto
+# the scene, sharp from near to far: there the blur only appears in the photo (take_photo() turns
+# the pass on for the capture frame).
+func update_dof_pass() -> void:
+	if not is_instance_valid(dof_pass): return
+	var allowed = graphics_preset in ["Ultra","Alto"] and not ("dof" in debug_off)
+	dof_pass.visible = allowed and not (interface_mode == "camara" and equipment.body == 1)
+
+func dof_allowed() -> bool:
+	return is_instance_valid(dof_pass) and graphics_preset in ["Ultra","Alto"] and not ("dof" in debug_off)
+
+func update_finder_shader() -> void:
+	if lens_material == null: return
+	var body_code = equipment.body if interface_mode == "camara" else -1
+	lens_material.set_shader_parameter("finder_body",body_code)
+	var shift = view_shift/view_rect.size if view_rect.size.x > 0 else Vector2.ZERO
+	lens_material.set_shader_parameter("parallax",shift)
+	# Compact LCD noise grows in dim light (scene EV below ~9).
+	lens_material.set_shader_parameter("lcd_noise",clampf((9.0-measured_ev)/6.0,0.0,1.0) if equipment.body == 0 else 0.0)
+
+func set_interface(value: String) -> void:
+	interface_mode = value
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","modo",value)
+	config.save("user://interfaz.cfg")
+	controls_shown = false
+	place_view()
+	update_dof_pass()
+	refresh()
+
+func load_interface() -> void:
+	var config = ConfigFile.new()
+	# Phones keep the classic HUD until the touch interface (docs/futuro/13) exists.
+	interface_mode = "clasica" if OS.has_feature("mobile") else "camara"
+	if config.load("user://interfaz.cfg") == OK: interface_mode = str(config.get_value("interfaz","modo",interface_mode))
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--interface="): interface_mode = arg.trim_prefix("--interface=")
+	place_view()
+
+# Which HUD bars show: always in the classic interface; with the camera, while Tab is on, while the
+# pointer rests near the top or bottom edge, and during Academy lessons (they point at controls).
+func update_hud_visibility(dt: float) -> void:
+	if hud_top.is_empty(): return
+	hud_hover = maxf(0.0,hud_hover-dt)
+	var show = interface_mode != "camara" or controls_shown or hud_hover > 0 or (academy and academy.active) or mode != "SEARCH"
+	for node in hud_top+hud_bottom:
+		node.visible = show
+	# The parallax of the rangefinder follows the focus distance.
+	var shift = Vector2.ZERO
+	if interface_mode == "camara" and equipment.body == 1: shift = camera_body.parallax()*view_rect.size
+	if not shift.is_equal_approx(view_shift):
+		view_shift = shift
+		place_view()
+	elif equipment.body == 0 and interface_mode == "camara":
+		update_finder_shader()
+
+# ui point (inside view_rect) → viewport pixel. The rangefinder's parallax shifts what the finder
+# shows (camera_body.gd), so the shift is undone here and clicks still land where they look.
 func image_position(point: Vector2) -> Vector2:
-	return point*Vector2(viewport.size)/ui.size
+	return (point-view_rect.position-view_shift)*Vector2(viewport.size)/view_rect.size
 
 func nearest_af(point: Vector2) -> void:
 	if equipment.focus_mode == "MF": return
@@ -1354,6 +1490,7 @@ func take_photo() -> void:
 	if equipment.auto_exposure: auto_expose()
 	shooting = true
 	pan_velocity = 0
+	if dof_allowed() and not dof_pass.visible: dof_pass.visible = true   # rangefinder: blur only in the photo
 	# Freeze first, then wait for physics and the render to represent precisely this state.
 	await get_tree().physics_frame
 	var evidence = capture_sandbox_evidence() if sandbox else capture_evidence()
@@ -1368,7 +1505,9 @@ func take_photo() -> void:
 	if not sandbox and (best.is_empty() or current_result.score > best.score):
 		best = current_result.duplicate(true)
 		best["photo"] = clean_image
-	play_tone(100,.09)
+	update_dof_pass()
+	shutter_sound()
+	if is_instance_valid(camera_body): camera_body.blackout(1.0/Photo.DENOMINATORS[t_index])
 	shooting = false
 	if academy_demo_shot:
 		# A shot of the Academy's demonstration: the photo goes to the tutor panel, no result screen.
@@ -1514,8 +1653,14 @@ func show_help() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
+	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
+		controls_shown = not controls_shown
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "SEARCH" and academy and academy.handle_key(event): return
+		if mode == "SEARCH" and event.is_action_pressed("camara_controles"):
+			controls_shown = not controls_shown
+			return
 		if event.keycode == KEY_ENTER and mode == "RESULT" and academy and academy.active:
 			resume_search()
 			return
@@ -1756,7 +1901,8 @@ func show_equipment() -> void:
 	if equipment.film:
 		label(root,"Cargar película",Rect2(75,525,250,35),20)
 		option(root,Photo.ISOS.map(func(iso): return "ISO %d" % iso),equipment.film_iso_index,Rect2(330,520,700,45),func(i): equipment.film_iso_index = i; apply_equipment(); show_equipment())
-	label(root,"La telemétrica utiliza objetivos fijos y enfoque manual por coincidencia.",Rect2(75,585,1100,35),18)
+	label(root,Texts.get_text("visor_interfaz"),Rect2(75,585,250,35),20)
+	option(root,[Texts.get_text("visor_interfaz_camara"),Texts.get_text("visor_interfaz_clasica")],0 if interface_mode == "camara" else 1,Rect2(330,580,700,45),func(i): set_interface("camara" if i == 0 else "clasica"); show_equipment())
 	button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
 	button(root,"Usar este equipo",Rect2(880,630,320,55),restore_equipment_screen,true)
 
@@ -1813,10 +1959,9 @@ func update_render_resolution() -> void:
 		factor = maxf(1.0,minf(window.x/1280.0,window.y/720.0))
 	viewport.size = Vector2i(roundi(1280*factor),roundi(720*factor))
 	viewport_container.stretch = false
-	viewport_container.position = Vector2.ZERO
 	viewport_container.size = Vector2(viewport.size)
-	viewport_container.scale = Vector2.ONE/factor
 	render_factor = factor
+	place_view()
 
 func apply_graphics_preset(preset: String) -> void:
 	graphics_preset = preset
@@ -1834,8 +1979,10 @@ func apply_graphics_preset(preset: String) -> void:
 		viewport.positional_shadow_atlas_size = 4096 if forward and preset in ["Ultra","Alto"] else 2048
 		viewport.use_debanding = forward
 		update_render_resolution()
-	if is_instance_valid(dof_pass): dof_pass.visible = preset in ["Ultra","Alto"]
-	if is_instance_valid(viewport_container): viewport_container.material = null if preset == "Bajo" else lens_material
+	update_dof_pass()
+	# Bajo skips the lens character, but the camera finders (07 §1) still need the shader.
+	if is_instance_valid(viewport_container): viewport_container.material = lens_material
+	if lens_material: lens_material.set_shader_parameter("lens_off",preset == "Bajo")
 	update_lens_effects()
 	apply_debug_off()
 	apply_mannequin_graphics_preset(preset)
@@ -1925,7 +2072,7 @@ func update_focus_aid(dt: float) -> void:
 		if is_instance_valid(finder): finder.mf_coincidence = false
 		return
 	focus_aid.visible = true
-	var center_pixel = ui.size * 0.5
+	var center_pixel = view_rect.get_center()
 	var best_dist = INF
 	var person_dist = INF
 	var patch_samples = [
@@ -1963,7 +2110,7 @@ func point_hit(point: Vector2) -> Dictionary:
 # the camera); with nobody under a point, the nearest scenery.
 func select_matrix_point() -> void:
 	var pts = finder.points()
-	var centre = ui.size*.5
+	var centre = view_rect.get_center()
 	var best_person_idx = -1
 	var best_person_key = INF
 	var best_scenery_idx = -1
@@ -1974,7 +2121,7 @@ func select_matrix_point() -> void:
 		var distance = camera.global_position.distance_squared_to(hit.position)
 		if distance < 1.0: continue
 		if hit.collider.has_meta("person"):
-			var key = pts[i].distance_to(centre)/ui.size.x+sqrt(distance)*.001
+			var key = pts[i].distance_to(centre)/view_rect.size.x+sqrt(distance)*.001
 			if key < best_person_key:
 				best_person_key = key
 				best_person_idx = i

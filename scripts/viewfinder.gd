@@ -8,6 +8,10 @@ var flash = 0.0
 var success = false
 var delta_ev = 0.0
 var thirds = false
+# Where the camera image is shown (ui coordinates; main.gd::view_rect) and whether the classic
+# HUD meter/battery are drawn (the realistic finders draw their own data, scripts/camera_body.gd).
+var view = Rect2(0,0,1280,720)
+var classic = true
 var font: Font
 var green = Color("a5cc79")
 func _ready() -> void:
@@ -16,18 +20,18 @@ func _ready() -> void:
 func points() -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	for y in [-1,0,1]:
-		for x in [-1,0,1]: out.append(Vector2(size.x*(.5+x*.105),size.y*(.50+y*.12)))
+		for x in [-1,0,1]: out.append(view.position+Vector2(view.size.x*(.5+x*.105),view.size.y*(.50+y*.12)))
 	return out
 func _process(dt: float) -> void:
 	flash = maxf(0,flash-dt)
 	queue_redraw()
 func _draw() -> void:
 	var ink = Color(.92,.95,.84,.48)
-	var left = size.x*.085
-	var right = size.x-left
-	var top = size.y*.23
-	var bottom = size.y*.82
-	for pair in [[Vector2(left,top),Vector2(1,1)],[Vector2(right,top),Vector2(-1,1)],[Vector2(left,bottom),Vector2(1,-1)],[Vector2(right,bottom),Vector2(-1,-1)]]:
+	var left = view.position.x+view.size.x*.085
+	var right = view.end.x-view.size.x*.085
+	var top = view.position.y+view.size.y*(.23 if classic else .08)
+	var bottom = view.position.y+view.size.y*(.82 if classic else .92)
+	for pair in ([[Vector2(left,top),Vector2(1,1)],[Vector2(right,top),Vector2(-1,1)],[Vector2(left,bottom),Vector2(1,-1)],[Vector2(right,bottom),Vector2(-1,-1)]] if classic else []):
 		var p: Vector2 = pair[0]
 		var direction: Vector2 = pair[1]
 		draw_line(p,p+Vector2(56*direction.x,0),Color(0,0,0,.25),5)
@@ -36,8 +40,10 @@ func _draw() -> void:
 		draw_line(p,p+Vector2(0,40*direction.y),ink,2)
 	if thirds:
 		for k in [1,2]:
-			draw_line(Vector2(size.x*k/3,top),Vector2(size.x*k/3,bottom),Color(1,1,1,.2),1)
-			draw_line(Vector2(left,size.y*k/3),Vector2(right,size.y*k/3),Color(1,1,1,.2),1)
+			var gx = view.position.x+view.size.x*k/3
+			var gy = view.position.y+view.size.y*k/3
+			draw_line(Vector2(gx,view.position.y),Vector2(gx,view.end.y),Color(1,1,1,.22),1)
+			draw_line(Vector2(view.position.x,gy),Vector2(view.end.x,gy),Color(1,1,1,.22),1)
 	var pts = points()
 	for i in pts.size():
 		if af_mode == "MF": continue
@@ -49,16 +55,17 @@ func _draw() -> void:
 		draw_rect(rect,color,false,2)
 		if i == active: draw_circle(pts[i],2,color)
 	if af_mode == "MF":
-		var c = size*.5
+		var c = view.get_center()
 		var patch_color = Color("b8d78c") if mf_coincidence else ink
 		var patch_width = 2 if mf_coincidence else 1
 		if body == 1:
-			draw_rect(Rect2(c-Vector2(size.y*.095,size.y*.048),Vector2(size.y*.19,size.y*.096)),patch_color,false,patch_width)
+			draw_rect(Rect2(c-Vector2(view.size.y*.095,view.size.y*.048),Vector2(view.size.y*.19,view.size.y*.096)),patch_color,false,patch_width)
 		else:
-			draw_arc(c,size.y*.078,0,TAU,64,patch_color,patch_width)
+			draw_arc(c,view.size.y*.078,0,TAU,64,patch_color,patch_width)
 		var label_text = Texts.get_text("foco_alineado") if mf_coincidence else Texts.get_text("alinear_imagen")
 		var label_color = Color("b8d78c") if mf_coincidence else Color("809276")
 		draw_string(font,c+Vector2(-60,85),label_text,HORIZONTAL_ALIGNMENT_LEFT,-1,14,label_color)
+	if not classic: return
 	var center = Vector2(size.x*.505,46)
 	for i in range(-8,9):
 		var x = center.x+i*12

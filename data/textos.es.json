@@ -251,5 +251,12 @@
   "academia_l5_pista_tele": "Pon el 135 mm (botón del panel) y busca a alguien del paseo exterior, junto a los árboles.",
   "academia_l5_pista_lejos": "Esa persona está demasiado cerca para el tele: busca a alguien a más de 9 m.",
   "academia_l5_pista_cerca": "Con el angular busca a alguien cercano, a menos de 4,5 m (el paseo de los bancos).",
-  "academia_l5_pista_tamano": "Encuádralo de cuerpo entero: que ocupe casi toda la altura de la foto."
+  "academia_l5_pista_tamano": "Encuádralo de cuerpo entero: que ocupe casi toda la altura de la foto.",
+  "visor_tab_controles": "Tab: controles · H: ayuda",
+  "visor_compacta_af": "AF",
+  "visor_compacta_mf": "MF",
+  "visor_compacta_marca": "DIGITAL  ·  6.0 MP  ·  3× ZOOM",
+  "visor_interfaz": "Interfaz",
+  "visor_interfaz_camara": "Cámara · el visor real de cada cuerpo (Tab muestra los controles)",
+  "visor_interfaz_clasica": "Clásica · controles siempre a la vista"
 }
