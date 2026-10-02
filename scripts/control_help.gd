@@ -12,6 +12,7 @@ var enabled = true
 var font: Font
 var bold: Font
 var toggle: Button
+var raise_button: Button      # classic park: lower the camera to search, raise it to shoot (Y)
 const MANUAL = Color("7cc6ff")
 const AUTO = Color(.78,.82,.86)
 const FIXED = Color(.6,.64,.68)
@@ -32,6 +33,12 @@ func _ready() -> void:
 	toggle.add_theme_font_size_override("font_size",13)
 	toggle.pressed.connect(func(): set_enabled(not enabled))
 	add_child(toggle)
+	raise_button = Button.new()
+	raise_button.focus_mode = Control.FOCUS_NONE
+	raise_button.size = Vector2(190,34)
+	raise_button.add_theme_font_size_override("font_size",14)
+	raise_button.pressed.connect(func(): main.toggle_raise())
+	add_child(raise_button)
 
 func set_enabled(value: bool) -> void:
 	enabled = value
@@ -42,6 +49,12 @@ func set_enabled(value: bool) -> void:
 	queue_redraw()
 
 func _process(_dt: float) -> void:
+	var can_lower = main.mode == "SEARCH" and not main.crowd and not (main.academy and main.academy.active)
+	raise_button.visible = can_lower
+	if can_lower:
+		raise_button.text = Texts.get_text("bajar_camara") if main.camera_raised else Texts.get_text("subir_camara")
+		var vr: Rect2 = main.view_rect
+		raise_button.position = Vector2(vr.end.x-raise_button.size.x-10,vr.end.y-raise_button.size.y-(150 if main.interface_mode == "clasica" and main.eye_ready() else 12))
 	var searching = main.mode == "SEARCH" and main.eye_ready()
 	toggle.visible = searching
 	if searching:

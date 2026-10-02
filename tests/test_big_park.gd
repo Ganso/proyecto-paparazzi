@@ -59,17 +59,22 @@ func run() -> void:
 	game.start_session("day")
 	game.begin_assignment()
 	game.mode = "SEARCH"
+	# The subject of the assignment stops and sits less (main.gd protected_target): this minute is
+	# about the crowd, so nobody is held back by it.
+	game.target.protected_target = false
 	var dt = 1.0/30
 	var max_stuck = 0.0
 	var off_path = 0
 	var min_gap = INF
 	var visited = {}
+	var ever_sat = false
 	for step in 1800:
 		for p in game.people: game.update_person(p,dt)
 		for p in game.people:
 			max_stuck = maxf(max_stuck,p.stuck_time)
 			if p.state == "CAMINANDO" and p.bench_goal < 0 and park.path_distance(p.position) > .6: off_path += 1
 			visited[p.get_meta("route")[0]] = true
+			if p.state == "SENTADO": ever_sat = true
 		if step % 10 == 0:
 			for i in game.people.size():
 				var a = game.people[i]
@@ -83,7 +88,7 @@ func run() -> void:
 	check(off_path < 60,"Walkers stay on the paths")
 	check(min_gap >= .42,"Walkers never overlap")
 	check(visited.size() >= park.nodes.size()*.8,"The crowd spreads over the whole network")
-	check(game.people.any(func(p): return p.state == "SENTADO"),"Someone sits on a bench")
+	check(ever_sat,"Someone sits on a bench during the minute")
 	check(game.people.any(func(p): return p.state == "DETENIDO"),"Someone stops to do something")
 	# --- The photographer ---
 	await frames(3)

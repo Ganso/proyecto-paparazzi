@@ -74,6 +74,10 @@ Tras probar el usuario el primer nivel manual («demasiado complicado: cámara, 
 - **El ratón mueve la vista hacia donde va**, en los dos ejes (antes el giro lateral arrastraba la escena y el vertical seguía al ratón). El táctil no cambia.
 - **Ayuda en pantalla** (`scripts/control_help.gd`): un interruptor siempre visible sobre la imagen y la tecla **F1** muestran un panel con los controles de la cámara montada, su tecla, su valor y si los llevas tú (**MAN**, resaltado) o la cámara (**AUTO**); los fijos (objetivo fijo, ISO del carrete) aparecen apagados, y con exposición manual el exposímetro en verde o naranja. En la interfaz clásica la tecla aparece también sobre cada botón. Va en su propio cristal oscuro (igual en tema claro y oscuro) y se recuerda en `user://interfaz.cfg`. Activada por defecto.
 
+## 8. Bajar la cámara para buscar (02-10-2026)
+
+En el parque clásico la cámara también se baja (tecla **Y**, botón en pantalla «Bajar la cámara · Y» o el botón Y del mando): vista natural amplia (72°) sin visor para localizar a alguien, y de vuelta al ojo con el objetivo puesto, mirando al mismo sitio (`main.gd::update_classic_raise()`, `view_focal()`; el giro con la cámara bajada va a la velocidad de un 30 mm). Sin la cámara al ojo no se puede disparar. En la Academia no se baja. Además, **el sujeto de un encargo nunca corre**, salvo en los niveles de congelar a un corredor (`target: "runner"`).
+
 ## 7. Pendiente
 
 Barrido (`congelado` exige congelar; el barrido sigue en [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)), insignias de [05 §3](05_DESAFIOS_Y_MODOS_JUEGO.md), condiciones de luz y de punto de interés (fuente, quiosco), sonido propio del obturador central de la TLR y la manivela animada.

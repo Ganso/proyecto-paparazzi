@@ -865,6 +865,9 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	focus_distance = 4
 	angle = 120
 	pan_velocity = 0
+	if not crowd:
+		camera_raised = true
+		raise_anim = 1.0
 	if crowd:
 		angle = 0.0
 		pitch = 0.0
@@ -889,7 +892,8 @@ func start_session(time_mode = "day", free_play = false) -> void:
 func new_assignment() -> void:
 	if is_instance_valid(target): target.protected_target = false
 	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
-	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO")
+	# The subject never runs, except in the levels about freezing a runner.
+	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO" and not p.runner)
 	if level.get("target","") == "runner":
 		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO")
 		if not runners.is_empty(): candidates = runners
@@ -924,6 +928,7 @@ func _process(dt: float) -> void:
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)
 	if crowd and mode != "INTRO": update_photographer(dt)
+	elif mode != "INTRO": update_classic_raise(dt)
 	# Arcade clock: it runs while searching; at zero the level ends with the best photo so far.
 	if mode == "SEARCH" and arcade_level >= 0 and level_limit() > 0 and not level_over:
 		level_time = maxf(0.0,level_time-dt)
@@ -931,13 +936,13 @@ func _process(dt: float) -> void:
 			level_over = true
 			end_level()
 	if mode == "SEARCH" and not shooting:
-		if eye_ready():
+		if eye_ready() or not crowd:
 			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
-			angle = fposmod(angle+axis*dt*42*24/focal+pan_velocity*dt,360)
-			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/focal
+			angle = fposmod(angle+axis*dt*42*24/view_focal()+pan_velocity*dt,360)
+			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/view_focal()
 			pan_velocity = move_toward(pan_velocity,0,dt*180)
-			if Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
-			if Input.is_physical_key_pressed(KEY_S): focal = clampf(focal-dt*30,equipment.lens().min,equipment.lens().max)
+			if eye_ready() and Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
+			if eye_ready() and Input.is_physical_key_pressed(KEY_S): focal = clampf(focal-dt*30,equipment.lens().min,equipment.lens().max)
 		if run_metrics:
 			angle = 120.0
 			focal = 24.0
@@ -1561,8 +1566,12 @@ func turn_heading(p: Pedestrian, dt: float, previous: float) -> void:
 
 # ---- The photographer in the big park (docs/futuro/01 Alternativa C) ----
 # Camera at the eye: the classic park always; the big park only after the toggle and its gesture.
+# Focal length the view turns with: the lens at the eye, a natural ~30 mm with the camera lowered.
+func view_focal() -> float:
+	return focal if eye_ready() else 30.0
+
 func eye_ready() -> bool:
-	return crowd == null or (camera_raised and raise_anim >= 1.0)
+	return camera_raised and raise_anim >= 1.0
 
 # Never start inside a lamp, a bench or a trunk: step out in a widening spiral.
 func free_player_spot() -> void:
@@ -1669,6 +1678,26 @@ func update_photographer(dt: float) -> void:
 		walk_label.text = briefing.text if not sandbox else Texts.get_text("paseo_sandbox")
 	var want = Input.MOUSE_MODE_CAPTURED if walking_view and not camera_raised and get_window().has_focus() else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != want and not smoke and screenshot_path == "": Input.mouse_mode = want
+
+# Classic park (docs/futuro/21 §8): the camera can be lowered too (Y or the on-screen button) to
+# search with the naked eye, a wide natural view, and brought back to the eye to shoot. The
+# direction of the view is kept, so what you found is what you frame.
+func update_classic_raise(dt: float) -> void:
+	raise_anim = move_toward(raise_anim,1.0 if camera_raised else 0.0,dt/.35)
+	var ready = eye_ready()
+	if ready != was_eye_ready:
+		was_eye_ready = ready
+		place_view()
+		update_dof_pass()
+		update_camera()
+		if is_instance_valid(raise_flash): raise_flash.color.a = .85
+	if is_instance_valid(raise_flash): raise_flash.color.a = move_toward(raise_flash.color.a,0.0,dt*5.0)
+	var naked = mode == "SEARCH" and not ready
+	if is_instance_valid(walk_label):
+		walk_label.visible = naked
+		walk_hint.visible = naked
+		walk_label.text = briefing.text
+		walk_hint.text = Texts.get_text("buscar_ayuda")
 
 # Walk up the avenue towards the plaza, look round, raise the camera, shoot, lower it, walk on.
 func run_walk_demo(dt: float) -> void:
@@ -2424,6 +2453,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "SEARCH" and academy and academy.handle_key(event): return
+		if event.physical_keycode == KEY_Y and mode == "SEARCH" and not crowd and not (academy and academy.active):
+			toggle_raise()
+			return
 		if event.physical_keycode == KEY_F1 and mode == "SEARCH":
 			control_help.set_enabled(not control_help.enabled)
 			return
@@ -2503,9 +2535,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if dragged:
 				# The view follows the mouse on both axes (it used to drag the scene sideways but
 				# follow the mouse vertically, which felt inverted).
-				var pan_delta = event.relative.x*.065*24/focal
+				var pan_delta = event.relative.x*.065*24/view_focal()
 				angle = fposmod(angle+pan_delta,360)
-				pitch -= event.relative.y*.065*24/focal
+				pitch -= event.relative.y*.065*24/view_focal()
 				pan_velocity = clampf(pan_delta*40,-80,80)
 				update_camera()
 	elif event is InputEventScreenTouch:
@@ -2521,9 +2553,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if touches.is_empty(): had_multitouch = false
 	elif event is InputEventScreenDrag and touches.has(event.index):
 		if touches.size() == 1:
-			var pan_delta = -event.relative.x*.065*24/focal
+			var pan_delta = -event.relative.x*.065*24/view_focal()
 			angle = fposmod(angle+pan_delta,360)
-			pitch -= event.relative.y*.065*24/focal
+			pitch -= event.relative.y*.065*24/view_focal()
 			pan_velocity = clampf(pan_delta*40,-80,80)
 		else:
 			var ids = touches.keys()

@@ -358,6 +358,19 @@ func run() -> void:
 	game._unhandled_input(motion)
 	check(angle_difference(deg_to_rad(angle_before),deg_to_rad(game.angle)) > 0,"Moving the mouse right turns the view right")
 	game.dragging = false
+	# Classic park: lower the camera to search with a wide view, raise it to shoot (docs/futuro/21 §8).
+	game.start_level(6)
+	game.begin_assignment()
+	var aim = game.angle
+	game.toggle_raise()
+	await create_timer(.6).timeout
+	check(not game.eye_ready() and game.camera.fov > 60.0 and not game.finder.visible,"Camera lowered: a wide view to search, no finder")
+	await game.take_photo()
+	check(game.mode == "SEARCH","No photo with the camera lowered")
+	game.toggle_raise()
+	await create_timer(.6).timeout
+	check(game.eye_ready() and game.camera.fov < 30.0 and absf(angle_difference(deg_to_rad(aim),deg_to_rad(game.angle))) < .05,"Back at the eye with the telephoto, looking the same way (%s, fov %.0f, %.1f→%.1f)" % [game.eye_ready(),game.camera.fov,aim,game.angle])
+	check(not game.target.runner,"The subject of a level that is not about runners never runs")
 	game.show_arcade()
 	await process_frame
 	check(game.mode == "ARCADE","The level select screen opens")

@@ -401,5 +401,8 @@
   "ayuda_manivela": "Manivela",
   "ayuda_tercios": "Tercios",
   "ayuda_tecla_disparar": "Espacio",
-  "ayuda_disparar": "Disparar"
+  "ayuda_disparar": "Disparar",
+  "bajar_camara": "Bajar la cámara · Y",
+  "subir_camara": "Al ojo · Y",
+  "buscar_ayuda": "Buscando sin la cámara · arrastra o flechas para mirar · Y o el botón: llévatela al ojo"
 }
