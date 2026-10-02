@@ -548,6 +548,7 @@ func in_view_opening(theta: float) -> bool:
 	return false
 
 # Fence bays left open as gates (±7.5° around each landmark: three bays).
+var fence_perches: Array = []
 func gate_bay(theta: float) -> bool:
 	for feature in [BANDSTAND, POND]:
 		if absf(angle_difference(deg_to_rad(theta),deg_to_rad(feature.x))) < deg_to_rad(7.6): return true
@@ -835,6 +836,8 @@ func build_layout() -> void:
 			add_child(bay)
 			visual("verja_tramo","",bay)
 			if i%6 == 0 or gate_edge: visual("verja_pilar","",bay)
+			# Where a pigeon can perch: the ball on top of each post (1.21 m) or pillar (1.59 m).
+			fence_perches.append(pos+Vector3.UP*(1.59 if i%6 == 0 or gate_edge else 1.21))
 	# Masa densa de arbolado y arbustos de fondo tras la verja para cerrar el escenario
 	for i in 84:
 		var theta = i*(360.0/84.0)+rng.randf_range(-1.2,1.2)

@@ -51,6 +51,20 @@ func run() -> void:
 		check(game.pigeons.triangle_count() < 40000,"Pigeons are cheap (%d triangles)" % game.pigeons.triangle_count())
 		for b in game.pigeons.birds:
 			if game.pigeons.flocks[b.flock].state == "suelo": check(b.pos.y < .1,"Pigeons on the ground stay on the ground")
+		# By day a scared flock may perch on the fence: one bird per post or pillar.
+		check(game.pigeons.fence.size() > 50 and game.pigeons.fence.all(func(v): return absf(Vector2(v.x,v.z).length()-12.8) < .01 and v.y > 1.1),"The fence offers its posts and pillars as perches")
+		var fence_flock = game.pigeons.flocks[0]
+		game.pigeons.perch_on_fence(fence_flock)
+		for i in 150: game.pigeons.update(1.0/30,[],[])
+		var perched = game.pigeons.birds.filter(func(b): return game.pigeons.flocks[b.flock] == fence_flock)
+		check(fence_flock.state == "posada","The flock settles on the fence")
+		check(perched.all(func(b): return game.pigeons.fence.any(func(v): return v.distance_to(b.pos) < .02)),"Every pigeon of the flock stands on a post or a pillar")
+		var spots = {}
+		for b in perched: spots[b.pos.snapped(Vector3(.05,.05,.05))] = true
+		check(spots.size() == perched.size(),"No two pigeons share a post")
+		game.pigeons.take_off(fence_flock,fence_flock.home,"suelo")
+		for i in 400: game.pigeons.update(1.0/30,[],[])
+		check(perched.all(func(b): return b.pos.y < .1),"From the fence the flock comes back to the lawn")
 
 	# --- The dog: collider for photos only ---
 	if game.dog:

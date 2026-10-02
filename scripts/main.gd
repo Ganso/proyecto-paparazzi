@@ -383,6 +383,8 @@ func build_world() -> void:
 	pigeons.build(Person.detail)
 	# In the big park the flocks perch on its real trees (the classic park's curtain is elsewhere).
 	if scenario == "grande": pigeons.perches = park.tree_spots
+	else: pigeons.fence = park.fence_perches
+	if "--pigeons=verja" in OS.get_cmdline_user_args() and not pigeons.fence.is_empty(): pigeons.settle_fence()
 	extras = preload("res://scripts/extras.gd").new()
 	viewport.add_child(extras)
 	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.

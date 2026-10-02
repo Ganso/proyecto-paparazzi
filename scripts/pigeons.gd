@@ -159,7 +159,8 @@ func update_flock(f: int, dt: float, people: Array) -> void:
 			for p in people:
 				if p.get_script() == PlayerProxy and p.state == "CAMINANDO" and Vector2(p.position.x-flock.center.x,p.position.z-flock.center.z).length() < 2.6: scared = true
 			if scared:
-				take_off(flock,roost(flock),"posada")
+				if not fence.is_empty() and rng.randf() < FENCE_CHANCE: perch_on_fence(flock)
+				else: take_off(flock,roost(flock),"posada")
 			elif feeder != null and flock.feeder == null:
 				flock.feeder = feeder
 				take_off(flock,feeder.position+feeder.global_basis*Vector3(0,0,-.85),"suelo")
@@ -184,6 +185,40 @@ func roost(flock: Dictionary) -> Vector3:
 		var tree: Vector3 = sorted[rng.randi_range(0,mini(2,sorted.size()-1))]
 		return Vector3(tree.x,0,tree.z)+Vector3.UP*rng.randf_range(4.2,5.2)
 	return Vector3(flock.home.x,0,flock.home.z).normalized()*rng.randf_range(13.5,15.5)+Vector3.UP*rng.randf_range(4.5,6.5)
+
+# By day a scared flock often goes no further than the fence: each bird on the ball of a post or
+# a pillar, side by side along the nearest stretch, looking back at the park.
+var fence: Array = []
+const FENCE_CHANCE = .6
+func perch_on_fence(flock: Dictionary) -> void:
+	var sorted = fence.duplicate()
+	sorted.sort_custom(func(a,b): return a.distance_squared_to(flock.home) < b.distance_squared_to(flock.home))
+	take_off(flock,Vector3(sorted[0].x,sorted[0].y,sorted[0].z),"posada")
+	var k = 0
+	var longest = 0.0
+	for b in birds:
+		if flocks[b.flock] != flock: continue
+		b.to = sorted[k%sorted.size()]
+		b.target = b.to
+		b.fly_len = maxf(1.2,b.from.distance_to(b.to)/rng.randf_range(4.5,6.0))
+		b.perch_yaw = atan2(b.to.x,b.to.z)+rng.randf_range(-.7,.7)
+		longest = maxf(longest,b.fly_len-b.fly_t)
+		k += 1
+	flock.timer = longest
+
+# Jump straight to the fence and stay (captures: -- --pigeons=verja).
+func settle_fence() -> void:
+	for flock in flocks:
+		perch_on_fence(flock)
+		flock.state = "posada"
+		flock.timer = 1e6
+		for b in birds:
+			if flocks[b.flock] != flock: continue
+			b.pos = b.to
+			b.from = b.to
+			b.fly_t = b.fly_len
+			b.yaw = b.perch_yaw
+			b.air = 0.0
 
 # Jump straight to the roost (a session that starts at night, or a capture).
 func settle_night() -> void:
@@ -212,6 +247,7 @@ func take_off(flock: Dictionary, destination: Vector3, next: String) -> void:
 	for b in birds:
 		if flocks[b.flock] != flock: continue
 		b.from = b.pos
+		b.erase("perch_yaw")
 		var scatter = Vector3(rng.randf_range(-1,1),0,rng.randf_range(-1,1))*(.8 if next == "suelo" else 1.6)
 		b.to = destination+scatter
 		if next == "suelo": b.to.y = 0
@@ -270,6 +306,7 @@ func fly_bird(b: Dictionary, flock: Dictionary, dt: float) -> void:
 	b.air = move_toward(b.air,1.0 if u > 0 and u < 1 else 0.0,dt*4)
 	b.flap += dt*(22.0 if u < .85 else 12.0)
 	if u >= 1 and flock.next == "suelo": b.pos.y = 0
+	if u >= 1 and b.has("perch_yaw"): b.yaw = lerp_angle(b.yaw,b.perch_yaw,minf(1.0,dt*5))
 
 func write(i: int, b: Dictionary) -> void:
 	var basis = Basis(Vector3.UP,b.yaw)
