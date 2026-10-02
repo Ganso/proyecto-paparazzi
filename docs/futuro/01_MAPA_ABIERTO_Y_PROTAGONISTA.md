@@ -38,7 +38,7 @@ stateDiagram-v2
     state "MODO VISOR (Cámara al Ojo)" as ModoVisor {
         [*] --> OperacionFotografica
         OperacionFotografica: Personaje frenado (paso finísimo o quieto)
-        OperacionFotografica: Aparece la máscara del visor óptico (HUD, colimadores, EV)
+        OperacionFotografica: Aparece la máscara del visor óptico (HUD, puntos de enfoque, EV)
         OperacionFotografica: Los dedos pasan a operar zoom, foco y exposición
     }
 

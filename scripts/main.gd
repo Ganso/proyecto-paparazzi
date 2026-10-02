@@ -114,6 +114,7 @@ var tlr_frames = 12                 # 120 film: 12 frames (counted in the sandbo
 var tlr_wound = true                # the crank advances the film before every shot
 var tlr_loupe = false               # L: 3× loupe over the ground glass
 var control_help                    # on-screen help (scripts/control_help.gd), F1
+var tutorial                        # tutorial mode (scripts/tutorial.gd)
 # ---- Gamepad (docs/futuro/14) ----
 const PAD_PARAMS = ["t","n","iso","ev_comp"]
 var pad_param = 1                   # which exposure setting the D-pad ↑/↓ changes (←/→ chooses)
@@ -298,9 +299,11 @@ func _ready() -> void:
 		start_level(int(pending_start.level))
 	elif pending_start.has("time"):
 		start_session(pending_start.time,pending_start.get("sandbox",false))
+	elif pending_start.has("tutorial"):
+		start_tutorial()
 	elif pending_start.has("academy"):
 		show_academy()
-	for key in ["time","sandbox","academy","level"]: pending_start.erase(key)
+	for key in ["time","sandbox","academy","level","tutorial"]: pending_start.erase(key)
 	if run_metrics:
 		# Measure the real cost, not the vsync cap.
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -550,7 +553,7 @@ func build_ui() -> void:
 	equipment_label = button(ui,"Equipo",Rect2(950,18,135,38),show_equipment)
 	var job_panel = panel(ui,Rect2(25,96,1230,68),Color(.075,.115,.085,.91))
 	sandbox_button = button(job_panel,"Sandbox · escena",Rect2(16,4,200,26),show_sandbox_controls)
-	graphics_button = button(job_panel,"Gráficos · " + graphics_preset,Rect2(225,4,130,26),show_graphics_settings)
+	# (The graphics are changed from the main menu's options, not during a phase.)
 	counter_label = label(job_panel,Texts.get_text("encargo_01_05"),Rect2(16,9,185,20),12,Color("b8d78c"))
 	briefing = label(job_panel,"",Rect2(16,30,1170,30),20)
 	status_label = label(job_panel,"",Rect2(835,8,375,22),13,Color("b5c3ad"))
@@ -610,6 +613,8 @@ func build_ui() -> void:
 	walk_hint.visible = false
 	control_help = preload("res://scripts/control_help.gd").new(self)
 	ui.add_child(control_help)
+	tutorial = preload("res://scripts/tutorial.gd").new(self)
+	ui.add_child(tutorial)
 	raise_flash = ColorRect.new()
 	raise_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	raise_flash.color = Color(0,0,0,0)
@@ -617,7 +622,7 @@ func build_ui() -> void:
 	ui.add_child(raise_flash)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
-		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help]: continue
+		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,tutorial]: continue
 		if child is Control:
 			if child.position.y < 300: hud_top.append(child)
 			else: hud_bottom.append(child)
@@ -739,7 +744,7 @@ func refresh() -> void:
 	lens_slider.set_value_no_signal(focal)
 	counter_label.text = Texts.get_text("arcade_nivel_d") % (arcade_level+1) if arcade_level >= 0 else "ENCARGO %02d" % (assignment+1)
 	counter_label.visible = not sandbox
-	sandbox_button.visible = sandbox and not (academy and academy.active)
+	sandbox_button.visible = sandbox and not (academy and academy.active) and not (tutorial and tutorial.active)
 	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("HORA AZUL" if time_of_day == "blue" else ("NUBES" if park.cloud_cover > .4 else "SOL")))
 	var frames_text = "sin límite" if sandbox else "%d disparos" % shots
 	if sandbox and equipment.tlr(): frames_text = "%d / 12" % tlr_frames
@@ -780,6 +785,7 @@ func create_modal() -> Control:
 # Main menu (scripts/main_menu.gd, docs/futuro/20): the live park behind frosted glass.
 func intro() -> void:
 	mode = "INTRO"
+	if tutorial and tutorial.active: tutorial.stop()
 	if academy and academy.active: academy.stop()
 	close_modal()
 	modal = preload("res://scripts/main_menu.gd").new(self)
@@ -990,6 +996,7 @@ func _process(dt: float) -> void:
 			if dog: dog.update(dt)
 		ambience.update(dt)
 		if academy: academy.update(dt)
+		if tutorial and tutorial.active: tutorial.update(dt)
 		update_hud_visibility(dt)
 		meter_timer -= dt
 		if meter_timer <= 0:
@@ -2148,7 +2155,8 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 		JOY_BUTTON_A:
 			if equipment.tlr() and sandbox and (not tlr_wound or tlr_frames <= 0): wind_film()
 			elif eye_ready(): autofocus()
-		JOY_BUTTON_B, JOY_BUTTON_START: show_help()
+		JOY_BUTTON_B: show_help()
+		JOY_BUTTON_START: show_pause()
 		JOY_BUTTON_X: control_help.set_enabled(not control_help.enabled)
 		JOY_BUTTON_Y:
 			if not crowd and not (academy and academy.active): toggle_raise()
@@ -2331,6 +2339,7 @@ func take_photo() -> void:
 		academy_demo_shot = false
 		academy.on_demo_photo(current_photo,current_result)
 		return
+	if tutorial and tutorial.active: current_result["tutorial_note"] = tutorial.on_photo(current_result)
 	mode = "RESULT"
 	show_results()
 
@@ -2392,6 +2401,7 @@ func show_results() -> void:
 		show_sandbox_result()
 		return
 	var root = create_modal()
+	var tutorial_on = tutorial and tutorial.active
 	var header = (Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level)) if arcade_level >= 0 else Texts.get_text("revelado_encargo_02d") % (assignment+1)
 	label(root,header,Rect2(25,18,700,25),14,Color("a9c487"))
 	label(root,Texts.get_text("cada_ajuste_deja_una_huella"),Rect2(25,50,770,45),30)
@@ -2433,6 +2443,11 @@ func show_results() -> void:
 		text_label.add_theme_color_override("font_color",UiStyle.INK)
 		text_label.add_theme_font_size_override("font_size",16)
 		column.add_child(text_label)
+	if tutorial_on:
+		var note = label(root,current_result.get("tutorial_note",""),Rect2(25,646,745,40),15,UiStyle.SKY_DEEP)
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button(root,Texts.get_text("tutorial_continuar"),Rect2(803,642,451,52),resume_search,true)
+		return
 	if arcade_level >= 0:
 		var more = shots > 0 and not level_over
 		if more: button(root,Texts.get_text("arcade_otra_foto_d") % shots,Rect2(803,642,204,52),resume_search)
@@ -2510,6 +2525,29 @@ func start_level(n: int) -> void:
 	arcade_level = n
 	start_session(level.time,false)
 
+# ---- Tutorial (docs/futuro/22 §2) ----
+func start_tutorial() -> void:
+	if scenario != "clasico":
+		reload_with("clasico",{"tutorial":true})
+		return
+	arcade_level = -1
+	equipment.preset(0)
+	start_session("day",true)
+	briefing.text = Texts.get_text("modo_tutorial_titulo")
+	tutorial.start()
+
+# The tutorial's assignment: a real subject and its description, without the briefing screen.
+func tutorial_assignment() -> void:
+	sandbox = false
+	if is_instance_valid(target): target.protected_target = false
+	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO" and not p.runner)
+	target = candidates[casting.rng.randi_range(0,candidates.size()-1)]
+	target.protected_target = true
+	briefing.text = Texts.get_text("busca")+", ".join(casting.predicates_for(target.traits,people.map(func(p): return p.traits)))+"."
+	shots = 99
+	best = {}
+	refresh()
+
 func end_level() -> void:
 	if arcade_level < 0 or mode == "LEVEL_END": return
 	level_over = true
@@ -2537,6 +2575,28 @@ func end_level() -> void:
 		button(root,Texts.get_text("arcade_siguiente"),Rect2(1012,520,203,56),func(): start_level(n+1),true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(805,592,410,52),show_arcade,not passed)
 
+# Pause (Esc, the on-screen button or Menu/Start): carry on, the help, or leave the phase for the
+# main menu after a confirmation (docs/futuro/22 §4).
+func show_pause(confirm = false) -> void:
+	mode = "PAUSE"
+	var root = create_modal()
+	label(root,Texts.get_text("pausa_titulo"),Rect2(440,190,400,60),40)
+	if not confirm:
+		button(root,Texts.get_text("pausa_seguir"),Rect2(440,280,400,56),resume_search,true)
+		button(root,Texts.get_text("pausa_ayuda"),Rect2(440,350,400,56),show_help)
+		button(root,Texts.get_text("pausa_salir"),Rect2(440,420,400,56),func(): show_pause(true))
+	else:
+		var warn = label(root,Texts.get_text("pausa_confirmar"),Rect2(440,260,400,60),18,UiStyle.WARN)
+		warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button(root,Texts.get_text("pausa_no"),Rect2(440,340,400,56),resume_search,true)
+		button(root,Texts.get_text("pausa_si"),Rect2(440,410,400,56),leave_phase)
+
+func leave_phase() -> void:
+	if academy and academy.active: academy.stop()
+	if tutorial and tutorial.active: tutorial.stop()
+	if crowd: set_raised(false)
+	intro()
+
 func show_help() -> void:
 	var previous = mode if mode != "HELP" else help_return
 	help_return = previous
@@ -2550,8 +2610,12 @@ func show_help() -> void:
 		diagram.size = Vector2(1200,500)
 		root.add_child(diagram)
 	else:
-		label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
-		glyph_label(root,Texts.get_rich("ayuda_texto_teclado"),Rect2(65,128,1130,490),17,UiStyle.INK)
+		# Keyboard and mouse: the keyboard drawn with the keys lit by group, and the mouse.
+		label(root,Texts.get_text("ayuda_titulo_teclado"),Rect2(65,40,1100,55),36,Color("b8d78c"))
+		var keyboard = preload("res://scripts/keyboard_diagram.gd").new()
+		keyboard.position = Vector2(45,105)
+		keyboard.size = Vector2(1200,520)
+		root.add_child(keyboard)
 	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = help_return; intro() if help_return == "INTRO" else close_modal(),true)
 
 var help_return = "SEARCH"
@@ -2595,7 +2659,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				if graphics_return == "INTRO": intro()
 				elif graphics_return == "EQUIPMENT": show_equipment()
 				else: close_modal()
-			elif mode == "SEARCH": show_help()
+			elif mode == "SEARCH": show_pause()
+			elif mode == "PAUSE": resume_search()
 			elif mode == "EQUIPMENT": restore_equipment_screen()
 			elif mode in ["ARCADE","OPTIONS"]: intro()
 			elif mode == "BRIEFING": show_arcade() if arcade_level >= 0 else intro()
@@ -2605,7 +2670,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ENTER:
 			if mode == "RESULT": resume_search() if shots > 0 else finish_assignment()
 			elif mode == "BRIEFING": begin_assignment()
-			elif mode == "INTRO": show_arcade()
+			elif mode == "SEARCH" and tutorial and tutorial.handle_accept(): pass
 			return
 		if mode != "SEARCH": return
 		match event.physical_keycode:
@@ -2828,7 +2893,7 @@ func show_equipment() -> void:
 		label(root,Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],Rect2(75,150,1100,30),20)
 		label(root,Texts.get_text("visor_interfaz"),Rect2(75,225,250,35),20)
 		option(root,[Texts.get_text("visor_interfaz_camara"),Texts.get_text("visor_interfaz_clasica")],0 if interface_mode == "camara" else 1,Rect2(330,220,700,45),func(i): set_interface("camara" if i == 0 else "clasica"); show_equipment())
-		button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
+		if equipment_return == "INTRO": button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
 		button(root,"Volver",Rect2(880,630,320,55),restore_equipment_screen,true)
 		return
 	for i in 4:
@@ -2849,7 +2914,7 @@ func show_equipment() -> void:
 		option(root,Photo.ISOS.map(func(iso): return "ISO %d" % iso),equipment.film_iso_index,Rect2(330,520,700,45),func(i): equipment.film_iso_index = i; apply_equipment(); show_equipment())
 	label(root,Texts.get_text("visor_interfaz"),Rect2(75,585,250,35),20)
 	option(root,[Texts.get_text("visor_interfaz_camara"),Texts.get_text("visor_interfaz_clasica")],0 if interface_mode == "camara" else 1,Rect2(330,580,700,45),func(i): set_interface("camara" if i == 0 else "clasica"); show_equipment())
-	button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
+	if equipment_return == "INTRO": button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
 	button(root,"Usar este equipo",Rect2(880,630,320,55),restore_equipment_screen,true)
 
 
@@ -2932,8 +2997,7 @@ func apply_graphics_preset(preset: String) -> void:
 	update_lens_effects()
 	apply_debug_off()
 	apply_mannequin_graphics_preset(preset)
-	if is_instance_valid(graphics_button):
-		graphics_button.text = "Gráficos · " + graphics_preset
+	pass
 	if is_instance_valid(graphics_button_intro):
 		graphics_button_intro.text = "Gráficos · " + graphics_preset
 
@@ -3370,6 +3434,10 @@ func show_sandbox_result() -> void:
 	var e: Dictionary = current_result.evidence
 	var info = "Tu cámara\n\n%.0f mm · f/%.1f\n1/%d s · ISO %d\n%s\n\nLuz medida: EV %.1f\nError de exposición: %+.2f EV\nDistancia: %.2f m\nDesenfoque: %.3f mm\nMovimiento: %.3f mm" % [e.f,e.n,roundi(1/e.t),e.iso,"Carrete · ISO fijo" if e.film else "Digital",e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
 	label(root,info,Rect2(885,120,360,420),20).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if tutorial and tutorial.active:
+		label(root,current_result.get("tutorial_note",""),Rect2(25,590,825,60),17,UiStyle.SKY_DEEP).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button(root,Texts.get_text("tutorial_continuar"),Rect2(885,620,360,75),resume_search,true)
+		return
 	label(root,"La foto conserva los ajustes del disparo. Prueba otro enfoque, exposición o equipo.",Rect2(25,584,825,50),17).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,"Menú",Rect2(25,647,165,50),intro)
 	button(root,"Cambiar equipo",Rect2(210,647,260,50),show_equipment)

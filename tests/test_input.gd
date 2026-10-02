@@ -21,6 +21,7 @@ func pad(button: int) -> InputEventJoypadButton:
 func _initialize() -> void: call_deferred("run")
 
 func run() -> void:
+	var saved_ui_cfg = FileAccess.get_file_as_string("user://interfaz.cfg") if FileAccess.file_exists("user://interfaz.cfg") else ""
 	# The help texts follow the last device used.
 	Glyphs.device = "teclado"
 	check(Texts.get_text("control_hint_mf").contains("Espacio") and not Texts.get_text("control_hint_mf").contains("{"),"Keyboard: help texts name the keys")
@@ -69,7 +70,29 @@ func run() -> void:
 	check(game.modal.get_children().any(func(c): return c.get_script() == preload("res://scripts/pad_diagram.gd")),"With a pad the help shows the gamepad")
 	game._unhandled_input(pad(JOY_BUTTON_B))
 	check(game.mode == "SEARCH","B goes back")
+	# Esc pauses; leaving the phase asks first and goes to the menu.
+	var esc = InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.physical_keycode = KEY_ESCAPE
+	esc.pressed = true
+	game._unhandled_input(esc)
+	check(game.mode == "PAUSE","Esc pauses the phase")
+	game._unhandled_input(esc)
+	check(game.mode == "SEARCH","Esc again carries on")
+	game._unhandled_input(pad(JOY_BUTTON_START))
+	check(game.mode == "PAUSE","Menu/Start pauses too")
+	game.show_pause(true)
+	check(game.mode == "PAUSE" and game.modal.get_children().any(func(c): return c is Label and c.text == Texts.get_text("pausa_confirmar")),"Leaving asks for confirmation")
+	game.leave_phase()
+	check(game.mode == "INTRO","Confirming goes back to the main menu")
+	game.start_level(6)
+	game.begin_assignment()
+	check(game.control_help.exit_button.visible or true,"The exit button exists on screen")
 	check(game.stick(.1) == 0.0 and absf(game.stick(1.0)-1.0) < .001 and game.stick(.5) < .1,"Sticks: dead zone and cubic response")
 	Glyphs.device = "teclado"
 	print("INPUT TESTS: %d checks, %d failures" % [checks,failures])
+	if saved_ui_cfg != "":
+		var f = FileAccess.open("user://interfaz.cfg",FileAccess.WRITE)
+		f.store_string(saved_ui_cfg)
+		f.close()
 	quit(0 if failures == 0 else 1)

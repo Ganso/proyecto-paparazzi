@@ -15,6 +15,7 @@ var font: Font
 var bold: Font
 var toggle: Button
 var raise_button: Button      # classic park: lower the camera to search, raise it to shoot (Y)
+var exit_button: Button       # pause / leave the phase (Esc)
 const MANUAL = Color("7cc6ff")
 const AUTO = Color(.78,.82,.86)
 const FIXED = Color(.6,.64,.68)
@@ -35,6 +36,12 @@ func _ready() -> void:
 	toggle.add_theme_font_size_override("font_size",13)
 	toggle.pressed.connect(func(): set_enabled(not enabled))
 	add_child(toggle)
+	exit_button = Button.new()
+	exit_button.focus_mode = Control.FOCUS_NONE
+	exit_button.size = Vector2(110,30)
+	exit_button.add_theme_font_size_override("font_size",13)
+	exit_button.pressed.connect(func(): main.show_pause())
+	add_child(exit_button)
 	raise_button = Button.new()
 	raise_button.focus_mode = Control.FOCUS_NONE
 	raise_button.size = Vector2(190,34)
@@ -57,6 +64,12 @@ func _process(_dt: float) -> void:
 		raise_button.text = Texts.get_text("bajar_camara") if main.camera_raised else Texts.get_text("subir_camara")
 		var vr: Rect2 = main.view_rect
 		raise_button.position = Vector2(vr.end.x-raise_button.size.x-10,vr.end.y-raise_button.size.y-(150 if main.interface_mode == "clasica" and main.eye_ready() else 12))
+	exit_button.visible = main.mode == "SEARCH"
+	if exit_button.visible:
+		var er: Rect2 = main.view_rect
+		exit_button.text = "✕ "+Texts.get_text("salir_fase")+" · "+Glyphs.kp("pausa")
+		var top = er.position.y+(176 if main.interface_mode == "clasica" and main.hud_top[0].visible else 10)
+		exit_button.position = Vector2(er.end.x-exit_button.size.x-10,top) if not main.eye_ready() else Vector2(er.end.x-toggle.size.x-exit_button.size.x-20,toggle.position.y)
 	var searching = main.mode == "SEARCH" and main.eye_ready()
 	toggle.visible = searching
 	if searching:

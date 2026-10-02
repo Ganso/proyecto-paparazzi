@@ -52,7 +52,7 @@ graph TD
 |---|---|---|
 | `01_inicio.png` | `mode == "INTRO"` | Pantalla de título, menú principal y tipografías vectoriales. |
 | `02_briefing.png` | `mode == "BRIEFING"` | Retrato 3D del objetivo, descripción gramatical y ropa. |
-| `03_visor_reflex.png` | `mode == "SEARCH"` | Visor óptico: 9 colimadores AF, cuadrícula áurea, exposímetro y prisma. |
+| `03_visor_reflex.png` | `mode == "SEARCH"` | Visor óptico: 9 puntos de enfoque AF, cuadrícula áurea, exposímetro y prisma. |
 | `04_parque_dia.png` | Cámara a $28\text{ mm}$ | Plaza central, 21 viandantes paseando y telón vegetal denso de fondo. |
 | `05_nubes_ev.png` | `weather_time = 7.3` | Nube ocultando el sol, atenuación lumínica de 3 EV y aguja compensada. |
 | `06_parque_noche.png` | `is_night = true` | Iluminación de farolas cálidas, conos de luz y sombras dinámicas. |
@@ -77,7 +77,7 @@ graph LR
 | `sheet_vegetacion.png` | Flora y Elementos Naturales | Troncos y copas de árboles procedurales (diferentes escalas y follajes), setos densos perimetrales, arbustos de sotobosque y matas florales. |
 | `sheet_prendas.png` | Catálogo de Vestimenta | Todas las piezas JSON de `data/piezas/`: torsos (camisetas, camisas, chaquetas), piernas (pantalones, faldas, shorts), prendas deportivas (`sport: true`) y calzado. |
 | `sheet_accesorios.png` | Complementos y Atrezo | Gafas de sol, gorras deportivas, sombreros, bolsos cruzados, mochilas y accesorios de mano. |
-| `sheet_equipamiento.png` | Cámaras y Ópticas | Cuerpos de cámara (compacta, telemétrica, réflex, futura TLR), catálogo de lentes ($28\text{ mm}$, $50\text{ mm}$, $85\text{ mm}$, $135\text{ mm}$) y colimadores HUD. |
+| `sheet_equipamiento.png` | Cámaras y Ópticas | Cuerpos de cámara (compacta, telemétrica, réflex, futura TLR), catálogo de lentes ($28\text{ mm}$, $50\text{ mm}$, $85\text{ mm}$, $135\text{ mm}$) y puntos de enfoque HUD. |
 
 ---
 

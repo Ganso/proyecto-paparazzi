@@ -267,7 +267,10 @@ func run() -> void:
 	check(UiStyle.INK == Color("0e1924") and UiStyle.SURFACE == Color(1,1,1),"Light theme restored")
 	game.intro()
 	await process_frame
-	check(game.modal.theme_buttons.size() == 2,"Main menu shows the theme selector")
+	game.modal.current = 5
+	game.modal.build_card()
+	await process_frame
+	check(game.modal.card.get_children().any(func(c): return c is Button and c.text.begins_with("Tema")),"The options card has the theme switch")
 	# Arcade (docs/futuro/21): levels fix the equipment, spend shots, run the clock and end.
 	var Arcade = preload("res://scripts/arcade.gd")
 	Arcade.SAVE = "user://arcade_test.cfg"

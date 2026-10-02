@@ -69,14 +69,14 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
 - **Carrete** (`equipment.film = true`): se carga una película de ISO fijo (`film_iso_index`, por defecto ISO 400). El botón de ISO queda deshabilitado (`iso_button.disabled`) y la exposición automática solo ajusta apertura y velocidad, conservando el ISO de la película (`main.gd::auto_expose()`).
 
 ### 3.4 Medición, Exposición Automática y Compensación (±EV)
-- **Medición TTL**: El exposímetro mide la luz incidente en el punto de la escena bajo el colimador activo (`park.illumination_ev()`); si el rayo no toca nada, usa `park.sky_ev()`. También con exposición automática: ningún automatismo mide sobre el objetivo del encargo.
+- **Medición TTL**: El exposímetro mide la luz incidente en el punto de la escena bajo el punto de enfoque activo (`park.illumination_ev()`); si el rayo no toca nada, usa `park.sky_ev()`. También con exposición automática: ningún automatismo mide sobre el objetivo del encargo.
 - **Compensación de Exposición (±EV)**: En exposición automática, el usuario dispone de un control interactivo de compensación en el HUD superior (`exposure_button`), con un rango de $\pm 2.0\text{ EV}$ en pasos de $1/3$ de paso (`Equipment.EV_COMPENSATIONS`):
   $$\text{Compensación } \in \{-2.0, -1.7, -1.3, -1.0, -0.7, -0.3, 0.0, +0.3, +0.7, +1.0, +1.3, +1.7, +2.0\}\text{ EV}$$
   - **Interacción**: Clic izquierdo (subir) / clic derecho (bajar), rueda del ratón (`WHEEL_UP` / `WHEEL_DOWN`), arrastre horizontal o atajos de teclado (`[` / `]` y `-` / `+`).
   - **Efecto Óptico y Revelado**: La compensación modifica el valor objetivo (`target_ev = measured_ev - compensation`), obligando al resolvedor simplex a escoger exposiciones intencionadamente más claras o más oscuras. La aguja `delta_ev` del visor refleja la desviación exacta y el shader de revelado químico (`develop.gdshader`) escala la luminancia de los píxeles proporcionalmente con $\exp2(\text{compensación})$.
 - **Optimizador Simplex**: En modo automático, `auto_expose()` recorre todas las combinaciones apertura × velocidad × ISO y minimiza una función de coste que prioriza el error respecto al EV objetivo compensado, luego evitar trepidación ($t > 1/f$), después ISO bajo y finalmente aperturas abiertas.
-- **Los automatismos no conocen al objetivo** (corregido el 30-09-2026, [futuro/12 §2.1](futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)): el AF matricial (`select_matrix_point()`) elige, entre los colimadores que tocan a alguien, el más cercano al centro del encuadre (en empate, la persona más próxima a la cámara); sin nadie, el decorado más cercano. Antes elegía al objetivo antes que a nadie y lo delataba al barrer el parque. Lo comprueba `tests/test_automatisms.gd`.
-- **Modos Futuros de Fotometría y AF**: La especificación técnica completa de medición matricial/evaluativa, puntual ligada al colimador, ponderada al centro, y modos AF-S, AF-C predictivo y seguimiento inteligente se encuentra en [docs/futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md).
+- **Los automatismos no conocen al objetivo** (corregido el 30-09-2026, [futuro/12 §2.1](futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)): el AF matricial (`select_matrix_point()`) elige, entre los puntos de enfoque que tocan a alguien, el más cercano al centro del encuadre (en empate, la persona más próxima a la cámara); sin nadie, el decorado más cercano. Antes elegía al objetivo antes que a nadie y lo delataba al barrer el parque. Lo comprueba `tests/test_automatisms.gd`.
+- **Modos Futuros de Fotometría y AF**: La especificación técnica completa de medición matricial/evaluativa, puntual ligada al punto de enfoque, ponderada al centro, y modos AF-S, AF-C predictivo y seguimiento inteligente se encuentra en [docs/futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](futuro/12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md).
 
 ---
 
@@ -89,14 +89,14 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
 |                            ^ aguja ΔEV                            |
 |   ┌─                                                        ─┐   |
 |                [ ]        [ ]        [ ]                          |
-|                [ ]        [■]        [ ]   <- 9 colimadores      |
+|                [ ]        [■]        [ ]   <- 9 puntos de enfoque      |
 |                [ ]        [ ]        [ ]                          |
 |   └─                                                        ─┘   |
 +-------------------------------------------------------------------+
 ```
 
 1. **Marcas de esquina**: cuatro escuadras que delimitan el área útil del visor.
-2. **9 colimadores AF/medición** (cuadrícula 3×3, teclas `1`–`9`):
+2. **9 puntos de enfoque AF/medición** (cuadrícula 3×3, teclas `1`–`9`):
    - En **AF matricial** se dibujan los 9; en **AF puntual** solo el activo; en **MF** ninguno.
    - El activo se dibuja en verde. Al enfocar parpadea en **blanco** si el AF confirma y en **naranja** si falla.
 3. **Guías de tercios** (tecla `G`): solo ayuda visual. La bonificación de tercios de la puntuación se calcula aparte en `Photo.evaluate()`.
@@ -104,7 +104,7 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
 5. **Enfoque manual táctil y gradual (MF)** (`focus_aid.gdshader`, centro del visor):
    - **Controles continuos y micro-pasos**: Rueda del ratón con paso fino (~0.0035 dioptrías, ~8 micro-pasos dentro de la profundidad de campo de un 90 mm a f/2.8), `Shift + rueda` para micro-enfoque quirúrgico (0.0012 dioptrías), `Ctrl + rueda` para barrido rápido, pulsación continua mantenida de teclas `R` y `T`, y **arrastre con botón derecho del ratón** para girar físicamente el anillo de enfoque de forma 1:1 analógica y continua.
    - **Estabilización de muestreo de parche**: El telémetro evalúa el área del parche central a 60 fps con amortiguamiento exponencial continuo, priorizando sujetos humanos y eliminando saltos bruscos o parpadeos al rotar la cámara.
-   - **Bloqueo de colimador en MF**: En enfoque manual, el clic de paneo no altera el punto de enfoque activo ni descalibra el exposímetro.
+   - **Bloqueo de punto de enfoque en MF**: En enfoque manual, el clic de paneo no altera el punto de enfoque activo ni descalibra el exposímetro.
    - **Confirmación óptica de coincidencia**: Al alinear las dos imágenes dentro de la profundidad de campo, el marco del parche se ilumina en verde dorado (`#b8d78c`) y el indicador confirma `MF · foco alineado` con un sutil clic mecánico de retén.
    - Réflex y compacta: círculo de imagen partida; las mitades superior e inferior se desplazan en sentidos opuestos.
    - Telemétrica: parche rectangular teñido con la doble imagen superpuesta.

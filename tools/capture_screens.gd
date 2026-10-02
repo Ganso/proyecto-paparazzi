@@ -63,5 +63,25 @@ func run() -> void:
 	await shot("16_tlr_resultado")
 	game.end_level()
 	await shot("17_fin_nivel")
+	# Menu of five modes, tutorial, controls with keyboard and with pad, pause (docs/futuro/22).
+	for k in 6:
+		game.intro()
+		game.modal.current = k
+		game.modal.build_card()
+		await shot("18_menu_%d_%s" % [k+1,game.modal.MODES[k]])
+	game.start_tutorial()
+	game.tutorial.next()
+	await shot("19_tutorial")
+	game.show_help()
+	await shot("20_ayuda_teclado")
+	var G = preload("res://scripts/input_glyphs.gd")
+	G.device = "mando"
+	game.show_help()
+	await shot("21_ayuda_mando")
+	G.device = "teclado"
+	game.resume_search()
+	game.show_pause()
+	await shot("22_pausa")
+	game.leave_phase()
 	game.set_interface("camara")
 	quit()

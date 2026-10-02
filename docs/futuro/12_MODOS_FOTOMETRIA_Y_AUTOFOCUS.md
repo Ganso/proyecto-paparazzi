@@ -34,10 +34,10 @@ El prototipo actual cuenta con los siguientes cimientos operativos y verificados
 
 ### 2.1 ✅ Corregido (30-09-2026): los automatismos ya no conocen al objetivo
 
-> Hecho en `main.gd::select_matrix_point()` (la persona más cercana al centro del encuadre, y en empate la más próxima a la cámara), `update_meter()` y `auto_expose()` (miden lo que hay bajo el colimador activo). Lo comprueba `tests/test_automatisms.gd`. Se conserva abajo la descripción del problema original.
-- **AF matricial**: `main.gd::select_matrix_point()` recorre los 9 colimadores y, si alguno toca al objetivo (`p == target`), lo elige antes que a cualquier otra persona. Basta con barrer el parque en AF matricial para ver en qué persona «salta» el colimador, lo que **delata al sujeto buscado** y anula parte del reto de identificación.
-- **Exposición automática**: `update_meter()` y `auto_expose()` sustituyen la lectura del colimador por la luz sobre el pecho del objetivo en cuanto aparece en el encuadre.
-- **Corrección (fase 0 de este documento)**: el AF matricial elige con una regla geométrica independiente de la identidad (la persona más cercana al centro del encuadre y, en caso de empate, la más próxima a la cámara), y la exposición automática mide el colimador activo o las zonas del §3. Ningún automatismo lee `target`.
+> Hecho en `main.gd::select_matrix_point()` (la persona más cercana al centro del encuadre, y en empate la más próxima a la cámara), `update_meter()` y `auto_expose()` (miden lo que hay bajo el punto de enfoque activo). Lo comprueba `tests/test_automatisms.gd`. Se conserva abajo la descripción del problema original.
+- **AF matricial**: `main.gd::select_matrix_point()` recorre los 9 puntos de enfoque y, si alguno toca al objetivo (`p == target`), lo elige antes que a cualquier otra persona. Basta con barrer el parque en AF matricial para ver en qué persona «salta» el punto de enfoque, lo que **delata al sujeto buscado** y anula parte del reto de identificación.
+- **Exposición automática**: `update_meter()` y `auto_expose()` sustituyen la lectura del punto de enfoque por la luz sobre el pecho del objetivo en cuanto aparece en el encuadre.
+- **Corrección (fase 0 de este documento)**: el AF matricial elige con una regla geométrica independiente de la identidad (la persona más cercana al centro del encuadre y, en caso de empate, la más próxima a la cámara), y la exposición automática mide el punto de enfoque activo o las zonas del §3. Ningún automatismo lee `target`.
 
 ## 3. Especificación de Modos de Exposición Automática (Metering)
 
@@ -45,8 +45,8 @@ Se proyecta una arquitectura de fotometría TTL (*Through-The-Lens*) con tres mo
 
 | Modo de Medición | Área de Cobertura | Algoritmo de Cálculo | Caso de Uso Óptimo | Cuerpos Disponibles |
 |---|---|---|---|---|
-| **Matricial / Evaluativa (Multi-zona)** | 100% del encuadre dividido en $3 \times 3$ o $5 \times 5$ celdas | Histograma zonal ponderado con mayor peso en la zona que contiene al sujeto o colimador activo. | Escenas generales con iluminación equilibrada; fotografía de calle espontánea. | Compacta digital, Réflex moderna |
-| **Puntual (Spot Metering)** | $2.5\% - 3.5\%$ del encuadre, centrado en el colimador activo | Lectura física estricta en el microcono de visión del colimador `finder.active`. | Fuertes contraluces, sujetos en penumbra o bajo focos directos de farolas nocturnas. | Compacta digital, Réflex moderna |
+| **Matricial / Evaluativa (Multi-zona)** | 100% del encuadre dividido en $3 \times 3$ o $5 \times 5$ celdas | Histograma zonal ponderado con mayor peso en la zona que contiene al sujeto o punto de enfoque activo. | Escenas generales con iluminación equilibrada; fotografía de calle espontánea. | Compacta digital, Réflex moderna |
+| **Puntual (Spot Metering)** | $2.5\% - 3.5\%$ del encuadre, centrado en el punto de enfoque activo | Lectura física estricta en el microcono de visión del punto de enfoque `finder.active`. | Fuertes contraluces, sujetos en penumbra o bajo focos directos de farolas nocturnas. | Compacta digital, Réflex moderna |
 | **Ponderada al Centro (Center-Weighted)** | 75% elipse central (radio 12 mm en sensor), 25% periferia | Media ponderada gaussiana decreciente desde el centro óptico. | Fotografía clásica analógica; comportamiento predecible y consistente. | Réflex analógica, Telemétrica |
 
 ### 3.1 Modelo Matemático de Medición Matricial (Zonas)
@@ -55,11 +55,11 @@ La escena proyectada en el frustum de la cámara se subdivide en $M \times N$ zo
 $$EV_{matricial} = \sum_{k=1}^{K} w_k \cdot EV_k$$
 
 Donde los pesos $w_k$ se normalizan ($\sum w_k = 1$) y se modulan dinámicamente:
-- **Prioridad de persona**: la zona que contiene a la persona bajo el colimador activo recibe un multiplicador $w_k \times 2.5$. Es cualquier persona detectada por los rayos, sin saber si es el objetivo del encargo (ver §2.1).
+- **Prioridad de persona**: la zona que contiene a la persona bajo el punto de enfoque activo recibe un multiplicador $w_k \times 2.5$. Es cualquier persona detectada por los rayos, sin saber si es el objetivo del encargo (ver §2.1).
 - **Compensación de Cielo**: Si las zonas superiores exhiben $EV_k > EV_{medio} + 3.0$ (cielo brillante), su peso se atenúa para evitar que la cámara subexponga a los peatones en el suelo.
 
-### 3.2 Medición Puntual Ligada al Colimador
-La medición puntual muestrea exclusivamente la luminancia en el punto 3D interceptado por el colimador activo:
+### 3.2 Medición Puntual Ligada al Punto de enfoque
+La medición puntual muestrea exclusivamente la luminancia en el punto 3D interceptado por el punto de enfoque activo:
 $$target\_ev = park.illumination\_ev(hit.position, night, hit.collider) - equipment.exposure\_compensation()$$
 Esto permite al jugador apuntar al rostro o prenda clave del sujeto, ajustar la compensación a $+0.7\text{ EV}$ si se trata de un tono claro, y obtener la exposición exacta con independencia de si el fondo es negro azabache o blanco cegador.
 
@@ -70,9 +70,9 @@ Esto permite al jugador apuntar al rostro o prenda clave del sujeto, ajustar la 
 El sistema de autofoco se diversifica en cuatro modos especializados que complementan el modo manual con telémetro de coincidencia (MF):
 
 ### 4.1 AF-S (Single Shot / Autofoco Simple con Bloqueo)
-- **Mecánica**: Al presionar a medio recorrido el disparador o pulsar la tecla `F`, el motor óptico busca el plano de foco sobre la superficie apuntada por el colimador activo.
+- **Mecánica**: Al presionar a medio recorrido el disparador o pulsar la tecla `F`, el motor óptico busca el plano de foco sobre la superficie apuntada por el punto de enfoque activo.
 - **Focus Lock (Bloqueo de Enfoque)**: Una vez alcanzada la confirmación (halo verde en visor), el plano de enfoque queda **bloqueado** mientras no se suelte el pulsador.
-- **Recomposición (Focus and Recompose)**: Permite centrar el colimador en el sujeto, fijar foco a $4.20\text{ m}$, y luego reencuadrar la cámara aplicando la regla de los tercios sin que la lente modifique su distancia.
+- **Recomposición (Focus and Recompose)**: Permite centrar el punto de enfoque en el sujeto, fijar foco a $4.20\text{ m}$, y luego reencuadrar la cámara aplicando la regla de los tercios sin que la lente modifique su distancia.
 
 ### 4.2 AF-C (Continuous / Autofoco Continuo Predictivo)
 
@@ -86,18 +86,18 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
   La lente se desplaza proactivamente hacia $s_{target}$, garantizando que en el instante exacto de apertura del obturador el círculo de confusión $CoC$ se mantenga dentro del límite de nitidez ($CoC \le 0.030\text{ mm}$).
 
 ### 4.3 AF-A (Automatic / Autofoco Híbrido Inteligente)
-- Monitorea la velocidad del sujeto bajo el colimador.
+- Monitorea la velocidad del sujeto bajo el punto de enfoque.
 - Si el sujeto permanece quieto o en pausa de banco, opera en **AF-S** permitiendo recomponer el encuadre.
 - Si el sujeto inicia la marcha o carrera ($\|\vec{v}\| > 0.3\text{ m/s}$), el sistema conmuta instantáneamente a **AF-C** emitiendo un doble bip de confirmación en el HUD.
 
 ### 4.4 ❌ Descartado: Detección y Seguimiento Inteligente de Sujetos (AI Subject / Eye Tracking)
 
 > [!CAUTION]
-> **Descartado.** Buscar «el personaje que mejor coincide con los rasgos del briefing» resolvería por el jugador el reto central del juego: identificar al objetivo. Se conserva el texto como antecedente. Un seguimiento aceptable solo podría engancharse a la persona que el jugador ya ha elegido con el colimador.
+> **Descartado.** Buscar «el personaje que mejor coincide con los rasgos del briefing» resolvería por el jugador el reto central del juego: identificar al objetivo. Se conserva el texto como antecedente. Un seguimiento aceptable solo podría engancharse a la persona que el jugador ya ha elegido con el punto de enfoque.
 
 - Exclusivo de cuerpos compactos digitales modernos y cámaras de gama alta.
 - Evalúa el frustum visible en busca del personaje que mejor coincide con los rasgos del briefing (o el más próximo al centro del visor).
-- El colimador activo se desprende de la cuadrícula rígida de 9 puntos y **persigue de forma autónoma** la cabeza del sujeto a través del visor 2D, proyectando un marco delimitador dinámico.
+- El punto de enfoque activo se desprende de la cuadrícula rígida de 9 puntos y **persigue de forma autónoma** la cabeza del sujeto a través del visor 2D, proyectando un marco delimitador dinámico.
 
 ---
 
@@ -151,7 +151,7 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 3. **Fase 2 (opcional)**: AF-A y AF-C predictivo, con el valor limitado que explica §4.2.
 
 **Criterios de aceptación** (ampliar `test_equipment.gd`):
-1. Con el objetivo y otra persona a la misma distancia y en colimadores simétricos, el AF matricial elige según la regla geométrica, nunca por identidad. Intercambiar quién es el objetivo no cambia el colimador elegido.
-2. Con el objetivo en sombra y el fondo al sol, la exposición automática depende solo del modo de medición y del colimador, no de `target`.
-3. La medición puntual lee exactamente `park.illumination_ev()` en el punto del colimador activo, y la matricial es la media ponderada del §3.1, ambas deterministas.
+1. Con el objetivo y otra persona a la misma distancia y en puntos de enfoque simétricos, el AF matricial elige según la regla geométrica, nunca por identidad. Intercambiar quién es el objetivo no cambia el punto de enfoque elegido.
+2. Con el objetivo en sombra y el fondo al sol, la exposición automática depende solo del modo de medición y del punto de enfoque, no de `target`.
+3. La medición puntual lee exactamente `park.illumination_ev()` en el punto del punto de enfoque activo, y la matricial es la media ponderada del §3.1, ambas deterministas.
 4. El bloqueo AF-L/AE-L mantiene foco y exposición mientras dura la fase 1 del disparador.

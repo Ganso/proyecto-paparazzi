@@ -1,8 +1,10 @@
 extends Control
-# Main menu (docs/futuro/20_INTERFAZ_CLARA.md, modes in docs/futuro/21): clean, light and airy. The live park keeps running
+# Main menu (docs/futuro/20_INTERFAZ_CLARA.md, modes in docs/futuro/22 §1): clean, light and airy. The live park keeps running
 # behind a block of frosted white glass (shaders/frosted_glass.gdshader) while the camera drifts
-# slowly; the menu sits on the left: the Arcade button, the sandbox (scenario cards, time of day
-# chips) and the secondary entries (Academy, equipment, graphics).
+# slowly. The modes — Arcade, Historia (coming), Tutorial, Sandbox, Academia, Opciones — show one at a time in a
+# big card, changed with the arrows (← → keys, D-pad or LB/RB, or the ‹ › buttons) and entered with
+# Enter / A or the button; each card holds what its mode needs (scenario and light for the sandbox,
+# theme and interface in the options).
 const Texts = preload("res://scripts/texts.gd")
 
 const UiStyle = preload("res://scripts/ui_style.gd")
@@ -20,6 +22,13 @@ var time_of_day = "day"
 var cards = {}
 var chips = {}
 var theme_buttons = []
+const MODES = ["arcade","historia","tutorial","sandbox","academia","opciones"]
+static var current = 0
+var card: Control
+var dots = []
+const Glyphs = preload("res://scripts/input_glyphs.gd")
+const GlyphLabel = preload("res://scripts/glyph_label.gd")
+var hint: Control
 var title_font: FontFile
 var body_font: FontFile
 var body_medium: FontFile
@@ -102,71 +111,158 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 			b.add_theme_stylebox_override("normal",box(UiStyle.surf(.42),12,LINE))
 			b.add_theme_stylebox_override("hover",box(UiStyle.surf(.8),12,SKY.lightened(.35),1,10))
 			b.add_theme_stylebox_override("pressed",box(SKY_SOFT,12,SKY.lightened(.2)))
+			b.add_theme_color_override("font_focus_color",SKY.darkened(.15))
+	# Keyboard and gamepad focus: a visible sky-blue ring.
+	b.add_theme_stylebox_override("focus",box(Color.TRANSPARENT,14,SKY,3))
 	b.pressed.connect(callback)
 	parent.add_child(b)
 	return b
 
 func build() -> void:
 	var x = 96.0
-	text(self,Texts.get_text("menu_estudio"),Vector2(x,70),13,UiStyle.SKY_DEEP,body_medium)
-	text(self,"Proyecto Paparazzi",Vector2(x-4,88),62,INK,title_font)
-	text(self,Texts.get_text("menu_lema"),Vector2(x,168),17,SOFT,light_font,560)
-	# Arcade: the main entry (the level fixes scenario, light and camera).
-	flat_button(self,Texts.get_text("menu_arcade"),Rect2(x,236,570,64),main.show_arcade,"primary")
-	# Sandbox: choose scenario and light, then play freely.
-	text(self,Texts.get_text("menu_sandbox_titulo"),Vector2(x,322),12,FAINT,body_medium)
-	var y = 344.0
+	text(self,Texts.get_text("menu_estudio"),Vector2(x,58),13,UiStyle.SKY_DEEP,body_medium)
+	text(self,"Proyecto Paparazzi",Vector2(x-4,76),58,INK,title_font)
+	text(self,Texts.get_text("menu_lema"),Vector2(x,150),16,SOFT,light_font,600)
+	# ‹ card › with the dots of the five modes under it.
+	var left = flat_button(self,"‹",Rect2(x-62,330,48,96),func(): change_mode(-1))
+	left.add_theme_font_size_override("font_size",40)
+	var right = flat_button(self,"›",Rect2(x+618,330,48,96),func(): change_mode(1))
+	right.add_theme_font_size_override("font_size",40)
+	for k in MODES.size():
+		var dot = Panel.new()
+		dot.position = Vector2(x+300-MODES.size()*12+k*24,602)
+		dot.size = Vector2(12,12)
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(dot)
+		dots.append(dot)
+	hint = GlyphLabel.new()
+	hint.position = Vector2(x,628)
+	hint.size = Vector2(600,24)
+	hint.font_size = 13
+	hint.color = FAINT
+	hint.align_center = true
+	add_child(hint)
+	build_card()
+
+func change_mode(step: int) -> void:
+	current = posmod(current+step,MODES.size())
+	build_card()
+
+func build_card() -> void:
+	if is_instance_valid(card): card.queue_free()
+	var x = 96.0
+	card = Panel.new()
+	card.position = Vector2(x,200)
+	card.size = Vector2(600,390)
+	card.add_theme_stylebox_override("panel",box(UiStyle.surf(.78),20,LINE,1,18))
+	add_child(card)
+	var mode: String = MODES[current]
+	text(card,Texts.get_text("modo_"+mode).to_upper(),Vector2(32,26),13,UiStyle.SKY_DEEP,body_medium)
+	text(card,Texts.get_text("modo_"+mode+"_titulo"),Vector2(30,44),44,INK,title_font)
+	text(card,Texts.get_text("modo_"+mode+"_texto"),Vector2(32,108),16,SOFT,light_font,536)
+	match mode:
+		"arcade":
+			var progress = preload("res://scripts/arcade.gd").load_progress()
+			var stars = 0
+			for n in progress: stars += int(progress[n].stars)
+			text(card,Texts.get_text("modo_arcade_progreso") % [progress.size(),stars],Vector2(32,190),18,INK,body_medium)
+			enter_button(main.show_arcade)
+		"historia":
+			# Not playable yet: said clearly, with a disabled button (docs/futuro/10).
+			var badge = Label.new()
+			badge.text = Texts.get_text("modo_proximamente")
+			badge.position = Vector2(440,26)
+			badge.add_theme_font_override("font",body_medium)
+			badge.add_theme_font_size_override("font_size",13)
+			badge.add_theme_color_override("font_color",Color.WHITE)
+			badge.add_theme_stylebox_override("normal",box(UiStyle.WARN,10,Color.TRANSPARENT,0))
+			card.add_child(badge)
+			var b = flat_button(card,Texts.get_text("modo_historia_boton"),Rect2(32,306,536,58),func(): pass)
+			b.disabled = true
+			enter_callback = Callable()
+		"tutorial":
+			enter_button(main.start_tutorial)
+		"sandbox":
+			build_sandbox()
+			enter_button(func(): main.start_in(scenario,time_of_day,true))
+		"academia":
+			var done = main.academy.practices_done() if main.academy else 0
+			text(card,Texts.get_text("modo_academia_progreso") % done,Vector2(32,190),18,INK,body_medium)
+			enter_button(main.open_academy)
+		"opciones":
+			build_options()
+	for k in dots.size():
+		dots[k].add_theme_stylebox_override("panel",box(SKY if k == current else UiStyle.surf(.6),6,LINE))
+	hint.set_rich(Texts.get_rich("modo_ayuda_menu"))
+
+func enter_button(callback: Callable) -> void:
+	var b = flat_button(card,Texts.get_text("modo_entrar"),Rect2(32,306,536,58),callback,"primary")
+	b.focus_mode = Control.FOCUS_ALL
+	b.call_deferred("grab_focus")
+	enter_callback = callback
+
+var enter_callback: Callable
+
+func build_sandbox() -> void:
+	cards = {}
+	chips = {}
 	for k in 2:
 		var which = ["clasico","grande"][k]
-		var card = Button.new()
-		card.position = Vector2(x+k*292,y)
-		card.size = Vector2(278,80)
-		card.focus_mode = Control.FOCUS_NONE
-		card.pressed.connect(func(): select_scenario(which))
-		add_child(card)
-		text(card,Texts.get_text("escenario_"+which).capitalize(),Vector2(20,12),20,INK,body_medium)
-		text(card,Texts.get_text("menu_"+which+"_detalle"),Vector2(20,42),13,SOFT,light_font,238)
-		cards[which] = card
+		var c = Button.new()
+		c.position = Vector2(32+k*276,170)
+		c.size = Vector2(260,70)
+		c.focus_mode = Control.FOCUS_NONE
+		c.pressed.connect(func(): select_scenario(which))
+		card.add_child(c)
+		text(c,Texts.get_text("escenario_"+which).capitalize(),Vector2(16,10),18,INK,body_medium)
+		text(c,Texts.get_text("menu_"+which+"_detalle"),Vector2(16,38),12,SOFT,light_font,230)
+		cards[which] = c
 	var times = [["day","intro_dia"],["golden","intro_dorada"],["blue","intro_azul"],["night","intro_noche"]]
 	for k in times.size():
 		var chip = Button.new()
 		chip.text = Texts.get_text(times[k][1])
-		chip.position = Vector2(x+k*143,436)
-		chip.size = Vector2(133,40)
+		chip.position = Vector2(32+k*136,252)
+		chip.size = Vector2(126,38)
 		chip.focus_mode = Control.FOCUS_NONE
 		chip.add_theme_font_override("font",body_medium)
-		chip.add_theme_font_size_override("font_size",15)
+		chip.add_theme_font_size_override("font_size",14)
 		var tod = times[k][0]
 		chip.pressed.connect(func(): select_time(tod))
-		add_child(chip)
+		card.add_child(chip)
 		chips[tod] = chip
-	flat_button(self,Texts.get_text("menu_sandbox"),Rect2(x,488,570,48),func(): main.start_in(scenario,time_of_day,true))
-	# Secondary entries.
-	var row = [["menu_academia",main.open_academy],["menu_equipo",main.show_equipment],["menu_graficos",main.show_graphics_settings]]
-	for k in row.size():
-		flat_button(self,Texts.get_text(row[k][0]),Rect2(x+k*193,552,183,44),row[k][1])
-	# Theme selector (top right).
-	text(self,Texts.get_text("menu_tema"),Vector2(1004,30),12,FAINT,body_medium)
-	for k in 2:
-		var dark = k == 1
-		var b = Button.new()
-		b.text = Texts.get_text("tema_oscuro" if dark else "tema_claro")
-		b.position = Vector2(1004+k*92,50)
-		b.size = Vector2(86,34)
-		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_override("font",body_medium)
-		b.add_theme_font_size_override("font_size",14)
-		var on = dark == UiStyle.dark
-		b.add_theme_color_override("font_color",Color.WHITE if on else SOFT)
-		b.add_theme_color_override("font_hover_color",Color.WHITE if on else SKY.darkened(.15))
-		b.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),17,Color.TRANSPARENT if on else LINE))
-		b.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),17,SKY.lightened(.35)))
-		b.add_theme_stylebox_override("pressed",box(SKY,17))
-		b.pressed.connect(func(): main.set_theme(dark))
-		add_child(b)
-		theme_buttons.append(b)
-	text(self,Texts.get_text("menu_pie"),Vector2(x,616),13,FAINT,light_font,570)
 	refresh()
+
+func build_options() -> void:
+	enter_callback = Callable()
+	var rows = [
+		[Texts.get_text("menu_equipo"),main.show_equipment],
+		[Texts.get_text("menu_graficos"),main.show_graphics_settings],
+		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
+		[Texts.get_text("opcion_interfaz") % Texts.get_text("visor_interfaz_corta_"+main.interface_mode),func(): main.set_interface("clasica" if main.interface_mode == "camara" else "camara"); build_card()],
+		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
+	]
+	for k in rows.size():
+		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,166+(k/2)*62,260,50),rows[k][1])
+		b.focus_mode = Control.FOCUS_ALL
+		if k == 0: b.call_deferred("grab_focus")
+
+# ← → (keys, D-pad, LB/RB) change the mode; Enter / A enters it.
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or main.mode != "INTRO": return
+	var step = 0
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode in [KEY_LEFT,KEY_A]: step = -1
+		elif event.physical_keycode in [KEY_RIGHT,KEY_D]: step = 1
+		elif event.physical_keycode in [KEY_ENTER,KEY_KP_ENTER] and enter_callback.is_valid():
+			get_viewport().set_input_as_handled()
+			enter_callback.call()
+			return
+	if event is InputEventJoypadButton and event.pressed:
+		if event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_LEFT_SHOULDER]: step = -1
+		elif event.button_index in [JOY_BUTTON_DPAD_RIGHT,JOY_BUTTON_RIGHT_SHOULDER]: step = 1
+	if step != 0:
+		get_viewport().set_input_as_handled()
+		change_mode(step)
 
 func select_scenario(which: String) -> void:
 	scenario = which
@@ -179,16 +275,18 @@ func select_time(tod: String) -> void:
 
 func refresh() -> void:
 	for which in cards:
+		if not is_instance_valid(cards[which]): continue
 		var on = which == scenario
-		var card: Button = cards[which]
-		card.add_theme_stylebox_override("normal",box(UiStyle.surf(.86) if on else CARD,16,SKY if on else LINE,2 if on else 1,16 if on else 0))
-		card.add_theme_stylebox_override("hover",box(UiStyle.surf(.92),16,SKY.lightened(.2) if not on else SKY,2 if on else 1,14))
-		card.add_theme_stylebox_override("pressed",box(SKY_SOFT,16,SKY,2))
+		var c: Button = cards[which]
+		c.add_theme_stylebox_override("normal",box(UiStyle.surf(.9) if on else CARD,14,SKY if on else LINE,2 if on else 1,12 if on else 0))
+		c.add_theme_stylebox_override("hover",box(UiStyle.surf(.95),14,SKY.lightened(.2) if not on else SKY,2 if on else 1,10))
+		c.add_theme_stylebox_override("pressed",box(SKY_SOFT,14,SKY,2))
 	for tod in chips:
+		if not is_instance_valid(chips[tod]): continue
 		var on = tod == time_of_day
 		var chip: Button = chips[tod]
 		chip.add_theme_color_override("font_color",Color.WHITE if on else SOFT)
 		chip.add_theme_color_override("font_hover_color",Color.WHITE if on else SKY.darkened(.15))
-		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),21,Color.TRANSPARENT if on else LINE,1,10 if on else 0))
-		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),21,SKY.lightened(.35),1,8))
-		chip.add_theme_stylebox_override("pressed",box(SKY,21))
+		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),19,Color.TRANSPARENT if on else LINE,1,8 if on else 0))
+		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),19,SKY.lightened(.35),1,8))
+		chip.add_theme_stylebox_override("pressed",box(SKY,19))

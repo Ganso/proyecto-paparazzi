@@ -25,7 +25,7 @@ Todas las entradas pasan a acciones con nombre en `project.godot`, cada una con 
 | `disparador` | `Espacio` | Gatillo derecho (RT/R2) | **Analógica en dos fases** |
 | `previsualizar_dof` (11) | por asignar (no `Espacio`) | Gatillo izquierdo (LT/L2) | Mantener |
 | `enfocar` | `F` | A / ✕ | Pulsar |
-| `colimador_anterior/siguiente` | `1`–`9` | LB / RB (L1 / R1) | Pulsar |
+| `punto de enfoque_anterior/siguiente` | `1`–`9` | LB / RB (L1 / R1) | Pulsar |
 | `parametro_anterior/siguiente` | — | Cruceta ← / → (elige t, N, ISO o ±EV) | Pulsar |
 | `parametro_menos/mas` | `Q`/`E`, `Z`/`X`, `C`/`V`, `[`/`]` | Cruceta ↓ / ↑ (con autorrepetición) | Pulsar |
 | `cuadricula_tercios` | `G` | Clic del stick derecho (R3) | Pulsar |
@@ -48,7 +48,7 @@ fuerza del gatillo:  0 ──────── 0.35 ─────────
                                 └ vibración corta     └ vibración + sonido
 ```
 
-- **Fase 1 (≥ 0,35)**: AF sobre el colimador activo (salvo en MF) y bloqueo de la medición mientras se mantenga.
+- **Fase 1 (≥ 0,35)**: AF sobre el punto de enfoque activo (salvo en MF) y bloqueo de la medición mientras se mantenga.
 - **Fase 2 (≥ 0,90)**: `take_photo()`. Si se suelta por debajo de 0,35 sin pasar a la fase 2, se cancela.
 - Histéresis de 0,05 en cada umbral para evitar rebotes.
 - **Misma máquina de estados que el disparador táctil** de [13 §4.1](13_INTERFAZ_MOVIL_UTILIZABLE.md) y que `Espacio` (en teclado, pulsar equivale a fase 1 y soltar a fase 2).

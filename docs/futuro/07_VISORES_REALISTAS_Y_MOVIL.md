@@ -107,8 +107,8 @@ Decisiones del usuario: **interfaz de la cámara** (los datos van dentro del vis
 | Pieza | Qué hace |
 |---|---|
 | `scripts/camera_body.gd` | Lo que rodea la imagen y los datos de cada visor, dibujado en la interfaz (fuera de la captura). Máscaras generadas por código (goma del ocular, cristal, plástico), dígitos de 7 segmentos dibujados por código, apagón del espejo al disparar y línea del encargo fuera de la imagen. |
-| `scripts/main.gd` | `view_rect` (dónde se ve la imagen: pantalla completa en la interfaz clásica, enmarcada por el cuerpo en la de cámara; siempre 16:9, así que la foto nunca se recorta), `place_view()`, `image_position()` (clics y colimadores siguen a la imagen, deshaciendo el paralaje), interfaz `camara`/`clasica` (`set_interface()`, `user://interfaz.cfg`, opción en Equipo, `--interface=`), barras plegables (`update_hud_visibility()`: Tab, borde de la pantalla, Academia y pantallas modales las muestran) y sonido de disparo por cuerpo. |
-| `scripts/viewfinder.gd` | Colimadores, tercios y ayuda de enfoque dentro de `view`; el exposímetro y la batería del HUD clásico solo en la interfaz clásica. |
+| `scripts/main.gd` | `view_rect` (dónde se ve la imagen: pantalla completa en la interfaz clásica, enmarcada por el cuerpo en la de cámara; siempre 16:9, así que la foto nunca se recorta), `place_view()`, `image_position()` (clics y puntos de enfoque siguen a la imagen, deshaciendo el paralaje), interfaz `camara`/`clasica` (`set_interface()`, `user://interfaz.cfg`, opción en Equipo, `--interface=`), barras plegables (`update_hud_visibility()`: Tab, borde de la pantalla, Academia y pantallas modales las muestran) y sonido de disparo por cuerpo. |
+| `scripts/viewfinder.gd` | Puntos de enfoque, tercios y ayuda de enfoque dentro de `view`; el exposímetro y la batería del HUD clásico solo en la interfaz clásica. |
 | `shaders/viewfinder_lens.gdshader` | Además del carácter del objetivo: grano fijo de pantalla esmerilada, centro Fresnel y motas de polvo (réflex), cristal limpio y desplazado por el paralaje (telemétrica), rejilla de píxeles, contraste de pantalla pequeña y ruido con poca luz (compacta). Corre también en Bajo, sin viñeteo ni aberración. |
 | `tools/audio/build_camera_sounds.py` | `assets/audio/camara/`: espejo y cortinilla de la réflex, cortinilla de tela de la telemétrica, beep y falso obturador de la compacta. |
 
@@ -129,6 +129,6 @@ Decisiones del usuario: **interfaz de la cámara** (los datos van dentro del vis
 
 ### 5.4 Pruebas y evidencias
 
-- `tests/test_finders.gd`: por cuerpo, la imagen cabe y es 16:9, el centro del visor es el centro de la foto, los colimadores están dentro, las barras se pliegan y Tab las muestra; el paralaje crece de cerca y casi desaparece de lejos; el visor de la telemétrica no desenfoca pero la foto sí; **la misma escena da la misma nota con la interfaz clásica y con la de cámara**; un disparo real por cuerpo; los sonidos existen; la interfaz clásica es la de siempre.
+- `tests/test_finders.gd`: por cuerpo, la imagen cabe y es 16:9, el centro del visor es el centro de la foto, los puntos de enfoque están dentro, las barras se pliegan y Tab las muestra; el paralaje crece de cerca y casi desaparece de lejos; el visor de la telemétrica no desenfoca pero la foto sí; **la misma escena da la misma nota con la interfaz clásica y con la de cámara**; un disparo real por cuerpo; los sonidos existen; la interfaz clásica es la de siempre.
 - Capturas `13_visor_reflex` a `16_visor_telemetrica_noche` en `docs/evidencias/ultra/` (`tools/capture_ultra.sh`).
 

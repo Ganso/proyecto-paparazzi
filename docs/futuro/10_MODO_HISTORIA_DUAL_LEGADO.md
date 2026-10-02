@@ -35,7 +35,7 @@ Tras heredar el viejo maletín fotográfico, notas de campo y negativos de su ab
 | Dimensión Técnica | Línea del Abuelo (1950-1960) | Línea del Nieto (Actualidad) |
 |---|---|---|
 | **Cámaras disponibles** | Telemétrica mecánica (Meica L9) y TLR (Rolleiflex 6×6). | Réflex digital profesional (DSLR / Mirrorless). |
-| **Enfoque** | Exclusivamente manual por coincidencia de imágenes o visor de cintura invertido. | Autofocus de punto único o matriz de 9 colimadores. |
+| **Enfoque** | Exclusivamente manual por coincidencia de imágenes o visor de cintura invertido. | Autofocus de punto único o matriz de 9 puntos de enfoque. |
 | **Sensibilidad / Película** | Carrete químico B&W (ISO 100 o 400 fijo durante todo el rollo). | Sensor digital con ISO dinámico (100 a 6400). |
 | **Capacidad de disparo** | Rollo limitado a **12 exposiciones** (120) o **36 exposiciones** (35 mm). Sin reintentos infinitos. | Tarjeta de memoria virtualmente ilimitada; penalización solo por tiempo. |
 | **Medición de luz** | Sin fotómetro incorporado: regla *Sunny 16* o fotómetro de mano (tabla fija de EV). | Exposímetro TTL matricial con aguja digital en visor. |

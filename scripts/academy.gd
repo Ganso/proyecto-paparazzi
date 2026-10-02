@@ -216,7 +216,6 @@ func begin(n: int, start_phase = "teoria") -> void:
 	main.park.forced_cover = s.get("cover",-1.0)
 	main.park.update_weather(0)
 	main.toast.text = ""
-	main.graphics_button.visible = false
 	apply_setup()
 	main.briefing.text = "%s %d · %s" % [text("academia"),n,lesson_text("titulo")]
 	main.sandbox_button.visible = false
@@ -284,7 +283,6 @@ func stop() -> void:
 	active = false
 	visible = false
 	main.park.forced_cover = -1.0
-	main.graphics_button.visible = true
 	release_staged()
 	for q in main.people: q.set_hidden(false)
 	frame_goal = {}

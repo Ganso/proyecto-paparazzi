@@ -93,7 +93,8 @@ static func theme() -> Theme:
 		t.set_stylebox("hover",kind,box(surf(.92),12,SKY.lightened(.3),1,8))
 		t.set_stylebox("pressed",kind,box(SKY_SOFT,12,SKY.lightened(.1)))
 		t.set_stylebox("disabled",kind,box(surf(.3),12,LINE))
-		t.set_stylebox("focus",kind,StyleBoxEmpty.new())
+		t.set_stylebox("focus",kind,box(Color.TRANSPARENT,12,SKY,3))   # gamepad / keyboard focus ring
+		t.set_color("font_focus_color",kind,SKY_DEEP)
 	t.set_stylebox("panel","PopupMenu",box(surf(.97),10,LINE,1,10))
 	t.set_color("font_color","PopupMenu",INK)
 	t.set_color("font_hover_color","PopupMenu",SKY_DEEP)

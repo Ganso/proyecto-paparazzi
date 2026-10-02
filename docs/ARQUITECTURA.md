@@ -56,7 +56,7 @@ graph TD
 | **Casting** | [scripts/casting.gd](../scripts/casting.gd) | Generación aleatoria de rasgos de vestimenta, asignación de encargos y concordancia morfológica estricta de género y número en español. |
 | **Óptica y Foto** | [scripts/photography.gd](../scripts/photography.gd) | Fórmulas ópticas reales: CoC, profundidad de campo, triángulo de exposición, desenfoque por velocidad de obturación y calificación determinista. |
 | **Equipo** | [scripts/equipment.gd](../scripts/equipment.gd) | Catálogo de cuerpos (compacta, telemétrica, réflex), objetivos fotográficos (24 mm a 200 mm), pasos de diafragma y carretes analógicos. |
-| **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 colimadores AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
+| **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 puntos de enfoque AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
 | **Vida en el parque** | [scripts/pigeons.gd](../scripts/pigeons.gd), [scripts/dog.gd](../scripts/dog.gd), [scripts/extras.gd](../scripts/extras.gd), [scripts/ambience.gd](../scripts/ambience.gd) | Palomas (MultiMesh), perro con correa, figurantes de la pradera sin colisionadores y sonido ambiente sintetizado. Los actualiza `main.gd` cada fotograma junto a los viandantes ([futuro/19](futuro/19_VIDA_EN_EL_PARQUE.md)). |
 | **Visores** | [scripts/camera_body.gd](../scripts/camera_body.gd) | Interfaz de cámara: lo que rodea la imagen (`main.gd::view_rect`) y los datos de cada visor, dibujado fuera de la captura ([futuro/07 §5](futuro/07_VISORES_REALISTAS_Y_MOVIL.md)). |
 | **Academia** | [scripts/academy.gd](../scripts/academy.gd), [scripts/academy_diagram.gd](../scripts/academy_diagram.gd) | Modo tutor sobre la sesión de sandbox: panel sobre el visor con teoría, demostraciones guionizadas (subtítulos, resaltado de controles, fotos en miniatura) y prácticas con tareas y pistas; progreso en `user://academia.cfg` ([futuro/06](futuro/06_MODO_TUTOR_ACADEMIA.md)). |
@@ -72,6 +72,10 @@ El flujo se gestiona en `main.gd` con la variable `mode`. El sandbox **no es un 
 stateDiagram-v2
     [*] --> INTRO: Arranque
     INTRO --> ARCADE: Arcade (show_arcade)
+    INTRO --> SEARCH: Tutorial (start_tutorial)
+    SEARCH --> PAUSE: Esc / botón Salir / Menu
+    PAUSE --> SEARCH: Seguir
+    PAUSE --> INTRO: Salir al menú (con confirmación)
     ARCADE --> BRIEFING: Nivel (start_level)
     RESULT --> LEVEL_END: Terminar el nivel / tiempo o disparos agotados (end_level)
     LEVEL_END --> BRIEFING: Repetir / siguiente nivel

@@ -20,7 +20,7 @@ Referencia: móvil de 6,1" y 19,5:9 en horizontal (140,6 × 64,9 mm). El juego o
 | Tiempo, diafragma, ISO, compensación | ~115×50 | 4,5 mm | ❌ |
 | `ENFOCAR` | 128×50 | 4,5 mm | ❌ |
 | `DISPARAR` | 248×59 | 5,3 mm | ❌ |
-| Colimadores AF (separación) | 134×86 | 7,8 mm | ✅ |
+| Puntos de enfoque AF (separación) | 134×86 | 7,8 mm | ✅ |
 
 Los textos de 11–14 px (subtítulo, contador, estado, ayudas) miden **1,0–1,3 mm** de cuerpo, por debajo de lo legible a distancia de brazo (~2 mm, unos 22 px).
 
@@ -95,7 +95,7 @@ Botones de distancia en el carril izquierdo: **1,8 · 4,0 · 7,0 · 11,5 m · �
 - Ejemplo: con 50 mm f/8 enfocado a 4 m, la zona nítida cubre de 2,9 a 6,4 m, así que el enfoque por zonas basta para todo el carril 1 (2,9–4,85 m).
 
 ### 3.3 Lupa de enfoque
-Mientras el dedo toca la rueda, se muestra una ampliación ×3 del colimador activo. Reutiliza `focus_aid.gdshader`, que ya desplaza la imagen partida del telémetro.
+Mientras el dedo toca la rueda, se muestra una ampliación ×3 del punto de enfoque activo. Reutiliza `focus_aid.gdshader`, que ya desplaza la imagen partida del telémetro.
 
 ### 3.4 Opción de accesibilidad: telémetro táctil
 Nivel de asistencia opcional: tocar sobre una persona en MF mide su distancia en ese instante y lleva el foco allí, sin seguimiento posterior. El reto pasa a ser el *momento* del disparo y no la motricidad fina. Aparece marcado en el resultado como «Asistencia: telémetro».
@@ -107,15 +107,15 @@ Nivel de asistencia opcional: tocar sobre una persona en MF mide su distancia en
 | Gesto | Acción | Cambio respecto a hoy |
 |---|---|---|
 | Arrastre con un dedo sobre el visor | Paneo e inclinación (sensibilidad ∝ 24/f) | Igual |
-| Toque corto | Elegir colimador y enfocar (AF) | Igual |
+| Toque corto | Elegir punto de enfoque y enfocar (AF) | Igual |
 | Pellizco | **Solo zoom** | Se elimina el foco por desplazamiento vertical de dos dedos |
-| Pulsación larga en el visor | Bloqueo AF/AE (AF-L) en el colimador tocado | Nuevo |
+| Pulsación larga en el visor | Bloqueo AF/AE (AF-L) en el punto de enfoque tocado | Nuevo |
 | Arrastre vertical sobre un parámetro | Subir o bajar **sin dar la vuelta** (con tope) | Nuevo tope; el toque ya no cicla |
 | Giroscopio (opcional, desactivado por defecto) | Ajuste fino del encuadre | Nuevo ([09 §1](09_EXPORTACION_AUTOMATIZADA_ANDROID_APK.md)) |
 
 ### 4.1 Disparador en dos fases
 Hereda la mecánica de 07 §2:
-- **Pulsar y mantener**: AF sobre el colimador activo y bloqueo de AE, con tic háptico al confirmar.
+- **Pulsar y mantener**: AF sobre el punto de enfoque activo y bloqueo de AE, con tic háptico al confirmar.
 - **Soltar**: dispara.
 - **Deslizar fuera del botón antes de soltar**: cancela sin gastar disparo (en el juego actual cada disparo cuenta).
 
