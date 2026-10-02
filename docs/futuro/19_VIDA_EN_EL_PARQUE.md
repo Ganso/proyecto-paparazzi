@@ -86,6 +86,7 @@ Triángulos medidos: 3.424.785 en `hd` y 94.112 en `lo` ([TESTS_Y_VERIFICACION.m
 
 - **Falda sentada** (hecho a medias): sus cadenas cuelgan de los muslos y con rigidez 2,6 se quedaban tiesas en horizontal al sentarse. Ahora `person.gd::update_skirt_springs()` baja la rigidez a 0,25 y sube la gravedad a 2,5 según `seat`, y la tela cae entre las rodillas. Falta un colisionador del asiento para la parte de atrás.
 - ~~Migas visibles y palomas que se posan en la verja~~: hecho. Las migas ya salían de la mano (`person.gd`, objeto `migas`); desde el 02-10-2026, en el parque clásico una bandada espantada de día se queda seis de cada diez veces en la **verja** (`pigeons.gd::perch_on_fence()`, `FENCE_CHANCE`): cada paloma sobre la bola de un poste (1,21 m) o de un pilar (1,59 m) del tramo más cercano (`park.fence_perches`), mirando al parque, y al rato vuelve al césped. El resto de las veces, y siempre de noche, van a los árboles. Captura: `-- --pigeons=verja`; prueba en `test_park_life.gd`.
+- ~~Gente en el mobiliario de la pradera~~: hecho el 02-10-2026. Dos amigos se sientan en la mesa de pícnic más cercana, uno en cada banco, con un café y un móvil (`extras.gd`, `PICNIC_TABLE`); de noche se van, como el pícnic de la manta. Ahora son 17 figurantes.
 - Más razas de perro y algún perro con los figurantes del quiosco.
 - Voces lejanas y risas de niños (difíciles de sintetizar con naturalidad; mejor con muestras CC0 si el usuario lo aprueba).
 - Figurantes que entren y salgan de la escena por los caminos de la pradera.

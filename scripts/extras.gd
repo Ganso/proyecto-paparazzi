@@ -8,6 +8,7 @@ const Person = preload("res://scripts/person.gd")
 const Cast = preload("res://scripts/casting.gd")
 const BANDSTAND = Vector2(120.0, 24.0)
 const POND = Vector2(245.0, 21.0)
+const PICNIC_TABLE = Vector3(106.5,18.0,.25)   # park.gd::MEADOW_TABLES[0] (azimuth, radius, turn)
 
 var extras: Array = []
 var dogs: Array = []
@@ -68,6 +69,12 @@ func build(detail: String) -> void:
 	add_still(reader,facing(reader,pond)-.6,"suelo","leer")
 	# A child kicking a ball about, to the right of the bandstand.
 	add_ball_game(polar(137.0,17.0))
+	# Two friends at the nearer picnic table, one on each bench, a coffee and a phone.
+	var table = polar(PICNIC_TABLE.x,PICNIC_TABLE.y)
+	var turn = Basis(Vector3.UP,atan2(-table.x,-table.z)+PICNIC_TABLE.z)
+	for bench in [-1.0,1.0]:
+		var seat_pos = table+turn*Vector3(bench*.35,0,bench*.66)
+		day_only.append(add_still(seat_pos,facing(seat_pos,table+turn*Vector3(bench*.35,0,0)),"banco","cafe" if bench < 0 else "movil"))
 
 # ---- Playground of the big park (docs/futuro/19 §10): there are always children playing ----
 # One on a swing (the seat really swings), one going up the ladder and down the slide in a loop,
