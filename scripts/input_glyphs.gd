@@ -43,14 +43,26 @@ const CONTROLS = {
 	"sacar": ["⟦Y⟧ · clic derecho","⦅Y⦆","⦅△⦆","⦅X⦆"],
 }
 
+const MOUSE_SWITCH = 60.0        # pixels the mouse must travel within 0.4 s to take over
+static var mouse_travel = 0.0
+static var mouse_since = 0
 static func note(event: InputEvent) -> bool:
 	var before = device
 	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf(event.axis_value) > .4):
 		device = "mando"
 		var joy_name = Input.get_joy_name(event.device).to_lower()
 		family = "ps" if ("playstation" in joy_name or "dualshock" in joy_name or "dualsense" in joy_name or "ps4" in joy_name or "ps5" in joy_name) else ("nintendo" if ("nintendo" in joy_name or "switch" in joy_name or "pro controller" in joy_name) else "xbox")
-	elif event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch or (event is InputEventMouseMotion and event.relative.length() > 3.0):
+	elif event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch:
 		device = "teclado"
+	elif event is InputEventMouseMotion:
+		# Only a real move of the mouse: a few pixels of drift (the mouse nudged on the desk, the
+		# sensor's own jitter) switched the help back to the keys while playing with the gamepad.
+		var now = Time.get_ticks_msec()
+		if now-mouse_since > 400:
+			mouse_since = now
+			mouse_travel = 0.0
+		mouse_travel += event.relative.length()
+		if mouse_travel > MOUSE_SWITCH: device = "teclado"
 	return device != before
 
 static func pad() -> bool:

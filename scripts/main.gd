@@ -2760,7 +2760,10 @@ func update_pad(dt: float) -> void:
 	var slow = 1.0/3.0 if pad_precision else 1.0
 	var lx = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_X))
 	var ly = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
-	if lx != 0.0 or ly != 0.0:
+	# Walking in the big park the left stick walks (update_photographer()) and the right one looks:
+	# it also turned and tilted the view here, so walking forward looked up as well.
+	var walking = crowd != null and not camera_raised
+	if (lx != 0.0 or ly != 0.0) and not walking:
 		angle = fposmod(angle+lx*dt*42*24/view_focal()*slow,360)
 		pitch -= ly*dt*30*24/view_focal()*slow
 	var rx = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X))

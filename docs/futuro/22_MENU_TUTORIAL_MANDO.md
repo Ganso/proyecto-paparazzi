@@ -65,3 +65,9 @@ Migración completa a acciones de `InputMap` y vibración ([14](14_SOPORTE_GAMEP
 - Solo el juego real escribe en el álbum (`badges_count()`): las pruebas y las herramientas de captura usan otra carpeta (`Album.DIR`, o la variable de entorno `PAPARAZZI_ALBUM_DIR`).
 - Pruebas: `tests/test_album.gd` (con display, 20 comprobaciones): la foto revelada se guarda con sus datos y no es un fotograma negro, la pantalla la muestra, se borra, y el álbum se queda con las 60 más recientes.
 - Pendiente: guardar a mano fotos del sandbox o de menos de 80 puntos.
+
+## Correcciones con mando (03-10-2026, aviso del usuario)
+
+- **La ayuda volvía a las teclas jugando con mando**: bastaba con que el ratón se moviera 3 píxeles (un roce en la mesa, la deriva del propio sensor) para que `input_glyphs.gd::note()` diera el teclado por dispositivo en uso. Ahora el ratón solo toma el relevo si recorre 60 píxeles en menos de 0,4 s (`MOUSE_SWITCH`); teclas y clics siguen cambiándolo al momento.
+- **Al andar con la seta izquierda se miraba hacia arriba**: en el parque grande, a pie, la seta izquierda anda y la derecha mira, pero `update_pad()` también aplicaba la izquierda a la mirada (hacia delante = inclinar hacia arriba). Ahora, mientras se camina sin la cámara al ojo, la seta izquierda solo anda.
+- Pruebas en `tests/test_input.gd` (el roce de ratón no cambia la ayuda; moverlo de verdad sí). La seta no se puede simular sin un mando conectado: **pendiente de comprobar con el mando físico**.

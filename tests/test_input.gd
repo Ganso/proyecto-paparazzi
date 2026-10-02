@@ -64,6 +64,9 @@ func run() -> void:
 	game._unhandled_input(pad(JOY_BUTTON_Y))
 	check(not game.camera_raised,"Y lowers the camera")
 	game._unhandled_input(pad(JOY_BUTTON_Y))
+	# (The game ran for frames meanwhile and sees the real mouse of whoever is at the machine: the
+	# gamepad is the device in use again, as the press of B itself would make it.)
+	Glyphs.device = "mando"
 	game._unhandled_input(pad(JOY_BUTTON_B))
 	check(game.mode == "HELP","B opens the help")
 	await process_frame
@@ -142,6 +145,18 @@ func run() -> void:
 		check(Glyphs.CONTROLS.bloqueo[1].contains("RT"),"The help names the half press as the lock on the gamepad")
 	else:
 		check(false,"The trigger test needs the camera at the eye in SEARCH (mode %s)" % game.mode)
+	# A nudge of the mouse does not take the help away from the gamepad; really moving it does.
+	Glyphs.device = "mando"
+	Glyphs.mouse_travel = 0.0
+	Glyphs.mouse_since = Time.get_ticks_msec()
+	var nudge = InputEventMouseMotion.new()
+	nudge.relative = Vector2(4,3)
+	for i in 3: Glyphs.note(nudge)
+	check(Glyphs.device == "mando","A few pixels of mouse drift keep the gamepad's help")
+	var sweep = InputEventMouseMotion.new()
+	sweep.relative = Vector2(30,10)
+	for i in 3: Glyphs.note(sweep)
+	check(Glyphs.device == "teclado","Really moving the mouse switches the help to keyboard and mouse")
 	# Vibration: asked for only with the gamepad in use and the option on.
 	Glyphs.device = "teclado"
 	var rumbles = game.rumbles
