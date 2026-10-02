@@ -417,6 +417,10 @@ func run() -> void:
 		var fx = game.park.EFFECTS[name]
 		check(int(table.sdfgi) == fx.sdfgi and (int(table.ssao) >= 0) == fx.ssao and table.ssil == fx.ssil and table.ssr == fx.ssr and table.volumetric == fx.volumetric and int(table.shadow_atlas) == fx.atlas and is_equal_approx(table.grass,fx.grass),"Profile %s: its table matches the documented effects" % name)
 	check(Graphics.OPTIONS.all(func(o): return Graphics.PRESETS["Ultra"].has(o[0]) and o[2].size() >= 2),"Every option edits a parameter of the table")
+	game.apply_graphics_preset("Bajo")
+	check(game.viewport.anisotropic_filtering_level == Viewport.ANISOTROPY_2X,"Bajo filters the ground textures at 2×")
+	game.apply_graphics_preset("Ultra")
+	check(game.viewport.anisotropic_filtering_level == Viewport.ANISOTROPY_16X,"Ultra filters the ground textures at 16×")
 	Graphics.copy_to_custom("Ultra")
 	Graphics.set_custom("scale",1.5)
 	Graphics.set_custom("msaa",8)

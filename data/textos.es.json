@@ -546,6 +546,7 @@
   "gfx_grass": "Hierba",
   "gfx_patterns": "Vetas de madera y tejidos",
   "gfx_lod": "Detalle de las mallas",
+  "gfx_aniso": "Filtrado anisótropo del suelo",
   "gfx_dof": "Profundidad de campo en el visor",
   "gfx_lens": "Viñeteo y aberración del objetivo",
   "gfx_si": "Sí",

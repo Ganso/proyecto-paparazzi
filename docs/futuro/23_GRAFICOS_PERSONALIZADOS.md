@@ -22,7 +22,9 @@ Puede ir **más allá de Ultra** (todo ello desactivado o en su valor normal por
 | | Mapa de sombras del sol | 2048, 4096, **8192, 16384** |
 | | Suavizado | normal, duras, baja, media, **alta, ultra** |
 | | Penumbra física · farolas · mapa de farolas | sí/no · ninguna, 4 interiores, todas · 2048, 4096, **8192** |
-| Detalle | Hierba · vetas y tejidos · detalle de mallas | 0–100 % · sí/no · normal, **máximo siempre** |
+| Detalle | Hierba · vetas y tejidos · filtrado anisótropo del suelo · detalle de mallas | 0–100 % · sí/no · no, 2×, 4×, 8×, 16× · normal, **máximo siempre** |
+
+El **filtrado anisótropo** (`aniso`, 02-10-2026) mantiene nítidas las losas y el adoquín vistos casi de canto, a lo lejos: Bajo 2×, Medio 4×, Alto 8× y Ultra 16× (antes, 4× fijo del proyecto). Se aplica con `Viewport.anisotropic_filtering_level` en `main.gd::apply_graphics_preset()`; comprobado en `test_game.gd`.
 | Cámara | Profundidad de campo en el visor · viñeteo y aberración | sí / no |
 
 - **Desenfoque de movimiento**: Godot no lo tiene. Se probó uno propio en el pase de posprocesado del visor (solo por el movimiento de la cámara) y se descartó el mismo día a petición del usuario: no desenfocaba a las personas y dejaba halos en los bordes.

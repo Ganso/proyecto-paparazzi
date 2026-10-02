@@ -3126,6 +3126,7 @@ func apply_graphics_preset(preset: String) -> void:
 		viewport.positional_shadow_atlas_size = int(g.lamp_atlas) if forward else 2048
 		viewport.use_debanding = forward
 		viewport.mesh_lod_threshold = float(g.lod)
+		viewport.anisotropic_filtering_level = {2:Viewport.ANISOTROPY_2X,4:Viewport.ANISOTROPY_4X,8:Viewport.ANISOTROPY_8X,16:Viewport.ANISOTROPY_16X}.get(int(g.aniso),Viewport.ANISOTROPY_DISABLED)
 		update_render_resolution()
 	update_dof_pass()
 	# Bajo skips the lens character, but the camera finders (07 §1) still need the shader.

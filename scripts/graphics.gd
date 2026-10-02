@@ -16,18 +16,19 @@ extends RefCounted
 #   patterns       procedural wood and cloth on the mannequins
 #   tonemap        "aces", "agx" or "filmic"
 #   lod            mesh LOD threshold in pixels (0 = always full detail)
+#   aniso          anisotropic filtering of the ground textures (0 off, 2, 4, 8 or 16 samples)
 # (PAPARAZZI_GFX_CFG points tests and capture tools at another file, never the player's.)
 static var SAVE = OS.get_environment("PAPARAZZI_GFX_CFG") if OS.has_environment("PAPARAZZI_GFX_CFG") else "user://graficos.cfg"
 const CUSTOM = "Personalizado"
 const PRESETS = {
 	"Bajo": {"scale":.5,"upscaler":"fsr2","msaa":0,"taa":false,"screen_aa":"no","sdfgi":0,"sdfgi_rays":-1,"ssao":-1,"ssil":false,"ssr":false,"volumetric":false,"glow":true,
-		"shadow_distance":0.0,"shadow_atlas":2048,"shadow_filter":-1,"penumbra":false,"lamp_shadows":0,"lamp_atlas":2048,"grass":.2,"dof":false,"lens":false,"patterns":false,"tonemap":"aces","lod":1.0},
+		"shadow_distance":0.0,"shadow_atlas":2048,"shadow_filter":-1,"penumbra":false,"lamp_shadows":0,"lamp_atlas":2048,"grass":.2,"dof":false,"lens":false,"patterns":false,"tonemap":"aces","aniso":2,"lod":1.0},
 	"Medio": {"scale":.7,"upscaler":"fsr2","msaa":0,"taa":false,"screen_aa":"no","sdfgi":3,"sdfgi_rays":-1,"ssao":2,"ssil":false,"ssr":false,"volumetric":false,"glow":true,
-		"shadow_distance":30.0,"shadow_atlas":2048,"shadow_filter":-1,"penumbra":false,"lamp_shadows":0,"lamp_atlas":2048,"grass":.45,"dof":false,"lens":true,"patterns":true,"tonemap":"aces","lod":1.0},
+		"shadow_distance":30.0,"shadow_atlas":2048,"shadow_filter":-1,"penumbra":false,"lamp_shadows":0,"lamp_atlas":2048,"grass":.45,"dof":false,"lens":true,"patterns":true,"tonemap":"aces","aniso":4,"lod":1.0},
 	"Alto": {"scale":.85,"upscaler":"fsr2","msaa":0,"taa":false,"screen_aa":"no","sdfgi":4,"sdfgi_rays":-1,"ssao":2,"ssil":false,"ssr":false,"volumetric":true,"glow":true,
-		"shadow_distance":38.0,"shadow_atlas":4096,"shadow_filter":-1,"penumbra":true,"lamp_shadows":1,"lamp_atlas":4096,"grass":.7,"dof":true,"lens":true,"patterns":true,"tonemap":"aces","lod":1.0},
+		"shadow_distance":38.0,"shadow_atlas":4096,"shadow_filter":-1,"penumbra":true,"lamp_shadows":1,"lamp_atlas":4096,"grass":.7,"dof":true,"lens":true,"patterns":true,"tonemap":"aces","aniso":8,"lod":1.0},
 	"Ultra": {"scale":1.0,"upscaler":"fsr2","msaa":4,"taa":false,"screen_aa":"no","sdfgi":4,"sdfgi_rays":-1,"ssao":2,"ssil":true,"ssr":true,"volumetric":true,"glow":true,
-		"shadow_distance":48.0,"shadow_atlas":4096,"shadow_filter":-1,"penumbra":true,"lamp_shadows":2,"lamp_atlas":4096,"grass":1.0,"dof":true,"lens":true,"patterns":true,"tonemap":"aces","lod":1.0},
+		"shadow_distance":48.0,"shadow_atlas":4096,"shadow_filter":-1,"penumbra":true,"lamp_shadows":2,"lamp_atlas":4096,"grass":1.0,"dof":true,"lens":true,"patterns":true,"tonemap":"aces","aniso":16,"lod":1.0},
 }
 # The settings screen: [key, text key of its name, [[label, value], …], group text key].
 # Labels starting with "@" are text keys (sí / no…); the rest are shown as they are.
@@ -53,6 +54,7 @@ const OPTIONS = [
 	["lamp_atlas","gfx_lamp_atlas",[["2048",2048],["4096",4096],["8192",8192]],"gfx_g_sombras"],
 	["grass","gfx_grass",[["0 %",0.0],["20 %",.2],["45 %",.45],["70 %",.7],["100 %",1.0]],"gfx_g_detalle"],
 	["patterns","gfx_patterns",[["@gfx_no",false],["@gfx_si",true]],"gfx_g_detalle"],
+	["aniso","gfx_aniso",[["@gfx_no",0],["2×",2],["4×",4],["8×",8],["16×",16]],"gfx_g_detalle"],
 	["lod","gfx_lod",[["@gfx_normal",1.0],["@gfx_maximo",0.0]],"gfx_g_detalle"],
 	["dof","gfx_dof",[["@gfx_no",false],["@gfx_si",true]],"gfx_g_camara"],
 	["lens","gfx_lens",[["@gfx_no",false],["@gfx_si",true]],"gfx_g_camara"],
