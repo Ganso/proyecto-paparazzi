@@ -245,8 +245,9 @@ func build_options() -> void:
 		b.focus_mode = Control.FOCUS_ALL
 		if k == 0: b.call_deferred("grab_focus")
 
-# ← → (keys, D-pad, LB/RB) change the mode; Enter / A enters it.
-func _unhandled_input(event: InputEvent) -> void:
+# ← → (keys, D-pad, LB/RB) change the mode; Enter / A enters it. In _input: the focused «Entrar»
+# button would take the arrows for focus navigation before _unhandled_input ever saw them.
+func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or main.mode != "INTRO": return
 	var step = 0
 	if event is InputEventKey and event.pressed and not event.echo:

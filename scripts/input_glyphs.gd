@@ -38,7 +38,7 @@ const CONTROLS = {
 	"correr": ["⟦Mayús⟧","⦅L3⦆","⦅L3⦆","⦅L3⦆"],
 	"agacharse": ["⟦Ctrl⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
 	"mirar_paseo": ["Ratón","Stick derecho","Stick derecho","Stick derecho"],
-	"sacar": ["Clic derecho","⦅Y⦆","⦅△⦆","⦅X⦆"],
+	"sacar": ["⟦Y⟧ · clic derecho","⦅Y⦆","⦅△⦆","⦅X⦆"],
 }
 
 static func note(event: InputEvent) -> bool:

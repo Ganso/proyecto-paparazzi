@@ -220,7 +220,10 @@ func ground_material() -> ShaderMaterial:
 		for map in ["color","normal","orm"]:
 			var images: Array[Image] = []
 			for name in GROUND_LAYERS:
-				var image = Image.load_from_file("res://assets/texturas/%s_%s.webp" % [name,map])
+				# Read from the raw file's bytes (the .webp is not imported, importer="keep"):
+				# Image.load_from_file() on a res:// path warns on every launch.
+				var image = Image.new()
+				image.load_webp_from_buffer(FileAccess.get_file_as_bytes("res://assets/texturas/%s_%s.webp" % [name,map]))
 				image.convert(Image.FORMAT_RGB8)
 				image.generate_mipmaps()
 				images.append(image)

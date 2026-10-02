@@ -110,7 +110,9 @@ static func choice_index(option: Array, value) -> int:
 
 # ---- Display (any profile): window mode, window size and vertical sync ----
 const WINDOW_MODES = [["@gfx_ventana","ventana"],["@gfx_sin_bordes","sin_bordes"],["@gfx_completa","completa"]]
-const WINDOW_SIZES = [["1280 × 720","1280x720"],["1600 × 900","1600x900"],["1920 × 1080","1920x1080"],["2560 × 1440","2560x1440"],["3840 × 2160","3840x2160"]]
+# In a window the size is the window's; in full screen it is the resolution of the 3D image (the
+# desktop's resolution is never changed: the image is scaled to fill the screen), or the screen's own.
+const WINDOW_SIZES = [["@gfx_nativa","nativa"],["1280 × 720","1280x720"],["1600 × 900","1600x900"],["1920 × 1080","1920x1080"],["2560 × 1440","2560x1440"],["3840 × 2160","3840x2160"]]
 static var display = {"mode":"ventana","size":"1440x810","vsync":true,"fps":false}
 
 static func load_display() -> bool:
@@ -134,9 +136,14 @@ static func apply_display(window: Window) -> void:
 		"sin_bordes": window.mode = Window.MODE_FULLSCREEN
 		_:
 			window.mode = Window.MODE_WINDOWED
-			var parts = str(display.size).split("x")
+			var parts = str(display.size if display.size != "nativa" else "1440x810").split("x")
 			var size = Vector2i(int(parts[0]),int(parts[1]))
 			var screen = DisplayServer.screen_get_usable_rect(window.current_screen)
 			size = Vector2i(mini(size.x,screen.size.x),mini(size.y,screen.size.y))
 			window.size = size
 			window.position = screen.position+(screen.size-size)/2
+
+# Height in pixels the 3D image is limited to in full screen (0 = no limit, the screen's own).
+static func fullscreen_height() -> int:
+	if display.mode == "ventana" or display.size == "nativa": return 0
+	return int(str(display.size).split("x")[1])

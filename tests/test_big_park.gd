@@ -98,6 +98,16 @@ func run() -> void:
 	game.shots = 3
 	await game.take_photo()
 	check(game.mode == "SEARCH" and game.shots == 3,"No photo with the camera down")
+	# The Y key raises and lowers the camera too (not only the right click).
+	var was_raised = game.camera_raised
+	var y_key = InputEventKey.new()
+	y_key.physical_keycode = KEY_Y
+	y_key.keycode = KEY_Y
+	y_key.pressed = true
+	game._unhandled_input(y_key)
+	check(game.camera_raised != was_raised,"Y raises the camera in the big park")
+	game._unhandled_input(y_key)
+	check(game.camera_raised == was_raised,"…and lowers it again")
 	game.player.position = Vector3(30,0,-14)
 	game.angle = 0.0
 	game.update_camera()

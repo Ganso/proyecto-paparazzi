@@ -90,3 +90,8 @@ Triángulos medidos: 3.424.785 en `hd` y 94.112 en `lo` ([TESTS_Y_VERIFICACION.m
 - Voces lejanas y risas de niños (difíciles de sintetizar con naturalidad; mejor con muestras CC0 si el usuario lo aprueba).
 - Figurantes que entren y salgan de la escena por los caminos de la pradera.
 - Que las actividades formen parte de los encargos («la persona que lee el periódico»), con cuidado de no romper el determinismo del sorteo.
+
+## Pendientes anotados por el usuario (03-10-2026)
+
+- **Personajes que se despatarran de repente al andar**: algunos viandantes abren las piernas de golpe mientras caminan. Sin diagnosticar. Sospechas por orden: la mezcla de la marcha que ahora espera 0,6 s parado antes de apagarse (`gait.gd::pose()`, `idle_time`, del 01-10-2026), el `reset_contacts()` cuando la posición salta más de 0,7 zancadas y el ritmo reducido de los niveles manuales (`walk_pace`), que alarga el tiempo de apoyo.
+- **Parque infantil con vida**: en el parque grande, que haya siempre algún niño jugando en los columpios o el tobogán y niños dando vueltas cerca (hoy la zona suele estar vacía). Encaja con los figurantes de `scripts/extras.gd`.

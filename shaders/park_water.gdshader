@@ -1,6 +1,8 @@
-// Still water of the pond and the fountain bowls (docs/futuro/17 fase 4). Procedural and
-// animated: two scrolling noise layers ripple the normal, rings spread from where the falling
-// curtains hit the pond, with foam at the impact line. `center` is the fountain axis (world xz).
+// Water of the pond and the fountain bowls (docs/futuro/17 fase 4). Procedural and animated.
+// The pond's sheet is a ring-subdivided mesh that really moves: waves of a couple of centimetres
+// spread from where the falling curtain hits it and a slow swell crosses it (vertex()). On top,
+// two scrolling noise layers and fine rings ripple the normal, with foam at the impact line.
+// `center` is the fountain axis (world xz). The bowls (above 0.6 m) stay flat: only their normal ripples.
 shader_type spatial;
 render_mode cull_back;
 
@@ -35,8 +37,21 @@ float height(vec2 p, float t) {
 	return h;
 }
 
+// Real displacement of the pond's surface in metres (± 2 cm: it never leaves its stone rim).
+float swell(vec2 p, float t) {
+	float d = length(p - center);
+	float rings = sin(d * 7.0 - t * 2.6) * exp(-abs(d - impact_radius) * 0.85);
+	float wind = sin(p.x * 1.7 + t * 0.9) * sin(p.y * 2.3 - t * 0.7);
+	return 0.013 * rings + 0.007 * wind;
+}
+
 void vertex() {
 	world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	if (world_position.y < 0.6) {
+		float lift = swell(world_position.xz, TIME);
+		VERTEX.y += lift;
+		world_position.y += lift;
+	}
 }
 
 void fragment() {
@@ -45,7 +60,9 @@ void fragment() {
 	float e = 0.02;
 	float h = height(p, t);
 	vec2 slope = vec2(height(p + vec2(e, 0.0), t) - h, height(p + vec2(0.0, e), t) - h) / e;
-	vec3 world_normal = normalize(vec3(-slope.x * 0.035, 1.0, -slope.y * 0.035));
+	// The slope of the moving surface itself lights the big waves.
+	vec2 big = world_position.y < 0.6 ? vec2(swell(p + vec2(e, 0.0), t) - swell(p, t), swell(p + vec2(0.0, e), t) - swell(p, t)) / e : vec2(0.0);
+	vec3 world_normal = normalize(vec3(-slope.x * 0.035 - big.x, 1.0, -slope.y * 0.035 - big.y));
 	NORMAL = normalize((VIEW_MATRIX * vec4(world_normal, 0.0)).xyz);
 	float d = length(p - center);
 	float foam = smoothstep(0.35, 0.0, abs(d - impact_radius)) * (0.55 + 0.45 * noise(p * 22.0 + t * 2.0));

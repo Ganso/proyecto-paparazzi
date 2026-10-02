@@ -266,7 +266,7 @@
   "intro_dia": "Día",
   "intro_dorada": "Hora dorada",
   "intro_noche": "Noche",
-  "paseo_ayuda": "{andar}: andar · {correr}: correr · {agacharse}: agacharse · {mirar_paseo}: mirar · {sacar}: sacar la cámara · {atras}: ayuda",
+  "paseo_ayuda": "{andar}: andar · {correr}: correr · {agacharse}: agacharse · {mirar_paseo}: mirar · {sacar}: sacar la cámara · {pausa}: pausa",
   "paseo_sandbox": "Paseo libre · saca la cámara con el clic derecho",
   "una_fuente": "una fuente",
   "un_columpio": "un columpio",
@@ -565,5 +565,7 @@
   "gfx_desc_Alto": "Resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra física y profundidad de campo en el visor.",
   "gfx_desc_Ultra": "Resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba completa y sombras en todas las farolas.",
   "gfx_integrada": "Gráfica integrada: en los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla.",
-  "gfx_fps": "FPS"
+  "gfx_fps": "FPS",
+  "gfx_resolucion_imagen": "Resolución de la imagen",
+  "gfx_nativa": "Nativa de la pantalla"
 }

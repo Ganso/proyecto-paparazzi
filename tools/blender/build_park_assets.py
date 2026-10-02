@@ -655,13 +655,32 @@ def build_estanque(lod):
     for s_i in range(seg):
         a0, a1 = s_i * n, ((s_i + 1) % seg) * n
         for k in range(n - 1):
-            faces.append([a0 + k, a1 + k, a1 + k + 1, a0 + k + 1])
+            # Normal hacia fuera y hacia arriba (con el orden contrario el bordillo solo se veía
+            # por dentro y el agua parecía flotar sobre su sombra).
+            faces.append([a0 + k, a0 + k + 1, a1 + k + 1, a1 + k])
     shade = [srgb("bdb4a2", 1.0 - 0.05 * ((i * 7) % 3)) for i in range(1)]
     b.add(verts, faces, shade[0])
     # Lámina de agua a 0,2 m, casi enrasada con el borde.
-    ring = [(math.sin(i * math.tau / seg) * (ax + 0.01), 0.2, math.cos(i * math.tau / seg) * (az + 0.01)) for i in range(seg)]
-    # Orden de vértices con la normal hacia arriba (si no, el motor descarta la cara).
-    water.add(ring, [list(range(seg))], srgb("3d5f6b"))
+    if detail:
+        # Lámina subdividida en anillos: el shader del agua la mueve con olas de verdad
+        # (shaders/park_water.gdshader), no solo con la normal. Más densa cerca de la fuente.
+        fractions = [0.0, 0.1, 0.18, 0.25, 0.31, 0.37, 0.43, 0.5, 0.58, 0.67, 0.77, 0.89, 1.0]
+        wverts = [(0.0, 0.2, 0.0)]
+        for fr in fractions[1:]:
+            for i in range(seg):
+                t = i * math.tau / seg
+                wverts.append((math.sin(t) * (ax + 0.01) * fr, 0.2, math.cos(t) * (az + 0.01) * fr))
+        wfaces = [[0, 1 + i, 1 + (i + 1) % seg] for i in range(seg)]
+        for r in range(len(fractions) - 2):
+            base0, base1 = 1 + r * seg, 1 + (r + 1) * seg
+            for i in range(seg):
+                j = (i + 1) % seg
+                wfaces.append([base0 + i, base1 + i, base1 + j, base0 + j])
+        water.add(wverts, wfaces, srgb("3d5f6b"))
+    else:
+        ring = [(math.sin(i * math.tau / seg) * (ax + 0.01), 0.2, math.cos(i * math.tau / seg) * (az + 0.01)) for i in range(seg)]
+        # Orden de vértices con la normal hacia arriba (si no, el motor descarta la cara).
+        water.add(ring, [list(range(seg))], srgb("3d5f6b"))
     # Fuente: pie, taza grande, fuste y taza pequeña con remate.
     if detail:
         lathe(b, [(0.35, 0.0), (0.3, 0.3), (0.16, 0.4), (0.14, 0.75), (0.2, 0.8), (0.95, 0.9), (1.0, 0.98), (0.92, 1.0), (0.2, 0.95)], (0, 0, 0), stone, 32)

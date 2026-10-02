@@ -674,10 +674,7 @@ func parameter_click(parameter: String) -> void:
 func _input(event: InputEvent) -> void:
 	# Help texts follow the last device used (keyboard and mouse, or gamepad).
 	if Glyphs.note(event): refresh_device()
-	# Moving the pointer to the top or bottom edge unfolds the HUD bars for a moment (camera interface).
-	if event is InputEventMouseMotion and is_instance_valid(ui):
-		var y = ui.get_local_mouse_position().y
-		if y < 70 or y > 640: hud_hover = 1.5
+	# (The HUD bars no longer unfold when the pointer nears the edges: only Tab shows them.)
 	# Releases can be consumed by an overlaid button after a scene drag.
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		end_mouse_drag.call_deferred()
@@ -1886,7 +1883,7 @@ func aim_at(p, rate: float) -> void:
 	update_camera()
 
 func photographer_input(event: InputEvent) -> bool:
-	var toggle = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or event.is_action_pressed("camara_al_ojo")
+	var toggle = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or event.is_action_pressed("camara_al_ojo") or (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y)
 	if toggle:
 		toggle_raise()
 		return true
@@ -3059,6 +3056,10 @@ func update_render_resolution() -> void:
 	if ParkScene.forward_plus():
 		var window = Vector2(get_window().size)
 		factor = maxf(1.0,minf(window.x/1280.0,window.y/720.0))
+		# Full screen with a chosen resolution: the 3D image is rendered at that height and scaled
+		# to fill the screen (place_view() already scales the container to the view).
+		var limit = Graphics.fullscreen_height()
+		if limit > 0: factor = clampf(limit/720.0,1.0,factor)
 	viewport.size = Vector2i(roundi(1280*factor),roundi(720*factor))
 	viewport_container.stretch = false
 	viewport_container.size = Vector2(viewport.size)
@@ -3125,9 +3126,10 @@ func show_graphics_settings() -> void:
 	var d = Graphics.display
 	label(root,Texts.get_text("gfx_modo_ventana"),Rect2(60,194,60,30),14)
 	option(root,Graphics.WINDOW_MODES.map(func(c): return gfx_label(c[0])),maxi(0,Graphics.WINDOW_MODES.map(func(c): return c[1]).find(d.mode)),Rect2(120,190,300,36),func(i): set_display("mode",Graphics.WINDOW_MODES[i][1]))
-	label(root,Texts.get_text("gfx_resolucion"),Rect2(440,194,170,30),14)
-	var sizes = option(root,Graphics.WINDOW_SIZES.map(func(c): return c[0]),maxi(0,Graphics.WINDOW_SIZES.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",Graphics.WINDOW_SIZES[i][1]))
-	sizes.disabled = d.mode != "ventana"
+	label(root,Texts.get_text("gfx_resolucion" if d.mode == "ventana" else "gfx_resolucion_imagen"),Rect2(440,194,170,30),14)
+	# In a window: its size. In full screen: the resolution of the image (or the screen's own).
+	var size_choices = Graphics.WINDOW_SIZES if d.mode != "ventana" else Graphics.WINDOW_SIZES.slice(1)
+	option(root,size_choices.map(func(c): return gfx_label(c[0])),maxi(0,size_choices.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",size_choices[i][1]))
 	label(root,Texts.get_text("gfx_vsync"),Rect2(815,194,175,30),14)
 	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,76,36),func(i): set_display("vsync",i == 0))
 	label(root,Texts.get_text("gfx_fps"),Rect2(1080,194,60,30),14)
@@ -3235,6 +3237,7 @@ func set_display(key: String, value) -> void:
 	Graphics.display[key] = value
 	Graphics.save_display()
 	Graphics.apply_display(get_window())
+	update_render_resolution.call_deferred()
 	show_graphics_settings.call_deferred()
 
 func set_manual_focus(distance: float) -> void:

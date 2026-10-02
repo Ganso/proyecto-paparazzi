@@ -126,3 +126,8 @@ Cifras medidas en [TESTS §5](../TESTS_Y_VERIFICACION.md): Ultra a 2560 × 1440 
 - **Tiempo de construcción** del parque `hd` (Blender, hierba, texturas): medirlo y cachear si pesa.
 - **Mobiliario de la pradera**: bancos y paseos de grava dentro de la pradera, gente de ambiente fuera de la zona jugable (02 §10.2).
 - Los `.glb` se leen sin importar; si en el futuro se abre el proyecto en el editor, conviene marcar `assets/parque/*.glb` con el importador `keep` para que no se dupliquen como escenas.
+
+## Fuente y agua (03-10-2026)
+
+- El bordillo del estanque tenía las caras al revés (`build_estanque()`): solo se veía por dentro y, de cerca, el agua parecía un disco flotando sobre su sombra. Corregido el orden de los vértices.
+- **Agua con relieve**: la lámina del estanque es una malla de anillos (1.536 triángulos en `hd`) y `shaders/park_water.gdshader::vertex()` la mueve ± 2 cm: ondas que salen de donde cae la cortina y un oleaje lento; la normal fina sigue encima. Las tazas y el nivel `lo` siguen planos.

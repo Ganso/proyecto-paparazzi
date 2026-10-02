@@ -50,12 +50,12 @@ func run() -> void:
 	var right = InputEventKey.new()
 	right.physical_keycode = KEY_RIGHT
 	right.pressed = true
-	menu._unhandled_input(right)
+	menu._input(right)
 	check(menu.current == (first+1)%6,"→ changes the mode")
 	var pad_left = InputEventJoypadButton.new()
 	pad_left.button_index = JOY_BUTTON_DPAD_LEFT
 	pad_left.pressed = true
-	menu._unhandled_input(pad_left)
+	menu._input(pad_left)
 	check(menu.current == first,"D-pad ← changes it back")
 	menu.current = 2
 	menu.build_card()
