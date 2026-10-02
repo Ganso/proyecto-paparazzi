@@ -55,6 +55,17 @@ func run() -> void:
 	for e in park.edges:
 		var mid = (park.nodes[e[0]]+park.nodes[e[1]])*.5
 		check(park.path_distance(mid) <= .01,"Edge %s–%s lies on a paved path" % [e[0],e[1]])
+	# --- The playground always has children (docs/futuro/19 §10) ---
+	if game.park.detail == "hd":
+		var kids = game.extras.extras
+		check(kids.size() >= 6 and kids.all(func(k): return k.traits.profile == 3 and k.ambient and k.colliders.is_empty()),"Six children at the playground, ambient and without colliders (%d)" % kids.size())
+		check(not kids.any(func(k): return k in game.people),"They are not pedestrians of the assignments")
+		var swing0 = game.extras.swing_pivot.rotation.x
+		var slide0 = game.extras.slider.position
+		for i in 60: game.extras.update(1.0/30)
+		check(absf(game.extras.swing_pivot.rotation.x-swing0) > .05,"The swing swings")
+		check(game.extras.slider.position.distance_to(slide0) > .3,"A child goes round the slide")
+		check(kids.all(func(k): return k.global_position.distance_to(park.PLAYGROUND_POS) < 9.0),"All of them stay by the playground")
 	# --- The crowd walks the paths ---
 	game.start_session("day")
 	game.begin_assignment()

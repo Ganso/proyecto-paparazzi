@@ -69,6 +69,98 @@ func build(detail: String) -> void:
 	# A child kicking a ball about, to the right of the bandstand.
 	add_ball_game(polar(137.0,17.0))
 
+# ---- Playground of the big park (docs/futuro/19 §10): there are always children playing ----
+# One on a swing (the seat really swings), one going up the ladder and down the slide in a loop,
+# one in the sandpit and three running round the playground. Ambient like the rest: no colliders,
+# never a target. At night they go home.
+var swing_pivot: Node3D
+var swing_time = 0.0
+var slider: Pedestrian
+var slide_origin = Vector3.ZERO
+var slide_time = 0.0
+# Slide loop, relative to the slide's base: [seconds, position, seated]
+const SLIDE_PATH = [[0.0,Vector3(0,0,-1.35),false],[2.2,Vector3(0,1.6,-.62),false],[3.0,Vector3(0,1.62,-.12),true],[4.3,Vector3(0,.3,1.95),true],[5.0,Vector3(0,0,2.45),false],[6.6,Vector3(1.15,0,2.3),false],[9.6,Vector3(1.15,0,-1.35),false],[10.6,Vector3(0,0,-1.35),false]]
+
+func build_playground(center: Vector3, detail: String) -> void:
+	if detail != "hd": return
+	rng.seed = 2209
+	cast.rng.seed = 2209
+	# Swing: seat and ropes hang from a pivot on the beam, with a child sitting on it.
+	var sw = center+Vector3(-1.6,0,0)
+	swing_pivot = Node3D.new()
+	swing_pivot.position = sw+Vector3(-.7,2.2,0)
+	add_child(swing_pivot)
+	var seat = MeshInstance3D.new()
+	var seat_box = BoxMesh.new()
+	seat_box.size = Vector3(.45,.05,.2)
+	seat.mesh = seat_box
+	var dark = StandardMaterial3D.new()
+	dark.albedo_color = Color("303030")
+	seat.material_override = dark
+	seat.position = Vector3(0,-1.72,0)
+	swing_pivot.add_child(seat)
+	var grey = StandardMaterial3D.new()
+	grey.albedo_color = Color("8a8a8a")
+	for k in [-.18,.18]:
+		var rope = MeshInstance3D.new()
+		var rope_mesh = CylinderMesh.new()
+		rope_mesh.top_radius = .008
+		rope_mesh.bottom_radius = .008
+		rope_mesh.height = 1.7
+		rope_mesh.radial_segments = 5
+		rope.mesh = rope_mesh
+		rope.material_override = grey
+		rope.position = Vector3(k,-.85,0)
+		swing_pivot.add_child(rope)
+	var swinger = spawn(true)
+	remove_child(swinger)
+	swing_pivot.add_child(swinger)
+	swinger.position = Vector3(0,-2.17,.12)
+	swinger.rotation.y = PI
+	swinger.state = "SENTADO"
+	swinger.seat = 1.0
+	swinger.animate(0)
+	day_only.append(swing_pivot)
+	# Slide: a child climbing and sliding in a loop.
+	slide_origin = center+Vector3(2.0,0,.6)
+	slider = spawn(true)
+	slider.set_meta("slider",true)
+	slider.state = "CAMINANDO"
+	day_only.append(slider)
+	# Sandpit: a child sitting on the sand.
+	var sand = center+Vector3(-1.2,0,-2.2)
+	day_only.append(add_still(sand+Vector3(.2,0,.1),2.4,"suelo","",true))
+	# Three children running round the playground, spaced out, two one way and one the other.
+	for k in 3:
+		var runner = spawn(true)
+		runner.state = "CAMINANDO"
+		runner.speed = rng.randf_range(1.25,1.6)
+		runner.set_meta("route",{"center":center,"radius":6.4+k*.55,"angle":k*2.2,"dir":1.0 if k != 1 else -1.0})
+		place_walker(runner,0.0)
+		runner.animate(0)
+		day_only.append(runner)
+
+func update_playground(dt: float) -> void:
+	if swing_pivot != null and swing_pivot.visible:
+		swing_time += dt
+		swing_pivot.rotation.x = .5*sin(swing_time*2.3)
+	if slider != null and slider.visible:
+		slide_time = fmod(slide_time+dt,SLIDE_PATH[-1][0])
+		var k = 0
+		while k < SLIDE_PATH.size()-2 and slide_time >= SLIDE_PATH[k+1][0]: k += 1
+		var a: Array = SLIDE_PATH[k]
+		var b: Array = SLIDE_PATH[k+1]
+		var u = clampf((slide_time-a[0])/(b[0]-a[0]),0,1)
+		var before = slider.position
+		slider.position = slide_origin+a[1].lerp(b[1],u)
+		var step = slider.position-before
+		var flat = Vector3(step.x,0,step.z)
+		if flat.length() > .0005 and not a[2]: slider.rotation.y = lerp_angle(slider.rotation.y,atan2(-flat.x,-flat.z),minf(1.0,dt*6))
+		if a[2]: slider.rotation.y = lerp_angle(slider.rotation.y,PI,minf(1.0,dt*8))   # sliding down, facing the chute's end
+		slider.state = "SENTADO" if a[2] else "CAMINANDO"
+		slider.seat_kind = "suelo" if a[2] else ""
+		slider.animate(dt,flat.length() if not a[2] else 0.0)
+
 func spawn(child = false) -> Pedestrian:
 	var p = Person.new()
 	p.ambient = true
@@ -199,8 +291,10 @@ func place_walker(p: Pedestrian, dt: float) -> void:
 	p.rotation.y = atan2(-tangent.x,-tangent.z)
 
 func update(dt: float) -> void:
+	update_playground(dt)
 	for p in extras:
-		if p == kid: continue
+		if p == kid or p == slider: continue
+		if swing_pivot != null and p.get_parent() == swing_pivot: continue
 		if not p.visible: continue
 		if p.state == "CAMINANDO":
 			place_walker(p,dt)

@@ -1,22 +1,24 @@
 extends RefCounted
 # Focal lengths are 35 mm equivalents, matching the simulator's reference sensor.
+# "ca": lateral chromatic aberration of the lens (0…1): the compact's zoom shows most, the primes
+# least (main.gd::lens_strengths(), docs/futuro/07 §6).
 const CAMERAS = ["Compacta", "Telemétrica", "Réflex", "TLR 6×6"]
 const LENSES = [
-	[{"name":"Zoom 24–120 · f/2.8–5.6", "min":24.0,"max":120.0,"wide":2.8,"long":5.6,"stop":8.0},
-	 {"name":"Fijo 35 · f/2.8", "min":35.0,"max":35.0,"wide":2.8,"long":2.8,"stop":8.0}],
-	[{"name":"Fijo 35 · f/2", "min":35.0,"max":35.0,"wide":2.0,"long":2.0,"stop":16.0},
-	 {"name":"Fijo 50 · f/1.4", "min":50.0,"max":50.0,"wide":1.4,"long":1.4,"stop":16.0},
-	 {"name":"Fijo 90 · f/2.8", "min":90.0,"max":90.0,"wide":2.8,"long":2.8,"stop":22.0}],
-	[{"name":"Zoom 24–105 · f/4", "min":24.0,"max":105.0,"wide":4.0,"long":4.0,"stop":22.0},
-	 {"name":"Zoom 70–200 · f/2.8", "min":70.0,"max":200.0,"wide":2.8,"long":2.8,"stop":22.0},
-	 {"name":"Fijo 50 · f/1.8", "min":50.0,"max":50.0,"wide":1.8,"long":1.8,"stop":22.0},
+	[{"name":"Zoom 24–120 · f/2.8–5.6", "ca":1.0, "min":24.0,"max":120.0,"wide":2.8,"long":5.6,"stop":8.0},
+	 {"name":"Fijo 35 · f/2.8", "ca":0.55, "min":35.0,"max":35.0,"wide":2.8,"long":2.8,"stop":8.0}],
+	[{"name":"Fijo 35 · f/2", "ca":0.35, "min":35.0,"max":35.0,"wide":2.0,"long":2.0,"stop":16.0},
+	 {"name":"Fijo 50 · f/1.4", "ca":0.4, "min":50.0,"max":50.0,"wide":1.4,"long":1.4,"stop":16.0},
+	 {"name":"Fijo 90 · f/2.8", "ca":0.3, "min":90.0,"max":90.0,"wide":2.8,"long":2.8,"stop":22.0}],
+	[{"name":"Zoom 24–105 · f/4", "ca":0.6, "min":24.0,"max":105.0,"wide":4.0,"long":4.0,"stop":22.0},
+	 {"name":"Zoom 70–200 · f/2.8", "ca":0.5, "min":70.0,"max":200.0,"wide":2.8,"long":2.8,"stop":22.0},
+	 {"name":"Fijo 50 · f/1.8", "ca":0.35, "min":50.0,"max":50.0,"wide":1.8,"long":1.8,"stop":22.0},
 	 # Added for the Academy (docs/futuro/06): wide-angle perspective, portrait bokeh, compression.
-	 {"name":"Fijo 28 · f/2.8", "min":28.0,"max":28.0,"wide":2.8,"long":2.8,"stop":22.0},
-	 {"name":"Fijo 105 · f/1.8", "min":105.0,"max":105.0,"wide":1.8,"long":1.8,"stop":22.0},
-	 {"name":"Fijo 135 · f/2", "min":135.0,"max":135.0,"wide":2.0,"long":2.0,"stop":22.0}],
+	 {"name":"Fijo 28 · f/2.8", "ca":0.45, "min":28.0,"max":28.0,"wide":2.8,"long":2.8,"stop":22.0},
+	 {"name":"Fijo 105 · f/1.8", "ca":0.4, "min":105.0,"max":105.0,"wide":1.8,"long":1.8,"stop":22.0},
+	 {"name":"Fijo 135 · f/2", "ca":0.35, "min":135.0,"max":135.0,"wide":2.0,"long":2.0,"stop":22.0}],
 	# TLR (docs/futuro/21 §3): 80 mm f/2.8 on 6×6. Its 56 mm square frame spans the field of a 50 mm
 	# on the 36 mm reference width, so it is a 50 mm equivalent here.
-	[{"name":"Planar 80 · f/2.8 (6×6)", "min":50.0,"max":50.0,"wide":2.8,"long":2.8,"stop":22.0}]
+	[{"name":"Planar 80 · f/2.8 (6×6)", "ca":0.5, "min":50.0,"max":50.0,"wide":2.8,"long":2.8,"stop":22.0}]
 ]
 const STOPS = [1.4,1.8,2.0,2.8,4.0,5.6,8.0,11.0,16.0,22.0]
 const EV_COMPENSATIONS = [-2.0, -1.7, -1.3, -1.0, -0.7, -0.3, 0.0, 0.3, 0.7, 1.0, 1.3, 1.7, 2.0]

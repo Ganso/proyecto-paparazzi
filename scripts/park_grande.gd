@@ -433,7 +433,8 @@ func build_playground() -> void:
 			leg.rotation.x = -z*.45
 	var beam = cylinder(.055,3.1,sw+Vector3(0,2.2,0),steel,Texts.get_text("un_columpio"))
 	beam.rotation.z = PI*.5
-	for x in [-.7,.7]:
+	# The left swing is built by extras.gd on desktop: it swings with a child on it.
+	for x in ([.7] if detail == "hd" else [-.7,.7]):
 		cube(Vector3(.45,.05,.2),sw+Vector3(x,.48,0),Color("303030"))
 		for k in [-.18,.18]:
 			cylinder(.008,1.7,sw+Vector3(x+k,1.35,0),Color("8a8a8a"))
@@ -449,5 +450,7 @@ func build_playground() -> void:
 	# Sandpit border.
 	for k in 8:
 		var a = k*TAU/8
-		var seg = cube(Vector3(1.6,.22,.18),p+Vector3(-1.2,0,-2.2)+Vector3(sin(a),0,cos(a))*1.2+Vector3.UP*.11,wood)
-		seg.rotation.y = a+PI*.5
+		# Eight boards round the sand, each along its side of the octagon (they pointed outwards,
+		# like a star).
+		var seg = cube(Vector3(1.08,.22,.18),p+Vector3(-1.2,0,-2.2)+Vector3(sin(a),0,cos(a))*1.2+Vector3.UP*.11,wood)
+		seg.rotation.y = a

@@ -26,7 +26,7 @@ void fragment() {
 	vec2 px = TEXTURE_PIXEL_SIZE;
 	vec2 uv_norm = UV - vec2(0.5);
 	float r2 = dot(uv_norm * vec2(1.0, 0.5625), uv_norm * vec2(1.0, 0.5625));
-	vec2 ca_dir = uv_norm * r2 * 0.015 * chromatic_aberration;
+	vec2 ca_dir = uv_norm * r2 * 0.03 * chromatic_aberration;
 
 	vec3 color = vec3(0.0);
 	for (int i = 0; i < 17; i++) {

@@ -63,6 +63,31 @@ func run() -> void:
 	game.apply_equipment()
 	await frames(2)
 	check(not game.lens_material.get_shader_parameter("mirror"),"Other bodies are not mirrored")
+	# Chromatic aberration (docs/futuro/07 §6): by lens, focal length and aperture; the photo keeps
+	# what it was taken with and the rangefinder's finder shows none.
+	game.equipment.preset(0)
+	game.apply_equipment()
+	game.focal = 24.0
+	game.n_index = 0
+	var compact_open = game.lens_strengths(24.0).y
+	game.n_index = game.apertures().size()-1
+	var compact_closed = game.lens_strengths(24.0).y
+	game.n_index = 0
+	check(compact_open > compact_closed and compact_open > .8,"Compact zoom wide open at 24 mm: strong fringes, weaker stopped down (%.2f → %.2f)" % [compact_open,compact_closed])
+	check(game.lens_strengths(120.0).y < compact_open,"Less at the long end")
+	game.equipment.preset(2)
+	game.equipment.lens_index = 2
+	game.apply_equipment()
+	check(game.lens_strengths(50.0).y < compact_open*.4,"A prime shows much less than the compact's zoom")
+	game.equipment.preset(1)
+	game.apply_equipment()
+	game.set_interface("camara")
+	game.update_lens_effects()
+	check(game.lens_material.get_shader_parameter("chromatic_aberration") == 0.0,"The rangefinder's finder shows no lens aberration")
+	check(game.lens_strengths(35.0).y > 0.0,"…but its photo does")
+	game.equipment.preset(0)
+	game.apply_equipment()
+	await frames(2)
 	# Parallax of the rangefinder: grows at close range and is undone when mapping clicks.
 	game.equipment.preset(1)
 	game.apply_equipment()

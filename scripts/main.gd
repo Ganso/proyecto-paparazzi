@@ -375,6 +375,7 @@ func build_world() -> void:
 	viewport.add_child(extras)
 	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.
 	if scenario == "clasico": extras.build(Person.detail)
+	else: extras.build_playground(park.PLAYGROUND_POS,Person.detail)
 	ambience = preload("res://scripts/ambience.gd").new()
 	if scenario == "grande":
 		ambience.fountain_pos = Vector3(0,.8,0)
@@ -2402,6 +2403,8 @@ func take_photo() -> void:
 	await get_tree().physics_frame
 	var evidence = capture_sandbox_evidence() if sandbox else capture_evidence()
 	evidence["rendered_dof"] = dof_active()
+	evidence["ca"] = float(equipment.lens().get("ca",.5))
+	evidence["stops"] = 2.0*log(apertures()[n_index]/equipment.apertures(focal)[0])/log(2.0)
 	current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
 	if arcade_level >= 0 and not sandbox: Conditions.apply(current_result,evidence,Arcade.LEVELS[arcade_level].cond)
@@ -2435,9 +2438,17 @@ func take_photo() -> void:
 
 # Vignetting and lateral chromatic aberration grow with wide angles (the same strengths develop the
 # photo). Depth of field follows focal length, aperture and focus distance exactly.
-func lens_strengths(focal_mm: float) -> Vector2:
+# x: vignetting. y: lateral chromatic aberration (colour fringes towards the corners): it depends
+# on the lens ("ca" in equipment.gd), grows at wide angles and at full aperture, and fades as the
+# diaphragm closes. ca_lens < 0 uses the mounted lens and the current aperture.
+func lens_strengths(focal_mm: float, ca_lens = -1.0, stops_closed = -1.0) -> Vector2:
 	var wide = clampf((50.0-focal_mm)/26.0,0.0,1.0)
-	return Vector2(.22+.26*wide,.14+.24*wide)
+	if ca_lens < 0.0:
+		ca_lens = float(equipment.lens().get("ca",.5))
+		var open = equipment.apertures(focal_mm)[0]
+		stops_closed = 2.0*log(apertures()[n_index]/open)/log(2.0)
+	var aperture_factor = clampf(1.0-.22*stops_closed,.35,1.0)
+	return Vector2(.22+.26*wide,ca_lens*(.55+.45*wide)*aperture_factor)
 
 var dof_blur = false
 func dof_active() -> bool:
@@ -2448,7 +2459,9 @@ func update_lens_effects() -> void:
 	var strengths = lens_strengths(focal)
 	if lens_material:
 		lens_material.set_shader_parameter("vignette_amount",strengths.x)
-		lens_material.set_shader_parameter("chromatic_aberration",strengths.y)
+		# The rangefinder's finder is a window beside the lens: it shows none of its aberration
+		# (the photo does).
+		lens_material.set_shader_parameter("chromatic_aberration",0.0 if equipment.body == 1 and interface_mode == "camara" else strengths.y)
 	if dof_active():
 		var dof_material: ShaderMaterial = dof_pass.material_override
 		dof_material.set_shader_parameter("focal_mm",focal)
@@ -2462,7 +2475,8 @@ func photo_material(result: Dictionary) -> ShaderMaterial:
 	# With the viewfinder's exact depth of field the capture is already blurred per pixel; otherwise
 	# the develop pass blurs the whole frame by the subject's circle of confusion.
 	mat.set_shader_parameter("coc_pixels",0.0 if evidence.get("rendered_dof",false) else minf(result.coc/36*viewport.size.x*.5,35))
-	var strengths = lens_strengths(evidence.f)
+	# The photo keeps the lens and aperture it was taken with (evidence.ca, evidence.stops).
+	var strengths = lens_strengths(evidence.f,evidence.get("ca",.5),evidence.get("stops",1.0))
 	mat.set_shader_parameter("vignette_amount",strengths.x)
 	mat.set_shader_parameter("chromatic_aberration",strengths.y)
 	mat.set_shader_parameter("exposure",clampf(result.delta,-8,8))

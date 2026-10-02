@@ -32,7 +32,7 @@ void fragment() {
 	uv = vec2(0.5) + (uv - vec2(0.5)) / loupe;
 	vec2 centred = uv - vec2(0.5);
 	float r2 = dot(centred * vec2(1.0, 0.5625), centred * vec2(1.0, 0.5625));
-	vec2 shift = lens_off ? vec2(0.0) : centred * r2 * 0.015 * chromatic_aberration;
+	vec2 shift = lens_off ? vec2(0.0) : centred * r2 * 0.03 * chromatic_aberration;
 	vec3 color = vec3(texture(TEXTURE, uv + shift).r, texture(TEXTURE, uv).g, texture(TEXTURE, uv - shift).b);
 	float vignette = smoothstep(0.0, 1.0, clamp(1.0 - r2 * 2.4 * vignette_amount, 0.0, 1.0));
 	if (!lens_off) color *= mix(0.70, 1.0, vignette);
