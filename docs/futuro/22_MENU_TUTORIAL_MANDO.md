@@ -29,6 +29,14 @@ Doce pasos en el parque clásico que se comprueban solos y avanzan con «✓ ¡B
 - `tests/test_tutorial.gd`: los cinco modos del menú y su navegación, y el tutorial completo haciendo lo que pide cada paso.
 - Capturas en `tools/capture_screens.gd` (`18_menu_*`, `19_tutorial`, `20_ayuda_teclado`, `21_ayuda_mando`, `22_pausa`).
 
+## 7. Referencias durante la búsqueda (02-10-2026)
+
+- **El sujeto en miniatura**: arriba a la izquierda, una copia pequeña del personaje del encargo gira 360° cada 8 s (`main.gd::update_portrait()`, su propio mundo 3D), para verlo desde todos los lados y no perder la referencia. La ayuda en pantalla queda debajo.
+- **Corredores**: el sujeto de un nivel de corredores nunca es el que pasa por el carril más cercano, en primer plano: se elige uno de los carriles 1 a 3.
+- **«Cara», no «ojos»**: los maniquíes no tienen ojos; la condición `ojos` se llama «Cara nítida» y mide el desenfoque a media altura de la cabeza.
+- **Guías de encuadre**: en los niveles con proporción áurea el visor dibuja sus líneas doradas (φ, 38 % y 62 %); en el resto, las de tercios. En la TLR, las del cuadrado. G (R3) las oculta.
+- **Movimiento en velocidades**: el informe y la condición de congelar ya no hablan de milímetros: dicen la velocidad mínima a la focal usada («a 135 mm hace falta 1/1000 s o más rápido; usaste 1/250 s»), si el problema es el pulso (regla 1/focal) o si ni 1/1000 s basta (menos focal, o fotografiarla cuando venga hacia ti). `Photography.needed_shutter()`.
+
 ## 6. Pendiente
 
 Migración completa a acciones de `InputMap` y vibración ([14](14_SOPORTE_GAMEPAD.md)), recorrido con cruceta de las pantallas de equipo y gráficos con desplegables, y probar con un mando físico.

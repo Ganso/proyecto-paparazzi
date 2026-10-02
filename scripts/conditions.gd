@@ -2,7 +2,8 @@ extends RefCounted
 # Level conditions of the arcade (docs/futuro/21_ARCADE_CONDICIONES_TLR.md §2). Each one is checked
 # on the photo's evidence (main.gd::capture_evidence()), deterministically, and a failed condition
 # rejects the photo with its reason. Keys of a level's "cond" dictionary:
-#   ojos        the subject's eyes inside the acceptable sharpness (CoC at the eyes ≤ 0.030 mm)
+#   ojos        the subject's face sharp (CoC at the face, halfway up the head, ≤ 0.030 mm); the
+#               mannequins have no eyes, so every text says «cara»
 #   aislado     nobody else noticeable in the frame (another person with chest inside, height ≥ 10 %)
 #   acompanado  exactly N other noticeable people in the frame
 #   grande      the subject fills at least that fraction of the frame height
@@ -59,7 +60,14 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 			"congelado":
 				var drag: float = e.v*e.t*e.f/e.d
 				ok = e.v >= 1.5 and drag <= Photo.C
-				text_value = Texts.get_text("cond_congelado") % [e.v,drag]
+				# Said as shutter speeds at the focal length used, not as millimetres of drag.
+				var needed = Photo.needed_shutter(e.v,e.f,e.d)
+				var why = ""
+				if e.v < 1.5: why = Texts.get_text("cond_congelado_quieto")
+				elif ok: why = Texts.get_text("cond_congelado_ok") % [roundi(e.f),roundi(1.0/e.t)]
+				elif needed < 0: why = Texts.get_text("cond_congelado_imposible") % roundi(e.f)
+				else: why = Texts.get_text("cond_congelado_lento") % [roundi(e.f),needed,roundi(1.0/e.t)]
+				text_value = Texts.get_text("cond_congelado") % why
 		out.append({"key":key,"ok":ok,"text":text_value})
 	return out
 

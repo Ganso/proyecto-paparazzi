@@ -115,6 +115,11 @@ var tlr_wound = true                # the crank advances the film before every s
 var tlr_loupe = false               # L: 3× loupe over the ground glass
 var control_help                    # on-screen help (scripts/control_help.gd), F1
 var tutorial                        # tutorial mode (scripts/tutorial.gd)
+# A small copy of the subject turning round at the top left while searching (docs/futuro/22 §7).
+var portrait: SubViewportContainer
+var portrait_view: SubViewport
+var portrait_person
+var portrait_of = null
 # ---- Gamepad (docs/futuro/14) ----
 const PAD_PARAMS = ["t","n","iso","ev_comp"]
 var pad_param = 1                   # which exposure setting the D-pad ↑/↓ changes (←/→ chooses)
@@ -909,6 +914,7 @@ func start_session(time_mode = "day", free_play = false) -> void:
 			if at.size() > 2: angle = float(at[2])
 		free_player_spot()
 	update_camera()
+	finder.golden = false
 	if sandbox:
 		if is_instance_valid(target): target.protected_target = false
 		target = null
@@ -924,7 +930,9 @@ func new_assignment() -> void:
 	# The subject never runs, except in the levels about freezing a runner.
 	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO" and not p.runner)
 	if level.get("target","") == "runner":
-		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO")
+		# Never the runner passing right in front (lane 0): one further away, to follow.
+		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO" and p.lane >= 1)
+		if runners.is_empty(): runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO")
 		if not runners.is_empty(): candidates = runners
 	if candidates.is_empty(): candidates = people.filter(func(p): return p.visible)
 	var all_traits = people.map(func(p): return p.traits)
@@ -934,6 +942,9 @@ func new_assignment() -> void:
 	target.protected_target = true
 	briefing.text = Texts.get_text("busca")+", ".join(predicates)+"."
 	shots = int(level.get("shots",3))
+	# Framing guides: the golden section where the level asks for it, thirds otherwise (G hides them).
+	finder.golden = not level.is_empty() and level.cond.has("aurea")
+	finder.thirds = true
 	# Manual exposure in the arcade starts metered for the subject: the player fine-tunes it.
 	if not level.is_empty() and equipment.exposure_mode() != "P":
 		expose_for(park.illumination_ev(target.control_points()[1],time_of_day,target))
@@ -956,6 +967,7 @@ func _process(dt: float) -> void:
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)
+	update_portrait(dt)
 	if crowd and mode != "INTRO": update_photographer(dt)
 	elif mode != "INTRO": update_classic_raise(dt)
 	# Arcade clock: it runs while searching; at zero the level ends with the best photo so far.
@@ -2141,6 +2153,58 @@ func ratchet_sound(clicks: int) -> void:
 	player_node.play()
 	player_node.finished.connect(player_node.queue_free)
 
+# The subject in miniature, slowly turning 360°: always a reference of who you are looking for,
+# seen from every side. Its own little world (no park, no shadows), lit like the briefing.
+func update_portrait(dt: float) -> void:
+	var show = mode == "SEARCH" and is_instance_valid(target) and not sandbox and not (academy and academy.active)
+	if not show:
+		if is_instance_valid(portrait): portrait.visible = false
+		return
+	if not is_instance_valid(portrait):
+		portrait = SubViewportContainer.new()
+		portrait.stretch = true
+		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait.size = Vector2(120,165)
+		ui.add_child(portrait)
+		ui.move_child(portrait,ui.get_child_count()-1)
+		portrait_view = SubViewport.new()
+		portrait_view.size = Vector2i(240,330)
+		portrait_view.own_world_3d = true
+		portrait_view.transparent_bg = true
+		portrait_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		portrait.add_child(portrait_view)
+		var env = WorldEnvironment.new()
+		env.environment = Environment.new()
+		env.environment.background_mode = Environment.BG_CLEAR_COLOR
+		env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		env.environment.ambient_light_color = Color.WHITE
+		env.environment.ambient_light_energy = .7
+		portrait_view.add_child(env)
+		var light = DirectionalLight3D.new()
+		light.rotation_degrees = Vector3(-35,-30,0)
+		light.light_energy = .9
+		portrait_view.add_child(light)
+		var cam = Camera3D.new()
+		cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+		cam.name = "Camara"
+		portrait_view.add_child(cam)
+		cam.current = true
+	if portrait_of != target:
+		portrait_of = target
+		if is_instance_valid(portrait_person): portrait_person.queue_free()
+		portrait_person = Person.new()
+		portrait_view.add_child(portrait_person)
+		portrait_person.setup(target.traits.duplicate(true),casting.catalog,702)
+		portrait_person.state = "DETENIDO"
+		portrait_person.animate(0)
+		var cam: Camera3D = portrait_view.get_node("Camara")
+		cam.size = portrait_person.height*1.15
+		cam.position = Vector3(0,portrait_person.height*.52,-4)
+		cam.look_at(Vector3(0,portrait_person.height*.52,0))
+	portrait_person.rotation.y += dt*TAU/8.0     # a full turn every 8 s
+	portrait.visible = true
+	portrait.position = view_rect.position+Vector2(10,(96 if interface_mode == "clasica" and hud_top[0].visible else 10)+(80 if interface_mode == "clasica" else 0))
+
 # ---- Gamepad (docs/futuro/14, docs/futuro/22 §3) ----
 # The device changed: every help text on screen is redone for it (Texts fills {controls}).
 func refresh_device() -> void:
@@ -2171,7 +2235,9 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 		JOY_BUTTON_DPAD_DOWN:
 			change_parameter(PAD_PARAMS[pad_param],-1)
 			pad_repeat = .35
-		JOY_BUTTON_RIGHT_STICK: finder.thirds = not finder.thirds
+		JOY_BUTTON_RIGHT_STICK:
+			if finder.golden: finder.golden = false
+			else: finder.thirds = not finder.thirds
 		JOY_BUTTON_LEFT_STICK: pad_precision = not pad_precision
 		_: return false
 	refresh()
@@ -2686,7 +2752,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_BRACKETRIGHT, KEY_EQUAL, KEY_KP_ADD: change_parameter("ev_comp",1)
 			KEY_R: adjust_focus(-1)
 			KEY_T: adjust_focus(1)
-			KEY_G: finder.thirds = not finder.thirds
+			KEY_G:
+				if finder.golden: finder.golden = false
+				else: finder.thirds = not finder.thirds
 			KEY_K: wind_film()
 			KEY_L:
 				if equipment.tlr():

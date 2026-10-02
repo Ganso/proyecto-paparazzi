@@ -8,6 +8,7 @@ var flash = 0.0
 var success = false
 var delta_ev = 0.0
 var thirds = false
+var golden = false          # golden-section guides (arcade levels that ask for it)
 # Where the camera image is shown (ui coordinates; main.gd::view_rect) and whether the classic
 # HUD meter/battery are drawn (the realistic finders draw their own data, scripts/camera_body.gd).
 var view = Rect2(0,0,1280,720)
@@ -38,9 +39,19 @@ func _draw() -> void:
 		draw_line(p,p+Vector2(0,40*direction.y),Color(0,0,0,.25),5)
 		draw_line(p,p+Vector2(56*direction.x,0),ink,2)
 		draw_line(p,p+Vector2(0,40*direction.y),ink,2)
-	if thirds:
-		# The TLR frames a square: its thirds are those of the central square.
-		var frame = Rect2(view.position.x+(view.size.x-view.size.y)*.5,view.position.y,view.size.y,view.size.y) if body == 3 else view
+	# Framing guides: golden section (gold) when the level asks for it, otherwise thirds; the TLR
+	# frames a square, so they are those of the central square.
+	var guide_frame = Rect2(view.position.x+(view.size.x-view.size.y)*.5,view.position.y,view.size.y,view.size.y) if body == 3 else view
+	if golden:
+		var gold = Color(1.0,.82,.35,.7)
+		for k in [.382,.618]:
+			var gx = guide_frame.position.x+guide_frame.size.x*k
+			var gy = guide_frame.position.y+guide_frame.size.y*k
+			draw_line(Vector2(gx,guide_frame.position.y),Vector2(gx,guide_frame.end.y),gold,1.5)
+			draw_line(Vector2(guide_frame.position.x,gy),Vector2(guide_frame.end.x,gy),Color(gold.r,gold.g,gold.b,.35),1)
+			draw_string(font,Vector2(gx+4,guide_frame.position.y+16),"φ",HORIZONTAL_ALIGNMENT_LEFT,-1,14,gold)
+	elif thirds:
+		var frame = guide_frame
 		for k in [1,2]:
 			var gx = frame.position.x+frame.size.x*k/3
 			var gy = frame.position.y+frame.size.y*k/3

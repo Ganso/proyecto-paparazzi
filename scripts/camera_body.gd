@@ -285,7 +285,7 @@ func draw_tlr(r: Rect2) -> void:
 	if main.sandbox and not main.tlr_wound:
 		draw_string(font,Vector2(cx-80,sq.position.y+220),"K ↻",HORIZONTAL_ALIGNMENT_CENTER,160,22,Color(1,.6,.4))
 	var mx = sq.position.x-150
-	var my = sq.position.y+150
+	var my = sq.position.y+330   # under the subject miniature (main.gd::update_portrait)
 	draw_rect(Rect2(mx-60,my-70,120,110),Color(.12,.12,.13))
 	draw_rect(Rect2(mx-52,my-62,104,70),cream)
 	for i in range(-2,3):

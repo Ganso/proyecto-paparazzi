@@ -374,6 +374,21 @@ func run() -> void:
 	await create_timer(.6).timeout
 	check(game.eye_ready() and game.camera.fov < 30.0 and absf(angle_difference(deg_to_rad(aim),deg_to_rad(game.angle))) < .05,"Back at the eye with the telephoto, looking the same way (%s, fov %.0f, %.1f→%.1f)" % [game.eye_ready(),game.camera.fov,aim,game.angle])
 	check(not game.target.runner,"The subject of a level that is not about runners never runs")
+	# References while searching (docs/futuro/22 §7): the subject in miniature, framing guides,
+	# movement said in shutter speeds.
+	game.start_level(4)
+	game.begin_assignment()
+	await frames(3)
+	check(is_instance_valid(game.portrait) and game.portrait.visible and game.portrait_of == game.target,"The subject turns in miniature at the top left")
+	check(game.finder.golden,"A golden-section level draws its guides")
+	game.start_level(0)
+	game.begin_assignment()
+	check(not game.finder.golden and game.finder.thirds,"Other levels draw the thirds")
+	var Photo = preload("res://scripts/photography.gd")
+	check(Photo.needed_shutter(2.8,70.0,8.0) == 1000 and Photo.needed_shutter(2.8,135.0,8.0) == -1 and Photo.needed_shutter(0.7,50.0,5.0) > 0,"The shutter needed to freeze a subject")
+	var Conditions = preload("res://scripts/conditions.gd")
+	var frozen = Conditions.check({"f":70.0,"n":2.8,"t":1.0/250,"s":8.0,"d":8.0,"v":2.8,"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5)},{"congelado":true})[0]
+	check(not frozen.ok and frozen.text.contains("1/1000") and frozen.text.contains("1/250"),"Freezing explained in shutter speeds (%s)" % frozen.text)
 	game.show_arcade()
 	await process_frame
 	check(game.mode == "ARCADE","The level select screen opens")

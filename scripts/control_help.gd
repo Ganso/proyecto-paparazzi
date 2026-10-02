@@ -119,6 +119,7 @@ func _draw() -> void:
 	var w = 360.0
 	var h = 34.0+list.size()*line
 	var pos = Vector2(r.position.x+10,r.position.y+(178 if classic else 10))
+	if is_instance_valid(main.portrait) and main.portrait.visible: pos.y = main.portrait.position.y+main.portrait.size.y+10   # under the subject
 	draw_style_box(box(Color(.03,.05,.08,.62)),Rect2(pos,Vector2(w,h)))
 	draw_string(bold,pos+Vector2(12,21),Texts.get_text("ayuda_titulo") % main.equipment.CAMERAS[main.equipment.body],HORIZONTAL_ALIGNMENT_LEFT,w-24,13,Color(1,1,1,.92))
 	var y = pos.y+30
