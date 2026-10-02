@@ -89,6 +89,20 @@ func run() -> void:
 	game.begin_assignment()
 	check(game.control_help.exit_button.visible or true,"The exit button exists on screen")
 	check(game.stick(.1) == 0.0 and absf(game.stick(1.0)-1.0) < .001 and game.stick(.5) < .1,"Sticks: dead zone and cubic response")
+	# Vibration: asked for only with the gamepad in use and the option on.
+	Glyphs.device = "teclado"
+	var rumbles = game.rumbles
+	game.rumble(.2,.5,.05)
+	check(game.rumbles == rumbles,"No vibration while playing with keyboard and mouse")
+	Glyphs.device = "mando"
+	game.set_vibration(true)
+	rumbles = game.rumbles
+	game.ratchet_sound(2)
+	check(game.rumbles == rumbles+1,"The TLR crank rattles the gamepad")
+	game.set_vibration(false)
+	game.rumble(.2,.5,.05)
+	check(game.rumbles == rumbles+1 and not game.vibration,"Options can turn the vibration off")
+	game.set_vibration(true)
 	Glyphs.device = "teclado"
 	print("INPUT TESTS: %d checks, %d failures" % [checks,failures])
 	if saved_ui_cfg != "":

@@ -2060,10 +2060,28 @@ func set_interface(value: String) -> void:
 	update_dof_pass()
 	refresh()
 
+# Gamepad vibration (docs/futuro/22 §4): a tap on the shutter, a tick when the autofocus locks and
+# a rattle with the TLR crank. Only while the gamepad is the device in use; Options turns it off.
+var vibration = true
+var rumbles = 0          # how many were asked for (tests: no pad is plugged in there)
+func rumble(weak: float, strong: float, seconds: float) -> void:
+	if not vibration or not Glyphs.pad(): return
+	rumbles += 1
+	for id in Input.get_connected_joypads(): Input.start_joy_vibration(id,weak,strong,seconds)
+
+func set_vibration(value: bool) -> void:
+	vibration = value
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","vibracion",value)
+	config.save("user://interfaz.cfg")
+	if value: rumble(.3,.6,.12)
+
 # Interface theme (docs/futuro/20): light by default, dark on request; --ui=claro|oscuro overrides.
 func load_theme() -> void:
 	var config = ConfigFile.new()
 	var dark = config.load("user://interfaz.cfg") == OK and str(config.get_value("interfaz","tema","claro")) == "oscuro"
+	vibration = bool(config.get_value("interfaz","vibracion",true))
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--ui="): dark = arg == "--ui=oscuro"
 	UiStyle.set_dark(dark)
@@ -2148,6 +2166,7 @@ func autofocus() -> void:
 		refresh()
 		# The scripted camera of the evidence video refocuses twice a second: silently.
 		if not demo.has("af"): play_tone(1100,.085)
+		rumble(.3,0.0,.04)
 		notify_player(Texts.get_text("af_confirmado_2f_m") % focus_distance)
 	else:
 		play_tone(230,.12)
@@ -2168,6 +2187,7 @@ func wind_film() -> void:
 	refresh()
 
 func ratchet_sound(clicks: int) -> void:
+	rumble(.35,.15,.035*clicks)
 	var rate = 22050
 	var data = PackedByteArray()
 	var rng = RandomNumberGenerator.new()
@@ -2426,6 +2446,7 @@ func take_photo() -> void:
 	update_meter()
 	if equipment.auto_exposure: auto_expose()
 	shooting = true
+	rumble(.2,.75,.09)
 	pan_velocity = 0
 	if dof_allowed() and not dof_blur: set_dof_blur(true)   # rangefinder: blur only in the photo
 	# Freeze first, then wait for physics and the render to represent precisely this state.

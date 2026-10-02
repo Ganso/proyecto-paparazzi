@@ -52,3 +52,7 @@ Doce pasos en el parque clásico que se comprueban solos y avanzan con «✓ ¡B
 ## 6. Pendiente
 
 Migración completa a acciones de `InputMap` y vibración ([14](14_SOPORTE_GAMEPAD.md)), recorrido con cruceta de las pantallas de equipo y gráficos con desplegables, y probar con un mando físico.
+
+## Vibración del mando (02-10-2026)
+
+`main.gd::rumble()` hace vibrar el mando solo mientras es el dispositivo en uso: un golpe seco al disparar, un toque al confirmar el autofoco y un traqueteo con la manivela de la TLR. Se activa o desactiva en **Opciones → Vibración del mando** (`set_vibration()`, clave `vibracion` de `user://interfaz.cfg`, activada por defecto). Comprobado en `tests/test_input.gd` con el contador `rumbles` (en las pruebas no hay mando conectado). **Pendiente de probar con un mando físico**, como el resto del soporte de mando.
