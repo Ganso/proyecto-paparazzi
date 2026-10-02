@@ -2328,7 +2328,7 @@ func ray_to(point: Vector3) -> Dictionary:
 
 func autofocus() -> void:
 	if mode != "SEARCH" or equipment.focus_mode == "MF": return
-	if equipment.focus_mode == "AF continuo":
+	if continuous_now():
 		# The shot itself: the predicted distance, at once and without the beep of a single AF.
 		var wanted = continuous_distance()
 		finder.flash = .15
@@ -2371,11 +2371,32 @@ func continuous_distance() -> float:
 		if is_instance_valid(person) and "actual_velocity" in person: where += person.actual_velocity*SHUTTER_LAG
 	return maxf(.8,camera.global_position.distance_to(where))
 
+# AF-A (§4.3): continuous only while the person under the active point moves faster than
+# AF_A_SPEED; with someone still (or scenery) it behaves as single AF. A double beep tells when it
+# starts following.
+const AF_A_SPEED = .3
+var af_a_following = false
+func subject_moving() -> bool:
+	var hit = point_hit(finder.points()[finder.active])
+	if hit.is_empty() or not hit.collider.has_meta("person"): return false
+	var person = hit.collider.get_meta("person")
+	return is_instance_valid(person) and "actual_velocity" in person and person.actual_velocity.length() > AF_A_SPEED
+
+func continuous_now() -> bool:
+	return equipment.focus_mode == "AF continuo" or (equipment.focus_mode == "AF automático" and af_a_following)
+
 func update_continuous_af(dt: float) -> void:
-	if equipment.focus_mode != "AF continuo" or focus_locked or mode != "SEARCH" or shooting or not eye_ready(): return
+	if not equipment.focus_mode in ["AF continuo","AF automático"] or focus_locked or mode != "SEARCH" or shooting or not eye_ready(): return
 	af_c_timer -= dt
 	if af_c_timer > 0.0: return
 	af_c_timer = AF_C_INTERVAL
+	if equipment.focus_mode == "AF automático":
+		var moving = subject_moving()
+		if moving and not af_a_following and demo.is_empty():
+			play_tone(1320,.04)
+			get_tree().create_timer(.09).timeout.connect(func(): play_tone(1320,.04))
+		af_a_following = moving
+		if not moving: return
 	var wanted = continuous_distance()
 	if wanted < 0.0: return
 	# The lens takes a moment to get there: most of the way on each step.

@@ -158,5 +158,19 @@ func run() -> void:
 	await follow.call(walker,.6)
 	check(game.focus_distance == held,"Single AF does not refocus by itself")
 	check(game.SHUTTER_LAG > 0.0 and game.AF_C_INTERVAL < .2,"AF-C refocuses several times a second and allows for the shutter lag")
+	# --- AF-A (§4.3): continuous only while the person under the point moves ---
+	check("AF automático" in game.equipment.focus_modes(),"The SLR offers automatic AF")
+	game.equipment.focus_mode = "AF automático"
+	game.af_a_following = false
+	game.focus_distance = 2.0
+	await follow.call(walker,1.0)
+	check(game.af_a_following and absf(game.focus_distance-game.camera.global_position.distance_to(walker.control_points()[1])) < .6,"AF-A follows a person who is walking")
+	var still = game.people.filter(func(p): return p.visible and p.state in ["DETENIDO","SENTADO"])
+	if not still.is_empty():
+		game.focus_distance = 2.0
+		await follow.call(still[0],1.0)
+		check(not game.af_a_following and game.focus_distance == 2.0,"…and leaves the focus alone with someone standing or sitting (single AF)")
+		game.autofocus()
+		check(absf(game.focus_distance-2.0) > .3,"…where focusing is on demand, as in single AF")
 	print("AUTOMATISMS TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

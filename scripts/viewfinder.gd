@@ -60,7 +60,7 @@ func _draw() -> void:
 	var pts = points()
 	for i in pts.size():
 		if af_mode == "MF": continue
-		if af_mode in ["AF puntual","AF continuo"] and i != active: continue
+		if af_mode in ["AF puntual","AF continuo","AF automático"] and i != active: continue
 		var color = green if i == active else Color(.12,.18,.15,.7)
 		if i == active and flash > 0: color = Color.WHITE if success else Color("ed8465")
 		var rect = Rect2(pts[i]-Vector2(12,12),Vector2(24,24))
