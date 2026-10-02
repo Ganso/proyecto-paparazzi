@@ -76,4 +76,17 @@ Demostración interactiva en bucles GIF animados cuantizados con paleta de color
 
 ---
 
+## Novedades del 02-10-2026 (capturas sueltas, hechas a mano)
+
+| Qué | Captura | Dónde está descrito |
+|---|---|---|
+| **Cielo propio**: cirros de día, resplandor de poniente, hora azul y noche con luna y estrellas | ![Cielo](cielo/cielo_cuatro_luces.jpg) | [ESCENARIO_Y_RENDIMIENTO.md §3.3](../ESCENARIO_Y_RENDIMIENTO.md) |
+| **Mobiliario de la pradera**: mesas de pícnic, papelera y fuente de beber | ![Pradera](estados/pradera_mobiliario.jpg) | [ESCENARIO_Y_RENDIMIENTO.md §2.2](../ESCENARIO_Y_RENDIMIENTO.md) |
+| **Dos amigos en la mesa de pícnic** | ![Mesa](estados/pradera_mesa_picnic.jpg) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
+| **Perros**: el de siempre y el pequeño con manchas | ![Perros](estados/perros.png) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
+| **Pantalla de carga e icono** | ![Carga](interfaz/00_carga.png) | [futuro/20](../futuro/20_INTERFAZ_CLARA.md) |
+| **Opciones**, con la vibración del mando | ![Opciones](interfaz/12_opciones.png) | [futuro/22](../futuro/22_MENU_TUTORIAL_MANDO.md) |
+
+---
+
 *Galería compilada automáticamente por `tools/capture_evidence.gd` y `tools/build_sheets.py`.*
