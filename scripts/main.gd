@@ -288,6 +288,7 @@ func _ready() -> void:
 	academy = preload("res://scripts/academy.gd").new(self)
 	ui.add_child(academy)
 	preload("res://scripts/academy.gd").register_actions()
+	register_pad_ui()
 	if not InputMap.has_action("camara_controles"):
 		InputMap.add_action("camara_controles")
 		var tab = InputEventKey.new()
@@ -732,7 +733,9 @@ func parameter_click(parameter: String) -> void:
 
 func _input(event: InputEvent) -> void:
 	# Help texts follow the last device used (keyboard and mouse, or gamepad).
-	if Glyphs.note(event): refresh_device()
+	if Glyphs.note(event):
+		log_device(event)
+		refresh_device()
 	# (The HUD bars no longer unfold when the pointer nears the edges: only Tab shows them.)
 	# Releases can be consumed by an overlaid button after a scene drag.
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
@@ -848,7 +851,18 @@ func create_modal() -> Control:
 	glass_material.set_shader_parameter("tint",UiStyle.GLASS_TINT)
 	glass.material = glass_material
 	modal.add_child(glass)
+	# Whatever the screen, the gamepad needs a button with the focus to start from.
+	call_deferred("ensure_modal_focus")
 	return modal
+
+func ensure_modal_focus() -> void:
+	if not is_instance_valid(modal): return
+	var owner_now = get_viewport().gui_get_focus_owner()
+	if owner_now != null and modal.is_ancestor_of(owner_now): return
+	for b in modal.find_children("*","Button",true,false):
+		if b.visible and not b.disabled and b.focus_mode == Control.FOCUS_ALL and b.is_visible_in_tree():
+			b.grab_focus()
+			return
 
 # Main menu (scripts/main_menu.gd, docs/futuro/20): the live park behind frosted glass.
 func intro() -> void:
@@ -1080,7 +1094,8 @@ func show_album(page = 0) -> void:
 		var card = Button.new()
 		card.position = cell.position
 		card.size = cell.size
-		card.focus_mode = Control.FOCUS_NONE
+		card.focus_mode = Control.FOCUS_ALL
+		if k == 0: card.call_deferred("grab_focus")
 		card.pressed.connect(func(): show_album_photo(index))
 		root.add_child(card)
 		var image = Album.load_image(photo.file)
@@ -1213,6 +1228,7 @@ func track_camera_turn(dt: float) -> void:
 
 func _process(dt: float) -> void:
 	total_time += dt
+	poll_pad()
 	if not shooting: track_camera_turn(dt)
 	update_continuous_af(dt)
 	update_fps_counter(dt)
@@ -2035,6 +2051,10 @@ func update_photographer(dt: float) -> void:
 		var pad = Vector2(Input.get_joy_axis(0,JOY_AXIS_LEFT_X),Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
 		if pad.length() > .2: input += pad
 		var look = Vector2(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X),Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
+		# Walking with the gamepad: once a second, the sticks and the view, in user://dispositivo.log
+		# (to see on the player's machine whether the left stick turns the view).
+		if pad.length() > .2 and Engine.get_process_frames()%60 == 0:
+			log_line("paseo · seta izq (%.2f, %.2f) · der (%.2f, %.2f) · vista %.1f° / %.1f°" % [pad.x,pad.y,look.x,look.y,angle,pitch])
 		if look.length() > .2:
 			angle = fposmod(angle+look.x*dt*110,360)
 			pitch = clampf(pitch-look.y*dt*80,-70,70)
@@ -2683,6 +2703,44 @@ func hud_clear_top() -> float:
 
 # ---- Gamepad (docs/futuro/14, docs/futuro/22 §3) ----
 # The device changed: every help text on screen is redone for it (Texts fills {controls}).
+# The gamepad buttons the interface itself needs (Godot's defaults have none for accepting): A
+# presses the focused button of a screen and B goes back (handled with Escape in _unhandled_input()).
+static func register_pad_ui() -> void:
+	var accept = InputEventJoypadButton.new()
+	accept.button_index = JOY_BUTTON_A
+	if not InputMap.action_get_events("ui_accept").any(func(e): return e is InputEventJoypadButton and e.button_index == JOY_BUTTON_A):
+		InputMap.action_add_event("ui_accept",accept)
+	var back = InputEventJoypadButton.new()
+	back.button_index = JOY_BUTTON_B
+	if not InputMap.action_get_events("ui_cancel").any(func(e): return e is InputEventJoypadButton and e.button_index == JOY_BUTTON_B):
+		InputMap.action_add_event("ui_cancel",back)
+
+# The gamepad is also noticed by polling, every frame: a screen that takes an event before this
+# node sees it must not leave the help showing the keys.
+func poll_pad() -> void:
+	if Glyphs.pad() or Input.get_connected_joypads().is_empty() or not pad_polling: return
+	var used = false
+	for button in [JOY_BUTTON_A,JOY_BUTTON_B,JOY_BUTTON_X,JOY_BUTTON_Y,JOY_BUTTON_LEFT_SHOULDER,JOY_BUTTON_RIGHT_SHOULDER,JOY_BUTTON_START,JOY_BUTTON_BACK,JOY_BUTTON_DPAD_UP,JOY_BUTTON_DPAD_DOWN,JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT,JOY_BUTTON_LEFT_STICK,JOY_BUTTON_RIGHT_STICK]:
+		if Input.is_joy_button_pressed(0,button): used = true
+	for axis in [JOY_AXIS_LEFT_X,JOY_AXIS_LEFT_Y,JOY_AXIS_RIGHT_X,JOY_AXIS_RIGHT_Y,JOY_AXIS_TRIGGER_LEFT,JOY_AXIS_TRIGGER_RIGHT]:
+		if absf(Input.get_joy_axis(0,axis)) > .5: used = true
+	if used:
+		Glyphs.device = "mando"
+		log_device(null)
+		refresh_device()
+
+# Last changes of device, with what caused them, in user://dispositivo.log: to see what switches
+# the help back to the keys on a machine where it happens (the newest 120 lines are kept).
+var device_log: PackedStringArray = []
+func log_device(event) -> void:
+	log_line("%s · %s" % [Glyphs.device,"sondeo del mando" if event == null else event.as_text()])
+
+func log_line(text: String) -> void:
+	device_log.append("%s · %s" % [Time.get_time_string_from_system(),text])
+	if device_log.size() > 120: device_log = device_log.slice(device_log.size()-120)
+	var file = FileAccess.open("user://dispositivo.log",FileAccess.WRITE)
+	if file: file.store_string("\n".join(device_log)+"\n")
+
 func refresh_device() -> void:
 	if is_instance_valid(walk_hint): walk_hint.set_rich(Texts.get_rich("buscar_ayuda" if not crowd else "paseo_ayuda"))
 	refresh()
@@ -3101,6 +3159,7 @@ func show_arcade() -> void:
 	label(root,Texts.get_text("arcade_subtitulo"),Rect2(65,82,1100,26),16,Color("b5c3ad"))
 	if Arcade.all_open: label(root,Texts.get_text("arcade_trampa"),Rect2(65,652,700,26),15,Color("f0c75e"))
 	var progress = Arcade.load_progress()
+	var focus_set = false
 	for block in Arcade.BLOCKS.size():
 		var y = 116+block*103
 		label(root,Texts.get_text(Arcade.BLOCKS[block]),Rect2(65,y,1100,22),13,Color("b8d78c"))
@@ -3110,10 +3169,15 @@ func show_arcade() -> void:
 			var card = Button.new()
 			card.position = Vector2(65+k*232,y+22)
 			card.size = Vector2(220,74)
-			card.focus_mode = Control.FOCUS_NONE
+			# Reachable with the gamepad (D-pad / stick to move, A to start); the focus starts on the
+			# first level still to pass.
+			card.focus_mode = Control.FOCUS_ALL
 			card.disabled = not open
 			card.pressed.connect(func(): start_level(n))
 			root.add_child(card)
+			if open and not progress.has(n) and not focus_set:
+				card.call_deferred("grab_focus")
+				focus_set = true
 			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,5,190,16),11,Color("b8d78c"))
 			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,20,196,26),18)
 			var stars = int(progress[n].stars) if progress.has(n) else 0

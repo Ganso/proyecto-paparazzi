@@ -145,6 +145,36 @@ func run() -> void:
 		check(Glyphs.CONTROLS.bloqueo[1].contains("RT"),"The help names the half press as the lock on the gamepad")
 	else:
 		check(false,"The trigger test needs the camera at the eye in SEARCH (mode %s)" % game.mode)
+	# The gamepad works the screens: A presses the focused button (Godot's own ui_accept has no
+	# gamepad button), B goes back.
+	var accept_pad = InputEventJoypadButton.new()
+	accept_pad.button_index = JOY_BUTTON_A
+	accept_pad.pressed = true
+	check(accept_pad.is_action_pressed("ui_accept"),"A is the interface's accept button")
+	var back_pad = InputEventJoypadButton.new()
+	back_pad.button_index = JOY_BUTTON_B
+	back_pad.pressed = true
+	check(back_pad.is_action_pressed("ui_cancel"),"B is the interface's back button")
+	game.show_arcade()
+	await process_frame
+	var pressed_card = false
+	var card: Button = game.modal.find_children("*","Button",true,false).filter(func(b): return not b.disabled and b.focus_mode == Control.FOCUS_ALL)[0] if game.modal.find_children("*","Button",true,false).any(func(b): return not b.disabled and b.focus_mode == Control.FOCUS_ALL) else null
+	check(card != null,"The arcade screen has buttons the gamepad can reach")
+	if card != null:
+		card.grab_focus()
+		await process_frame
+		var focused = root.gui_get_focus_owner()
+		var focus_text = (focused.get_class()+" «"+str(focused.get("text"))+"»") if focused != null else "nada"
+		if focused is BaseButton: focused.pressed.connect(func(): pressed_card = true)
+		root.push_input(accept_pad)
+		var accept_up = InputEventJoypadButton.new()
+		accept_up.button_index = JOY_BUTTON_A
+		accept_up.pressed = false
+		root.push_input(accept_up)
+		await process_frame
+		check(pressed_card or game.mode == "BRIEFING","A presses the focused button of a screen: a level card starts the level (focus %s, now %s)" % [focus_text,game.mode])
+	game.intro()
+	await process_frame
 	# A nudge of the mouse does not take the help away from the gamepad; really moving it does.
 	Glyphs.device = "mando"
 	Glyphs.mouse_travel = 0.0
