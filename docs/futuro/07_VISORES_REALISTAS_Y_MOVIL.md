@@ -132,3 +132,15 @@ Decisiones del usuario: **interfaz de la cámara** (los datos van dentro del vis
 - `tests/test_finders.gd`: por cuerpo, la imagen cabe y es 16:9, el centro del visor es el centro de la foto, los puntos de enfoque están dentro, las barras se pliegan y Tab las muestra; el paralaje crece de cerca y casi desaparece de lejos; el visor de la telemétrica no desenfoca pero la foto sí; **la misma escena da la misma nota con la interfaz clásica y con la de cámara**; un disparo real por cuerpo; los sonidos existen; la interfaz clásica es la de siempre.
 - Capturas `13_visor_reflex` a `16_visor_telemetrica_noche` en `docs/evidencias/ultra/` (`tools/capture_ultra.sh`).
 
+
+## 6. Pendiente: aberraciones cromáticas en visores y resultados (anotado el 03-10-2026)
+
+Petición del usuario: que las aberraciones cromáticas se noten en los visores y en las fotos reveladas.
+
+Punto de partida: ya existe una aberración **lateral** muy leve, igual en el visor (`shaders/viewfinder_lens.gdshader`) y en el revelado (`shaders/develop.gdshader`), con la misma intensidad (`main.gd::lens_strengths()`: de 0,14 a 50 mm o más hasta 0,38 a 24 mm; desplazamiento de `r² · 0,015 · intensidad` de la imagen, casi invisible) y solo depende de la focal. Con `lens` desactivado (perfil Bajo) no se aplica.
+
+Por decidir e implementar:
+- Cuánto debe notarse y si depende del **objetivo** (zooms y angulares baratos más que los fijos), del **diafragma** (más a plena apertura) y del cuerpo (la compacta más que la réflex).
+- Aberración **longitudinal** (halos magenta y verde delante y detrás del plano de foco), que hoy no existe y encaja con el pase de profundidad de campo.
+- Que el visor de cada cámara la muestre con su carácter (la telemétrica mira por una ventana aparte: no debería enseñar la del objetivo) y que el resultado la conserve.
+- No debe alterar la puntuación: es solo imagen, como el viñeteo.
