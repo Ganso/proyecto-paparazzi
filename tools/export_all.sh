@@ -79,7 +79,7 @@ want windows && export_desktop windows "Windows" "build/windows/ProyectoPaparazz
 want linux && export_desktop linux "Linux" "build/linux/ProyectoPaparazzi.x86_64"
 want macos && export_desktop macos "macOS" "build/macos/ProyectoPaparazzi.zip"
 if want android; then
-	if "$SCRIPT_DIR/export_android.sh" > "$PROJECT_DIR/build/export_android.log" 2>&1; then ok+=("android: build/paparazzi-debug.apk ($(du -h "$PROJECT_DIR/build/paparazzi-debug.apk" | cut -f1))")
+	if GODOT_BIN="$GODOT" JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/default-java}" bash "$SCRIPT_DIR/export_android.sh" > "$PROJECT_DIR/build/export_android.log" 2>&1; then ok+=("android: build/paparazzi-debug.apk ($(du -h "$PROJECT_DIR/build/paparazzi-debug.apk" | cut -f1))")
 	else fail+=("android: $(grep -m1 ERROR "$PROJECT_DIR/build/export_android.log" || echo 'ver build/export_android.log')"); fi
 fi
 echo
