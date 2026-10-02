@@ -396,19 +396,23 @@ func animate(delta: float, traveled_distance = -1.0) -> void:
 	update_props()
 	update_skirt_springs()
 
-# Seated, the skirt chains (children of the thighs) would stay stiffly along the thighs: they relax
-# and weigh more, so the cloth drapes over the knees and hangs at the sides (docs/futuro/19).
-var skirt_seated = -1.0
+# Seated, the skirt follows the thighs as far as the knees and hangs down from there. Its chains
+# are children of the thighs, so they already lie along them; left alone they stuck out stiffly
+# past the knees, and loosened (an earlier attempt) they dropped straight from the hips, behind
+# the legs. Now their last third is bent down by the amount of sitting: the springs keep the pose
+# as their target, so the cloth still sways a little (docs/futuro/19).
+const SKIRT_BEND = [0.0,0.0,-1.25,-.3,0.0]     # radians per joint of a chain, fully seated
 func update_skirt_springs() -> void:
-	if chains.is_empty() or is_equal_approx(seat,skirt_seated): return
+	if chains.is_empty() or (seat <= 0.0 and skirt_seated <= 0.0): return
 	skirt_seated = seat
-	var sim = rig.get_node_or_null("Muelles")
-	if sim == null: return
 	var e = smoothstep(0,1,seat)
-	for i in chains.size():
-		if not str(chains[i].name).begins_with("falda"): continue
-		sim.set_stiffness(i,lerpf(chains[i].get("stiffness",1.0),.25,e))
-		sim.set_gravity(i,lerpf(chains[i].get("gravity",0.0),2.5,e))
+	for chain in chains:
+		if not str(chain.name).begins_with("falda"): continue
+		for k in mini(chain.points.size(),SKIRT_BEND.size()):
+			if SKIRT_BEND[k] == 0.0: continue
+			var id = bones.get("%s.%d" % [chain.name,k],-1)
+			if id >= 0: rig.set_bone_pose_rotation(id,Quaternion(Vector3.RIGHT,SKIRT_BEND[k]*e))
+var skirt_seated = -1.0
 
 # ---- Hand-held props (docs/futuro/19_VIDA_EN_EL_PARQUE.md) ----
 # Small objects shown while an activity is on: built on first use from primitives, attached to
