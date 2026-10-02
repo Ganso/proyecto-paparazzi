@@ -218,7 +218,8 @@ func run() -> void:
 	for i in 5: await process_frame
 	check(academy.phase == "examen" and game.park.forced_cover == 1.0,"Exam 1 clouds the sky over")
 	game.update_meter()
-	check(game.finder.delta_ev < -2.0,"…and the exposure the tutor left is now far under (%.1f EV)" % game.finder.delta_ev)
+	game.refresh()
+	check(game.finder.delta_ev < -2.4 and game.finder.delta_ev > -4.2,"…and the exposure the tutor left is now about 3 EV under, not more (%.1f EV)" % game.finder.delta_ev)
 	await game.take_photo()
 	for i in 3: await process_frame
 	check(game.mode == "RESULT" and not academy.exam_last.passed and academy.exam_attempts == 1 and not academy.done(1,"examen"),"Shooting without correcting fails the exam, with its report")

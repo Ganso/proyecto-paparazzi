@@ -754,12 +754,11 @@ func start_exam() -> void:
 			# Where the lens points may be in the shade already and lose little: the settings are
 			# left about 3 EV short in any case (faster shutter, then a smaller aperture).
 			var guard = 0
-			while main.finder.delta_ev > -2.6 and guard < 12:
+			while exam_needle() > -2.6 and guard < 12:
 				guard += 1
 				if main.t_index > 0: main.t_index -= 1
 				elif main.n_index < main.apertures().size()-1: main.n_index += 1
 				else: break
-				main.update_meter()
 		2:
 			# A second person a little further away: both have to be sharp in the same photo.
 			second = stand_person(1,SETUP[2].angle+5.0,EXAM_SECOND_RADIUS,subject)
@@ -770,6 +769,11 @@ func start_exam() -> void:
 	set_scene_pause(lesson != 3)
 	main.refresh()
 	update_panel()
+
+# The needle for the current settings (negative: underexposed), computed here: the finder's own
+# value is only refreshed with the HUD.
+func exam_needle() -> float:
+	return -Photo.ev(main.apertures()[main.n_index],1.0/Photo.DENOMINATORS[main.t_index],Photo.ISOS[main.iso_index],main.measured_ev)
 
 const EXAM_SECOND_RADIUS = 4.4
 
@@ -805,7 +809,7 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 	var delta: float = x.get("delta",0.0)
 	var denominator = roundi(1.0/e.t)
 	var exposure_limit = .5 if n == 1 else 1.0
-	lines.append([absf(delta) <= exposure_limit,Texts.get_text("academia_ex_expo_ok" if absf(delta) <= exposure_limit else "academia_ex_expo_mal") % ("%+.1f" % delta)])
+	lines.append([absf(delta) <= exposure_limit,Texts.get_text("academia_ex_expo_ok" if absf(delta) <= exposure_limit else "academia_ex_expo_mal") % ("%+.1f" % -delta)])   # as the needle reads: negative is underexposed
 	# Hand-held rule: no slower than 1/focal.
 	var steady = e.t*e.f <= 1.0+.0001
 	var safe: int = Photo.DENOMINATORS.max()

@@ -36,6 +36,6 @@ func _initialize() -> void:
 	for key in ["application/boot_splash/image","application/config/icon"]:
 		var path: String = ProjectSettings.get_setting(key,"")
 		check(path.begins_with("res://assets/marca/") and FileAccess.file_exists(path),"%s points at a file of assets/marca" % key)
-		check(FileAccess.get_file_as_string(path+".import").contains("keep"),"%s is shipped as it is (importer keep)" % key)
+		check(FileAccess.get_file_as_string(path+".import").contains("importer=\"texture\""),"%s is a normal texture (the exporter adds it itself: with importer keep it went twice into the APK)" % key)
 	print("EXPORT TESTS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

@@ -663,5 +663,6 @@
   "bloqueo_activo": "puesto",
   "bloqueo_puesto": "Foco (%s) y exposición (EV %.1f) bloqueados: reencuadra y dispara.",
   "bloqueo_suelto": "Bloqueo suelto.",
-  "arcade_trampa": "Trampa activa: todos los niveles abiertos en esta partida."
+  "arcade_trampa": "Trampa activa: todos los niveles abiertos en esta partida.",
+  "cond_barrido_corto_focal": "el fondo apenas se arrastra (%.1f mm a 1/%d s): acércate con el zoom o espera a que pase más cerca"
 }

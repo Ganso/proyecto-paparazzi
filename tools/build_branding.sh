@@ -35,5 +35,7 @@ convert -size 1280x720 gradient:'#155a8c'-'#2f9be8' \
 convert -size 256x256 xc:none -fill '#2f9be8' -draw "roundrectangle 8,8 247,247 52,52" \
 	"$TMP/a176.png" -geometry +40+40 -composite -strip "$OUT/icono.png"
 rm -r "$TMP"
-for f in carga icono; do printf '[remap]\n\nimporter="keep"\n' > "$OUT/$f.png.import"; done
+# Las dos se importan como texturas normales (sus .import están versionados): el exportador ya mete
+# por su cuenta el icono y la imagen de carga, y con importer="keep" entraban dos veces en el APK
+# de Android, que no se podía firmar.
 echo "BRANDING $OUT/carga.png $OUT/icono.png"

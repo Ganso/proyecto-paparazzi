@@ -97,6 +97,7 @@ var toast_time = 0.0
 var boot_frames = 0
 var screenshot_path = ""
 var advance_seconds = 0.0
+var start_screen = ""
 var ducks: Node3D
 var pigeons
 var dog
@@ -265,7 +266,11 @@ func _ready() -> void:
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
-		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose"]: demo[arg.trim_prefix("--")] = true
+		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot"]: demo[arg.trim_prefix("--")] = true
+		# Capture helpers: --shutter=30 fixes the speed of the demo shot (a pan needs a slow one),
+		# --pan-shot lets the scripted camera's own turn count as a pan, --screen= opens a screen.
+		if arg.begins_with("--shutter="): demo["shutter"] = int(arg.get_slice("=",1))
+		if arg.begins_with("--screen="): start_screen = arg.get_slice("=",1)
 		if arg.begins_with("--shoot-at="): demo["shoot-at"] = float(arg.get_slice("=",1))
 		if arg.begins_with("--debug-off="): debug_off = arg.trim_prefix("--debug-off=").split(",")
 		for key in ["angle","pitch","focal"]:
@@ -988,6 +993,11 @@ func new_assignment() -> void:
 		# Never the runner passing right in front (lane 0): one further away, to follow.
 		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO" and p.lane >= 1)
 		if runners.is_empty(): runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO")
+		# Of those, the one on the outermost path: the inner ones are held up by walkers all the
+		# time, and a runner who cannot run is no subject for freezing or panning.
+		if not runners.is_empty():
+			var outer_lane = runners.map(func(p): return p.lane).max()
+			runners = runners.filter(func(p): return p.lane == outer_lane)
 		if not runners.is_empty(): candidates = runners
 	if candidates.is_empty(): candidates = people.filter(func(p): return p.visible)
 	var all_traits = people.map(func(p): return p.traits)
@@ -995,6 +1005,10 @@ func new_assignment() -> void:
 	var predicates = casting.predicates_for(target.traits,all_traits)
 	assert(not predicates.is_empty(),Texts.get_text("el_encargo_debe_identificar_un_sujeto_unico"))
 	target.protected_target = true
+	# If the level's runner was stretching, the run goes on.
+	if runner_on_duty(target):
+		target.pending_stop = {}
+		if target.state == "DETENIDO": resume_walk(target)
 	briefing.text = Texts.get_text("busca")+", ".join(predicates)+"."
 	shots = int(level.get("shots",3))
 	# Framing guides: the golden section where the level asks for it, thirds otherwise (G hides them).
@@ -1272,6 +1286,12 @@ func _process(dt: float) -> void:
 			academy.update_panel()
 	if boot_frames == 20 and stage != "": stage_scene(stage)
 	if boot_frames == 12 and "--arcade" in OS.get_cmdline_user_args(): show_arcade()
+	if boot_frames == 12 and start_screen != "":
+		match start_screen:
+			"insignias": show_badges()
+			"album": show_album()
+			"opciones":
+				if is_instance_valid(modal) and modal.has_method("change_mode"): modal.change_mode(-1)
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
 		for p in people:
@@ -1376,7 +1396,7 @@ func update_person(p: Pedestrian, dt: float) -> void:
 			p.poi = interest
 			if p.runner and p.pending_stop.is_empty() and p.rng.randf() < .05:
 				# Runners stop now and then to stretch by the path.
-				p.pending_stop = {"activity":"estirar","time":p.rng.randf_range(6,10),"face":face_view(p)}
+				if not runner_on_duty(p): p.pending_stop = {"activity":"estirar","time":p.rng.randf_range(6,10),"face":face_view(p)}
 			elif not p.runner and not p.has_meta("staged") and p.bench_goal < 0 and p.pending_stop.is_empty() and p.rng.randf() < .12:
 				var poi_blocked = false
 				for other in people:
@@ -1446,7 +1466,12 @@ func ahead_of(p: Pedestrian, theta: float) -> float:
 
 # A stop at a point of interest: slows down smoothly first (pending_stop, see walk_step()).
 # Sometimes two people walking towards each other stop to chat.
+func runner_on_duty(p) -> bool:
+	return p.protected_target and p.runner and arcade_level >= 0 and Arcade.LEVELS[arcade_level].get("target","") == "runner"
+
 func plan_stop(p: Pedestrian) -> void:
+	# The runner of a level about freezing or panning keeps running: no stretching meanwhile.
+	if runner_on_duty(p): return
 	var time = p.rng.randf_range(6,16)
 	for q in people:
 		if q == p or q.runner or q.protected_target or q.has_meta("staged") or q.lane != p.lane or q.direction == p.direction: continue
@@ -2731,7 +2756,11 @@ func take_photo() -> void:
 	rumble(.2,.75,.09)
 	# The turn of the camera at the instant of the shot (0 in the guided demonstrations, where the
 	# tutor's own tracking must not freeze the runner it is showing blurred).
-	var shot_omega = 0.0 if (academy and academy.active and academy.phase == "demo") or not demo.is_empty() else deg_to_rad(camera_omega)
+	var shot_omega = 0.0 if (academy and academy.active and academy.phase == "demo") or (not demo.is_empty() and not demo.has("pan-shot")) else deg_to_rad(camera_omega)
+	if demo.has("pan-shot") and is_instance_valid(target):
+		# Capture helper: the scripted camera is taken to follow the subject exactly (its own
+		# smoothed tracking lags a little, which a real pan cannot afford).
+		shot_omega = target.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(target.control_points()[1]))
 	pan_velocity = 0
 	if dof_allowed() and not dof_blur: set_dof_blur(true)   # rangefinder: blur only in the photo
 	# Freeze first, then wait for physics and the render to represent precisely this state.
@@ -3302,6 +3331,11 @@ func update_demo(dt: float) -> void:
 		for f in pigeons.flocks:
 			if f.center.distance_to(view) < nearest.center.distance_to(view): nearest = f
 		pigeons.take_off(nearest,pigeons.roost(nearest),"posada")
+	if demo.has("shutter") and not demo.has("shot"):
+		var wanted_t = Photo.DENOMINATORS.find(int(demo["shutter"]))
+		if wanted_t >= 0 and t_index != wanted_t:
+			t_index = wanted_t
+			refresh()
 	if demo.has("shoot-at") and demo_time >= demo["shoot-at"] and not demo.has("shot"):
 		demo["shot"] = true
 		take_photo()

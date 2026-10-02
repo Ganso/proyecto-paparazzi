@@ -70,6 +70,7 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				if e.v < 1.5: pan_why = Texts.get_text("cond_congelado_quieto")
 				elif ok: pan_why = Texts.get_text("cond_barrido_ok") % [roundi(1.0/e.t),streak]
 				elif pan_drag > Photo.PAN_TOLERANCE: pan_why = Texts.get_text("cond_barrido_movido")
+				elif e.t >= 1.0/30-.0001: pan_why = Texts.get_text("cond_barrido_corto_focal") % [streak,roundi(1.0/e.t)]
 				else: pan_why = Texts.get_text("cond_barrido_corto") % [streak,roundi(1.0/e.t)]
 				text_value = Texts.get_text("cond_barrido") % pan_why
 			"congelado":
