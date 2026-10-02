@@ -145,3 +145,5 @@ Petición del usuario: que se noten en los visores y en las fotos reveladas.
 - Lo comprueba `tests/test_finders.gd`.
 
 Pendiente: la aberración **longitudinal** (halos magenta y verde delante y detrás del plano de foco), que encajaría en el pase de profundidad de campo.
+
+- **Ruido del LCD de la compacta (02-10-2026)**: el ruido con poca luz dibujaba una trama diagonal (el hash de seno sobre coordenadas de píxel). Ahora usa un hash sin patrón (`hash3` en `shaders/viewfinder_lens.gdshader`), sobre todo de luminancia con algo de color, renovado 24 veces por segundo. Solo es del visor: no toca la foto ni la nota.

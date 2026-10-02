@@ -26,6 +26,14 @@ float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
 
+// Noise without the diagonal weave the sine hash draws at pixel coordinates (it showed in the
+// compact's screen at night): one value per cell and per frame.
+float hash3(vec3 p) {
+	p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+	p += dot(p, p.yxz + 33.33);
+	return fract((p.x + p.y) * p.z);
+}
+
 void fragment() {
 	vec2 uv = UV - parallax;
 	if (mirror) uv.x = 1.0 - uv.x;
@@ -60,8 +68,11 @@ void fragment() {
 		color = clamp((color - 0.5) * 1.12 + 0.52, 0.0, 1.0);
 		float luma = dot(color, vec3(0.3, 0.59, 0.11));
 		color = mix(vec3(luma), color, 1.15) * vec3(0.96, 1.0, 1.06);
-		float n = hash(floor(px / 2.0) + fract(TIME * 13.0) * 91.7) - 0.5;
-		color += n * lcd_noise * 0.22;
+		// Sensor noise in dim light: mostly luminance, with a little colour, new every frame.
+		vec3 cell3 = vec3(floor(px / 2.0), floor(TIME * 24.0));
+		float n = hash3(cell3) - 0.5;
+		vec3 chroma = vec3(hash3(cell3 + 17.0), hash3(cell3 + 41.0), hash3(cell3 + 73.0)) - 0.5;
+		color += (n * 0.8 + chroma * 0.35) * lcd_noise * 0.2;
 		color *= grid;
 	}
 	if (square && abs(UV.x - 0.5) * 1.777778 > 0.5) color = vec3(0.012);
