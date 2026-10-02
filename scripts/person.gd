@@ -309,9 +309,9 @@ func segment(id: String, a: Vector3, b: Vector3, ra: float, rb: float, color: Co
 	var basis = Basis(Quaternion(Vector3.UP,(b-a).normalized()))
 	append_primitive(primitive,id,Transform3D(basis,(a+b)*.5),color)
 
-func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color, with_collision = true) -> void:
-	if build_pass == "visual" or ambient: with_collision = false
-	if with_collision and not colliders.has(id):
+# The body that carries the colliders of a bone (made on first use).
+func collider_body(id: String) -> StaticBody3D:
+	if not colliders.has(id):
 		var attachment = BoneAttachment3D.new()
 		attachment.bone_name = id
 		rig.add_child(attachment)
@@ -320,14 +320,21 @@ func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color
 		body.set_meta("label","un viandante en primer plano")
 		attachment.add_child(body)
 		colliders[id] = body
+	return colliders[id]
+
+func collision_node(shape: Shape3D) -> CollisionShape3D:
+	var collision = CollisionShape3D.new()
+	collision.shape = shape
+	return collision
+
+func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color, with_collision = true) -> void:
+	if build_pass == "visual" or ambient: with_collision = false
 	if with_collision:
-		var collision = CollisionShape3D.new()
 		var shape = ConvexPolygonShape3D.new()
 		var collision_points = PackedVector3Array()
 		for vertex in primitive.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]: collision_points.append(tr*vertex)
 		shape.points = collision_points
-		collision.shape = shape
-		colliders[id].add_child(collision)
+		collider_body(id).add_child(collision_node(shape))
 	if build_pass == "collision": return
 	var key = color.to_html()+current_zone
 	if not batches.has(key): batches[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"i":PackedInt32Array(),"b":PackedInt32Array(),"w":PackedFloat32Array(),"color":color,"u":PackedVector2Array(),"u2":PackedVector2Array()}
@@ -777,6 +784,18 @@ func build_skinned_mesh(shape: Dictionary, color: Color) -> void:
 	skinned_ranges.append([built.count,color])
 
 func build_contoured_mesh(shape: Dictionary, color: Color) -> void:
+	if build_pass == "collision":
+		# Only the hull is needed, and it is the same for everybody wearing the piece: no mesh is
+		# built (it went to the GPU just to be read back) and the convex shape is shared.
+		if shape.get("collision",true):
+			if not shape.has("_convex"):
+				var points = PackedVector3Array()
+				for v in shape.vertices: points.append(vector(v))
+				var convex = ConvexPolygonShape3D.new()
+				convex.points = points
+				shape["_convex"] = convex
+			collider_body(shape.bone).add_child(collision_node(shape["_convex"]))
+		return
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	var vertices = PackedVector3Array()
