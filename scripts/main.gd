@@ -9,6 +9,7 @@ const UiStyle = preload("res://scripts/ui_style.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
+const Graphics = preload("res://scripts/graphics.gd")
 const Develop = preload("res://shaders/develop.gdshader")
 
 var equipment = preload("res://scripts/equipment.gd").new()
@@ -290,6 +291,10 @@ func _ready() -> void:
 	await warm_up_view()
 	update_camera()
 	apply_graphics_preset(graphics_preset)
+	# The saved display (window mode and size) applies to a normal run only: never to tests,
+	# captures or scripted runs, which need their own window.
+	if get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty() and Graphics.load_display():
+		Graphics.apply_display(get_window())
 	if not equipment_state.is_empty():
 		equipment.body = equipment_state.body
 		equipment.lens_index = equipment_state.lens
@@ -2000,7 +2005,7 @@ func set_dof_blur(value: bool) -> void:
 	if is_instance_valid(dof_pass): (dof_pass.material_override as ShaderMaterial).set_shader_parameter("enabled",value)
 
 func dof_allowed() -> bool:
-	return is_instance_valid(dof_pass) and graphics_preset in ["Ultra","Alto"] and not ("dof" in debug_off)
+	return is_instance_valid(dof_pass) and bool(Graphics.settings(graphics_preset).dof) and not ("dof" in debug_off)
 
 func update_finder_shader() -> void:
 	if lens_material == null: return
@@ -3007,7 +3012,7 @@ func show_equipment() -> void:
 # instructions per pixel) are the only thing the two lowest profiles skip.
 func apply_mannequin_graphics_preset(preset: String) -> void:
 	var mat = Person.mannequin_material()
-	if mat is ShaderMaterial: mat.set_shader_parameter("textured",preset != "Bajo")
+	if mat is ShaderMaterial: mat.set_shader_parameter("textured",bool(Graphics.settings(preset).patterns))
 
 # The profile persists in override.cfg with the renderer it needs: Godot reads that file at launch,
 # before any rendering starts (docs/futuro/17 §2.1). Next to the executable when exported.
@@ -3063,22 +3068,29 @@ func apply_graphics_preset(preset: String) -> void:
 	graphics_preset = preset
 	if park: park.apply_graphics_preset(preset)
 	# FXAA smooths the mannequins' ink lines and the scene edges without the memory of MSAA (VRAM < 60 MiB).
+	var g: Dictionary = Graphics.settings(preset)
 	if is_instance_valid(viewport):
 		var forward = ParkScene.forward_plus()
-		var scale = RENDER_SCALE.get(preset,1.0) if forward else 1.0
-		# Forward+: Ultra multisamples at native resolution; lower profiles render fewer pixels and
-		# FSR 2 upscales them (it also antialiases). gl_compatibility: FXAA.
+		var scale = float(g.scale) if forward else 1.0
+		# Forward+: the profile's table decides (scripts/graphics.gd). Below 100 % an upscaler fills
+		# the window (FSR 2 also antialiases); above it the scene is supersampled. gl_compatibility: FXAA.
 		viewport.scaling_3d_scale = scale
-		viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2 if forward and scale < 1.0 else Viewport.SCALING_3D_MODE_BILINEAR
-		viewport.msaa_3d = Viewport.MSAA_4X if forward and scale >= 1.0 else Viewport.MSAA_DISABLED
-		viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if not forward and preset != "Bajo" else Viewport.SCREEN_SPACE_AA_DISABLED
-		viewport.positional_shadow_atlas_size = 4096 if forward and preset in ["Ultra","Alto"] else 2048
+		var upscaler = {"fsr1":Viewport.SCALING_3D_MODE_FSR,"bilinear":Viewport.SCALING_3D_MODE_BILINEAR}.get(g.upscaler,Viewport.SCALING_3D_MODE_FSR2)
+		viewport.scaling_3d_mode = upscaler if forward and scale < 1.0 else Viewport.SCALING_3D_MODE_BILINEAR
+		# FSR 2 is temporal and does its own antialiasing: MSAA and TAA only at native or above.
+		var temporal = forward and scale < 1.0 and upscaler == Viewport.SCALING_3D_MODE_FSR2
+		viewport.msaa_3d = {2:Viewport.MSAA_2X,4:Viewport.MSAA_4X,8:Viewport.MSAA_8X}.get(int(g.msaa),Viewport.MSAA_DISABLED) if forward and not temporal else Viewport.MSAA_DISABLED
+		viewport.use_taa = forward and bool(g.taa) and not temporal
+		if forward: viewport.screen_space_aa = {"fxaa":Viewport.SCREEN_SPACE_AA_FXAA,"smaa":Viewport.SCREEN_SPACE_AA_SMAA}.get(g.screen_aa,Viewport.SCREEN_SPACE_AA_DISABLED)
+		else: viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if preset != "Bajo" else Viewport.SCREEN_SPACE_AA_DISABLED
+		viewport.positional_shadow_atlas_size = int(g.lamp_atlas) if forward else 2048
 		viewport.use_debanding = forward
+		viewport.mesh_lod_threshold = float(g.lod)
 		update_render_resolution()
 	update_dof_pass()
 	# Bajo skips the lens character, but the camera finders (07 §1) still need the shader.
 	if is_instance_valid(viewport_container): viewport_container.material = lens_material
-	if lens_material: lens_material.set_shader_parameter("lens_off",preset == "Bajo")
+	if lens_material: lens_material.set_shader_parameter("lens_off",not bool(g.lens))
 	update_lens_effects()
 	apply_debug_off()
 	apply_mannequin_graphics_preset(preset)
@@ -3086,54 +3098,95 @@ func apply_graphics_preset(preset: String) -> void:
 	if is_instance_valid(graphics_button_intro):
 		graphics_button_intro.text = "Gráficos · " + graphics_preset
 
+func gfx_label(value: String) -> String:
+	return Texts.get_text(value.trim_prefix("@")) if value.begins_with("@") else value
+
+# Graphics screen (docs/futuro/23): the four profiles and Personalizado, where every parameter is
+# set by hand; and the display (window mode, size, vsync), common to every profile.
 func show_graphics_settings() -> void:
 	if mode != "GRAPHICS": graphics_return = mode
 	mode = "GRAPHICS"
 	var root = create_modal()
-	label(root, "Ajustes gráficos del sistema", Rect2(75, 25, 1100, 50), 38)
-	label(root, "Configuración escalonada de rendimiento y fidelidad visual (docs/futuro/02, §10)", Rect2(75, 78, 1100, 28), 15, Color("b8d78c"))
-
-	var preset_names = ["Bajo", "Medio", "Alto", "Ultra"]
-	# Same look in every profile; the lower ones only drop cost (docs/futuro/17 §2.1).
-	var preset_descs = [
-		"Bajo: mismo aspecto con el mínimo coste. Resolución interna al 50 % (FSR 2), sin iluminación global ni oclusión ambiental y con poca hierba.",
-		"Medio: resolución al 70 %, iluminación global con 3 cascadas, oclusión ambiental y sombras de 2048; sin niebla volumétrica.",
-		"Alto: resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra física y profundidad de campo en el visor.",
-		"Ultra: resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba completa y sombras de farola en las 12."
-	]
-
-	for i in 4:
-		var pname = preset_names[i]
-		var is_active = (graphics_preset == pname)
-		button(root, ("✓ " if is_active else "") + pname + (" (Activo)" if is_active else ""), Rect2(75 + i * 280, 118, 260, 52), func():
+	label(root,Texts.get_text("gfx_titulo"),Rect2(60,18,500,46),34)
+	var sub = label(root,Texts.get_text("gfx_subtitulo"),Rect2(60,62,1160,24),14,Color("b5c3ad"))
+	label(root,Texts.get_text("gfx_perfil"),Rect2(60,96,200,18),12,Color("b8d78c"))
+	var names = ["Bajo","Medio","Alto","Ultra",Graphics.CUSTOM]
+	for i in names.size():
+		var pname: String = names[i]
+		var active = graphics_preset == pname
+		button(root,("✓ " if active else "")+(Texts.get_text("gfx_personalizado") if Graphics.is_custom(pname) else pname),Rect2(60+i*232,116,220,44),func():
+			if Graphics.is_custom(pname) and not Graphics.has_saved_custom(): Graphics.copy_to_custom(graphics_preset if not Graphics.is_custom(graphics_preset) else "Ultra")
 			select_graphics_profile(pname)
 			show_graphics_settings()
-		, is_active)
-	
-	var desc_panel = panel(root, Rect2(75, 185, 1100, 420), Color(.075, .115, .085, .91))
-	label(desc_panel, "Perfil seleccionado actualmente: " + graphics_preset, Rect2(25, 18, 1050, 30), 22, Color("b8d78c"))
-	
-	var current_idx = preset_names.find(graphics_preset)
-	if current_idx < 0: current_idx = 3
-	var desc_text = preset_descs[current_idx]
-	var desc_lbl = label(desc_panel, desc_text, Rect2(25, 54, 1050, 44), 16, Color("e6ebdb"))
-	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	
-	label(desc_panel, "Desglose técnico de parámetros activos:", Rect2(25, 108, 1050, 26), 16, Color("a7c683"))
-	
-	var fx: Dictionary = park.EFFECTS.get(graphics_preset,park.EFFECTS["Ultra"])
-	var specs = [
-		"• Resolución interna: %d %% %s" % [int(RENDER_SCALE.get(graphics_preset,1.0)*100),"(nativa, MSAA 4×)" if graphics_preset == "Ultra" else "(escalada con FSR 2)"],
-		"• Iluminación global SDFGI: " + ("desactivada (luz ambiente calibrada)" if ParkScene.sdfgi_cascades(graphics_preset) == 0 else "%d cascadas" % ParkScene.sdfgi_cascades(graphics_preset)),
-		"• Oclusión ambiental: %s · Rebote en pantalla (SSIL): %s · Reflejos (SSR): %s" % ["sí" if fx.ssao else "no","sí" if fx.ssil else "no","sí" if fx.ssr else "no"],
-		"• Niebla volumétrica: %s · Penumbra física del sol: %s · Atlas de sombras: %d" % ["sí" if fx.volumetric else "no","sí" if fx.penumbra else "no",fx.atlas],
-		"• Hierba: %d %% · Profundidad de campo en el visor: %s" % [int(fx.grass*100),"sí" if graphics_preset in ["Ultra","Alto"] else "no"]
-	]
-
-	for s_idx in specs.size():
-		label(desc_panel, specs[s_idx], Rect2(25, 142 + s_idx * 36, 1050, 28), 15, Color("b7c5ad"))
-	
-	button(root, "Aceptar y volver", Rect2(880, 620, 320, 52), func():
+		,active)
+	# Display: any profile.
+	label(root,Texts.get_text("gfx_pantalla"),Rect2(60,172,200,18),12,Color("b8d78c"))
+	var d = Graphics.display
+	label(root,Texts.get_text("gfx_modo_ventana"),Rect2(60,194,60,30),14)
+	option(root,Graphics.WINDOW_MODES.map(func(c): return gfx_label(c[0])),maxi(0,Graphics.WINDOW_MODES.map(func(c): return c[1]).find(d.mode)),Rect2(120,190,300,36),func(i): set_display("mode",Graphics.WINDOW_MODES[i][1]))
+	label(root,Texts.get_text("gfx_resolucion"),Rect2(440,194,170,30),14)
+	var sizes = option(root,Graphics.WINDOW_SIZES.map(func(c): return c[0]),maxi(0,Graphics.WINDOW_SIZES.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",Graphics.WINDOW_SIZES[i][1]))
+	sizes.disabled = d.mode != "ventana"
+	label(root,Texts.get_text("gfx_vsync"),Rect2(820,194,170,30),14)
+	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,90,36),func(i): set_display("vsync",i == 0))
+	for o in [sub]: o.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var body = panel(root,Rect2(60,240,1160,372),Color(.075,.115,.085,.91))
+	if not Graphics.is_custom(graphics_preset):
+		# A profile: what it is and its values, read from the same table Personalizado edits.
+		label(body,Texts.get_text("gfx_desc_"+graphics_preset),Rect2(24,16,1110,44),16).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var g = Graphics.settings(graphics_preset)
+		var k = 0
+		for opt in Graphics.OPTIONS:
+			var text_value = gfx_label(opt[2][Graphics.choice_index(opt,g[opt[0]])][0])
+			if opt[0] == "sdfgi": text_value = gfx_label("@gfx_no") if ParkScene.sdfgi_cascades(graphics_preset) == 0 else str(ParkScene.sdfgi_cascades(graphics_preset))
+			label(body,Texts.get_text(opt[1])+": "+text_value,Rect2(24+(k%2)*560,70+(k/2)*21,540,20),13,Color("b7c5ad"))
+			k += 1
+		if RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU and ParkScene.forward_plus():
+			label(body,Texts.get_text("gfx_integrada"),Rect2(24,346,1110,20),13,UiStyle.WARN)
+	else:
+		# Personalizado: every parameter by hand, in a scrolling list of two columns.
+		label(body,Texts.get_text("gfx_copiar"),Rect2(24,12,90,28),14)
+		for i in 4:
+			var base: String = names[i]
+			button(body,base,Rect2(114+i*96,8,88,32),func():
+				Graphics.copy_to_custom(base)
+				select_graphics_profile(Graphics.CUSTOM)
+				show_graphics_settings())
+		label(body,Texts.get_text("gfx_aviso"),Rect2(520,14,620,24),13,UiStyle.WARN)
+		var scroll = ScrollContainer.new()
+		scroll.position = Vector2(16,48)
+		scroll.size = Vector2(1132,316)
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		body.add_child(scroll)
+		var list = Control.new()
+		scroll.add_child(list)
+		var g = Graphics.settings(Graphics.CUSTOM)
+		var y = 0.0
+		var column = 0
+		var group = ""
+		for opt in Graphics.OPTIONS:
+			if opt[3] != group:
+				group = opt[3]
+				if column == 1: y += 40
+				column = 0
+				label(list,Texts.get_text(group),Rect2(8,y+4,400,18),12,Color("b8d78c"))
+				y += 24
+			var x = 8+column*560
+			label(list,Texts.get_text(opt[1]),Rect2(x,y+6,340,24),14)
+			var key: String = opt[0]
+			var choices: Array = opt[2]
+			var ob = option(list,choices.map(func(c): return gfx_label(c[0])),Graphics.choice_index(opt,g[key]),Rect2(x+345,y,190,34),func(i):
+				Graphics.set_custom(key,choices[i][1])
+				apply_graphics_preset(Graphics.CUSTOM)
+				if park: park.update_lamp_shadows())
+			ob.add_theme_font_size_override("font_size",15)
+			column += 1
+			if column == 2:
+				column = 0
+				y += 40
+		if column == 1: y += 40
+		list.custom_minimum_size = Vector2(1110,y+8)
+	button(root,Texts.get_text("gfx_volver"),Rect2(900,626,320,52),func():
 		mode = graphics_return
 		match graphics_return:
 			"INTRO": intro()
@@ -3143,6 +3196,12 @@ func show_graphics_settings() -> void:
 			_: close_modal()
 		refresh()
 	, true)
+
+func set_display(key: String, value) -> void:
+	Graphics.display[key] = value
+	Graphics.save_display()
+	Graphics.apply_display(get_window())
+	show_graphics_settings.call_deferred()
 
 func set_manual_focus(distance: float) -> void:
 	if equipment.focus_mode != "MF": return

@@ -398,6 +398,40 @@ func run() -> void:
 	var Conditions = preload("res://scripts/conditions.gd")
 	var frozen = Conditions.check({"f":70.0,"n":2.8,"t":1.0/250,"s":8.0,"d":8.0,"v":2.8,"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5)},{"congelado":true})[0]
 	check(not frozen.ok and frozen.text.contains("1/1000") and frozen.text.contains("1/250"),"Freezing explained in shutter speeds (%s)" % frozen.text)
+	# Graphics (docs/futuro/23): the profiles are tables, Personalizado is edited by hand and kept.
+	var Graphics = preload("res://scripts/graphics.gd")
+	Graphics.SAVE = "user://graficos_test.cfg"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Graphics.SAVE))
+	Graphics.custom = {}
+	for name in ["Bajo","Medio","Alto","Ultra"]:
+		var table = Graphics.settings(name)
+		var fx = game.park.EFFECTS[name]
+		check(int(table.sdfgi) == fx.sdfgi and (int(table.ssao) >= 0) == fx.ssao and table.ssil == fx.ssil and table.ssr == fx.ssr and table.volumetric == fx.volumetric and int(table.shadow_atlas) == fx.atlas and is_equal_approx(table.grass,fx.grass),"Profile %s: its table matches the documented effects" % name)
+	check(Graphics.OPTIONS.all(func(o): return Graphics.PRESETS["Ultra"].has(o[0]) and o[2].size() >= 2),"Every option edits a parameter of the table")
+	Graphics.copy_to_custom("Ultra")
+	Graphics.set_custom("scale",1.5)
+	Graphics.set_custom("msaa",8)
+	Graphics.set_custom("lamp_shadows",0)
+	Graphics.custom = {}
+	check(is_equal_approx(Graphics.settings("Personalizado").scale,1.5) and int(Graphics.settings("Personalizado").msaa) == 8,"Personalizado is saved and loaded back")
+	game.apply_graphics_preset("Personalizado")
+	if game.ParkScene.forward_plus():
+		check(is_equal_approx(game.viewport.scaling_3d_scale,1.5) and game.viewport.msaa_3d == Viewport.MSAA_8X,"Personalizado goes beyond Ultra: supersampling and MSAA 8×")
+		game.park.set_time_of_day("night")
+		game.park.update_lamp_shadows()
+		check(game.park.lamps.all(func(l): return not l.shadow_enabled),"Personalizado: lamp shadows off by hand")
+		game.park.set_time_of_day("day")
+	game.apply_graphics_preset("Ultra")
+	if game.ParkScene.forward_plus(): check(is_equal_approx(game.viewport.scaling_3d_scale,1.0) and game.viewport.msaa_3d == Viewport.MSAA_4X,"Back to Ultra restores its values")
+	Graphics.display = {"mode":"ventana","size":"1600x900","vsync":true}
+	Graphics.save_display()
+	Graphics.display = {"mode":"completa","size":"1280x720","vsync":false}
+	check(Graphics.load_display() and Graphics.display.mode == "ventana" and Graphics.display.size == "1600x900","The display settings are kept")
+	game.show_graphics_settings()
+	await process_frame
+	check(game.mode == "GRAPHICS","The graphics screen opens")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Graphics.SAVE))
+	Graphics.custom = {}
 	game.show_arcade()
 	await process_frame
 	check(game.mode == "ARCADE","The level select screen opens")

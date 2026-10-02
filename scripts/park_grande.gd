@@ -354,7 +354,7 @@ func build_lamps() -> void:
 
 # Night shadows only for the lamps nearest the photographer (there are dozens).
 func update_lamp_shadows() -> void:
-	var limit = 6 if current_graphics_preset == "Ultra" else (3 if current_graphics_preset == "Alto" else 0)
+	var limit = [0,3,6][int(Graphics.settings(current_graphics_preset).lamp_shadows)]
 	var sorted = lamps.duplicate()
 	sorted.sort_custom(func(a,b): return a.global_position.distance_squared_to(view_point) < b.global_position.distance_squared_to(view_point))
 	for i in sorted.size():

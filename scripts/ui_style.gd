@@ -112,6 +112,7 @@ static func primary(b: Button) -> void:
 	b.add_theme_color_override("font_color",Color.WHITE)
 	b.add_theme_color_override("font_hover_color",Color.WHITE)
 	b.add_theme_color_override("font_pressed_color",Color.WHITE)
+	b.add_theme_color_override("font_focus_color",Color.WHITE)
 	b.add_theme_stylebox_override("normal",box(SKY,12,Color.TRANSPARENT,0,10))
 	b.add_theme_stylebox_override("hover",box(SKY.lightened(.12),12,Color.TRANSPARENT,0,14))
 	b.add_theme_stylebox_override("pressed",box(SKY.darkened(.1),12))

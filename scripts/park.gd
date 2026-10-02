@@ -1,5 +1,6 @@
 class_name Park
 extends Node3D
+const Graphics = preload("res://scripts/graphics.gd")
 const Texts = preload("res://scripts/texts.gd")
 const ParkAssets = preload("res://scripts/park_assets.gd")
 
@@ -879,7 +880,8 @@ func apply_graphics_preset(preset: String) -> void:
 func update_lamp_shadows() -> void:
 	for i in lamps.size():
 		var inner = i % 3 == 0
-		lamps[i].shadow_enabled = is_night and (current_graphics_preset == "Ultra" or (current_graphics_preset == "Alto" and inner))
+		var level = int(Graphics.settings(current_graphics_preset).lamp_shadows)
+		lamps[i].shadow_enabled = is_night and (level == 2 or (level == 1 and inner))
 
 # ---- Colour grading per time of day (Alto and Ultra, docs/futuro/17 postprocesado) ----
 # A 33³ LUT built in code: split toning (tint of shadows and highlights), a gentle S curve and
@@ -934,25 +936,37 @@ const EFFECTS = {
 # SDFGI cascades of a profile on this machine. Integrated GPUs get none: on an Intel Iris Xe SDFGI
 # floods the scene with sky light (washed-out blue park, white mannequins), so they use the
 # calibrated flat ambient of Bajo instead (NO_GI_AMBIENT).
+# Personalizado is the player's explicit choice: there SDFGI is whatever they set, on any GPU.
 static func sdfgi_cascades(preset: String) -> int:
-	if not forward_plus() or RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU: return 0
+	if not forward_plus(): return 0
+	if Graphics.is_custom(preset): return int(Graphics.settings(preset).sdfgi)
+	if RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU: return 0
 	return EFFECTS.get(preset,EFFECTS["Ultra"]).sdfgi
 
 func apply_forward_effects(preset: String) -> void:
 	var env = environment.environment
-	var fx: Dictionary = EFFECTS.get(preset,EFFECTS["Ultra"]).duplicate()
-	fx.sdfgi = sdfgi_cascades(preset)
+	# Every value comes from the profile's table (scripts/graphics.gd), Personalizado included.
+	var g: Dictionary = Graphics.settings(preset)
+	var fx = {"sdfgi":sdfgi_cascades(preset),"ssao":int(g.ssao) >= 0,"ssil":g.ssil,"ssr":g.ssr,"volumetric":g.volumetric,"penumbra":g.penumbra,"atlas":int(g.shadow_atlas),"grass":float(g.grass)}
 	var forward = forward_plus()
 	env.sdfgi_enabled = forward and fx.sdfgi > 0
 	env.ssao_enabled = forward and fx.ssao
 	env.ssil_enabled = forward and fx.ssil
 	env.ssr_enabled = forward and fx.ssr
 	env.volumetric_fog_enabled = forward and fx.volumetric
-	env.glow_enabled = forward
+	env.glow_enabled = forward and g.glow
 	sun.light_angular_distance = .6 if forward and fx.penumbra else 0.0
 	if forward: RenderingServer.directional_shadow_atlas_set_size(fx.atlas,true)
 	set_grass_fraction(fx.grass if forward else 0.0)
 	if not forward: return
+	# Quality knobs that are global in the renderer: the project's defaults unless Personalizado
+	# raises them (−1 = default), so leaving Personalizado restores them.
+	var filter = int(g.shadow_filter) if int(g.shadow_filter) >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality",2))
+	RenderingServer.directional_soft_shadow_filter_set_quality(filter)
+	RenderingServer.positional_soft_shadow_filter_set_quality(int(g.shadow_filter) if int(g.shadow_filter) >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality",2)))
+	RenderingServer.environment_set_ssao_quality(maxi(int(g.ssao),0) if int(g.ssao) >= 0 else 2,true,.5,2,50.0,300.0)
+	RenderingServer.environment_set_sdfgi_ray_count(int(g.sdfgi_rays) if int(g.sdfgi_rays) >= 0 else int(ProjectSettings.get_setting("rendering/global_illumination/sdfgi/probe_ray_count",1)))
+	env.tonemap_mode = {"agx":Environment.TONE_MAPPER_AGX,"filmic":Environment.TONE_MAPPER_FILMIC}.get(g.tonemap,Environment.TONE_MAPPER_ACES)
 	env.sdfgi_use_occlusion = true
 	env.sdfgi_cascades = maxi(fx.sdfgi,1)
 	env.sdfgi_min_cell_size = .15
@@ -995,30 +1009,17 @@ func apply_preset_values(preset: String) -> void:
 	env.fog_sky_affect = 0.3
 	# Vertex colours hold sRGB values in every profile.
 	if park_material: park_material.vertex_color_is_srgb = true
-	match preset:
-		"Bajo":
-			sun.shadow_enabled = false
-		"Medio":
-			sun.shadow_enabled = true
-			sun.shadow_blur = .8
-			sun.directional_shadow_max_distance = 30.0
-			sun.directional_shadow_blend_splits = false
-			sun.shadow_bias = 0.02
-			sun.shadow_normal_bias = .7
-		"Alto":
-			sun.shadow_enabled = true
-			sun.shadow_blur = .8
-			sun.directional_shadow_max_distance = 38.0
-			sun.directional_shadow_blend_splits = true
-			sun.shadow_bias = 0.02
-			sun.shadow_normal_bias = .7
-		"Ultra", _:
-			sun.shadow_enabled = true
-			sun.shadow_blur = .8
-			sun.directional_shadow_max_distance = 48.0
-			sun.directional_shadow_blend_splits = true
-			sun.shadow_bias = 0.015
-			sun.shadow_normal_bias = .6
+	# Sun shadows from the profile's table: reach, blending between cascades and bias (the long
+	# reach of Ultra and beyond needs the tighter bias).
+	var g: Dictionary = Graphics.settings(preset)
+	var reach = float(g.shadow_distance)
+	sun.shadow_enabled = reach > 0.0
+	if reach > 0.0:
+		sun.shadow_blur = .8
+		sun.directional_shadow_max_distance = reach
+		sun.directional_shadow_blend_splits = reach > 34.0
+		sun.shadow_bias = 0.015 if reach > 44.0 else 0.02
+		sun.shadow_normal_bias = .6 if reach > 44.0 else .7
 	# Blue hour: the light comes from the whole sky, there are no hard sun shadows.
 	if time_of_day == "blue": sun.shadow_enabled = false
 	apply_forward_effects(preset)
