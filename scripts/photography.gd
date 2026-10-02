@@ -6,6 +6,10 @@ const APERTURES = [2.8, 4.0, 5.6, 8.0, 11.0, 16.0, 22.0]
 const DENOMINATORS = [1000, 500, 250, 125, 60, 30, 15, 8]
 const ISOS = [100, 200, 400, 800, 1600, 3200]
 const C = 0.030
+# Panning: the background has to streak at least this much on the sensor (mm; about 18 px of a
+# 1280 px frame) behind a subject that really moves (m/s across the view).
+const PAN_STREAK = .5
+const PAN_SUBJECT_SPEED = .4
 
 static func ev(n: float, t: float, iso: float, scene_ev: float) -> float:
 	return log(n*n/t)/log(2.0) - log(iso/100.0)/log(2.0) - scene_ev
@@ -36,10 +40,20 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	var blur = coc(e.f, e.n, e.get("d_eyes", e.d), e.s)
 	var delta = ev(e.n, e.t, e.iso, e.scene_ev)
 	var ratio: float = e.t*e.f
-	var drag: float = e.v*e.t*e.f/e.d
+	# Panning (docs/futuro/11 §1): the camera turning at camera_omega rad/s (+ to the right) sweeps
+	# the scene across the sensor; what blurs the subject is its speed *relative* to that sweep.
+	# Without camera_omega (a still camera) this is the subject's own speed, as always.
+	var pan: float = e.get("camera_omega", 0.0)
+	var direction: float = e.get("motion_sign", 1.0)
+	if direction == 0.0: direction = 1.0
+	var lateral: float = e.v*direction-pan*e.d
+	var drag: float = absf(lateral)*e.t*e.f/e.d
+	var background: float = absf(pan)*e.t*e.f
+	var panning: bool = background >= PAN_STREAK and drag <= C and e.v >= PAN_SUBJECT_SPEED
 	var focus = clampf((5*C-blur)/(4*C), 0, 1)
 	var exposure = clampf(1-maxf(0, abs(delta)-0.5)/2.5, 0, 1)
-	var shake = clampf(1-(ratio-1)/2, 0, 1)
+	# A good pan is a deliberate slow shutter: the hand rule does not count against it.
+	var shake = 1.0 if panning else clampf(1-(ratio-1)/2, 0, 1)
 	var subject = clampf((3*C-drag)/(2*C), 0, 1)
 	var movement = minf(shake, subject)
 	var occlusion = (5.0-e.blockers.size())/5.0
@@ -59,7 +73,7 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	elif e.blockers.size() >= 4: reason = Texts.get_text("el_objetivo_esta_tapado_en_d_de_los_5_puntos_de_control") % e.blockers.size()
 	# Movement explained in shutter speeds, not millimetres: the slowest one that freezes the
 	# subject at this focal length and distance, and the one the hand needs (1/focal).
-	var subject_needed = needed_shutter(e.v, e.f, e.d)
+	var subject_needed = needed_shutter(absf(lateral), e.f, e.d)
 	var hand_needed = 1000
 	for denom in DENOMINATORS:
 		if 1.0/denom <= 1.0/e.f: hand_needed = denom
@@ -69,6 +83,8 @@ static func evaluate(e: Dictionary) -> Dictionary:
 		movement_text = Texts.get_text("mov_imposible") % roundi(e.f) if subject_needed < 0 else Texts.get_text("mov_sujeto") % [used, roundi(e.f), maxi(subject_needed, hand_needed)]
 	elif shake < 1:
 		movement_text = Texts.get_text("mov_pulso") % [used, roundi(e.f), hand_needed]
+	if panning: movement_text = Texts.get_text("mov_barrido") % [used, background]
+	elif subject < 1 and background > C and e.v < PAN_SUBJECT_SPEED: movement_text = Texts.get_text("mov_camara") % used
 	var lines = [
 		Texts.get_text("enfoque_d_coc_3f_mm_nitido_0_030_foco_a_s_sujeto_a_2f_m_s") % [roundi(focus*100), blur, Texts.get_text("infinito") if is_inf(e.s) else Texts.get_text("2f_m") % e.s, e.get("d_eyes", e.d), Texts.get_text("vuelve_a_enfocar_sobre_el_sujeto") if focus < 1 else Texts.get_text("el_sujeto_esta_dentro_de_la_nitidez_aceptable")],
 		Texts.get_text("exposicion_d_ev_2f_s_s") % [roundi(exposure*100), delta, Texts.get_text("subexpuesta") if delta > .5 else Texts.get_text("sobreexpuesta") if delta < -.5 else Texts.get_text("correcta"), Texts.get_text("abre_diafragma_sube_iso_o_alarga_el_tiempo") if delta > .5 else Texts.get_text("cierra_diafragma_baja_iso_o_acorta_el_tiempo") if delta < -.5 else Texts.get_text("dentro_de_la_tolerancia_de_medio_paso")],
@@ -76,4 +92,4 @@ static func evaluate(e: Dictionary) -> Dictionary:
 		Texts.get_text("oclusion_d_d_5_puntos_libres_s") % [roundi(occlusion*100), 5-e.blockers.size(), Texts.get_text("obstaculos")+", ".join(e.blockers)+Texts.get_text("espera_a_que_despejen_la_vista") if not e.blockers.is_empty() else Texts.get_text("cabeza_pecho_cadera_y_ambas_rodillas_visibles")],
 		Texts.get_text("encuadre_d_altura_0f_ideal_4585_s_s") % [roundi(framing*100), h*100, Texts.get_text("cabeza_o_pies_recortados") if crop < 1 else Texts.get_text("cuerpo_entero"), Texts.get_text("bonificacion_de_tercios") if thirds > 0 else Texts.get_text("situa_el_pecho_cerca_de_una_linea_de_tercios")]
 	]
-	return {"score":score, "stars":stars, "credits":reward, "rejected":rejected, "reason":reason, "focus":focus, "exposure":exposure, "movement":movement, "occlusion":occlusion, "framing":framing, "coc":blur, "delta":delta, "ratio":ratio, "drag":drag, "lines":lines}
+	return {"score":score, "stars":stars, "credits":reward, "rejected":rejected, "reason":reason, "focus":focus, "exposure":exposure, "movement":movement, "occlusion":occlusion, "framing":framing, "coc":blur, "delta":delta, "ratio":ratio, "drag":drag, "lines":lines, "panning":panning, "background":background, "drag_sign":signf(lateral)}

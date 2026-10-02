@@ -6,6 +6,13 @@ Este documento especifica la implementación técnica de dos dinámicas visuales
 
 ## 1. El Barrido Fotográfico (*Panning*)
 
+> **Estado (02-10-2026): ✅ implementado** (la mecánica, la puntuación y el revelado; falta el desafío de [05 §2.4](05_DESAFIOS_Y_MODOS_JUEGO.md) y una condición de arcade que lo pida).
+> - **Giro de la cámara en la evidencia**: `main.gd::track_camera_turn()` mide cada fotograma cuánto gira la cámara (grados por segundo, positivo hacia la derecha, suavizado; un salto de más de 6° en un fotograma no cuenta como giro) y `take_photo()` lo guarda en la evidencia como `camera_omega` (rad/s). En las demostraciones de la Academia vale 0, para que el seguimiento del tutor no congele al corredor que enseña movido.
+> - **Puntuación** (`Photography.evaluate()`): el arrastre del sujeto usa su velocidad **relativa** al barrido de la cámara, `|v·signo − ω·d|·t·f/d`; el fondo se arrastra `|ω|·t·f` mm. Es un **barrido** si el fondo se arrastra al menos 0,5 mm (`PAN_STREAK`, unos 18 px de 1.280), el sujeto queda dentro del círculo de confusión y se mueve de verdad (≥ 0,4 m/s): entonces la regla del pulso no penaliza y la línea de movimiento lo dice («Barrido: …»). Girar la cámara sobre alguien quieto emborrona la foto («Moviste la cámara…»). Sin `camera_omega` el resultado es idéntico al de antes: sigue siendo determinista.
+> - **Revelado** (`shaders/develop.gdshader`, uniformes `pan` y `subject_box`): todo el fotograma se arrastra en horizontal salvo la caja del sujeto (de la cabeza a los pies de la evidencia), que conserva su propio arrastre.
+> - **Cómo se hace**: con el ratón o con A/D siguiendo a quien se mueve y disparando sin dejar de girar. A 50 mm, A/D gira a unos 20°/s, casi lo que pide un corredor a 7 m (23°/s) a 1/30 s.
+> - **Pruebas**: `tests/test_photography.gd` (cámara quieta = igual que antes; seguir al corredor lo deja nítido y arrastra el fondo; girar al revés o a media velocidad no; girar sobre alguien quieto emborrona; determinismo). El examen 3 de la Academia acepta un barrido bien hecho.
+
 ### 1.1 Fundamento Físico y Fotográfico
 Cuando un sujeto se desplaza horizontalmente a una velocidad lineal $v$ a una distancia $r$, su velocidad angular respecto a la cámara es:
 $$\omega_{\text{sujeto}} = \frac{v}{r}$$

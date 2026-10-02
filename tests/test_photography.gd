@@ -77,5 +77,34 @@ func _initialize() -> void:
 		check(matches == 1,"Briefing has exactly one match")
 	var piece = casting.catalog.piezas.piernas[2]
 	check(casting.garment(piece,"gris",casting.catalog.tonos_ropa) == "bermudas grises","Plural adjective agreement")
+	# --- Panning (docs/futuro/11 §1): the camera's turn is part of the evidence ---
+	var pan = fixture()
+	pan.f = 50.0
+	pan.d = 7.0
+	pan.s = 7.0
+	pan.v = 2.8
+	pan.t = 1.0/30
+	pan.motion_sign = 1.0
+	pan.scene_ev = 14+Photo.ev(pan.n,pan.t,pan.iso,14)
+	var still = Photo.evaluate(pan)
+	check(not still.panning and still.movement < .05 and near(still.drag,2.8/30*50/7.0,.001),"A runner at 1/30 s with a still camera is dragged")
+	pan.camera_omega = 0.0
+	check(Photo.evaluate(pan) == still,"A camera that does not turn changes nothing")
+	pan.camera_omega = 2.8/7.0
+	var swept = Photo.evaluate(pan)
+	check(swept.panning and near(swept.drag,0.0) and swept.movement == 1.0,"Following the runner at its angular speed keeps it sharp")
+	check(near(swept.background,2.8/7.0/30*50,.001) and swept.background >= Photo.PAN_STREAK,"…and streaks the background (%.2f mm)" % swept.background)
+	check(swept.score > still.score+15 and swept == Photo.evaluate(pan.duplicate(true)),"The pan scores, deterministically (%d against %d)" % [swept.score,still.score])
+	check(swept.lines[2].contains("Barrido"),"The movement line names the pan")
+	pan.camera_omega = -2.8/7.0
+	check(not Photo.evaluate(pan).panning and Photo.evaluate(pan).drag > still.drag,"Turning the other way doubles the drag")
+	pan.camera_omega = 2.8/7.0*.5
+	check(not Photo.evaluate(pan).panning,"Half the speed is not enough: the runner is still dragged")
+	pan.v = 0.0
+	pan.camera_omega = .4
+	var jerked = Photo.evaluate(pan)
+	check(not jerked.panning and jerked.movement < .05 and jerked.lines[2].contains("Moviste la cámara"),"Turning the camera on someone standing blurs the photo")
+	pan.t = 1.0/1000
+	check(Photo.evaluate(pan).movement == 1.0,"…unless the shutter is fast enough")
 	print("TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

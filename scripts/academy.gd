@@ -776,7 +776,7 @@ const EXAM_SECOND_RADIUS = 4.4
 # What the photo says beyond its evidence: the second person of lesson 2, the thirds of lesson 4.
 func exam_context(result: Dictionary) -> Dictionary:
 	var e: Dictionary = result.evidence
-	var x = {"delta":result.delta,"coc":result.coc,"thirds":main.academy_last_thirds,"fill":person_fill(e) if e.get("person",true) else 0.0}
+	var x = {"delta":result.delta,"coc":result.coc,"drag":result.get("drag",0.0),"thirds":main.academy_last_thirds,"fill":person_fill(e) if e.get("person",true) else 0.0}
 	if lesson == 5 and not e.get("person",true):
 		var far = extra_at_focus()
 		if far > 0.0:
@@ -826,6 +826,8 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 			else:
 				var needed = Photo.needed_shutter(e.v,e.f,e.d)
 				var frozen = needed > 0 and denominator >= needed
+				# A good pan freezes the runner too (the photo's own relative drag says so).
+				if x.has("drag"): frozen = x.drag <= Photo.C+.0005
 				lines.append([frozen,Texts.get_text("academia_ex_congelado_ok") % denominator if frozen else Texts.get_text("academia_ex_congelado_mal") % [denominator,needed if needed > 0 else Photo.DENOMINATORS.max()]])
 		4:
 			var state = str(x.get("thirds",""))

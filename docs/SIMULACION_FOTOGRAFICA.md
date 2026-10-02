@@ -137,3 +137,5 @@ $$\text{nota} = \text{round}\big(100 \cdot (0.28\,\text{foco} + 0.24\,\text{expo
 ## 6. Verificación Automatizada
 
 Suite `tests/test_photography.gd` (headless). Comando, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+
+> **Barrido (02-10-2026)**: la evidencia lleva `camera_omega` (giro de la cámara en el disparo) y el arrastre del sujeto se calcula con su velocidad relativa a ese giro; seguir a un corredor a 1/30 s lo deja nítido con el fondo arrastrado. Detalle en [futuro/11 §1](futuro/11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md).

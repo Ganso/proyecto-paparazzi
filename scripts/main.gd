@@ -49,6 +49,11 @@ var focal: float = 24.0
 var focus_distance: float = 4.0
 var angle: float = 120.0
 var pan_velocity = 0.0
+# How fast the camera is turning (degrees per second, + to the right), smoothed over the last
+# tenths of a second: the photo records it, because following a runner with the camera keeps the
+# runner sharp and streaks the background (panning, docs/futuro/11 §1).
+var camera_omega = 0.0
+var omega_last_angle = 0.0
 var target: Pedestrian
 var night = false
 var time_of_day = "day"
@@ -996,8 +1001,19 @@ func notify_player(message: String) -> void:
 	toast.text = message
 	toast_time = 4.0
 
+func track_camera_turn(dt: float) -> void:
+	var step = wrapf(angle-omega_last_angle,-180.0,180.0)
+	omega_last_angle = angle
+	# A jump (a staged framing, a lesson, a test placing the camera) is not a turn of the wrist.
+	if dt <= 0.0 or mode != "SEARCH" or absf(step) > 6.0:
+		camera_omega = 0.0
+		return
+	camera_omega = lerpf(camera_omega,step/dt,clampf(dt*14.0,0.0,1.0))
+	if absf(camera_omega) < .05: camera_omega = 0.0
+
 func _process(dt: float) -> void:
 	total_time += dt
+	if not shooting: track_camera_turn(dt)
 	update_fps_counter(dt)
 	boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
@@ -2459,11 +2475,15 @@ func take_photo() -> void:
 	if equipment.auto_exposure: auto_expose()
 	shooting = true
 	rumble(.2,.75,.09)
+	# The turn of the camera at the instant of the shot (0 in the guided demonstrations, where the
+	# tutor's own tracking must not freeze the runner it is showing blurred).
+	var shot_omega = 0.0 if (academy and academy.active and academy.phase == "demo") or not demo.is_empty() else deg_to_rad(camera_omega)
 	pan_velocity = 0
 	if dof_allowed() and not dof_blur: set_dof_blur(true)   # rangefinder: blur only in the photo
 	# Freeze first, then wait for physics and the render to represent precisely this state.
 	await get_tree().physics_frame
 	var evidence = capture_sandbox_evidence() if sandbox else capture_evidence()
+	evidence["camera_omega"] = shot_omega
 	evidence["rendered_dof"] = dof_active()
 	evidence["ca"] = float(equipment.lens().get("ca",.5))
 	evidence["stops"] = 2.0*log(apertures()[n_index]/equipment.apertures(focal)[0])/log(2.0)
@@ -2545,7 +2565,15 @@ func photo_material(result: Dictionary) -> ShaderMaterial:
 	mat.set_shader_parameter("vignette_amount",strengths.x)
 	mat.set_shader_parameter("chromatic_aberration",strengths.y)
 	mat.set_shader_parameter("exposure",clampf(result.delta,-8,8))
-	mat.set_shader_parameter("motion",Vector2(minf(result.drag/36*viewport.size.x,90)*evidence.motion_sign,0))
+	mat.set_shader_parameter("motion",Vector2(minf(result.drag/36*viewport.size.x,90)*result.get("drag_sign",evidence.get("motion_sign",1.0)),0))
+	# Panning: the background streaks by the camera's sweep and the subject keeps its own blur.
+	var streak: float = result.get("background",0.0)
+	if streak > Photo.C and evidence.has("head") and evidence.has("feet"):
+		var top: Vector2 = evidence.head
+		var bottom: Vector2 = evidence.feet
+		var tall = maxf(absf(bottom.y-top.y),.05)
+		mat.set_shader_parameter("pan",Vector2(minf(streak/36*viewport.size.x,140),0))
+		mat.set_shader_parameter("subject_box",Vector4((top.x+bottom.x)*.5,(top.y+bottom.y)*.5,tall*.24,tall*.6))
 	var shake_angle = fposmod(evidence.seed*2.399963,TAU)
 	mat.set_shader_parameter("shake",Vector2.from_angle(shake_angle)*minf(maxf(0,result.ratio-1)*5,45))
 	mat.set_shader_parameter("grain",log(evidence.iso/100.0)/log(2.0)*.035)
