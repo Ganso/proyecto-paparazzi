@@ -439,7 +439,7 @@
   "modo_academia_texto": "Cinco lecciones de fotografía con teoría, una demostración guiada y práctica: exposición, profundidad de campo, movimiento, composición y focal.",
   "modo_academia_progreso": "%d de 5 prácticas completadas",
   "modo_opciones_titulo": "Opciones",
-  "modo_opciones_texto": "Equipo, gráficos, tema, interfaz y ayuda en pantalla.",
+  "modo_opciones_texto": "Equipo, gráficos, tema y ayuda en pantalla.",
   "modo_entrar": "Entrar",
   "modo_ayuda_menu": "{cambiar_modo} cambiar de modo · {aceptar} entrar",
   "opcion_tema": "Tema: %s",

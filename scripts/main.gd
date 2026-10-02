@@ -116,7 +116,8 @@ var tlr_loupe = false               # L: 3× loupe over the ground glass
 var control_help                    # on-screen help (scripts/control_help.gd), F1
 var tutorial                        # tutorial mode (scripts/tutorial.gd)
 # A small copy of the subject turning round at the top left while searching (docs/futuro/22 §7).
-var portrait: SubViewportContainer
+var portrait: Panel                 # dark glass card holding the miniature (portrait_box)
+var portrait_box: SubViewportContainer
 var portrait_view: SubViewport
 var portrait_person
 var portrait_of = null
@@ -2047,8 +2048,10 @@ func set_theme(dark: bool) -> void:
 func load_interface() -> void:
 	var config = ConfigFile.new()
 	# Phones keep the classic HUD until the touch interface (docs/futuro/13) exists.
+	# The camera interface everywhere on desktop (the classic full-screen HUD added nothing once the
+	# controls unfold with Tab and the on-screen help lists them); phones keep the classic one until
+	# the touch interface exists (docs/futuro/13). --interface= still forces either for tests.
 	interface_mode = "clasica" if OS.has_feature("mobile") else "camara"
-	if config.load("user://interfaz.cfg") == OK: interface_mode = str(config.get_value("interfaz","modo",interface_mode))
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--interface="): interface_mode = arg.trim_prefix("--interface=")
 	place_view()
@@ -2161,18 +2164,30 @@ func update_portrait(dt: float) -> void:
 		if is_instance_valid(portrait): portrait.visible = false
 		return
 	if not is_instance_valid(portrait):
-		portrait = SubViewportContainer.new()
-		portrait.stretch = true
+		# A translucent dark card (like the on-screen help) so the miniature stands out from any
+		# background, in the light and the dark theme.
+		portrait = Panel.new()
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait.size = Vector2(120,165)
+		portrait.size = Vector2(124,172)
+		var card = StyleBoxFlat.new()
+		card.bg_color = Color(.03,.05,.08,.62)
+		card.set_corner_radius_all(10)
+		card.anti_aliasing = true
+		portrait.add_theme_stylebox_override("panel",card)
 		ui.add_child(portrait)
 		ui.move_child(portrait,ui.get_child_count()-1)
+		portrait_box = SubViewportContainer.new()
+		portrait_box.stretch = true
+		portrait_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_box.position = Vector2(2,4)
+		portrait_box.size = Vector2(120,165)
+		portrait.add_child(portrait_box)
 		portrait_view = SubViewport.new()
 		portrait_view.size = Vector2i(240,330)
 		portrait_view.own_world_3d = true
 		portrait_view.transparent_bg = true
 		portrait_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-		portrait.add_child(portrait_view)
+		portrait_box.add_child(portrait_view)
 		var env = WorldEnvironment.new()
 		env.environment = Environment.new()
 		env.environment.background_mode = Environment.BG_CLEAR_COLOR
@@ -2203,7 +2218,13 @@ func update_portrait(dt: float) -> void:
 		cam.look_at(Vector3(0,portrait_person.height*.52,0))
 	portrait_person.rotation.y += dt*TAU/8.0     # a full turn every 8 s
 	portrait.visible = true
-	portrait.position = view_rect.position+Vector2(10,(96 if interface_mode == "clasica" and hud_top[0].visible else 10)+(80 if interface_mode == "clasica" else 0))
+	portrait.position = Vector2(view_rect.position.x+10,hud_clear_top())
+
+# The first free height over the image: under the top bar and the assignment panel whenever they
+# show (classic interface, or the camera interface with its controls unfolded), else the image's top.
+func hud_clear_top() -> float:
+	if not hud_top.is_empty() and hud_top[0].visible: return 172.0
+	return view_rect.position.y+10
 
 # ---- Gamepad (docs/futuro/14, docs/futuro/22 §3) ----
 # The device changed: every help text on screen is redone for it (Texts fills {controls}).
@@ -2959,8 +2980,6 @@ func show_equipment() -> void:
 		# The arcade level fixes the camera: only the interface and the graphics can change.
 		label(root,Texts.get_text("arcade_equipo_fijo"),Rect2(75,100,1100,30),18,Color("b8d78c"))
 		label(root,Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],Rect2(75,150,1100,30),20)
-		label(root,Texts.get_text("visor_interfaz"),Rect2(75,225,250,35),20)
-		option(root,[Texts.get_text("visor_interfaz_camara"),Texts.get_text("visor_interfaz_clasica")],0 if interface_mode == "camara" else 1,Rect2(330,220,700,45),func(i): set_interface("camara" if i == 0 else "clasica"); show_equipment())
 		if equipment_return == "INTRO": button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
 		button(root,"Volver",Rect2(880,630,320,55),restore_equipment_screen,true)
 		return
@@ -2980,8 +2999,6 @@ func show_equipment() -> void:
 	if equipment.film:
 		label(root,"Cargar película",Rect2(75,525,250,35),20)
 		option(root,Photo.ISOS.map(func(iso): return "ISO %d" % iso),equipment.film_iso_index,Rect2(330,520,700,45),func(i): equipment.film_iso_index = i; apply_equipment(); show_equipment())
-	label(root,Texts.get_text("visor_interfaz"),Rect2(75,585,250,35),20)
-	option(root,[Texts.get_text("visor_interfaz_camara"),Texts.get_text("visor_interfaz_clasica")],0 if interface_mode == "camara" else 1,Rect2(330,580,700,45),func(i): set_interface("camara" if i == 0 else "clasica"); show_equipment())
 	if equipment_return == "INTRO": button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
 	button(root,"Usar este equipo",Rect2(880,630,320,55),restore_equipment_screen,true)
 

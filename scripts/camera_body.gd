@@ -284,8 +284,10 @@ func draw_tlr(r: Rect2) -> void:
 	draw_string(font,Vector2(cx-60,sq.position.y+168),"Nº",HORIZONTAL_ALIGNMENT_CENTER,120,14,Color(cream.r,cream.g,cream.b,.6))
 	if main.sandbox and not main.tlr_wound:
 		draw_string(font,Vector2(cx-80,sq.position.y+220),"K ↻",HORIZONTAL_ALIGNMENT_CENTER,160,22,Color(1,.6,.4))
-	var mx = sq.position.x-150
-	var my = sq.position.y+330   # under the subject miniature (main.gd::update_portrait)
+	# The hand-held meter on the right, under the frame counter: the left side holds the subject
+	# miniature and the on-screen help.
+	var mx = sq.end.x+90
+	var my = sq.position.y+300
 	draw_rect(Rect2(mx-60,my-70,120,110),Color(.12,.12,.13))
 	draw_rect(Rect2(mx-52,my-62,104,70),cream)
 	for i in range(-2,3):

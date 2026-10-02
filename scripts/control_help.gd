@@ -63,19 +63,20 @@ func _process(_dt: float) -> void:
 	if can_lower:
 		raise_button.text = Texts.get_text("bajar_camara") if main.camera_raised else Texts.get_text("subir_camara")
 		var vr: Rect2 = main.view_rect
-		raise_button.position = Vector2(vr.end.x-raise_button.size.x-10,vr.end.y-raise_button.size.y-(150 if main.interface_mode == "clasica" and main.eye_ready() else 12))
+		var bottom = 617.0 if (not main.hud_bottom.is_empty() and main.hud_bottom[0].visible) else vr.end.y-12   # above the bottom bar when it shows
+		raise_button.position = Vector2(vr.end.x-raise_button.size.x-10,minf(bottom,vr.end.y-12)-raise_button.size.y)
 	exit_button.visible = main.mode == "SEARCH"
 	if exit_button.visible:
 		var er: Rect2 = main.view_rect
 		exit_button.text = "✕ "+Texts.get_text("salir_fase")+" · "+Glyphs.kp("pausa")
-		var top = er.position.y+(176 if main.interface_mode == "clasica" and main.hud_top[0].visible else 10)
+		var top = main.hud_clear_top()
 		exit_button.position = Vector2(er.end.x-exit_button.size.x-10,top) if not main.eye_ready() else Vector2(er.end.x-toggle.size.x-exit_button.size.x-20,toggle.position.y)
 	var searching = main.mode == "SEARCH" and main.eye_ready()
 	toggle.visible = searching
 	if searching:
 		var r: Rect2 = main.view_rect
 		toggle.text = ("✓ " if enabled else "")+Texts.get_text("ayuda_pantalla")+" · "+Glyphs.kp("ayuda_pantalla")
-		toggle.position = Vector2(r.end.x-toggle.size.x-10,r.position.y+(96 if main.interface_mode == "clasica" and main.hud_top[0].visible else 10)+(80 if main.interface_mode == "clasica" else 0))
+		toggle.position = Vector2(r.end.x-toggle.size.x-10,main.hud_clear_top())
 	queue_redraw()
 
 # [key, name, value, kind] for every control of the mounted camera; kind is manual, auto or fixed.
@@ -118,7 +119,7 @@ func _draw() -> void:
 	var line = 22.0
 	var w = 360.0
 	var h = 34.0+list.size()*line
-	var pos = Vector2(r.position.x+10,r.position.y+(178 if classic else 10))
+	var pos = Vector2(r.position.x+10,main.hud_clear_top())
 	if is_instance_valid(main.portrait) and main.portrait.visible: pos.y = main.portrait.position.y+main.portrait.size.y+10   # under the subject
 	draw_style_box(box(Color(.03,.05,.08,.62)),Rect2(pos,Vector2(w,h)))
 	draw_string(bold,pos+Vector2(12,21),Texts.get_text("ayuda_titulo") % main.equipment.CAMERAS[main.equipment.body],HORIZONTAL_ALIGNMENT_LEFT,w-24,13,Color(1,1,1,.92))

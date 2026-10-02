@@ -4,7 +4,7 @@ extends Control
 # slowly. The modes — Arcade, Historia (coming), Tutorial, Sandbox, Academia, Opciones — show one at a time in a
 # big card, changed with the arrows (← → keys, D-pad or LB/RB, or the ‹ › buttons) and entered with
 # Enter / A or the button; each card holds what its mode needs (scenario and light for the sandbox,
-# theme and interface in the options).
+# theme in the options).
 const Texts = preload("res://scripts/texts.gd")
 
 const UiStyle = preload("res://scripts/ui_style.gd")
@@ -238,7 +238,6 @@ func build_options() -> void:
 		[Texts.get_text("menu_equipo"),main.show_equipment],
 		[Texts.get_text("menu_graficos"),main.show_graphics_settings],
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
-		[Texts.get_text("opcion_interfaz") % Texts.get_text("visor_interfaz_corta_"+main.interface_mode),func(): main.set_interface("clasica" if main.interface_mode == "camara" else "camara"); build_card()],
 		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
 	]
 	for k in rows.size():

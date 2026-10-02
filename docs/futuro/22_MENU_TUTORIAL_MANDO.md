@@ -37,6 +37,11 @@ Doce pasos en el parque clásico que se comprueban solos y avanzan con «✓ ¡B
 - **Guías de encuadre**: en los niveles con proporción áurea el visor dibuja sus líneas doradas (φ, 38 % y 62 %); en el resto, las de tercios. En la TLR, las del cuadrado. G (R3) las oculta.
 - **Movimiento en velocidades**: el informe y la condición de congelar ya no hablan de milímetros: dicen la velocidad mínima a la focal usada («a 135 mm hace falta 1/1000 s o más rápido; usaste 1/250 s»), si el problema es el pulso (regla 1/focal) o si ni 1/1000 s basta (menos focal, o fotografiarla cuando venga hacia ti). `Photography.needed_shutter()`.
 
+## 8. Muñeco con tarjeta e interfaz clásica retirada (02-10-2026)
+
+- El sujeto en miniatura va sobre una **tarjeta translúcida oscura** (como la de la ayuda) para destacar sobre cualquier fondo. Muñeco, ayuda en pantalla y botones se colocan siempre por debajo de la barra superior y del panel del encargo cuando estos se ven (`main.gd::hud_clear_top()`), y «Bajar la cámara» por encima de la barra inferior; el fotómetro de mano de la TLR pasa a la derecha del cuadrado. Comprobado en las cuatro cámaras, con Tab, con y sin ayuda, cámara bajada, tutorial, parque grande y tema oscuro.
+- **Interfaz clásica retirada en escritorio**: con Tab y la ayuda en pantalla ya no aportaba nada. Se quita de Opciones y de la pantalla de equipo; en escritorio siempre se usa la de cámara y en el móvil la clásica hasta que exista la interfaz táctil ([13](13_INTERFAZ_MOVIL_UTILIZABLE.md)). `--interface=clasica` la sigue forzando para pruebas y capturas.
+
 ## 6. Pendiente
 
 Migración completa a acciones de `InputMap` y vibración ([14](14_SOPORTE_GAMEPAD.md)), recorrido con cruceta de las pantallas de equipo y gráficos con desplegables, y probar con un mando físico.
