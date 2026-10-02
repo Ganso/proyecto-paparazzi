@@ -931,9 +931,17 @@ const EFFECTS = {
 	"Bajo": {"sdfgi": 0, "ssao": false, "ssil": false, "ssr": false, "volumetric": false, "penumbra": false, "atlas": 2048, "grass": .2},
 }
 
+# SDFGI cascades of a profile on this machine. Integrated GPUs get none: on an Intel Iris Xe SDFGI
+# floods the scene with sky light (washed-out blue park, white mannequins), so they use the
+# calibrated flat ambient of Bajo instead (NO_GI_AMBIENT).
+static func sdfgi_cascades(preset: String) -> int:
+	if not forward_plus() or RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU: return 0
+	return EFFECTS.get(preset,EFFECTS["Ultra"]).sdfgi
+
 func apply_forward_effects(preset: String) -> void:
 	var env = environment.environment
-	var fx: Dictionary = EFFECTS.get(preset,EFFECTS["Ultra"])
+	var fx: Dictionary = EFFECTS.get(preset,EFFECTS["Ultra"]).duplicate()
+	fx.sdfgi = sdfgi_cascades(preset)
 	var forward = forward_plus()
 	env.sdfgi_enabled = forward and fx.sdfgi > 0
 	env.ssao_enabled = forward and fx.ssao
@@ -1016,7 +1024,7 @@ func apply_preset_values(preset: String) -> void:
 	apply_forward_effects(preset)
 	# Without SDFGI (Bajo) the flat ambient reaches every shaded face that SDFGI would occlude: it is
 	# scaled per time of day to keep Ultra's exposure (calibrated on the same shot).
-	var no_gi = forward_plus() and EFFECTS.get(preset,{}).get("sdfgi",4) == 0
+	var no_gi = forward_plus() and sdfgi_cascades(preset) == 0
 	env.ambient_light_energy = base_ambient*(NO_GI_AMBIENT.get(time_of_day,1.0) if no_gi else 1.0)
 	# gl_compatibility renders the same scene noticeably brighter than Forward+ (and without SSAO or
 	# SDFGI shadowing), so its exposure is scaled to match Ultra's image (measured on the same shot).

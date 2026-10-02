@@ -76,7 +76,7 @@ Detalle en [futuro/19_VIDA_EN_EL_PARQUE.md](futuro/19_VIDA_EN_EL_PARQUE.md). Res
 ## 3. Iluminación y Clima Procedural
 
 ### 3.1 Iluminación y Horas del Día: Día, Hora Dorada y Noche (`park.set_time_of_day()`)
-- **Perfiles**: los cuatro de escritorio usan Forward+ y comparten aspecto; Alto, Medio y Bajo solo quitan coste (tabla en [futuro/17 §2.4](futuro/17_SALTO_GRAFICO_ULTRA.md)). Bajo, sin SDFGI, calibra la luz ambiente por hora (`NO_GI_AMBIENT`) para mantener la exposición de Ultra.
+- **Perfiles**: los cuatro de escritorio usan Forward+ y comparten aspecto; Alto, Medio y Bajo solo quitan coste (tabla en [futuro/17 §2.4](futuro/17_SALTO_GRAFICO_ULTRA.md)). Bajo, sin SDFGI, calibra la luz ambiente por hora (`NO_GI_AMBIENT`) para mantener la exposición de Ultra; lo mismo ocurre en cualquier perfil con GPU integrada, donde SDFGI se desactiva (`park.gd::sdfgi_cascades()`, [futuro/17 §2.4](futuro/17_SALTO_GRAFICO_ULTRA.md)).
 - **Ultra (Forward+)**: SDFGI (energía 0,7 y rebote 0,25, para que el césped no tiña de verde las superficies claras), SSAO, SSIL, SSR, niebla volumétrica ligera (densidad 0,0022), glow (umbral 1,4), sombras del sol de 4096 con penumbra (`light_angular_distance`) y MSAA 4×, todo en `park.gd::apply_forward_effects()`. Los colores de vértice se leen como sRGB (en los perfiles `lo` se siguen usando como lineales, el aspecto para el que está ajustada su luz).
 - **Gradación de color por hora** (Alto y Ultra, `park.gd::grading_lut()`): LUT 3D de 33³ generada por código y aplicada en `Environment.adjustment_color_correction`. Día: sombras frías y luces cálidas; hora dorada: sombras verde azuladas y violáceas con luces ámbar; noche: sombras azules, luz de farola cálida y algo menos de saturación.
 - **Día**:

@@ -193,6 +193,11 @@ func run() -> void:
 		check(game.park.grass_nodes.is_empty() or game.park.grass_nodes[0].multimesh.visible_instance_count < game.park.grass_nodes[0].multimesh.instance_count,"Bajo thins the grass")
 	game.apply_graphics_preset("Ultra")
 	check(game.graphics_preset == "Ultra","Restored to Ultra preset")
+	# Integrated GPUs render SDFGI wrong (washed-out park): they get Bajo's calibrated ambient instead.
+	if forward:
+		var discrete = RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU
+		check(env.sdfgi_enabled == discrete,"SDFGI only on a dedicated GPU")
+		check(discrete or is_equal_approx(env.ambient_light_energy,game.park.base_ambient*game.park.NO_GI_AMBIENT.get(game.park.time_of_day,1.0)),"Without SDFGI the ambient is the calibrated one")
 	check(game.park.sun.shadow_enabled and game.park.environment.environment.fog_enabled,"Ultra restores shadows and atmospheric fog")
 	# Merged park (docs/futuro/16): few surfaces, vertex colours with baked occlusion, smooth shading.
 	var park_surfaces = game.park.get_children().filter(func(n): return n is MeshInstance3D and n.mesh != null)

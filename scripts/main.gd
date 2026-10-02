@@ -3124,7 +3124,7 @@ func show_graphics_settings() -> void:
 	var fx: Dictionary = park.EFFECTS.get(graphics_preset,park.EFFECTS["Ultra"])
 	var specs = [
 		"• Resolución interna: %d %% %s" % [int(RENDER_SCALE.get(graphics_preset,1.0)*100),"(nativa, MSAA 4×)" if graphics_preset == "Ultra" else "(escalada con FSR 2)"],
-		"• Iluminación global SDFGI: " + ("desactivada (luz ambiente calibrada)" if fx.sdfgi == 0 else "%d cascadas" % fx.sdfgi),
+		"• Iluminación global SDFGI: " + ("desactivada (luz ambiente calibrada)" if ParkScene.sdfgi_cascades(graphics_preset) == 0 else "%d cascadas" % ParkScene.sdfgi_cascades(graphics_preset)),
 		"• Oclusión ambiental: %s · Rebote en pantalla (SSIL): %s · Reflejos (SSR): %s" % ["sí" if fx.ssao else "no","sí" if fx.ssil else "no","sí" if fx.ssr else "no"],
 		"• Niebla volumétrica: %s · Penumbra física del sol: %s · Atlas de sombras: %d" % ["sí" if fx.volumetric else "no","sí" if fx.penumbra else "no",fx.atlas],
 		"• Hierba: %d %% · Profundidad de campo en el visor: %s" % [int(fx.grass*100),"sí" if graphics_preset in ["Ultra","Alto"] else "no"]
