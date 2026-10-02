@@ -285,7 +285,7 @@ func run() -> void:
 	UiStyle.set_dark(saved_dark)
 	game.intro()
 	await process_frame
-	game.modal.current = 5
+	game.modal.current = game.modal.MODES.find("opciones")
 	game.modal.build_card()
 	await process_frame
 	check(game.modal.card.get_children().any(func(c): return c is Button and c.text.begins_with("Tema")),"The options card has the theme switch")

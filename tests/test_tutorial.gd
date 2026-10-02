@@ -40,8 +40,8 @@ func run() -> void:
 	game.intro()
 	await frames(3)
 	var menu = game.modal
-	check(menu.MODES == ["arcade","historia","tutorial","sandbox","academia","opciones"],"The menu has the six modes (Historia announced)")
-	menu.current = 1
+	check(menu.MODES == ["tutorial","arcade","sandbox","academia","opciones","historia"],"The menu has the six modes (Historia announced)")
+	menu.current = 5
 	menu.build_card()
 	check(not menu.enter_callback.is_valid(),"Historia cannot be entered yet")
 	menu.current = 0
@@ -57,7 +57,7 @@ func run() -> void:
 	pad_left.pressed = true
 	menu._input(pad_left)
 	check(menu.current == first,"D-pad ← changes it back")
-	menu.current = 2
+	menu.current = 0
 	menu.build_card()
 	await frames(2)
 	check(menu.enter_callback.is_valid(),"The tutorial card has its Enter")

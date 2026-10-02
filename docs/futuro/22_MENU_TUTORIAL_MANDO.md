@@ -4,7 +4,7 @@
 
 ## 1. Menú principal: los modos en grande (`scripts/main_menu.gd`)
 
-Los modos **Arcade, Historia, Tutorial, Sandbox, Academia y Opciones** se muestran de uno en uno en una tarjeta grande sobre el parque vivo, con ‹ › a los lados y puntos debajo. Se cambia con **← →** (también A/D), la **cruceta** o **LB/RB**, y se entra con **Intro / A** o el botón «Entrar». Cada tarjeta lleva lo suyo: el progreso del Arcade y de la Academia, escenario y luz para el Sandbox, y en Opciones equipo, gráficos, tema claro/oscuro, interfaz cámara/clásica y ayuda en pantalla. El modo elegido se recuerda mientras dura la partida. **Historia** aparece anunciado con la etiqueta «Próximamente» y un botón desactivado («Disponible en una versión futura»): su diseño está en [10](10_MODO_HISTORIA_DUAL_LEGADO.md).
+Los modos **Tutorial, Arcade, Sandbox, Academia, Opciones e Historia** (en ese orden desde el 03-10) se muestran de uno en uno en una tarjeta grande sobre el parque vivo, con ‹ › a los lados y puntos debajo. Se cambia con **← →** (también A/D), la **cruceta** o **LB/RB**, y se entra con **Intro / A** o el botón «Entrar». Cada tarjeta lleva lo suyo: el progreso del Arcade y de la Academia, escenario y luz para el Sandbox, y en Opciones equipo, gráficos, tema claro/oscuro, interfaz cámara/clásica y ayuda en pantalla. El modo elegido se recuerda mientras dura la partida. **Historia** aparece anunciado con la etiqueta «Próximamente» y un botón desactivado («Disponible en una versión futura»): su diseño está en [10](10_MODO_HISTORIA_DUAL_LEGADO.md).
 
 ## 2. Tutorial (`scripts/tutorial.gd`)
 

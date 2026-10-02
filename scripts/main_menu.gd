@@ -22,7 +22,7 @@ var time_of_day = "day"
 var cards = {}
 var chips = {}
 var theme_buttons = []
-const MODES = ["arcade","historia","tutorial","sandbox","academia","opciones"]
+const MODES = ["tutorial","arcade","sandbox","academia","opciones","historia"]
 static var current = 0
 var card: Control
 var dots = []
