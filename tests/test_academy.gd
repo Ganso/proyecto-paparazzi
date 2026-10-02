@@ -170,6 +170,12 @@ func run() -> void:
 	check(academy.active and game.mode == "SEARCH","Back to the lesson after the result")
 
 	# --- Exams (docs/futuro/06 §2-§3): deterministic reports from fixed evidence ---
+	# Every theory page of every lesson opens (highlight and diagram included).
+	for n in range(1,academy.LESSONS+1):
+		academy.begin(n,"teoria")
+		for k in academy.THEORY_PAGES[n]-1: academy.go_next()
+		check(academy.page == academy.THEORY_PAGES[n]-1 and academy.title_label.text == Texts.get_text("academia_l%d_t%d_titulo" % [n,academy.THEORY_PAGES[n]]),"Lesson %d: its last theory page opens" % n)
+	check(Texts.get_text("academia_l3_t5_texto").contains("barrido") or Texts.get_text("academia_l3_t5_titulo").contains("barrido"),"Lesson 3 teaches panning")
 	print("· exams")
 	var Academy = academy.get_script()
 	for n in range(1,academy.LESSONS+1): check(has_text("academia_l%d_examen" % n),"Lesson %d has its exam statement" % n)

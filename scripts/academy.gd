@@ -20,13 +20,13 @@ const SETUP = {
 	2: {"time":"golden","cover":1.0,"body":2,"lens":4,"focal":105.0,"auto":false,"focus":"AF puntual","angle":118.0,"pitch":-2.0,"n":1.8,
 		"pages":["dof","dof","dof","dof"],"practice_diagram":"dof"},
 	3: {"time":"golden","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":70.0,"pitch":-4.0,"t":250,
-		"pages":["movimiento","movimiento","movimiento","pasos"],"practice_diagram":"movimiento"},
+		"pages":["movimiento","movimiento","movimiento","pasos","movimiento"],"practice_diagram":"movimiento"},
 	4: {"time":"golden","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":122.0,"pitch":-3.0,
 		"pages":["tercios","tercios","tercios","tercios"],"practice_diagram":"tercios"},
 	5: {"time":"day","body":2,"lens":3,"focal":28.0,"auto":true,"focus":"AF puntual","angle":121.0,"pitch":-4.0,
 		"pages":["compresion","compresion","compresion","compresion"],"practice_diagram":"compresion"},
 }
-const THEORY_PAGES = {1:5, 2:4, 3:4, 4:4, 5:4}
+const THEORY_PAGES = {1:5, 2:4, 3:5, 4:4, 5:4}
 const TASKS = 3
 # Exam (docs/futuro/06 §2 and §3): one statement per lesson, no hints; every photo gets the tutor's
 # report and the exam is passed when all its criteria are met. Passing the five gives the diploma.
@@ -359,7 +359,7 @@ func theory_highlight() -> String:
 	match lesson:
 		1: return ["exposimetro","diafragma","velocidad","iso",""][page]
 		2: return ["nitidez","diafragma","zoom","nitidez"][page]
-		3: return ["velocidad","","velocidad","diafragma"][page]
+		3: return ["velocidad","","velocidad","diafragma","velocidad"][page]
 	return ""
 
 func update_panel() -> void:

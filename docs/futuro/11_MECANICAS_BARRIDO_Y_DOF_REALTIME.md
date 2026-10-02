@@ -11,6 +11,7 @@ Este documento especifica la implementación técnica de dos dinámicas visuales
 > - **Puntuación** (`Photography.evaluate()`): el arrastre del sujeto usa su velocidad **relativa** al barrido de la cámara, `|v·signo − ω·d|·t·f/d`; el fondo se arrastra `|ω|·t·f` mm. Es un **barrido** si el fondo se arrastra al menos 0,5 mm (`PAN_STREAK`, unos 18 px de 1.280), el sujeto queda dentro del círculo de confusión y se mueve de verdad (≥ 0,4 m/s): entonces la regla del pulso no penaliza y la línea de movimiento lo dice («Barrido: …»). Girar la cámara sobre alguien quieto emborrona la foto («Moviste la cámara…»). Sin `camera_omega` el resultado es idéntico al de antes: sigue siendo determinista.
 > - **Revelado** (`shaders/develop.gdshader`, uniformes `pan` y `subject_box`): todo el fotograma se arrastra en horizontal salvo la caja del sujeto (de la cabeza a los pies de la evidencia), que conserva su propio arrastre.
 > - **Cómo se hace**: con el ratón o con A/D siguiendo a quien se mueve y disparando sin dejar de girar. A 50 mm, A/D gira a unos 20°/s, casi lo que pide un corredor a 7 m (23°/s) a 1/30 s.
+> - **Academia**: la lección 3 tiene una quinta página de teoría, «El barrido: al revés».
 > - **Pruebas**: `tests/test_photography.gd` (cámara quieta = igual que antes; seguir al corredor lo deja nítido y arrastra el fondo; girar al revés o a media velocidad no; girar sobre alguien quieto emborrona; determinismo). El examen 3 de la Academia acepta un barrido bien hecho.
 
 ### 1.1 Fundamento Físico y Fotográfico
