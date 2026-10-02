@@ -255,8 +255,9 @@ func build_fence() -> void:
 				cube(Vector3(bay,.035,.035),pos+Vector3.UP*.8,Color("394844"))
 
 # ---- Trees and bushes ----
+var tree_spots: Array[Vector3] = []     # where the trees stand (perches for the pigeons)
 func build_trees(rng: RandomNumberGenerator) -> void:
-	var placed: Array[Vector3] = []
+	var placed: Array[Vector3] = tree_spots
 	var free_spot = func(pos: Vector3, clearance: float) -> bool:
 		if path_distance(pos) < clearance: return false
 		if pos.distance_to(BANDSTAND_POS) < 9.0 or pos.distance_to(PLAYGROUND_POS) < PLAYGROUND_R+2.5: return false
@@ -324,8 +325,11 @@ func build_trees(rng: RandomNumberGenerator) -> void:
 # ---- Lamps along the paths and round the plaza ----
 func build_lamps() -> void:
 	var spots: Array[Vector3] = []
+	# No lamp in front of a bench or beside it (two of the plaza's stood right before its benches):
+	# the six of the plaza go between the benches, and any other within 2.2 m of one is dropped.
+	var seats = bench_spots().map(func(b): return b[0])
 	for k in 6:
-		spots.append(Vector3(sin(k*TAU/6+.26),0,-cos(k*TAU/6+.26))*(PLAZA_R-.6))
+		spots.append(Vector3(sin(k*TAU/6),0,-cos(k*TAU/6))*(PLAZA_R-.6))
 	for e in edges:
 		var a: Vector3 = nodes[e[0]]
 		var b: Vector3 = nodes[e[1]]
@@ -339,6 +343,10 @@ func build_lamps() -> void:
 			if pos.length() < PLAZA_R+1.0: continue
 			if spots.any(func(q): return q.distance_to(pos) < 6.0): continue
 			spots.append(pos)
+	var clear: Array[Vector3] = []
+	for q in spots:
+		if not seats.any(func(b): return b.distance_to(q) < 2.2): clear.append(q)
+	spots = clear
 	for pos in spots:
 		var root = Node3D.new()
 		root.position = pos
@@ -369,7 +377,8 @@ func follow_view(pos: Vector3, dt: float) -> void:
 		if is_night: update_lamp_shadows()
 
 # ---- Benches by the paths (two seats each, facing the path) ----
-func build_benches() -> void:
+# Where the benches go: [position, facing] (also used to keep the lamps clear of them).
+func bench_spots() -> Array:
 	var spots = []
 	# Round the plaza, facing the fountain.
 	for k in 4:
@@ -387,7 +396,10 @@ func build_benches() -> void:
 	spots.append([BANDSTAND_POS+Vector3(4.2,0,4.2),Vector3(-1,0,-1).normalized()])
 	spots.append([PLAYGROUND_POS+Vector3(-PLAYGROUND_R-.5,0,0),Vector3(1,0,0)])
 	spots.append([PLAYGROUND_POS+Vector3(PLAYGROUND_R+.5,0,0),Vector3(-1,0,0)])
-	for s in spots:
+	return spots
+
+func build_benches() -> void:
+	for s in bench_spots():
 		var pos: Vector3 = s[0]
 		var face: Vector3 = s[1]
 		var root = Node3D.new()
@@ -445,7 +457,7 @@ func build_playground() -> void:
 		cylinder(.04,1.6,sl+Vector3(x,.8,-.2),steel,Texts.get_text("un_tobogan"))
 	cube(Vector3(.8,.08,.7),sl+Vector3(0,1.55,-.5),wood,Texts.get_text("un_tobogan"))
 	var chute = cube(Vector3(.55,.05,2.4),sl+Vector3(0,.85,.85),Color("e8c33a"),Texts.get_text("un_tobogan"))
-	chute.rotation.x = -.62
+	chute.rotation.x = .62      # down and away from the platform (it sloped the wrong way)
 	for k in 5: cube(Vector3(.7,.04,.04),sl+Vector3(0,.3+k*.3,-.82),steel)
 	# Sandpit border.
 	for k in 8:

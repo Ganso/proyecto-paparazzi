@@ -39,9 +39,12 @@ void fragment() {
 	// Separate threads of water (thin along the angle, long along the fall), not a sheet: between
 	// them the curtain is empty. They speed up and break into drops as they fall.
 	float around = angle * (radius * 26.0 + 18.0);
-	float speed = TIME * (2.2 + 2.6 * fall);
-	float threads = smoothstep(0.52, 0.72, noise(vec2(around, y * 0.7 + speed * 0.35)));
-	float drops = smoothstep(0.38, 0.62, noise(vec2(around * 1.4, y * 6.0 + speed * 2.4)));
+	// Free fall: the water has travelled a distance that grows with the square of the time since it
+	// left the lip, so the pattern runs on sqrt(fall) minus time: it moves down, ever faster.
+	// (Scaling time by the fall instead made it creep upwards in slow motion.)
+	float travel = sqrt(fall) - TIME * 2.4;
+	float threads = smoothstep(0.52, 0.72, noise(vec2(around, travel * 2.2)));
+	float drops = smoothstep(0.38, 0.62, noise(vec2(around * 1.4, travel * 11.0)));
 	float body = threads * mix(1.0, drops, fall * 0.85);
 	// A continuous lip where the water leaves the bowl, thinning at once.
 	float lip = smoothstep(0.12, 0.0, fall) * 0.75;

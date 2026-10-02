@@ -87,6 +87,17 @@ func run() -> void:
 	check(game.lens_strengths(35.0).y > 0.0,"…but its photo does")
 	game.equipment.preset(0)
 	game.apply_equipment()
+	game.focal = 24.0
+	game.camera_raised = false
+	game.raise_anim = 0.0
+	game.update_lens_effects()
+	check(game.lens_material.get_shader_parameter("chromatic_aberration") == 0.0,"Camera lowered: you look with your own eyes, no aberration")
+	game.camera_raised = true
+	game.raise_anim = 1.0
+	game.update_lens_effects()
+	check(game.lens_material.get_shader_parameter("chromatic_aberration") > 0.0,"Camera at the eye: the lens shows its aberration")
+	game.equipment.preset(0)
+	game.apply_equipment()
 	await frames(2)
 	# Parallax of the rangefinder: grows at close range and is undone when mapping clicks.
 	game.equipment.preset(1)

@@ -7,6 +7,7 @@ extends Node3D
 
 const FLOCK_HOMES = [Vector2(80.0, 5.55), Vector2(262.0, 5.55)]   # (azimuth °, radius m): lawn ring 5.1–6.0
 const PER_FLOCK = 9
+const PlayerProxy = preload("res://scripts/player_proxy.gd")
 var homes: Array = FLOCK_HOMES        # (azimuth, radius) of each flock; the big park sets its own
 const WALK_SPEED = .22
 var rng = RandomNumberGenerator.new()
@@ -154,6 +155,9 @@ func update_flock(f: int, dt: float, people: Array) -> void:
 					if rng.randf() < .3: scared = true
 				elif d > 4.0: passing.erase(p)
 			flock.passing = passing
+			# The photographer walking up to the flock always puts it to flight (big park).
+			for p in people:
+				if p.get_script() == PlayerProxy and p.state == "CAMINANDO" and Vector2(p.position.x-flock.center.x,p.position.z-flock.center.z).length() < 2.6: scared = true
 			if scared:
 				take_off(flock,roost(flock),"posada")
 			elif feeder != null and flock.feeder == null:
@@ -170,7 +174,15 @@ func update_flock(f: int, dt: float, people: Array) -> void:
 				flock.timer = rng.randf_range(8,16)
 
 # A perch in the tree curtain behind the lawn.
+# Where trees stand, if the park gives them (the big park): the flock flies to one of the three
+# nearest to its home. Without them (classic park) it goes to the tree curtain behind the lawn.
+var perches: Array = []
 func roost(flock: Dictionary) -> Vector3:
+	if not perches.is_empty():
+		var sorted = perches.duplicate()
+		sorted.sort_custom(func(a,b): return a.distance_squared_to(flock.home) < b.distance_squared_to(flock.home))
+		var tree: Vector3 = sorted[rng.randi_range(0,mini(2,sorted.size()-1))]
+		return Vector3(tree.x,0,tree.z)+Vector3.UP*rng.randf_range(4.2,5.2)
 	return Vector3(flock.home.x,0,flock.home.z).normalized()*rng.randf_range(13.5,15.5)+Vector3.UP*rng.randf_range(4.5,6.5)
 
 # Jump straight to the roost (a session that starts at night, or a capture).

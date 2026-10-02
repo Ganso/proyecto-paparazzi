@@ -66,6 +66,20 @@ func run() -> void:
 		check(absf(game.extras.swing_pivot.rotation.x-swing0) > .05,"The swing swings")
 		check(game.extras.slider.position.distance_to(slide0) > .3,"A child goes round the slide")
 		check(kids.all(func(k): return k.global_position.distance_to(park.PLAYGROUND_POS) < 9.0),"All of them stay by the playground")
+	# --- Lamps clear of the benches, the slide slopes down, pigeons flee to real trees ---
+	var worst_lamp = INF
+	for bench in park.benches:
+		for lamp in park.lamps: worst_lamp = minf(worst_lamp,Vector2(lamp.global_position.x-bench.pos.x,lamp.global_position.z-bench.pos.z).length())
+	check(worst_lamp >= 2.2,"No lamp stands in front of a bench or beside it (nearest %.1f m)" % worst_lamp)
+	var flock = game.pigeons.flocks[0]
+	var perch = game.pigeons.roost(flock)
+	check(park.tree_spots.any(func(t): return Vector2(t.x-perch.x,t.z-perch.z).length() < .1),"The pigeons' perch is a real tree")
+	flock.state = "suelo"
+	game.player_proxy.position = flock.center+Vector3(1.5,0,0)
+	game.player_proxy.state = "CAMINANDO"
+	game.pigeons.update(1.0/30,game.people,[game.player_proxy])
+	check(flock.state == "vuelo" and flock.next == "posada","Walking up to the pigeons puts them to flight")
+	game.player_proxy.state = "DETENIDO"
 	# --- The crowd walks the paths ---
 	game.start_session("day")
 	game.begin_assignment()

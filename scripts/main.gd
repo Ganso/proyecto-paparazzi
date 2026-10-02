@@ -371,6 +371,8 @@ func build_world() -> void:
 		pigeons.homes = [Vector3(14,0,-5),Vector3(-14,0,5)].map(func(v): return Vector2(fposmod(rad_to_deg(atan2(v.x,-v.z)),360.0),Vector2(v.x,v.z).length()))
 	viewport.add_child(pigeons)
 	pigeons.build(Person.detail)
+	# In the big park the flocks perch on its real trees (the classic park's curtain is elsewhere).
+	if scenario == "grande": pigeons.perches = park.tree_spots
 	extras = preload("res://scripts/extras.gd").new()
 	viewport.add_child(extras)
 	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.
@@ -812,7 +814,7 @@ func menu_park_ready() -> void:
 
 func update_menu_background(dt: float) -> void:
 	for p in people: update_person(p,dt)
-	pigeons.update(dt,people,[dog] if dog else [])
+	pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 	if extras: extras.update(dt)
 	if dog: dog.update(dt)
 	ambience.update(dt)
@@ -1008,7 +1010,7 @@ func _process(dt: float) -> void:
 		park.update_weather(dt)
 		if not (sandbox and sandbox_paused):
 			for p in people: update_person(p,dt)
-			pigeons.update(dt,people,[dog] if dog else [])
+			pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			extras.update(dt)
 			if dog: dog.update(dt)
 		ambience.update(dt)
@@ -1030,7 +1032,7 @@ func _process(dt: float) -> void:
 		# --advance=N: let the crowd live N seconds before the capture (benches, chats, activities).
 		for step in int(advance_seconds*30):
 			for p in people: update_person(p,1.0/30)
-			pigeons.update(1.0/30,people,[dog] if dog else [])
+			pigeons.update(1.0/30,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			if dog: dog.update(1.0/30)
 	if boot_frames == 12 and academy_start != "":
 		var parts = academy_start.split(":")
@@ -1062,7 +1064,7 @@ func _process(dt: float) -> void:
 		# A few seconds more so poses blend in and the pigeons reach anyone tossing crumbs.
 		for step in 240:
 			for p in people: update_person(p,1.0/30)
-			pigeons.update(1.0/30,people,[dog] if dog else [])
+			pigeons.update(1.0/30,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 	if boot_frames == 100:
 		if smoke: smoke_test()
 		if screenshot_path != "": save_screenshot.call_deferred()
@@ -2461,7 +2463,10 @@ func update_lens_effects() -> void:
 		lens_material.set_shader_parameter("vignette_amount",strengths.x)
 		# The rangefinder's finder is a window beside the lens: it shows none of its aberration
 		# (the photo does).
-		lens_material.set_shader_parameter("chromatic_aberration",0.0 if equipment.body == 1 and interface_mode == "camara" else strengths.y)
+		# With the camera lowered you look with your own eyes: no lens character at all.
+		var through_lens = eye_ready() and not (equipment.body == 1 and interface_mode == "camara")
+		lens_material.set_shader_parameter("chromatic_aberration",strengths.y if through_lens else 0.0)
+		if not eye_ready(): lens_material.set_shader_parameter("vignette_amount",0.0)
 	if dof_active():
 		var dof_material: ShaderMaterial = dof_pass.material_override
 		dof_material.set_shader_parameter("focal_mm",focal)
