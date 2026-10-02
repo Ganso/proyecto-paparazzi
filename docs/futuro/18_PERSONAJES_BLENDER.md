@@ -63,3 +63,9 @@ Hasta **60.000 triángulos por maniquí** en `hd` (máximo en escena: 41.372; la
 - Bandolera: la correa debe apoyarse mejor sobre el pecho.
 - Revisar los perfiles delgado, robusto y niño con zoom.
 - Nivel `lo` (Android) sigue con el catálogo antiguo.
+
+## Muelles de falda, pelo y bolso reajustados (02-10-2026)
+
+Al andar, la falda, la melena y la coleta se quedaban **tendidas hacia atrás casi en horizontal**, como una bandera, y solo caían al parar: el `drag` del `SpringBoneSimulator3D` actúa contra el aire (cuanto mayor, más se rezaga la cadena respecto de quien la lleva) y las piezas traían mucho rozamiento y casi nada de peso. `person.gd::SPRING_TUNING` fija ahora, por tipo de cadena, `[rigidez, rozamiento, gravedad]`: falda `[3,4 · 0,12 · 1,6]`, melena `[1,8 · 0,15 · 1,3]`, coleta `[1,4 · 0,12 · 1,5]`, bufanda `[1,8 · 0,15 · 1,0]` y bolso `[3,0 · 0,2 · 1,2]` (las piezas de Blender no se regeneran: los valores se aplican al montar el simulador). Tela y pelo cuelgan, oscilan con cada paso y se asientan.
+
+Sentada, la falda necesita lo contrario —mantener la pose que se le da sobre el regazo y bajo los muslos—, así que `update_skirt_springs()` lleva sus muelles a `SKIRT_SEATED` (`[9,0 · 0,5 · 0,1]`) según se sienta. Hojas `08_sentado` y `09_dinamica` regeneradas. Queda un hilo fino entre las piernas al sentarse y algún pico en el bajo al arrancar a andar.

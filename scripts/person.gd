@@ -144,8 +144,15 @@ func add_secondary_chains(t: Dictionary) -> void:
 
 # Secondary motion: each chain wavers with inertia and returns to its rest shape; the legs, torso
 # and head are collision capsules so skirt and hair slide over them instead of passing through.
+var spring_sim: SpringBoneSimulator3D
+# Seated, the skirt has to keep the pose given to it (over the lap, tucked under the thighs): its
+# springs stiffen and the weight that makes it hang while walking is taken away.
+const SKIRT_SEATED = [9.0,.5,.1]
+# [stiffness, drag, gravity] of the secondary chains, by the start of their name.
+const SPRING_TUNING = {"falda":[3.4,.12,1.6],"melena":[1.8,.15,1.3],"coleta":[1.4,.12,1.5],"bufanda":[1.8,.15,1.0],"bolso":[3.0,.2,1.2]}
 func build_spring_simulator() -> void:
 	var sim = SpringBoneSimulator3D.new()
+	spring_sim = sim
 	sim.name = "Muelles"
 	rig.add_child(sim)
 	sim.setting_count = chains.size()
@@ -154,9 +161,16 @@ func build_spring_simulator() -> void:
 		var n: int = chain.points.size()
 		sim.set_root_bone_name(i,"%s.0" % chain.name)
 		sim.set_end_bone_name(i,"%s.%d" % [chain.name,n-1])
-		sim.set_stiffness(i,chain.get("stiffness",1.0))
-		sim.set_drag(i,chain.get("drag",.4))
-		sim.set_gravity(i,chain.get("gravity",0.0))
+		# The simulator's drag works against the air: with the values the pieces bring, a skirt or a
+		# ponytail lagged behind a walking person until it lay almost flat, like a flag, and only
+		# fell when the person stopped. Less drag and more weight: cloth and hair hang, sway with
+		# each step and settle (SPRING_TUNING by chain; the pieces' own values otherwise).
+		var tuning: Array = []
+		for prefix in SPRING_TUNING:
+			if str(chain.name).begins_with(prefix): tuning = SPRING_TUNING[prefix]
+		sim.set_stiffness(i,tuning[0] if not tuning.is_empty() else chain.get("stiffness",1.0))
+		sim.set_drag(i,tuning[1] if not tuning.is_empty() else chain.get("drag",.4))
+		sim.set_gravity(i,tuning[2] if not tuning.is_empty() else chain.get("gravity",0.0))
 		sim.set_radius(i,chain.get("radius",.02))
 	for spec in [["muslo.I",.075,.5],["muslo.D",.075,.5],["pierna.I",.055,.45],["pierna.D",.055,.45],["torax",.15,.3],["cabeza",.1,.1]]:
 		if not bones.has(spec[0]): continue
@@ -489,8 +503,14 @@ func update_skirt_springs() -> void:
 	if chains.is_empty() or (seat <= 0.0 and skirt_seated <= 0.0): return
 	skirt_seated = seat
 	var e = smoothstep(0,1,seat)
-	for chain in chains:
+	for i in chains.size():
+		var chain: Dictionary = chains[i]
 		if not str(chain.name).begins_with("falda"): continue
+		if is_instance_valid(spring_sim):
+			var walking: Array = SPRING_TUNING["falda"]
+			spring_sim.set_stiffness(i,lerpf(walking[0],SKIRT_SEATED[0],e))
+			spring_sim.set_drag(i,lerpf(walking[1],SKIRT_SEATED[1],e))
+			spring_sim.set_gravity(i,lerpf(walking[2],SKIRT_SEATED[2],e))
 		# The chains behind the hip end up under the thigh, on the seat: they hardly bend at the knee
 		# (bent like the front ones, they hung behind the calves in shreds).
 		var back = vector(chain.points[0]).z > 0.0
