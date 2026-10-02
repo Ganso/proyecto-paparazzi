@@ -394,13 +394,13 @@ func build_world() -> void:
 	viewport.add_child(extras)
 	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.
 	if scenario == "clasico": extras.build(Person.detail)
+	else: extras.build_playground(park.PLAYGROUND_POS,Person.detail)
 	# Ducks on the pond (desktop only, beyond the fence).
 	if scenario == "clasico" and Person.detail == "hd" and park.detail == "hd":
 		ducks = preload("res://scripts/ducks.gd").new()
 		viewport.add_child(ducks)
 		var pond_pos = park.polar(park.POND.x,park.POND.y)
 		ducks.build(pond_pos,park.facing_center(pond_pos)+PI*.5)
-	else: extras.build_playground(park.PLAYGROUND_POS,Person.detail)
 	world_times["figurantes"] = Time.get_ticks_msec()-t_stage
 	t_stage = Time.get_ticks_msec()
 	ambience = preload("res://scripts/ambience.gd").new()
