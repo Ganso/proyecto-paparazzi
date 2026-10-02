@@ -13,7 +13,7 @@ Secuencia de momentos clave que recorre el ciclo de juego desde la interfaz inic
 |---|---|---|
 | **01. Inicio / Intro** | ![Inicio](estados/01_inicio.png) | Menú principal vectorial, tipografía de palo seco antialiased procedural y paleta de diseño editorial sobrio. |
 | **02. Briefing del Objetivo** | ![Briefing](estados/02_briefing.png) | Retrato 3D del objetivo con iluminación de estudio, descriptor morfológico y prendas de vestimenta asignadas. |
-| **03. Visor Réflex** | ![Visor Réflex](estados/03_visor_reflex.png) | Visor óptico clásico con cuadrícula áurea, 9 puntos de enfoque AF, prisma esmerilado y aguja del exposímetro analógico. |
+| **03. Visor Réflex** | ![Visor Réflex](estados/03_visor_reflex.png) | Visor óptico clásico con cuadrícula áurea, 9 colimadores AF, prisma esmerilado y aguja del exposímetro analógico. |
 | **04. Parque en Día Despejado** | ![Parque Día](estados/04_parque_dia.png) | Plaza central abierta a $28\text{ mm}$, 21 viandantes simultáneos y fondo vegetal denso sin caídas de frame. |
 | **05. Atenuación Lumínica por Nubes** | ![Nubes y EV](estados/05_nubes_ev.png) | Nube procedural ocultando el sol con atenuación de 3 EV, modificando el exposímetro y la exposición requerida. |
 | **05b. Parque en Hora Dorada** | ![Hora Dorada](estados/05b_hora_dorada.png) | Puesta de sol a baja cota ($-15^\circ$), resplandor ambarino cálido, sombras rasantes dramáticas y reflejos en maniquíes. |
@@ -85,6 +85,7 @@ Demostración interactiva en bucles GIF animados cuantizados con paleta de color
 | **Dos amigos en la mesa de pícnic** | ![Mesa](estados/pradera_mesa_picnic.jpg) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
 | **Perros**: el de siempre y el pequeño con manchas | ![Perros](estados/perros.png) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
 | **Patos en el estanque** | ![Patos](estados/patos.png) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
+| **Periódico**: hojas abiertas con pliegue, por dentro y por fuera | ![Periódico](estados/periodico.png) | [futuro/19](../futuro/19_VIDA_EN_EL_PARQUE.md) |
 | **Pantalla de carga e icono** | ![Carga](interfaz/00_carga.png) | [futuro/20](../futuro/20_INTERFAZ_CLARA.md) |
 | **Opciones**, con la vibración del mando | ![Opciones](interfaz/12_opciones.png) | [futuro/22](../futuro/22_MENU_TUTORIAL_MANDO.md) |
 

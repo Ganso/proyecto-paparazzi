@@ -506,6 +506,7 @@ var skirt_seated = -1.0
 # the hand bones, visual only (no colliders, so scoring never sees them).
 const PROP_FOR = {"movil": ["telefono"], "leer": ["periodico"], "foto": ["camara"], "cafe": ["cafe"], "palomas": ["pan","migas"]}
 static var prop_materials = {}
+static var prop_meshes = {}
 # Phone screen glow by time of day (park.gd::set_time_of_day): 0 day … 1 night. The screen is
 # emissive and a tiny light (no shadows, 0.5 m) lights the face from below.
 static var screen_glow = .2
@@ -541,28 +542,99 @@ static func prop_material(key: String, color: Color, rough = .6, emission = Colo
 		prop_materials[key] = m
 	return prop_materials[key]
 
+# Newsprint drawn by code: the outside of the open paper on the top half of the image (back page on
+# the left, front page with its masthead on the right) and the inside spread on the bottom half.
 static func newspaper_material() -> StandardMaterial3D:
 	if not prop_materials.has("periodico"):
-		# Procedural newsprint: masthead, headline, photo block and columns of grey lines.
-		var img = Image.create(256,192,false,Image.FORMAT_RGB8)
-		img.fill(Color("ece7d8"))
+		var img = Image.create(512,512,false,Image.FORMAT_RGB8)
+		var paper = Color("f3f0e6")
+		var ink = Color("3b3a37")
+		var text = Color("8f8c85")
+		img.fill(paper)
 		var rng = RandomNumberGenerator.new()
 		rng.seed = 7
-		img.fill_rect(Rect2i(10,8,236,16),Color("2a2a2a"))
-		img.fill_rect(Rect2i(10,30,180,8),Color("505050"))
-		img.fill_rect(Rect2i(10,46,90,62),Color("8a8f93"))
-		for col in 4:
-			var x0 = 10+col*60
-			for row in 30:
-				var y = 46+row*4.8
-				if col == 0 and y < 112: continue
-				img.fill_rect(Rect2i(x0,int(y),int(rng.randf_range(38,54)),2),Color("9a9790"))
+		for half in 2:
+			for page in 2:
+				var x0 = page*256+14
+				var y0 = half*256+12
+				var top = y0
+				if half == 0 and page == 1:
+					# Front page: masthead between two rules, date line, big headline.
+					img.fill_rect(Rect2i(x0,y0,228,2),ink)
+					img.fill_rect(Rect2i(x0+34,y0+7,160,18),ink)
+					img.fill_rect(Rect2i(x0,y0+30,228,2),ink)
+					img.fill_rect(Rect2i(x0,y0+36,228,1),text)
+					img.fill_rect(Rect2i(x0,y0+44,200,9),ink)
+					img.fill_rect(Rect2i(x0,y0+57,150,9),ink)
+					top = y0+74
+				else:
+					# Page header and a headline.
+					img.fill_rect(Rect2i(x0,y0,228,1),text)
+					img.fill_rect(Rect2i(x0,y0+8,120+int(rng.randf_range(0,80)),7),ink)
+					top = y0+24
+				# A photograph (grey block with a darker shape) somewhere on the page.
+				var photo = Rect2i(x0+(0 if rng.randf() < .5 else 118),top,110,64)
+				img.fill_rect(photo,Color("a9adb0"))
+				img.fill_rect(Rect2i(photo.position.x+12,photo.position.y+26,60,38),Color("7d8286"))
+				img.fill_rect(Rect2i(photo.position.x+62,photo.position.y+10,26,26),Color("c9ccce"))
+				# Four narrow columns of text: short strokes with gaps, like words, not solid lines.
+				for col in 4:
+					var cx = x0+col*58
+					var y = top
+					while y < half*256+244:
+						var inside_photo = cx+50 > photo.position.x and cx < photo.end.x and y < photo.end.y+4
+						if not inside_photo:
+							var x = cx
+							while x < cx+50:
+								var word = int(rng.randf_range(4,13))
+								img.fill_rect(Rect2i(x,y,mini(word,cx+50-x),1),text)
+								x += word+2
+						y += 4 if rng.randf() > .06 else 9   # a gap now and then: paragraphs
+		# The fold shows as a faint shadow down the middle.
+		for half in 2: img.fill_rect(Rect2i(254,half*256,4,256),Color("dedacd"))
+		img.generate_mipmaps()
 		var m = StandardMaterial3D.new()
 		m.albedo_texture = ImageTexture.create_from_image(img)
-		m.roughness = .9
-		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		m.roughness = .95
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		prop_materials["periodico"] = m
 	return prop_materials["periodico"]
+
+# An open newspaper: two pages meeting at a fold, opened in a V towards the reader (+z), each page
+# bulging a little and drooping at its upper outer corner. Inside and outside are separate faces
+# with their own half of the texture (a flat box showed the print as planks of wood).
+static func newspaper_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var width = .21
+	var height = .30
+	var open = .42
+	var columns = 6
+	var rows = 4
+	for side in [-1.0,1.0]:
+		for face in 2:   # 0 inside (towards the reader), 1 outside
+			var grid = []
+			for j in rows+1:
+				var row = []
+				for i in columns+1:
+					var t = float(i)/columns
+					var up = float(j)/rows
+					var droop = t*t*up*up
+					var pos = Vector3(side*width*t*cos(open),(up-.5)*height-droop*.035,width*t*sin(open)-sin(t*PI)*.014+droop*.05)
+					var u = .5+side*t*.5 if face == 0 else .5-side*t*.5
+					var normal = Vector3(-side*sin(open),0,cos(open))*(1.0 if face == 0 else -1.0)
+					row.append([pos,Vector2(u,(1.0-up)*.5+(.5 if face == 0 else 0.0)),normal])
+				grid.append(row)
+			for j in rows:
+				for i in columns:
+					var quad = [grid[j][i],grid[j][i+1],grid[j+1][i+1],grid[j+1][i]]
+					# Counter-clockwise seen from the face's own side.
+					var order = [0,1,2,0,2,3] if (side > 0) == (face == 1) else [0,2,1,0,3,2]
+					for k in order:
+						st.set_normal(quad[k][2])
+						st.set_uv(quad[k][1])
+						st.add_vertex(quad[k][0])
+	return st.commit()
 
 func prop_part(parent: Node3D, mesh: Mesh, material: Material, pos: Vector3, rot = Vector3.ZERO) -> MeshInstance3D:
 	var node = MeshInstance3D.new()
@@ -601,9 +673,8 @@ func make_prop(key: String) -> Node3D:
 			attach.set_meta("light",light)
 		"periodico":
 			# Held open between both hands, facing the reader (placed every frame in update_props()).
-			var sheet = BoxMesh.new()
-			sheet.size = Vector3(.42,.30,.003)
-			var paper = prop_part(holder,sheet,newspaper_material(),Vector3.ZERO)
+			if not prop_meshes.has("periodico"): prop_meshes["periodico"] = newspaper_mesh()
+			var paper = prop_part(holder,prop_meshes["periodico"],newspaper_material(),Vector3.ZERO)
 			paper.top_level = true
 			attach.set_meta("sheet",paper)
 		"camara":
