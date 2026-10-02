@@ -10,6 +10,7 @@ const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
 const Badges = preload("res://scripts/badges.gd")
+const Album = preload("res://scripts/album.gd")
 const Graphics = preload("res://scripts/graphics.gd")
 const Develop = preload("res://shaders/develop.gdshader")
 
@@ -1002,6 +1003,94 @@ func new_assignment() -> void:
 # must not fill the player's file (they are never the tree's current scene, or carry their flags).
 func badges_count() -> bool:
 	return get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty()
+
+# ---- Photo album (scripts/album.gd) ----
+# Develops the photo off screen (the same material the result screen uses) and saves it.
+func save_to_album(texture: Texture2D, result: Dictionary) -> String:
+	var size = Vector2i(1280,roundi(1280.0*texture.get_height()/maxf(1.0,texture.get_width())))
+	var darkroom = SubViewport.new()
+	darkroom.size = size
+	darkroom.disable_3d = true
+	darkroom.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(darkroom)
+	var print_rect = TextureRect.new()
+	print_rect.texture = texture
+	print_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	print_rect.size = Vector2(size)
+	print_rect.material = photo_material(result)
+	darkroom.add_child(print_rect)
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var image = darkroom.get_texture().get_image()
+	darkroom.queue_free()
+	var e: Dictionary = result.evidence
+	var where = Texts.get_text("album_nivel") % (arcade_level+1) if arcade_level >= 0 else (Texts.get_text("academia") if academy and academy.active else Texts.get_text("album_tutorial"))
+	return Album.add(image,{"score":result.score,"stars":result.stars,"f":e.f,"n":e.n,"t":e.t,"iso":e.iso,"date":Time.get_datetime_string_from_system(false,true).substr(0,16),"where":where,"panning":result.get("panning",false)})
+
+var album_page = 0
+func show_album(page = 0) -> void:
+	mode = "ALBUM"
+	var root = create_modal()
+	var photos = Album.list()
+	var per_page = 8
+	var pages = maxi(1,ceili(photos.size()/float(per_page)))
+	album_page = clampi(page,0,pages-1)
+	label(root,Texts.get_text("album_titulo"),Rect2(65,26,600,55),38)
+	label(root,Texts.get_text("album_subtitulo") % [Album.MIN_SCORE,photos.size(),Album.MAX],Rect2(65,82,1150,26),16,Color("b5c3ad"))
+	if photos.is_empty(): label(root,Texts.get_text("album_vacio"),Rect2(65,300,1150,40),24,Color("b7c5ad"))
+	for k in per_page:
+		var index = album_page*per_page+k
+		if index >= photos.size(): break
+		var photo: Dictionary = photos[index]
+		var cell = Rect2(65+(k%4)*290,124+(k/4)*250,276,236)
+		var card = Button.new()
+		card.position = cell.position
+		card.size = cell.size
+		card.focus_mode = Control.FOCUS_NONE
+		card.pressed.connect(func(): show_album_photo(index))
+		root.add_child(card)
+		var image = Album.load_image(photo.file)
+		if image != null:
+			var thumb = TextureRect.new()
+			thumb.position = Vector2(8,8)
+			thumb.size = Vector2(260,170)
+			thumb.texture = ImageTexture.create_from_image(image)
+			thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			card.add_child(thumb)
+		label(card,album_caption(photo),Rect2(10,182,256,22),14)
+		label(card,"%s · %s" % [photo.get("where",""),photo.get("date","")],Rect2(10,206,256,20),12,Color("a9b8a0"))
+	if pages > 1:
+		label(root,Texts.get_text("album_pagina") % [album_page+1,pages],Rect2(540,652,200,30),16,Color("b7c5ad"))
+		if album_page > 0: button(root,"‹",Rect2(470,640,60,52),func(): show_album(album_page-1))
+		if album_page < pages-1: button(root,"›",Rect2(750,640,60,52),func(): show_album(album_page+1))
+	button(root,Texts.get_text("academia_volver_menu"),Rect2(65,640,260,52),intro)
+	if not photos.is_empty() and not OS.has_feature("web"): button(root,Texts.get_text("album_abrir_carpeta"),Rect2(955,640,260,52),func(): OS.shell_open(ProjectSettings.globalize_path(Album.DIR)))
+
+func album_caption(photo: Dictionary) -> String:
+	var caption = "%d/100 · %.0f mm · ƒ/%s · 1/%d s" % [int(photo.get("score",0)),float(photo.get("f",50.0)),str(photo.get("n",8.0)),roundi(1.0/float(photo.get("t",.004)))]
+	return caption+(" · "+Texts.get_text("album_barrido") if photo.get("panning",false) else "")
+
+func show_album_photo(index: int) -> void:
+	var photos = Album.list()
+	if index < 0 or index >= photos.size():
+		show_album(album_page)
+		return
+	var photo: Dictionary = photos[index]
+	var root = create_modal()
+	var image = Album.load_image(photo.file)
+	if image != null:
+		var view = TextureRect.new()
+		view.position = Vector2(65,24)
+		view.size = Vector2(1150,590)
+		view.texture = ImageTexture.create_from_image(image)
+		view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		root.add_child(view)
+	label(root,"%s · ISO %d · %s · %s" % [album_caption(photo),int(photo.get("iso",100)),photo.get("where",""),photo.get("date","")],Rect2(340,652,560,30),15,Color("b7c5ad"))
+	button(root,Texts.get_text("album_volver"),Rect2(65,640,260,52),func(): show_album(album_page))
+	button(root,Texts.get_text("album_borrar"),Rect2(955,640,260,52),func(): Album.remove(photo.file); show_album(album_page))
 
 func announce_badge(id: String) -> void:
 	notify_player(Texts.get_text("insignia_ganada") % Texts.get_text("insignia_%s_nombre" % id))
@@ -2562,6 +2651,9 @@ func take_photo() -> void:
 		var side = clean_image.get_height()
 		clean_image = clean_image.get_region(Rect2i((clean_image.get_width()-side)/2,0,side,side))
 	current_photo = ImageTexture.create_from_image(clean_image)
+	# The good ones go to the album (only in the real game: tests and capture tools never write there).
+	if badges_count() and not sandbox and not current_result.rejected and current_result.score >= Album.MIN_SCORE:
+		save_to_album(current_photo,current_result)
 	if not sandbox and (best.is_empty() or current_result.score > best.score):
 		best = current_result.duplicate(true)
 		best["photo"] = clean_image

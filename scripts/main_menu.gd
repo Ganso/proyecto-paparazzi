@@ -241,9 +241,10 @@ func build_options() -> void:
 		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
 		[Texts.get_text("opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
 		[Texts.get_text("menu_insignias"),main.show_badges],
+		[Texts.get_text("menu_album"),func(): main.show_album()],
 	]
 	for k in rows.size():
-		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,166+(k/2)*62,260,50),rows[k][1])
+		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,162+(k/2)*54,260,46),rows[k][1])
 		b.focus_mode = Control.FOCUS_ALL
 		if k == 0: b.call_deferred("grab_focus")
 

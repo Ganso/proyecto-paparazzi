@@ -56,3 +56,12 @@ Migración completa a acciones de `InputMap` y vibración ([14](14_SOPORTE_GAMEP
 ## Vibración del mando (02-10-2026)
 
 `main.gd::rumble()` hace vibrar el mando solo mientras es el dispositivo en uso: un golpe seco al disparar, un toque al confirmar el autofoco y un traqueteo con la manivela de la TLR. Se activa o desactiva en **Opciones → Vibración del mando** (`set_vibration()`, clave `vibracion` de `user://interfaz.cfg`, activada por defecto). Comprobado en `tests/test_input.gd` con el contador `rumbles` (en las pruebas no hay mando conectado). **Pendiente de probar con un mando físico**, como el resto del soporte de mando.
+
+## Álbum de fotos (02-10-2026)
+
+- **Qué guarda**: toda foto aceptada de un encargo (arcade, tutorial o Academia; el sandbox no) que alcance **80 puntos** (`Album.MIN_SCORE`). Se guarda **revelada**: `main.gd::save_to_album()` la pasa por el mismo material de revelado de la pantalla de resultado (`photo_material()`: exposición, desenfoque, arrastre o barrido, grano, viñeteo y aberración del objetivo) en un `SubViewport` aparte y la escribe como JPG de 1.280 px de ancho (cuadrada con la TLR).
+- **Dónde**: `user://album/foto_NNNNN.jpg`, con sus datos (nota, estrellas, focal, diafragma, velocidad, ISO, fecha, nivel y si fue un barrido) en `user://album/album.cfg` (`scripts/album.gd`). Se conservan las **60 más recientes**.
+- **Pantalla**: Opciones → **Álbum** (`show_album()`): rejilla de ocho miniaturas por página con su pie; al pulsar una se ve grande (`show_album_photo()`), con botón para borrarla; «Abrir la carpeta» la abre en el gestor de archivos.
+- Solo el juego real escribe en el álbum (`badges_count()`): las pruebas y las herramientas de captura usan otra carpeta (`Album.DIR`, o la variable de entorno `PAPARAZZI_ALBUM_DIR`).
+- Pruebas: `tests/test_album.gd` (con display, 20 comprobaciones): la foto revelada se guarda con sus datos y no es un fotograma negro, la pantalla la muestra, se borra, y el álbum se queda con las 60 más recientes.
+- Pendiente: guardar a mano fotos del sandbox o de menos de 80 puntos.

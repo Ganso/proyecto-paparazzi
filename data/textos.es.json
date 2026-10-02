@@ -439,7 +439,7 @@
   "modo_academia_texto": "Cinco lecciones de fotografía con teoría, una demostración guiada y práctica: exposición, profundidad de campo, movimiento, composición y focal.",
   "modo_academia_progreso": "%d de 5 prácticas completadas",
   "modo_opciones_titulo": "Opciones",
-  "modo_opciones_texto": "Equipo, gráficos, tema, ayuda, vibración e insignias.",
+  "modo_opciones_texto": "Equipo, gráficos, tema, ayuda, vibración, insignias y álbum.",
   "modo_entrar": "Entrar",
   "modo_ayuda_menu": "{cambiar_modo} cambiar de modo · {aceptar} entrar",
   "opcion_tema": "Tema: %s",
@@ -642,5 +642,16 @@
   "cond_barrido_ok": "corredor nítido a 1/%d s con el fondo arrastrado %.1f mm",
   "cond_barrido_movido": "el corredor sale movido: gira la cámara a su ritmo mientras disparas",
   "cond_barrido_corto": "el fondo apenas se arrastra (%.1f mm a 1/%d s): usa una velocidad más lenta, como 1/30 s",
-  "cond_corta_barrido": "Barrido (sigue al corredor)"
+  "cond_corta_barrido": "Barrido (sigue al corredor)",
+  "menu_album": "Álbum",
+  "album_titulo": "Álbum",
+  "album_subtitulo": "Aquí se guardan, reveladas, tus fotos de %d puntos o más. %d de %d (al llenarse, salen las más antiguas).",
+  "album_vacio": "Todavía no hay fotos. Las de 80 puntos o más de los encargos se guardan solas.",
+  "album_pagina": "Página %d de %d",
+  "album_abrir_carpeta": "Abrir la carpeta",
+  "album_volver": "Volver al álbum",
+  "album_borrar": "Borrar esta foto",
+  "album_barrido": "barrido",
+  "album_nivel": "Nivel %d",
+  "album_tutorial": "Tutorial"
 }
