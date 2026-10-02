@@ -265,8 +265,11 @@ func _ready() -> void:
 	# Desktop runs every profile in Forward+ (docs/futuro/17 §2.1). Ultra's effects need it: in the
 	# gl_compatibility fallback (Android, no Vulkan) the top profile is Alto.
 	if not ParkScene.forward_plus() and graphics_preset == "Ultra" and not smoke and screenshot_path == "" and not run_metrics: graphics_preset = "Alto"
+	var t_start = Time.get_ticks_msec()
 	build_world()
+	var t_world = Time.get_ticks_msec()
 	build_ui()
+	var t_ui = Time.get_ticks_msec()
 	academy = preload("res://scripts/academy.gd").new(self)
 	ui.add_child(academy)
 	preload("res://scripts/academy.gd").register_actions()
@@ -284,7 +287,11 @@ func _ready() -> void:
 		var y_button = InputEventJoypadButton.new()
 		y_button.button_index = JOY_BUTTON_Y
 		InputMap.action_add_event("camara_al_ojo",y_button)
+	var t_people = Time.get_ticks_msec()
 	populate()
+	# -- --timing: where the start-up time goes (the park by stage, the people, the interface).
+	if "--timing" in OS.get_cmdline_user_args():
+		print("TIMING total=%d ms · mundo=%d (parque %d: %s) · interfaz=%d · gente=%d" % [Time.get_ticks_msec()-t_start,t_world-t_start,world_times.get("parque",0),str(park.build_times),t_ui-t_world,Time.get_ticks_msec()-t_people])
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
 	await settle_population()
@@ -346,6 +353,7 @@ func warm_up_view() -> void:
 		await RenderingServer.frame_post_draw
 	camera.rotation = saved
 
+var world_times = {}
 func build_world() -> void:
 	var container = SubViewportContainer.new()
 	viewport_container = container
@@ -364,7 +372,9 @@ func build_world() -> void:
 	park.detail = "hd" if ParkScene.forward_plus() else "lo"
 	Person.detail = "lo" if "lo_people" in debug_off else park.detail
 	viewport.add_child(park)
+	var t_park = Time.get_ticks_msec()
 	park.build()
+	world_times["parque"] = Time.get_ticks_msec()-t_park
 	pigeons = preload("res://scripts/pigeons.gd").new()
 	if scenario == "grande":
 		# Two flocks on the lawns beside the plaza.

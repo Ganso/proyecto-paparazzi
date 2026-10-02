@@ -78,7 +78,8 @@ var primary_bone_count = 20
 var arm_out = {"I": .055, "D": .055}
 var catalog_ref: Dictionary
 var chains: Array = []
-var piece_cache = {}
+# Parsed once for everybody: each hd piece is hundreds of kilobytes of JSON.
+static var piece_cache = {}
 
 func piece_resource(path: String) -> Dictionary:
 	if not piece_cache.has(path): piece_cache[path] = JSON.parse_string(FileAccess.get_file_as_string(path))
@@ -339,6 +340,10 @@ static func mannequin_material() -> ShaderMaterial:
 			shared_material.next_pass = outline
 	return shared_material
 
+# Blender pieces of this person, appended natively, and [vertex count, colour] of each.
+var skinned_tool: SurfaceTool
+var skinned_ranges: Array = []
+
 func finish_mesh() -> void:
 	# One draw surface per person: vertex colors preserve the four named color zones.
 	var vertices = PackedVector3Array()
@@ -358,10 +363,11 @@ func finish_mesh() -> void:
 		bone_indices.append_array(batch.b)
 		weights.append_array(batch.w)
 		for index in batch.i: indices.append(index+offset)
+		var shades: PackedFloat32Array = batch.get("s",PackedFloat32Array())
+		var known = shades.size()
 		for j in batch.v.size():
-			var shade = occlusion(batch.v[j],batch.n[j])
+			var shade = shades[j] if j < known and shades[j] > 0.0 else occlusion(batch.v[j],batch.n[j])
 			colors.append(Color(batch.color.r*shade,batch.color.g*shade,batch.color.b*shade,batch.color.a))
-	triangle_count = indices.size()/3
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
@@ -372,6 +378,29 @@ func finish_mesh() -> void:
 	arrays[Mesh.ARRAY_COLOR] = colors
 	arrays[Mesh.ARRAY_TEX_UV] = uv
 	arrays[Mesh.ARRAY_TEX_UV2] = uv2
+	if skinned_tool != null:
+		# Tint the Blender pieces (their colour so far is only the occlusion) and add the primitives.
+		var skinned = skinned_tool.commit_to_arrays()
+		var tinted: PackedColorArray = skinned[Mesh.ARRAY_COLOR]
+		var k = 0
+		for entry in skinned_ranges:
+			var tint: Color = entry[1]
+			for j in entry[0]:
+				var shade = tinted[k].r
+				tinted[k] = Color(tint.r*shade,tint.g*shade,tint.b*shade,tint.a)
+				k += 1
+		skinned[Mesh.ARRAY_COLOR] = tinted
+		if not vertices.is_empty():
+			var rest = ArrayMesh.new()
+			rest.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+			var joined = SurfaceTool.new()
+			joined.create_from_arrays(skinned)
+			joined.append_from(rest,0,Transform3D.IDENTITY)
+			skinned = joined.commit_to_arrays()
+		arrays = skinned
+		skinned_tool = null
+		skinned_ranges.clear()
+	triangle_count = arrays[Mesh.ARRAY_INDEX].size()/3
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
 	mesh.surface_set_material(0,mannequin_material())
 	var instance = MeshInstance3D.new()
@@ -607,27 +636,58 @@ func build_skinned_mesh(shape: Dictionary, color: Color) -> void:
 	var weights: Array = shape.weights
 	var vertices: Array = shape.vertices
 	var normals: Array = shape.normals
-	var key = color.to_html()+current_zone
-	if not batches.has(key): batches[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"i":PackedInt32Array(),"b":PackedInt32Array(),"w":PackedFloat32Array(),"color":color,"u":PackedVector2Array(),"u2":PackedVector2Array()}
-	var batch: Dictionary = batches[key]
-	var offset: int = batch.v.size()
 	var zone_base = ZONE_TEXTURES.get(current_zone,4)*100
-	for k in vertices.size():
-		var v = vector(vertices[k])
-		var best = 0
-		for j in 4:
-			if weights[k*4+j] > weights[k*4+best]: best = j
-		var dominant: int = bones[names[joints[k*4+best]]]
-		# Position in the dominant bone's space: the procedural pattern sticks to the piece.
-		var local = rests[dominant].affine_inverse()*v
-		batch.u.append(Vector2(local.x,local.y))
-		batch.u2.append(Vector2(local.z,zone_base+dominant))
-		batch.v.append(v)
-		batch.n.append(vector(normals[k]).normalized())
-		for j in 4:
-			batch.b.append(bones[names[joints[k*4+j]]])
-			batch.w.append(weights[k*4+j])
-	for index in shape.indices: batch.i.append(index+offset)
+	# The converted piece is kept as a mesh inside the parsed JSON, one per bone numbering (secondary
+	# chains shift the indices), with its baked occlusion as vertex colour. Each person wearing it
+	# appends it natively (SurfaceTool.append_from) and tints its vertices in finish_mesh().
+	var mapped = PackedInt32Array()
+	for bone_name in names: mapped.append(bones[bone_name])
+	if not shape.has("_built"): shape["_built"] = {}
+	var built = shape["_built"].get(mapped)
+	if built == null:
+		var arrays = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		var v_out = PackedVector3Array()
+		var n_out = PackedVector3Array()
+		var c_out = PackedColorArray()
+		var u_out = PackedVector2Array()
+		var u2_out = PackedVector2Array()
+		var b_out = PackedInt32Array()
+		var w_out = PackedFloat32Array()
+		for k in vertices.size():
+			var v = vector(vertices[k])
+			var best = 0
+			for j in 4:
+				if weights[k*4+j] > weights[k*4+best]: best = j
+			var dominant: int = mapped[joints[k*4+best]]
+			# Position in the dominant bone's space: the procedural pattern sticks to the piece.
+			var local = rests[dominant].affine_inverse()*v
+			u_out.append(Vector2(local.x,local.y))
+			u2_out.append(Vector2(local.z,zone_base+dominant))
+			v_out.append(v)
+			var n = vector(normals[k]).normalized()
+			n_out.append(n)
+			var shade = occlusion(v,n)
+			c_out.append(Color(shade,shade,shade))
+			for j in 4:
+				b_out.append(mapped[joints[k*4+j]])
+				w_out.append(weights[k*4+j])
+		arrays[Mesh.ARRAY_VERTEX] = v_out
+		arrays[Mesh.ARRAY_NORMAL] = n_out
+		arrays[Mesh.ARRAY_COLOR] = c_out
+		arrays[Mesh.ARRAY_TEX_UV] = u_out
+		arrays[Mesh.ARRAY_TEX_UV2] = u2_out
+		arrays[Mesh.ARRAY_BONES] = b_out
+		arrays[Mesh.ARRAY_WEIGHTS] = w_out
+		arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(shape.indices)
+		built = {"mesh":ArrayMesh.new(),"count":v_out.size()}
+		built.mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+		shape["_built"][mapped] = built
+	if skinned_tool == null:
+		skinned_tool = SurfaceTool.new()
+		skinned_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	skinned_tool.append_from(built.mesh,0,Transform3D.IDENTITY)
+	skinned_ranges.append([built.count,color])
 
 func build_contoured_mesh(shape: Dictionary, color: Color) -> void:
 	var arrays = []

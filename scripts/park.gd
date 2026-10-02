@@ -213,23 +213,38 @@ const GROUND_LAYERS = ["losas", "asfalto", "adoquin", "grava", "cesped"]
 const GROUND_TILES = [2.4, 3.0, 1.8, 2.0, 3.0]
 var ground_material_hd: ShaderMaterial
 
+# The fifteen ground textures are decoded and mipmapped in worker threads while the park is laid
+# out (1.6 s of every start when done in a row on the main thread).
+const GROUND_MAPS = ["color","normal","orm"]
+var ground_images: Array = []
+var ground_task = -1
+func start_ground_load() -> void:
+	ground_images.resize(GROUND_MAPS.size()*GROUND_LAYERS.size())
+	ground_task = WorkerThreadPool.add_group_task(load_ground_image,ground_images.size(),-1,true)
+
+func load_ground_image(index: int) -> void:
+	# Read from the raw file's bytes (the .webp is not imported, importer="keep"):
+	# Image.load_from_file() on a res:// path warns on every launch.
+	var image = Image.new()
+	image.load_webp_from_buffer(FileAccess.get_file_as_bytes("res://assets/texturas/%s_%s.webp" % [GROUND_LAYERS[index%GROUND_LAYERS.size()],GROUND_MAPS[index/GROUND_LAYERS.size()]]))
+	image.convert(Image.FORMAT_RGB8)
+	image.generate_mipmaps()
+	ground_images[index] = image
+
 func ground_material() -> ShaderMaterial:
 	if ground_material_hd == null:
 		ground_material_hd = ShaderMaterial.new()
 		ground_material_hd.shader = preload("res://shaders/park_ground.gdshader")
-		for map in ["color","normal","orm"]:
+		if ground_task < 0: start_ground_load()
+		WorkerThreadPool.wait_for_group_task_completion(ground_task)
+		ground_task = -1
+		for map in GROUND_MAPS:
 			var images: Array[Image] = []
-			for name in GROUND_LAYERS:
-				# Read from the raw file's bytes (the .webp is not imported, importer="keep"):
-				# Image.load_from_file() on a res:// path warns on every launch.
-				var image = Image.new()
-				image.load_webp_from_buffer(FileAccess.get_file_as_bytes("res://assets/texturas/%s_%s.webp" % [name,map]))
-				image.convert(Image.FORMAT_RGB8)
-				image.generate_mipmaps()
-				images.append(image)
+			for name in GROUND_LAYERS: images.append(ground_images[GROUND_MAPS.find(map)*GROUND_LAYERS.size()+GROUND_LAYERS.find(name)])
 			var array = Texture2DArray.new()
 			array.create_from_images(images)
 			ground_material_hd.set_shader_parameter({"color":"albedo_tex","normal":"normal_tex","orm":"orm_tex"}[map],array)
+		ground_images.clear()
 		var tiles = PackedFloat32Array(GROUND_TILES)
 		tiles.resize(8)
 		ground_material_hd.set_shader_parameter("tile_size",tiles)
@@ -695,10 +710,19 @@ func bush(radius: float, height: float, pos: Vector3, color: Color, variant: int
 func polar(theta: float, radius: float) -> Vector3:
 	return Vector3(sin(deg_to_rad(theta))*radius,0,-cos(deg_to_rad(theta))*radius)
 
+# Milliseconds of each stage of build(), for `-- --timing` (docs/TESTS_Y_VERIFICACION.md §4.1).
+var build_times = {}
 func build() -> void:
+	var t0 = Time.get_ticks_msec()
+	if detail == "hd" and ground_material_hd == null: start_ground_load()
 	build_environment()
+	build_times["entorno"] = Time.get_ticks_msec()-t0
+	t0 = Time.get_ticks_msec()
 	build_layout()
+	build_times["disposicion"] = Time.get_ticks_msec()-t0
+	t0 = Time.get_ticks_msec()
 	finish_build()
+	build_times["fusion_y_hierba"] = Time.get_ticks_msec()-t0
 
 # Sky, fog, tone mapping and the sun: shared by every layout (park_grande.gd too).
 func build_environment() -> void:
@@ -887,14 +911,20 @@ func build_layout() -> void:
 		collider_only = false
 
 func finish_build() -> void:
+	var t0 = Time.get_ticks_msec()
 	merge_static_meshes()
+	build_times["fusion"] = Time.get_ticks_msec()-t0
 	# The source meshes now live inside the merged sectors: free their GPU buffers.
 	ParkAssets.cache.clear()
+	t0 = Time.get_ticks_msec()
 	if detail == "hd": build_grass()
+	build_times["hierba"] = Time.get_ticks_msec()-t0
+	t0 = Time.get_ticks_msec()
 	build_clouds()
 	build_sky_clouds()
 	set_night(false)
 	apply_graphics_preset("Ultra")
+	build_times["nubes_y_luz"] = Time.get_ticks_msec()-t0
 
 
 func apply_graphics_preset(preset: String) -> void:
@@ -1292,8 +1322,35 @@ func append_node(group: Dictionary, node: MeshInstance3D) -> void:
 		else:
 			for k in indices: group.i.append(offset+k)
 
+# Blender props are merged natively (SurfaceTool.append_from applies the transform to vertices and
+# normals and offsets the indices in C++): walking their millions of vertices in GDScript took 3 s
+# of every start. Their colours come linear and the park material reads sRGB values: each source
+# mesh is converted once, however many copies of it stand in the park.
+var srgb_meshes = {}
+func srgb_mesh(mesh: Mesh) -> ArrayMesh:
+	if srgb_meshes.has(mesh): return srgb_meshes[mesh]
+	var out = ArrayMesh.new()
+	for surface in mesh.get_surface_count():
+		var arrays = mesh.surface_get_arrays(surface)
+		var colors = arrays[Mesh.ARRAY_COLOR]
+		var count: int = arrays[Mesh.ARRAY_VERTEX].size()
+		if arrays[Mesh.ARRAY_INDEX] == null: arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(range(count))
+		var converted = PackedColorArray()
+		converted.resize(count)
+		for k in count: converted[k] = colors[k].linear_to_srgb() if colors != null else Color.WHITE
+		var clean = []
+		clean.resize(Mesh.ARRAY_MAX)
+		clean[Mesh.ARRAY_VERTEX] = arrays[Mesh.ARRAY_VERTEX]
+		clean[Mesh.ARRAY_NORMAL] = arrays[Mesh.ARRAY_NORMAL]
+		clean[Mesh.ARRAY_COLOR] = converted
+		clean[Mesh.ARRAY_INDEX] = arrays[Mesh.ARRAY_INDEX]
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,clean)
+	srgb_meshes[mesh] = out
+	return out
+
 func merge_static_meshes() -> void:
 	var groups = {}
+	srgb_meshes.clear()
 	for node in find_children("*","MeshInstance3D",true,false):
 		if node.mesh != null and not node.has_meta("ground") and not node.material_override in [glass_material,bulb_material,water_material,spray_material,windows_material]:
 			add_occluder(node)
@@ -1303,8 +1360,15 @@ func merge_static_meshes() -> void:
 		var own_key = {glass_material:"glass",bulb_material:"bulb",water_material:"water",spray_material:"spray",windows_material:"windows"}
 		var key = own_key.get(node.material_override,sector_key(node.global_position))
 		if detail == "hd" and node.has_meta("ground_layer"): key = "suelo:" + key
-		if not groups.has(key): groups[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"c":PackedColorArray(),"i":PackedInt32Array()}
-		append_node(groups[key],node)
+		if not groups.has(key): groups[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"c":PackedColorArray(),"i":PackedInt32Array(),"st":null}
+		if node.has_meta("baked"):
+			if groups[key].st == null:
+				groups[key].st = SurfaceTool.new()
+				groups[key].st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			var source = srgb_mesh(node.mesh)
+			for surface in source.get_surface_count(): groups[key].st.append_from(source,surface,node.global_transform)
+		else:
+			append_node(groups[key],node)
 		# Colliders stay as children of the emptied node, so photo rays and labels are unchanged.
 		node.mesh = null
 	for key in groups:
@@ -1315,7 +1379,12 @@ func merge_static_meshes() -> void:
 		arrays[Mesh.ARRAY_COLOR] = groups[key].c
 		arrays[Mesh.ARRAY_INDEX] = groups[key].i
 		var mesh = ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+		if not groups[key].v.is_empty(): mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+		if groups[key].st != null:
+			# Primitives (walked by hand, with their baked occlusion) join the natively merged props.
+			var st: SurfaceTool = groups[key].st
+			if mesh.get_surface_count() > 0: st.append_from(mesh,0,Transform3D.IDENTITY)
+			mesh = st.commit()
 		var node = MeshInstance3D.new()
 		node.name = "Parque_"+key.replace(":","_")
 		node.mesh = mesh
