@@ -662,5 +662,6 @@
   "ayuda_bloqueo": "Bloqueo AF/AE",
   "bloqueo_activo": "puesto",
   "bloqueo_puesto": "Foco (%s) y exposición (EV %.1f) bloqueados: reencuadra y dispara.",
-  "bloqueo_suelto": "Bloqueo suelto."
+  "bloqueo_suelto": "Bloqueo suelto.",
+  "arcade_trampa": "Trampa activa: todos los niveles abiertos en esta partida."
 }

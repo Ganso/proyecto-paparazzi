@@ -99,3 +99,4 @@ El arcade tiene ahora **25 niveles en 5 bloques**. El quinto, «Maestría · la 
 - La pantalla del arcade dibuja los bloques que haya (`Arcade.BLOCKS`), con tarjetas algo más bajas para que quepan cinco filas.
 - **Se pueden superar**: `tools/arcade_solver.gd` aprende a hacer barridos (sigue al corredor fotograma a fotograma y dispara sin parar) y pasa los 25 niveles; los nuevos, tres veces seguidas. El solucionador pone a cero el giro de la cámara antes de las fotos que no son barridos, como haría quien se detiene a disparar.
 - Pruebas: `tests/test_arcade.gd` (25 niveles, textos, la condición con sus cuatro motivos), `tests/test_photography.gd` (tolerancia) y `tests/test_input.gd` (la tecla sigue al corredor en su sentido y nunca en contra).
+- **Código de trampa** (02-10-2026): lanzar el juego con `-- --cheat=niveles` abre los 25 niveles en esa partida (`Arcade.all_open`), sin tocar el progreso guardado.

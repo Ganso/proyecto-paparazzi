@@ -1083,7 +1083,7 @@ func track_frame_goal(dt: float) -> void:
 
 func highlight_rect() -> Rect2:
 	match highlight:
-		"exposimetro": return Rect2(540,24,215,40)
+		"exposimetro": return Rect2(main.meter_bar.position,main.meter_bar.size)
 		"diafragma": return Rect2(main.aperture_button.position,main.aperture_button.size)
 		"velocidad": return Rect2(main.shutter_button.position,main.shutter_button.size)
 		"iso": return Rect2(main.iso_button.position,main.iso_button.size)

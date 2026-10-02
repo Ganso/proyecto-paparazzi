@@ -46,6 +46,11 @@ func _initialize() -> void:
 	# Progress: unlocking and stars.
 	check(Arcade.unlocked(0,{}) and not Arcade.unlocked(1,{}) and Arcade.unlocked(1,{0:{"score":70,"stars":2}}),"A passed level opens the next")
 	check(Arcade.stars_for(49,50) == 0 and Arcade.stars_for(50,50) == 1 and Arcade.stars_for(100,50) == 5,"Stars from the pass mark to 100")
+	# Cheat code (-- --cheat=niveles): every level open for the run, nothing saved for it.
+	Arcade.all_open = true
+	check(Arcade.unlocked(24,{}) and Arcade.unlocked(7,{}),"The cheat opens every level")
+	Arcade.all_open = false
+	check(not Arcade.unlocked(24,{}),"…and only while it is on")
 	Arcade.SAVE = "user://arcade_test_headless.cfg"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(Arcade.SAVE))
 	Arcade.save_result(2,70,2)

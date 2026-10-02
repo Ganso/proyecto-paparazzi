@@ -85,6 +85,36 @@ func neutral() -> void:
 		p.rig.set_bone_pose_rotation(p.bones["brazo."+side],Quaternion(Vector3.BACK,sign_side*p.arm_out[side]))
 		p.pose_bone("antebrazo."+side,.12)
 
+# Height of the pelvis while walking. Taking "as high as the more stretched leg allows" draws the
+# arcs of a pair of compasses: the hips fall towards each double support and bounce off a sharp
+# corner there, twice a stride, which read as a rebound. Here they ride a smooth wave that stays
+# under those arcs all the way round (so the knees give a little, as a person's do): lowest at
+# double support, highest in mid-stance, with WALK_BOUNCE of the compass's drop and each person's
+# own share of it (person.style.bounce). The arcs are measured once per stride length.
+const WALK_BOUNCE = .7
+var hip_wave = {}
+func walk_hip(cycle_base: float, leg: float) -> float:
+	var p = person
+	if hip_wave.get("stride",-1.0) != p.stride or hip_wave.get("leg",-1.0) != leg:
+		var top = p.nz*.03+leg*.98
+		var lowest = INF
+		var highest = -INF
+		var lowest_at = 0.0
+		for k in 96:
+			var c = k/192.0
+			var limit = top
+			for offset in [0.0,.5]:
+				var s = sample(fposmod(c+offset,1))
+				var z: float = s.z+s.roll_z
+				limit = minf(limit,s.y+sqrt(maxf(.001,pow(leg-.003,2)-z*z)))
+			if limit < lowest:
+				lowest = limit
+				lowest_at = c*2.0
+			highest = maxf(highest,limit)
+		hip_wave = {"stride":p.stride,"leg":leg,"low":lowest-.003,"drop":highest-lowest,"phase":lowest_at}
+	var u = fposmod(cycle_base*2.0-hip_wave.phase,1.0)
+	return hip_wave.low+hip_wave.drop*WALK_BOUNCE*p.style.bounce*pow(sin(PI*u),2)
+
 var idle_time = 0.0
 func pose(delta: float, traveled_distance = -1.0) -> void:
 	var p = person
@@ -129,6 +159,8 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 	var b = p.nz*(.323-.03)
 	var cycle_base = p.phase/TAU
 	var hip = p.nz*.03+(a+b)*(.95-.035*cos(TAU*(fposmod(cycle_base*2,1)-.12)) if p.runner else .98)
+	# Walkers: a smooth rise and fall instead of the arcs of a compass (see walk_hip()).
+	if not p.runner: hip = walk_hip(cycle_base,a+b)
 	for side in ["I","D"]:
 		var sign_side = -1 if side == "I" else 1
 		var x = p.profile.hombros*.22*sign_side

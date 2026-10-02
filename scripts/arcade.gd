@@ -66,8 +66,10 @@ static func save_result(n: int, score: int, stars: int) -> void:
 	if score > int(previous.score): config.set_value("niveles",str(n),{"score":score,"stars":stars})
 	config.save(SAVE)
 
+# Cheat for this run only (-- --cheat=niveles): every level open; nothing is written for it.
+static var all_open = false
 static func unlocked(n: int, progress: Dictionary) -> bool:
-	return n == 0 or progress.has(n-1)
+	return all_open or n == 0 or progress.has(n-1)
 
 # Stars of a passed level: the pass mark gives one, then every quarter of the way to 100 another.
 static func stars_for(score: int, minimum: int) -> int:

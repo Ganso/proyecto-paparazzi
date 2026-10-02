@@ -226,3 +226,4 @@ El generador de personajes en [scripts/casting.gd](../scripts/casting.gd) respet
 Suites `tests/test_art.gd` y `tests/test_gait.gd` (headless; incluye la postura sentada) y `tests/test_park_life.gd` (con display: sentarse sin teletransportes, objetos de mano). Hoja de evidencias `docs/evidencias/personajes_modelado/10_actividades.png` (`tools/capture_characters.gd -- --only=actividades`). Comandos, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
 
 > **Estilo de paso (02-10-2026)**: cada viandante bracea, lleva los codos, balancea los hombros e inclina el torso a su manera (`person.gd::style`, [futuro/15 P4](futuro/15_VARIEDAD_PROCEDURAL.md)). No afecta a piernas ni a pies apoyados.
+> **Cadera sin rebote (02-10-2026)**: la altura de la pelvis al andar es una onda suave (`gait.gd::walk_hip()`), no los arcos con pico de un compás; pasos más cortos y cadencia propia por persona. Detalle en [futuro/15 P4](futuro/15_VARIEDAD_PROCEDURAL.md).

@@ -70,10 +70,10 @@ var build_pass = "both"
 var ambient = false
 # "banco" (bench-height seat) or "suelo" (sitting on the grass, legs stretched out).
 var seat_kind = "banco"
-# Way of walking (docs/futuro/15 P4): arm swing and shoulder sway as factors, extra elbow bend and
-# torso lean in radians. Drawn per person from its seed; never named in a brief, never scored
+# Way of walking (docs/futuro/15 P4): arm swing, shoulder sway, hip bounce and cadence as factors,
+# extra elbow bend and torso lean in radians. Drawn per person from its seed; never named in a brief, never scored
 # apart (the legs and the planted feet do not change).
-var style = {"arm":1.0,"sway":1.0,"elbow":0.0,"lean":0.0}
+var style = {"arm":1.0,"sway":1.0,"elbow":0.0,"lean":0.0,"bounce":1.0,"cadence":1.0}
 # Walks a dog (scripts/dog.gd): the left hand holds the leash.
 var has_dog = false
 # The 20 bones of the universal rig; secondary chain bones come after them.
@@ -191,7 +191,9 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	rng.seed = seed_value
 	runner = t.get("runner",false)
 	speed = rng.randf_range(2.6, 3.0) if runner else rng.randf_range(0.55, 0.85)
-	stride *= 1.4 if runner else .8
+	# Walkers stroll at 0.55–0.85 m/s: shorter, quicker steps than a brisk walk (0.8 of the profile's
+	# stride made long slow lunges, and the longer the step the more the hips drop at each one).
+	stride *= 1.4 if runner else .68
 	phase = rng.randf()*TAU
 	# Its own generator: the sequence that decides speed, phase and activities is not shifted.
 	var style_rng = RandomNumberGenerator.new()
@@ -200,6 +202,11 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	style.sway = style_rng.randf_range(.6,1.7)
 	style.elbow = 0.0 if runner else style_rng.randf_range(0.0,.28)
 	style.lean = 0.0 if runner else style_rng.randf_range(-.035,.02)
+	# How much the hips rise and fall, and the cadence: shorter, quicker steps or longer, slower
+	# ones at the same speed (the planted feet never slide whatever the stride).
+	style.bounce = 1.0 if runner else style_rng.randf_range(.85,1.15)
+	style.cadence = 1.0 if runner else style_rng.randf_range(.9,1.12)
+	stride /= style.cadence
 	rig = Skeleton3D.new()
 	rig.name = "Rig"
 	add_child(rig)

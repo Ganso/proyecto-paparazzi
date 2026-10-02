@@ -176,6 +176,10 @@ func run() -> void:
 		for k in academy.THEORY_PAGES[n]-1: academy.go_next()
 		check(academy.page == academy.THEORY_PAGES[n]-1 and academy.title_label.text == Texts.get_text("academia_l%d_t%d_titulo" % [n,academy.THEORY_PAGES[n]]),"Lesson %d: its last theory page opens" % n)
 	check(Texts.get_text("academia_l3_t5_texto").contains("barrido") or Texts.get_text("academia_l3_t5_titulo").contains("barrido"),"Lesson 3 teaches panning")
+	# The light meter the first lesson points at is really drawn on the top bar.
+	academy.begin(1,"teoria")
+	for i in 3: await process_frame
+	check(academy.highlight == "exposimetro" and academy.highlight_rect() == Rect2(game.meter_bar.position,game.meter_bar.size) and game.meter_bar.visible and game.meter_bar.size.x > 150,"Lesson 1 highlights the light meter, and the meter is there")
 	print("· exams")
 	var Academy = academy.get_script()
 	for n in range(1,academy.LESSONS+1): check(has_text("academia_l%d_examen" % n),"Lesson %d has its exam statement" % n)

@@ -259,6 +259,8 @@ func _ready() -> void:
 		if arg == "--photo-walk": photo_walk = {"t":0.0,"phase":"walk","timer":3.0}
 		if arg == "--sandbox": pending_start["sandbox_demo"] = true
 		if arg.begins_with("--level="): pending_start["level"] = int(arg.trim_prefix("--level="))-1
+		# Cheat code: every arcade level open for this run (the saved progress is not touched).
+		if arg == "--cheat=niveles": Arcade.all_open = true
 		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
@@ -667,6 +669,15 @@ func build_ui() -> void:
 	raise_flash.color = Color(0,0,0,0)
 	raise_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(raise_flash)
+	# The light meter on the top bar, between the exposure buttons: scale from −2 to +2 EV and the
+	# needle. (Only the classic full-screen finder drew it; with the camera interface the place the
+	# Academy points at was an empty gap.)
+	meter_bar = Control.new()
+	meter_bar.position = Vector2(540,18)
+	meter_bar.size = Vector2(215,50)
+	meter_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	meter_bar.draw.connect(draw_meter_bar)
+	ui.add_child(meter_bar)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
 		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,tutorial]: continue
@@ -784,6 +795,7 @@ func refresh() -> void:
 	var depth = Photo.dof(focal,apertures()[n_index],focus_distance)
 	dof_label.text = Texts.get_text("nitido_2f_m_s") % [depth.x,Texts.get_text("infinito") if is_inf(depth.y) else Texts.get_text("2f_m") % depth.y]
 	finder.delta_ev = -Photo.ev(apertures()[n_index],1.0/Photo.DENOMINATORS[t_index],Photo.ISOS[iso_index],measured_ev)
+	if is_instance_valid(meter_bar): meter_bar.queue_redraw()
 	focus_slider.set_value_no_signal(1 if is_inf(focus_distance) else 1-.8/focus_distance)
 	lens_slider.set_value_no_signal(focal)
 	counter_label.text = Texts.get_text("arcade_nivel_d") % (arcade_level+1) if arcade_level >= 0 else "ENCARGO %02d" % (assignment+1)
@@ -1146,6 +1158,20 @@ func key_follow_speed(axis: float, speed: float) -> float:
 		best = turn
 		best_offset = offset
 	return best
+
+var meter_bar: Control
+func draw_meter_bar() -> void:
+	if interface_mode != "camara": return   # the classic finder draws its own
+	var font = UiStyle.font("Roboto-Regular")
+	var centre = meter_bar.size.x*.5
+	var step = 44.0
+	for i in range(-8,9):
+		var x = centre+i*step/4.0
+		meter_bar.draw_line(Vector2(x,26),Vector2(x,26+(9 if i%4 == 0 else 4)),UiStyle.FAINT,1)
+	for i in range(-2,3): meter_bar.draw_string(font,Vector2(centre+i*step-10,20),str(i) if i <= 0 else "+"+str(i),HORIZONTAL_ALIGNMENT_CENTER,20,13,UiStyle.SOFT)
+	var needle = centre+clampf(finder.delta_ev,-2,2)*step
+	var good = absf(finder.delta_ev) <= .5
+	meter_bar.draw_colored_polygon(PackedVector2Array([Vector2(needle-6,48),Vector2(needle+6,48),Vector2(needle,37)]),Color("5fbf6a") if good else Color("e3ac6a"))
 
 func track_camera_turn(dt: float) -> void:
 	var step = wrapf(angle-omega_last_angle,-180.0,180.0)
@@ -2922,6 +2948,7 @@ func show_arcade() -> void:
 	var root = create_modal()
 	label(root,Texts.get_text("arcade_titulo"),Rect2(65,26,600,55),38)
 	label(root,Texts.get_text("arcade_subtitulo"),Rect2(65,82,1100,26),16,Color("b5c3ad"))
+	if Arcade.all_open: label(root,Texts.get_text("arcade_trampa"),Rect2(65,652,700,26),15,Color("f0c75e"))
 	var progress = Arcade.load_progress()
 	for block in Arcade.BLOCKS.size():
 		var y = 116+block*103

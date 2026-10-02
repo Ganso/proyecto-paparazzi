@@ -98,5 +98,30 @@ func run() -> void:
 			check(p.rig.get_bone_pose_rotation(p.bones["muslo.I"]).get_euler().x>1,"Seated thighs extend forward")
 			check(p.rig.get_bone_pose_rotation(p.bones["pierna.I"]).get_euler().x< -1,"Seated knees flex anatomically")
 			p.free()
+	# The hips of a walker ride a smooth wave (no rebound at each double support): the height
+	# changes little from frame to frame, its slope never jumps, and the cadence is the person's own.
+	var cadences = {}
+	for seed_value in [10,11,12,13,14,15]:
+		var t = cast.generate(false)
+		t.profile = seed_value%3
+		var p = Person.new()
+		root.add_child(p)
+		p.setup(t,cast.catalog,seed_value)
+		p.state = "CAMINANDO"
+		var heights = []
+		for frame in 241:
+			p.phase = TAU*frame/240.0
+			p.animate(0)
+			heights.append(p.rig.get_bone_pose_position(p.bones.caderas).y)
+		var bounce = heights.max()-heights.min()
+		var worst_kink = 0.0
+		for k in range(1,240): worst_kink = maxf(worst_kink,absf(heights[k+1]-2.0*heights[k]+heights[k-1]))
+		check(bounce > .008 and bounce < .042,"The hips rise and fall gently (%.1f mm, seed %d)" % [bounce*1000.0,seed_value])
+		check(worst_kink < bounce*.012,"…without a sharp corner anywhere in the stride (kink %.3f mm of %.1f mm, seed %d)" % [worst_kink*1000.0,bounce*1000.0,seed_value])
+		check(absf(heights[0]-heights[240]) < .0001 and absf(heights[0]-heights[120]) < .0005,"…the same for both steps of the stride (seed %d)" % seed_value)
+		check(p.style.bounce >= .85 and p.style.bounce <= 1.15 and p.style.cadence >= .9 and p.style.cadence <= 1.12,"Bounce and cadence within their limits (seed %d)" % seed_value)
+		cadences[snappedf(p.style.cadence,.01)] = true
+		p.free()
+	check(cadences.size() >= 4,"People walk at different cadences (%d of 6)" % cadences.size())
 	print("GAIT TESTS: %d checks, %d failures, min sole y %.5f m, max contact drift %.6f m/frame" % [checks,failures,worst_clearance,maximum_slide])
 	quit(0 if failures == 0 else 1)
