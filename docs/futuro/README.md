@@ -47,7 +47,7 @@ Evaluación del estado actual de la lista de ideas y requisitos frente al códig
 | **Mecánicas de Barrido (Panning) y Previsualización DoF** | ✅ **Barrido hecho** (02-10-2026; la previsualización de profundidad de campo ya existía en el visor) | [11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md). Requiere simular el movimiento de cámara durante la exposición (§1.2.1). |
 | **Modos de Fotometría Avanzada y Autofoco (AF-C / AF-S)** | 🟡 **Fases 0 y 1 hechas** (fotometría puntual, ponderada y matricial; bloqueo AF-L/AE-L; quedan AF-C y AF-A, opcionales) | Compensación de exposición $\pm\text{EV}$ activa en `main.gd` y `equipment.gd`. Fase 0 hecha (30-09-2026): el AF matricial y la exposición automática ya no conocen al objetivo ([12 §2.1](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md), `tests/test_automatisms.gd`). §4.4 descartado. Doc: [12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md). |
 | **Interfaz Móvil Utilizable (enfoque manual táctil, controles a dos pulgares)** | 📝 *Propuesta futura* · **prioritaria** | [13_INTERFAZ_MOVIL_UTILIZABLE.md](13_INTERFAZ_MOVIL_UTILIZABLE.md) |
-| **Soporte de Gamepad (InputMap, gatillo de dos fases, menús navegables)** | 🟡 **Mando jugable, con vibración** (falta migrar todo a `InputMap` y el gatillo de dos fases) — [22 §3](22_MENU_TUTORIAL_MANDO.md) | [14_SOPORTE_GAMEPAD.md](14_SOPORTE_GAMEPAD.md) |
+| **Soporte de Gamepad (InputMap, gatillo de dos fases, menús navegables)** | 🟡 **Mando jugable, con vibración y gatillo de dos fases** (falta migrar todo a `InputMap`) — [22 §3](22_MENU_TUTORIAL_MANDO.md) | [14_SOPORTE_GAMEPAD.md](14_SOPORTE_GAMEPAD.md) |
 
 ---
 

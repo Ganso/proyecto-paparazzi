@@ -40,6 +40,8 @@ Implementación: `Input.get_vector()` para los sticks, `Input.get_action_strengt
 
 ## 3. El Gatillo como Disparador de Dos Fases
 
+> **Estado (02-10-2026): ✅ implementado** en `main.gd::update_trigger()`. A partir de 0,35 enfoca sobre el punto activo y **bloquea foco y exposición** (AF-L/AE-L de [12 §7](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)) mientras el gatillo siga a medias, para poder reencuadrar; a partir de 0,90 dispara con lo bloqueado; si se suelta por debajo de 0,30 sin disparar, se cancela. La vibración corta de la fase 1 y la del disparo ya estaban (`rumble()`). La ayuda llama al control «RT a medias» (`bloqueo` en `input_glyphs.gd`). Probado con valores sintéticos del gatillo en `tests/test_input.gd`; **sigue sin probarse con un mando físico**. Queda la equivalencia con la barra espaciadora (pulsar = fase 1, soltar = fase 2) y la migración completa a `InputMap` (§2).
+
 El gatillo analógico reproduce de forma natural el disparador real:
 
 ```

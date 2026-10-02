@@ -25,7 +25,7 @@ const CONTROLS = {
 	"punto_enfoque": ["⟦1⟧–⟦9⟧ · clic","⦅LB⦆ ⦅RB⦆","⦅L1⦆ ⦅R1⦆","⦅L⦆ ⦅R⦆"],
 	"tercios": ["⟦G⟧","⦅R3⦆","⦅R3⦆","⦅R3⦆"],
 	"fotometria": ["⟦M⟧","—","—","—"],
-	"bloqueo": ["⟦B⟧","—","—","—"],
+	"bloqueo": ["⟦B⟧","⦅RT⦆ a medias","⦅R2⦆ a medias","⦅ZR⦆ a medias"],
 	"lupa": ["⟦L⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
 	"manivela": ["⟦K⟧","⦅A⦆","⦅✕⦆","⦅B⦆"],
 	"bajar": ["⟦Y⟧","⦅Y⦆","⦅△⦆","⦅X⦆"],

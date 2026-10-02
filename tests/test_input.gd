@@ -109,6 +109,38 @@ func run() -> void:
 	check(signf(game.key_turn(-signf(turn))) == -signf(turn),"The other way, the key still turns the other way (it never follows someone against the key)")
 	check(game.key_turn(0.0) == 0.0,"No key, no turn")
 	game.end_level()
+	# The trigger as a two-stage shutter (docs/futuro/14 §3): half press locks focus and exposure,
+	# letting go cancels, a full press shoots with what was locked.
+	game.start_level(7)
+	for i in 3: await process_frame
+	game.begin_assignment()
+	for i in 30: await process_frame
+	if game.mode == "SEARCH" and game.eye_ready():
+		game.equipment.focus_mode = "AF puntual"
+		game.finder.active = 4
+		game.update_trigger(0.0)
+		game.update_trigger(.5)
+		check(game.trigger_stage == 1 and game.exposure_locked and game.focus_locked,"Half press of the trigger locks focus and exposure")
+		var held_ev = game.measured_ev
+		var held_focus = game.focus_distance
+		game.pitch += 12.0
+		game.update_camera()
+		for i in 3: await physics_frame
+		game.update_meter()
+		game.update_trigger(.6)
+		check(game.measured_ev == held_ev and game.focus_distance == held_focus,"…and holds them while recomposing")
+		game.update_trigger(.1)
+		check(game.trigger_stage == 0 and not game.exposure_locked and not game.focus_locked,"Letting the trigger go cancels the lock")
+		game.update_trigger(.5)
+		var shots_before = game.shot_serial
+		game.update_trigger(.95)
+		for i in 30: await process_frame
+		check(game.trigger_stage == 2 and game.shot_serial == shots_before+1 and not game.exposure_locked,"A full press shoots and releases the lock")
+		game.update_trigger(0.0)
+		if game.mode == "RESULT": game.resume_search()
+		check(Glyphs.CONTROLS.bloqueo[1].contains("RT"),"The help names the half press as the lock on the gamepad")
+	else:
+		check(false,"The trigger test needs the camera at the eye in SEARCH (mode %s)" % game.mode)
 	# Vibration: asked for only with the gamepad in use and the option on.
 	Glyphs.device = "teclado"
 	var rumbles = game.rumbles

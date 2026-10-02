@@ -2497,6 +2497,34 @@ static func stick(x: float) -> float:
 	var v = (absf(x)-.15)/.85
 	return signf(x)*v*v*v
 
+# The right trigger as a real shutter button (docs/futuro/14 §3): from 0.35 it focuses on the active
+# point and holds focus and exposure (AF-L / AE-L) for as long as it stays there, so the photo can
+# be recomposed; from 0.90 it shoots; let go below 0.30 without shooting and the lock is released.
+func update_trigger(rt: float) -> void:
+	if trigger_stage == 0 and rt >= .35:
+		trigger_stage = 1
+		if eye_ready() and mode == "SEARCH":
+			if equipment.focus_mode != "MF": autofocus()
+			update_meter()
+			if equipment.auto_exposure: auto_expose()
+			exposure_locked = true
+			focus_locked = equipment.focus_mode != "MF"
+			trigger_lock = true
+			refresh()
+	if trigger_stage == 1 and rt >= .9:
+		trigger_stage = 2
+		trigger_lock = false
+		take_photo()
+	if rt < .3:
+		if trigger_stage == 1 and trigger_lock:
+			# Cancelled: the half press is let go without a photo.
+			release_lock()
+			refresh()
+		trigger_lock = false
+		trigger_stage = 0
+
+var trigger_lock = false         # the lock in force was set by the trigger's half press
+
 # Sticks, triggers and D-pad repeat, every frame while searching.
 func update_pad(dt: float) -> void:
 	if Input.get_connected_joypads().is_empty(): return
@@ -2518,14 +2546,7 @@ func update_pad(dt: float) -> void:
 				tlr_loupe = loupe
 				update_finder_shader()
 	# Right trigger, a two-stage shutter: half way focuses (AF), all the way shoots.
-	var rt = Input.get_joy_axis(0,JOY_AXIS_TRIGGER_RIGHT)
-	if trigger_stage == 0 and rt >= .35:
-		trigger_stage = 1
-		if eye_ready() and equipment.focus_mode != "MF": autofocus()
-	if trigger_stage == 1 and rt >= .9:
-		trigger_stage = 2
-		take_photo()
-	if rt < .3: trigger_stage = 0
+	update_trigger(Input.get_joy_axis(0,JOY_AXIS_TRIGGER_RIGHT))
 	# D-pad ↑/↓ held: repeat at 8 Hz after 0.35 s.
 	for dir in [[JOY_BUTTON_DPAD_UP,1],[JOY_BUTTON_DPAD_DOWN,-1]]:
 		if Input.is_joy_button_pressed(0,dir[0]):
