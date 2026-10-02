@@ -9,6 +9,7 @@ const UiStyle = preload("res://scripts/ui_style.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
+const Badges = preload("res://scripts/badges.gd")
 const Graphics = preload("res://scripts/graphics.gd")
 const Develop = preload("res://shaders/develop.gdshader")
 
@@ -996,6 +997,34 @@ func new_assignment() -> void:
 	show_assignment()
 	refresh()
 	notify_player(Texts.get_text("encuentra_los_rasgos_del_encargo_usa_el_exposimetro_para_ajustar"))
+
+# Only the game itself earns badges: the test suites and the capture tools run the same scene and
+# must not fill the player's file (they are never the tree's current scene, or carry their flags).
+func badges_count() -> bool:
+	return get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty()
+
+func announce_badge(id: String) -> void:
+	notify_player(Texts.get_text("insignia_ganada") % Texts.get_text("insignia_%s_nombre" % id))
+	toast_time = 9.0
+	play_tone(1568,.12)
+
+# The badges screen (Options): what each one asks for and how far the player is.
+func show_badges() -> void:
+	mode = "BADGES"
+	var root = create_modal()
+	label(root,Texts.get_text("insignias_titulo"),Rect2(75,30,1100,52),36)
+	label(root,Texts.get_text("insignias_subtitulo"),Rect2(75,86,1100,30),18,Color("b7c5ad"))
+	var state = Badges.load_state()
+	for k in Badges.BADGES.size():
+		var id: String = Badges.BADGES[k]
+		var y = 136+k*92
+		var done = Badges.earned(id,state)
+		panel(root,Rect2(75,y,1130,82),Color(.075,.115,.085,.95))
+		label(root,Texts.get_text("insignia_conseguida") if done else Texts.get_text("insignia_pendiente"),Rect2(95,y+14,60,54),38,Color("f0c75e") if done else Color("5f6d59"))
+		label(root,Texts.get_text("insignia_%s_nombre" % id),Rect2(165,y+8,600,34),24,Color("e6ebdb"))
+		label(root,Texts.get_text("insignia_%s_texto" % id),Rect2(165,y+44,820,28),15,Color("a9b8a0"))
+		label(root,Texts.get_text("insignia_hecha") if done else "%d / %d" % [mini(state[id],Badges.GOALS[id]),Badges.GOALS[id]],Rect2(1000,y+26,190,30),18,Color("f0c75e") if done else Color("b7c5ad"))
+	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,630,260,55),intro)
 
 func notify_player(message: String) -> void:
 	toast.text = message
@@ -2494,6 +2523,10 @@ func take_photo() -> void:
 		tlr_frames -= 1
 		tlr_wound = false
 	shot_serial += 1
+	# Mastery badges (docs/futuro/05 §3): every photo of a real assignment counts, never the sandbox
+	# nor the automatic captures.
+	if badges_count() and not sandbox and not (academy and academy.active and academy.phase == "demo"):
+		for id in Badges.register(current_result,{"night":time_of_day == "night","first_shot":shot_serial == 1}): announce_badge(id)
 	if not sandbox: shots -= 1
 	await RenderingServer.frame_post_draw
 	var clean_image = viewport.get_texture().get_image()

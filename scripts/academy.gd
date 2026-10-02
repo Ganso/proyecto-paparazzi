@@ -795,6 +795,7 @@ func on_exam_photo(result: Dictionary) -> Dictionary:
 	exam_attempts += 1
 	exam_last = exam_report(lesson,result.evidence,exam_context(result))
 	if exam_last.passed: mark(lesson,"examen")
+	if graduated() and main.badges_count() and main.Badges.grant("graduado"): main.announce_badge("graduado")
 	update_panel()
 	return exam_last
 

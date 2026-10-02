@@ -69,6 +69,22 @@ graph TD
 
 ## 3. Sistema de Insignias y Medallas de Maestría
 
+> **Estado (02-10-2026): ✅ insignias implementadas** (`scripts/badges.gd`), adaptadas al juego actual, en el que los desafíos de este documento se convirtieron en los niveles del arcade:
+>
+> | Insignia | Se gana con | Dónde se comprueba |
+> |---|---|---|
+> | **Ojo de halcón** | 5 fotos con desenfoque ≤ 0,020 mm, el pecho sobre una línea de tercios y 75 puntos o más | `Badges.credits()` |
+> | **Instantánea decisiva** | 5 encargos resueltos con su primer disparo y 85 puntos o más | `first_shot` (primera foto de la sesión) |
+> | **Maestro de la noche** | 5 fotos nocturnas con error ≤ 0,3 EV y 75 puntos o más | `night` |
+> | **Velocidad pura** | Un barrido ([11 §1](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)): corredor nítido con el fondo arrastrado ≥ 40 px de 1.280 | `result.panning`, `result.background` |
+> | **Graduado de la Academia** | Los cinco exámenes de la Academia ([06 §6.1](06_MODO_TUTOR_ACADEMIA.md)) | `academy.gd`, `Badges.grant()` |
+>
+> - Cuentan las fotos de encargos del arcade, del tutorial y de la Academia; **no** las del sandbox, las rechazadas ni las de las demostraciones. Contadores y insignias se guardan en `user://insignias.cfg`.
+> - Al ganar una suena un aviso y se anuncia en pantalla; **Opciones → Insignias** (`main.gd::show_badges()`) muestra las cinco con su progreso.
+> - Solo el juego real las concede (`main.gd::badges_count()`): las suites de prueba y las herramientas de captura, que ejecutan la misma escena, no tocan el fichero del jugador.
+> - Deterministas: `Badges.credits(resultado, contexto)` solo lee el resultado y su evidencia. Pruebas en `tests/test_badges.gd` (headless, 24 comprobaciones).
+> - Pendiente: los desafíos del §2 como modos propios (hoy los cubren los niveles del arcade) y la condición original de «sin quemar altas luces» de la insignia nocturna.
+
 Al completar los desafíos con puntuación sobresaliente ($\ge 90$ créditos), el jugador desbloquea galardones permanentes:
 
 | Insignia | Desafío Requerido | Condición Técnica |

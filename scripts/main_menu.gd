@@ -240,6 +240,7 @@ func build_options() -> void:
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
 		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
 		[Texts.get_text("opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
+		[Texts.get_text("menu_insignias"),main.show_badges],
 	]
 	for k in rows.size():
 		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,166+(k/2)*62,260,50),rows[k][1])
