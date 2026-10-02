@@ -170,9 +170,10 @@ func draw_assignment(r: Rect2) -> void:
 	var text_value: String = main.briefing.text
 	if main.counter_label.visible: text_value = main.counter_label.text+" · "+text_value
 	var y = r.position.y-10 if r.position.y > 26 else 18.0
-	var hint = Texts.get_text("visor_tab_controles")
+	var hint = Texts.get_rich("visor_tab_controles")
 	draw_string(font,Vector2(r.position.x,y),text_value,HORIZONTAL_ALIGNMENT_LEFT,r.size.x-230,13,Color(.78,.82,.74,.85))
-	draw_string(font,Vector2(r.end.x-220,y),hint,HORIZONTAL_ALIGNMENT_RIGHT,220,12,Color(.6,.64,.58,.8))
+	# Keys as keycaps, pad buttons round (scripts/glyph_label.gd).
+	preload("res://scripts/glyph_label.gd").draw_rich(self,font,Vector2(r.end.x-200,y-13),hint,12,Color(.7,.74,.68,.85))
 
 func meter_delta() -> float:
 	return main.finder.delta_ev

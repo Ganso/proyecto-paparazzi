@@ -8,6 +8,7 @@ const Finder = preload("res://scripts/viewfinder.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
+const Glyphs = preload("res://scripts/input_glyphs.gd")
 const Develop = preload("res://shaders/develop.gdshader")
 
 var equipment = preload("res://scripts/equipment.gd").new()
@@ -16,7 +17,7 @@ var measured_ev = 14.0
 var meter_timer = 0.0
 var af_button: Button
 var equipment_label: Button
-var control_hint: Label
+var control_hint                    # scripts/glyph_label.gd: keys as keycaps, pad buttons round
 var exposure_label: Control
 var exposure_button: Button
 var focus_aid: TextureRect
@@ -113,6 +114,12 @@ var tlr_frames = 12                 # 120 film: 12 frames (counted in the sandbo
 var tlr_wound = true                # the crank advances the film before every shot
 var tlr_loupe = false               # L: 3× loupe over the ground glass
 var control_help                    # on-screen help (scripts/control_help.gd), F1
+# ---- Gamepad (docs/futuro/14) ----
+const PAD_PARAMS = ["t","n","iso","ev_comp"]
+var pad_param = 1                   # which exposure setting the D-pad ↑/↓ changes (←/→ chooses)
+var pad_precision = false           # L3: sticks three times finer
+var trigger_stage = 0               # RT: 0 rest, 1 half (AF), 2 fired
+var pad_repeat = 0.0                # D-pad ↑/↓ auto-repeat timer
 # ---- Scenarios (docs/futuro/01 Alternativa C) ----
 # "clasico": the photographer stands in the centre of the cylindrical park (and the Academy uses it).
 # "grande": the big park with a path network, walked freely; the camera is raised to the eye with a
@@ -135,7 +142,7 @@ var demo_keys = {}
 var photo_walk = {}
 var viewmodel: Node3D
 var walk_label: Label
-var walk_hint: Label
+var walk_hint
 var raise_flash: ColorRect
 const WALK_SPEED = 1.4
 const RUN_SPEED = 3.2
@@ -490,14 +497,31 @@ func label(parent: Control, text_value: String, rect: Rect2, font_size = 18, col
 	parent.add_child(node)
 	return node
 
+# Text with keys drawn as keycaps and pad buttons as round buttons (scripts/glyph_label.gd).
+func glyph_label(parent: Control, rich: String, rect: Rect2, font_size = 16, color = Color.WHITE, shadow = false) -> Control:
+	var node = preload("res://scripts/glyph_label.gd").new()
+	node.position = rect.position
+	node.size = rect.size
+	node.font_size = font_size
+	node.color = color
+	node.shadow = shadow
+	node.rich = rich
+	parent.add_child(node)
+	return node
+
 func button(parent: Control, text_value: String, rect: Rect2, callback: Callable, primary = false) -> Button:
 	var node = Button.new()
 	node.text = text_value
 	node.position = rect.position
 	node.size = rect.size
-	node.focus_mode = Control.FOCUS_NONE
+	# Buttons of the screens can take the focus (gamepad and keyboard navigation, docs/futuro/14 §5);
+	# the HUD's stay out of it so the D-pad never steals it while searching.
+	var on_screen = is_instance_valid(modal) and (parent == modal or modal.is_ancestor_of(parent))
+	node.focus_mode = Control.FOCUS_ALL if on_screen else Control.FOCUS_NONE
 	node.add_theme_font_size_override("font_size",16)
-	if primary: UiStyle.primary(node)
+	if primary:
+		UiStyle.primary(node)
+		if on_screen: node.call_deferred("grab_focus")
 	node.pressed.connect(callback)
 	parent.add_child(node)
 	return node
@@ -563,7 +587,7 @@ func build_ui() -> void:
 	focus_slider.value_changed.connect(func(v): set_manual_focus(INF if v >= .999 else .8/(1-v)))
 	ui.add_child(focus_slider)
 	dof_label = label(ui,"",Rect2(531,638,285,27),14,Color("c8d0bb"))
-	control_hint = label(ui,Texts.get_text("arrastra_paneo_rueda_zoom_clic_af_espacio_disparo_ayuda"),Rect2(531,670,350,35),12,Color("90a287"))
+	control_hint = glyph_label(ui,Texts.get_rich("arrastra_paneo_rueda_zoom_clic_af_espacio_disparo_ayuda"),Rect2(531,664,330,40),11,UiStyle.text_color(Color("90a287")))
 	af_button = button(ui,Texts.get_text("enfocar"),Rect2(863,647,128,50),autofocus)
 	button(ui,Texts.get_text("disparar"),Rect2(1005,642,248,59),take_photo,true)
 	toast = label(ui,"",Rect2(290,574,700,35),16,Color("e2e8d4"))
@@ -581,11 +605,8 @@ func build_ui() -> void:
 	walk_label.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
 	walk_label.add_theme_constant_override("shadow_offset_y",2)
 	walk_label.visible = false
-	walk_hint = label(ui,Texts.get_text("paseo_ayuda"),Rect2(40,676,1200,24),14,Color("d8dfd0"))
-	walk_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	walk_hint.add_theme_color_override("font_color",Color("eef3f8"))
-	walk_hint.add_theme_color_override("font_shadow_color",Color(0,0,0,.8))
-	walk_hint.add_theme_constant_override("shadow_offset_y",2)
+	walk_hint = glyph_label(ui,Texts.get_rich("paseo_ayuda"),Rect2(40,668,1200,30),14,Color("eef3f8"),true)
+	walk_hint.align_center = true
 	walk_hint.visible = false
 	control_help = preload("res://scripts/control_help.gd").new(self)
 	ui.add_child(control_help)
@@ -635,6 +656,8 @@ func parameter_click(parameter: String) -> void:
 	skip_parameter_click = false
 
 func _input(event: InputEvent) -> void:
+	# Help texts follow the last device used (keyboard and mouse, or gamepad).
+	if Glyphs.note(event): refresh_device()
 	# Moving the pointer to the top or bottom edge unfolds the HUD bars for a moment (camera interface).
 	if event is InputEventMouseMotion and is_instance_valid(ui):
 		var y = ui.get_local_mouse_position().y
@@ -693,9 +716,9 @@ func refresh() -> void:
 		exposure_button.text = "M"
 		exposure_button.disabled = true
 	if equipment.focus_mode == "MF":
-		control_hint.text = Texts.get_text("control_hint_mf")
+		control_hint.set_rich(Texts.get_rich("control_hint_mf"))
 	else:
-		control_hint.text = "Mirar: arrastrar · Foto: Espacio · H: ayuda\nClic: AF"+(" · Rueda: zoom" if equipment.zoom() else " · Objetivo fijo")
+		control_hint.set_rich(Texts.get_rich("control_hint_af")+"\n"+Texts.get_rich("control_hint_af_zoom" if equipment.zoom() else "control_hint_af_fijo"))
 	finder.af_mode = equipment.focus_mode
 	finder.body = equipment.body
 	if is_instance_valid(camera_body) and camera_body.body != equipment.body:
@@ -950,6 +973,7 @@ func _process(dt: float) -> void:
 			for key in shot_view: set(key,shot_view[key])
 		else:
 			update_demo(dt)
+		update_pad(dt)
 		update_camera()
 		update_focus_aid(dt)
 		if equipment.focus_mode == "MF":
@@ -1697,7 +1721,7 @@ func update_classic_raise(dt: float) -> void:
 		walk_label.visible = naked
 		walk_hint.visible = naked
 		walk_label.text = briefing.text
-		walk_hint.text = Texts.get_text("buscar_ayuda")
+		walk_hint.set_rich(Texts.get_rich("buscar_ayuda"))
 
 # Walk up the avenue towards the plaza, look round, raise the camera, shoot, lower it, walk on.
 func run_walk_demo(dt: float) -> void:
@@ -2110,6 +2134,84 @@ func ratchet_sound(clicks: int) -> void:
 	player_node.play()
 	player_node.finished.connect(player_node.queue_free)
 
+# ---- Gamepad (docs/futuro/14, docs/futuro/22 §3) ----
+# The device changed: every help text on screen is redone for it (Texts fills {controls}).
+func refresh_device() -> void:
+	if is_instance_valid(walk_hint): walk_hint.set_rich(Texts.get_rich("buscar_ayuda" if not crowd else "paseo_ayuda"))
+	refresh()
+	if mode == "HELP": show_help()
+
+# Buttons while searching. Returns true when the event was used.
+func pad_button(event: InputEventJoypadButton) -> bool:
+	if not event.pressed or mode != "SEARCH": return false
+	match event.button_index:
+		JOY_BUTTON_A:
+			if equipment.tlr() and sandbox and (not tlr_wound or tlr_frames <= 0): wind_film()
+			elif eye_ready(): autofocus()
+		JOY_BUTTON_B, JOY_BUTTON_START: show_help()
+		JOY_BUTTON_X: control_help.set_enabled(not control_help.enabled)
+		JOY_BUTTON_Y:
+			if not crowd and not (academy and academy.active): toggle_raise()
+			else: return false
+		JOY_BUTTON_LEFT_SHOULDER: finder.active = posmod(finder.active-1,9)
+		JOY_BUTTON_RIGHT_SHOULDER: finder.active = posmod(finder.active+1,9)
+		JOY_BUTTON_DPAD_LEFT: pad_param = posmod(pad_param-1,PAD_PARAMS.size())
+		JOY_BUTTON_DPAD_RIGHT: pad_param = posmod(pad_param+1,PAD_PARAMS.size())
+		JOY_BUTTON_DPAD_UP:
+			change_parameter(PAD_PARAMS[pad_param],1)
+			pad_repeat = .35
+		JOY_BUTTON_DPAD_DOWN:
+			change_parameter(PAD_PARAMS[pad_param],-1)
+			pad_repeat = .35
+		JOY_BUTTON_RIGHT_STICK: finder.thirds = not finder.thirds
+		JOY_BUTTON_LEFT_STICK: pad_precision = not pad_precision
+		_: return false
+	refresh()
+	return true
+
+static func stick(x: float) -> float:
+	# Radial dead zone 0.15 and a cubic response: fine aim near the centre.
+	if absf(x) < .15: return 0.0
+	var v = (absf(x)-.15)/.85
+	return signf(x)*v*v*v
+
+# Sticks, triggers and D-pad repeat, every frame while searching.
+func update_pad(dt: float) -> void:
+	if Input.get_connected_joypads().is_empty(): return
+	var slow = 1.0/3.0 if pad_precision else 1.0
+	var lx = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_X))
+	var ly = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
+	if lx != 0.0 or ly != 0.0:
+		angle = fposmod(angle+lx*dt*42*24/view_focal()*slow,360)
+		pitch -= ly*dt*30*24/view_focal()*slow
+	var rx = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X))
+	var ry = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
+	if eye_ready():
+		if ry != 0.0 and equipment.zoom(): focal = clampf(focal-ry*dt*40*slow,equipment.lens().min,equipment.lens().max)
+		if rx != 0.0 and equipment.focus_mode == "MF": adjust_focus_delta(-rx*.3*slow*dt)
+		# TLR: the left trigger holds the loupe over the ground glass.
+		if equipment.tlr():
+			var loupe = Input.get_joy_axis(0,JOY_AXIS_TRIGGER_LEFT) > .5
+			if loupe != tlr_loupe:
+				tlr_loupe = loupe
+				update_finder_shader()
+	# Right trigger, a two-stage shutter: half way focuses (AF), all the way shoots.
+	var rt = Input.get_joy_axis(0,JOY_AXIS_TRIGGER_RIGHT)
+	if trigger_stage == 0 and rt >= .35:
+		trigger_stage = 1
+		if eye_ready() and equipment.focus_mode != "MF": autofocus()
+	if trigger_stage == 1 and rt >= .9:
+		trigger_stage = 2
+		take_photo()
+	if rt < .3: trigger_stage = 0
+	# D-pad ↑/↓ held: repeat at 8 Hz after 0.35 s.
+	for dir in [[JOY_BUTTON_DPAD_UP,1],[JOY_BUTTON_DPAD_DOWN,-1]]:
+		if Input.is_joy_button_pressed(0,dir[0]):
+			pad_repeat -= dt
+			if pad_repeat <= 0.0:
+				change_parameter(PAD_PARAMS[pad_param],dir[1])
+				pad_repeat = .125
+
 func play_tone(frequency: float, duration: float) -> void:
 	var stream = AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
@@ -2436,18 +2538,39 @@ func end_level() -> void:
 	button(root,Texts.get_text("arcade_niveles"),Rect2(805,592,410,52),show_arcade,not passed)
 
 func show_help() -> void:
-	var previous = mode
+	var previous = mode if mode != "HELP" else help_return
+	help_return = previous
 	mode = "HELP"
 	var root = create_modal()
-	label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
-	var text_value = "Mirar: arrastra en cualquier dirección. A/D: giro continuo de 360°. ↑/↓: inclinación.\nZoom: rueda o W/S, solo con objetivo zoom.\nAF: clic, F o ENFOCAR. Matricial elige la superficie más cercana entre nueve puntos.\nMF: Shift + rueda, R/T o deslizador. Con objetivo fijo también sirve la rueda sola.\nRéflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.\nCompacta en MF: ayuda digital de imagen partida. La ayuda usa el centro del visor.\nExposición manual: Q/E diafragma, Z/X velocidad, C/V ISO.\nAUTO con compensación de exposición: rueda/clic en botón AUTO o teclas +/- y [ / ].\n1–9: punto de medición/AF. G: tercios. Espacio: disparar. Tab: muestra u oculta los controles sobre el visor.\nEquipo: pulsa el tipo de cámara arriba para elegir modos u objetivos.\nLas focales se expresan como equivalentes de 35 mm.\nSandbox: disparos ilimitados; pulsa «Sandbox · escena» para cambiar luz, nubes y movimiento.\nTLR: se mira desde arriba y el visor invierte izquierda y derecha. L: lupa 3×. K: manivela (en el sandbox, 12 fotos por carrete).\nArcade: cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones; Intro en el menú abre los niveles.\nF1 o el botón «Ayuda en pantalla»: muestra los controles de la cámara, su tecla y si los llevas tú (MAN) o la cámara (AUTO). Modos A y S: tú eliges el diafragma o el tiempo y la cámara el resto."
-	label(root,text_value,Rect2(65,128,1130,490),18)
-	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = previous; intro() if previous == "INTRO" else close_modal(),true)
+	if Glyphs.pad():
+		# With a gamepad: the pad drawn with what every button does.
+		label(root,Texts.get_text("ayuda_titulo_mando"),Rect2(65,40,1100,55),36,Color("b8d78c"))
+		var diagram = preload("res://scripts/pad_diagram.gd").new()
+		diagram.position = Vector2(40,110)
+		diagram.size = Vector2(1200,500)
+		root.add_child(diagram)
+	else:
+		label(root,Texts.get_text("tu_camara_a_mano"),Rect2(65,55,1100,55),36,Color("b8d78c"))
+		glyph_label(root,Texts.get_rich("ayuda_texto_teclado"),Rect2(65,128,1130,490),17,UiStyle.INK)
+	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = help_return; intro() if help_return == "INTRO" else close_modal(),true)
 
+var help_return = "SEARCH"
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
 	if crowd and mode == "SEARCH" and photographer_input(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
+	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
+		controls_shown = not controls_shown
+		return
+	if event is InputEventJoypadButton and pad_button(event): return
+	# B on a screen goes back, as Escape does.
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B and mode != "SEARCH":
+		var esc = InputEventKey.new()
+		esc.keycode = KEY_ESCAPE
+		esc.physical_keycode = KEY_ESCAPE
+		esc.pressed = true
+		_unhandled_input(esc)
+		return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
 		controls_shown = not controls_shown
 		return
@@ -2473,6 +2596,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				elif graphics_return == "EQUIPMENT": show_equipment()
 				else: close_modal()
 			elif mode == "SEARCH": show_help()
+			elif mode == "EQUIPMENT": restore_equipment_screen()
+			elif mode in ["ARCADE","OPTIONS"]: intro()
+			elif mode == "BRIEFING": show_arcade() if arcade_level >= 0 else intro()
+			elif mode == "LEVEL_END": show_arcade()
+			elif mode == "RESULT" and not (academy and academy.active): resume_search() if shots > 0 and not level_over else finish_assignment()
 			return
 		if event.keycode == KEY_ENTER:
 			if mode == "RESULT": resume_search() if shots > 0 else finish_assignment()

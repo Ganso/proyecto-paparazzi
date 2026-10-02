@@ -6,6 +6,8 @@ extends Control
 # dark glass so it reads the same with the light and the dark theme; it never reaches the photo.
 const Photo = preload("res://scripts/photography.gd")
 const Texts = preload("res://scripts/texts.gd")
+const Glyphs = preload("res://scripts/input_glyphs.gd")
+const GlyphLabel = preload("res://scripts/glyph_label.gd")
 
 var main
 var enabled = true
@@ -59,7 +61,7 @@ func _process(_dt: float) -> void:
 	toggle.visible = searching
 	if searching:
 		var r: Rect2 = main.view_rect
-		toggle.text = ("✓ " if enabled else "")+Texts.get_text("ayuda_pantalla")+" · F1"
+		toggle.text = ("✓ " if enabled else "")+Texts.get_text("ayuda_pantalla")+" · "+Glyphs.kp("ayuda_pantalla")
 		toggle.position = Vector2(r.end.x-toggle.size.x-10,r.position.y+(96 if main.interface_mode == "clasica" and main.hud_top[0].visible else 10)+(80 if main.interface_mode == "clasica" else 0))
 	queue_redraw()
 
@@ -68,35 +70,40 @@ func rows() -> Array:
 	var e = main.equipment
 	var m: String = e.exposure_mode()
 	var out = []
-	out.append([Texts.get_text("ayuda_tecla_mirar"),Texts.get_text("ayuda_mirar"),"","info"])
-	if e.zoom(): out.append([Texts.get_text("ayuda_tecla_zoom"),Texts.get_text("ayuda_zoom"),"%d mm" % roundi(main.focal),"manual"])
+	out.append([Glyphs.k("mirar"),Texts.get_text("ayuda_mirar"),"","info"])
+	if e.zoom(): out.append([Glyphs.k("zoom"),Texts.get_text("ayuda_zoom"),"%d mm" % roundi(main.focal),"manual"])
 	else: out.append(["—",Texts.get_text("ayuda_zoom"),Texts.get_text("ayuda_objetivo_fijo") % roundi(main.focal),"fixed"])
 	var dist = Texts.get_text("infinito") if is_inf(main.focus_distance) else "%.1f m" % main.focus_distance
 	if e.focus_mode == "MF":
-		out.append([Texts.get_text("ayuda_tecla_mf_zoom") if e.zoom() else Texts.get_text("ayuda_tecla_mf"),Texts.get_text("ayuda_enfoque"),dist,"manual"])
+		out.append([Glyphs.k("enfoque_mf_zoom") if e.zoom() else Glyphs.k("enfoque_mf"),Texts.get_text("ayuda_enfoque"),dist,"manual"])
 	else:
-		out.append([Texts.get_text("ayuda_tecla_af"),Texts.get_text("ayuda_enfoque")+" AF",dist,"auto"])
+		out.append([Glyphs.k("af"),Texts.get_text("ayuda_enfoque")+" AF",dist,"auto"])
 	var n = main.apertures()[main.n_index]
-	out.append(["Q · E",Texts.get_text("ayuda_diafragma"),"f/%s" % (("%.1f" % n) if n < 10 else str(int(n))),"manual" if m in ["M","A"] else "auto"])
-	out.append(["Z · X",Texts.get_text("ayuda_velocidad"),"1/%d s" % Photo.DENOMINATORS[main.t_index],"manual" if m in ["M","S"] else "auto"])
+	out.append([pad_key("diafragma","n"),Texts.get_text("ayuda_diafragma"),"f/%s" % (("%.1f" % n) if n < 10 else str(int(n))),"manual" if m in ["M","A"] else "auto"])
+	out.append([pad_key("velocidad","t"),Texts.get_text("ayuda_velocidad"),"1/%d s" % Photo.DENOMINATORS[main.t_index],"manual" if m in ["M","S"] else "auto"])
 	if e.film: out.append(["—","ISO",Texts.get_text("ayuda_carrete") % Photo.ISOS[main.iso_index],"fixed"])
-	else: out.append(["C · V","ISO",str(Photo.ISOS[main.iso_index]),"manual" if m == "M" else "auto"])
-	if m != "M": out.append(["[ · ]",Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual"])
+	else: out.append([pad_key("iso","iso"),"ISO",str(Photo.ISOS[main.iso_index]),"manual" if m == "M" else "auto"])
+	if m != "M": out.append([pad_key("compensacion","ev_comp"),Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual"])
 	else: out.append(["",Texts.get_text("ayuda_exposimetro"),"%+.1f EV" % main.finder.delta_ev,"meter"])
 	if e.tlr():
-		out.append(["L",Texts.get_text("tlr_lupa"),"3×" if main.tlr_loupe else "","info"])
-		if main.sandbox: out.append(["K",Texts.get_text("ayuda_manivela"),"%d / 12" % main.tlr_frames,"info"])
-	out.append(["G",Texts.get_text("ayuda_tercios"),"","info"])
-	out.append([Texts.get_text("ayuda_tecla_disparar"),Texts.get_text("ayuda_disparar"),"","info"])
+		out.append([Glyphs.k("lupa"),Texts.get_text("tlr_lupa"),"3×" if main.tlr_loupe else "","info"])
+		if main.sandbox: out.append([Glyphs.k("manivela"),Texts.get_text("ayuda_manivela"),"%d / 12" % main.tlr_frames,"info"])
+	out.append([Glyphs.k("tercios"),Texts.get_text("ayuda_tercios"),"","info"])
+	out.append([Glyphs.k("disparar"),Texts.get_text("ayuda_disparar"),"","info"])
 	return out
+
+# With a gamepad the D-pad changes the selected exposure setting: mark which one.
+func pad_key(control: String, param: String) -> String:
+	if not Glyphs.pad(): return Glyphs.k(control)
+	return "▶ Cruceta ↑↓" if main.PAD_PARAMS[main.pad_param] == param else "Cruceta ←→"
 
 func _draw() -> void:
 	if not enabled or main.mode != "SEARCH" or not main.eye_ready(): return
 	var r: Rect2 = main.view_rect
 	var classic = main.interface_mode == "clasica"
 	var list = rows()
-	var line = 21.0
-	var w = 330.0
+	var line = 22.0
+	var w = 360.0
 	var h = 34.0+list.size()*line
 	var pos = Vector2(r.position.x+10,r.position.y+(178 if classic else 10))
 	draw_style_box(box(Color(.03,.05,.08,.62)),Rect2(pos,Vector2(w,h)))
@@ -109,16 +116,14 @@ func _draw() -> void:
 			var off = absf(main.finder.delta_ev) > .5
 			color = Color(1,.72,.4) if off else Color(.55,1,.6)
 		if row[0] != "":
-			var kw = maxf(30.0,font.get_string_size(row[0],HORIZONTAL_ALIGNMENT_LEFT,-1,11).x+12)
-			draw_style_box(box(Color(1,1,1,.16) if kind != "manual" else Color(MANUAL.r,MANUAL.g,MANUAL.b,.3),5),Rect2(pos.x+10,y+2,kw,17))
-			draw_string(font,Vector2(pos.x+16,y+15),row[0],HORIZONTAL_ALIGNMENT_LEFT,-1,11,Color(1,1,1,.95))
-		draw_string(font,Vector2(pos.x+120,y+15),row[1],HORIZONTAL_ALIGNMENT_LEFT,104,13,color)
-		draw_string(font,Vector2(pos.x+228,y+15),row[2],HORIZONTAL_ALIGNMENT_LEFT,66,13,color)
+			GlyphLabel.draw_rich(self,font,Vector2(pos.x+10,y+1),row[0],12,Color(1,1,1,.9))
+		draw_string(font,Vector2(pos.x+150,y+15),row[1],HORIZONTAL_ALIGNMENT_LEFT,104,13,color)
+		draw_string(font,Vector2(pos.x+258,y+15),row[2],HORIZONTAL_ALIGNMENT_LEFT,66,13,color)
 		if kind in ["manual","auto"]:
 			draw_string(font,Vector2(pos.x+w-46,y+15),"MAN" if kind == "manual" else "AUTO",HORIZONTAL_ALIGNMENT_RIGHT,36,9,color)
 		y += line
 	# Classic interface: the key on top of each HUD control too.
-	if classic and main.hud_top[0].visible:
+	if classic and main.hud_top[0].visible and not Glyphs.pad():
 		var chips = [[main.shutter_button,"Z·X"],[main.aperture_button,"Q·E"],[main.iso_button,"C·V"],[main.exposure_button,"[ ]"],[main.af_button,"F"],[main.lens_slider,"W·S"],[main.focus_slider,"R·T"]]
 		for c in chips:
 			var node: Control = c[0]
