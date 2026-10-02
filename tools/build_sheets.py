@@ -176,6 +176,12 @@ Demostración interactiva en bucles GIF animados cuantizados con paleta de color
 
 ---
 
+## Vídeo de evidencias
+
+[`video/evidencias.mp4`](video/evidencias.mp4): el último vídeo largo del proyecto (unos 175 s, 27 secuencias), generado con `tools/capture_video.sh`.
+
+---
+
 ## Novedades del 02-10-2026 (capturas sueltas, hechas a mano)
 
 | Qué | Captura | Dónde está descrito |

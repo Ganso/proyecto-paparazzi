@@ -2748,7 +2748,8 @@ func take_photo() -> void:
 		if not tlr_wound:
 			notify_player(Texts.get_text("tlr_manivela"))
 			return
-	if equipment.focus_mode != "MF" and not focus_locked: autofocus()
+	# (In a scripted capture with --mf-rack the script has already put the focus on the subject.)
+	if equipment.focus_mode != "MF" and not focus_locked and not demo.has("mf-rack"): autofocus()
 	update_meter()
 	if equipment.auto_exposure and not exposure_locked: auto_expose()
 	release_lock()

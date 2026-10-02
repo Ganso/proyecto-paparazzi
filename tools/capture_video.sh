@@ -62,7 +62,7 @@ SEQUENCES=(
 	"Compacta · su visor real y zoom 24–120|5|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
 	"Réflex · teleobjetivo siguiendo a un viandante|6|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
 	"Telemétrica 90 mm · enfoque manual, disparo y revelado|10|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=6"
-	"Nivel 8 · condición: cara nítida con AF puntual|9|--level=8 --interface=camara --follow-target --expose --shoot-at=5"
+	"Nivel 8 · condición: cara nítida y sujeto grande|9|--level=8 --interface=camara --follow-target --mf-rack --shoot-at=5"
 	"TLR 6×6 · a la cintura, visor espejado y foto cuadrada|11|--level=16 --interface=camara --follow-target --mf-rack --expose --shoot-at=7"
 	"Nivel 21 · barrido: corredor nítido, fondo arrastrado|10|--level=21 --interface=camara --focal=85 --follow-target --pan-shot --shutter=30 --shoot-at=6"
 	"Parque grande · paseo libre y cámara al ojo|12|--scenario=grande --time=golden --photo-walk"
@@ -123,3 +123,14 @@ else
 	ffmpeg -loglevel error -y -i "$silent" -c copy -movflags +faststart "$OUT"
 fi
 echo "=== Vídeo: $OUT (${duration%.*} s, $(du -h "$OUT" | cut -f1))"
+# El último vídeo largo va siempre al repositorio (docs/evidencias/video/evidencias.mp4), en una copia
+# ligera: GitHub avisa a partir de 50 MB y rechaza los ficheros de más de 100 MB. Solo cuando se
+# graba el guion entero (sin --only ni --sequences).
+if [ -z "$ONLY" ] && [ -z "$SEQ_FILE" ]; then
+	REPO_COPY="$PROJECT_DIR/docs/evidencias/video/evidencias.mp4"
+	mkdir -p "$(dirname "$REPO_COPY")"
+	ffmpeg -loglevel error -y -i "$OUT" -c:v libx264 -preset slow -crf 27 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart "$REPO_COPY"
+	size=$(stat -c %s "$REPO_COPY")
+	echo "=== Copia para el repositorio: $REPO_COPY ($(du -h "$REPO_COPY" | cut -f1))"
+	if [ "$size" -gt 50000000 ]; then echo "    AVISO: pasa de 50 MB; recodifícala con más compresión antes de subirla."; fi
+fi

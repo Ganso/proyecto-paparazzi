@@ -114,6 +114,8 @@ func pad_key(control: String, param: String) -> String:
 	return "▶ Cruceta ↑↓" if main.PAD_PARAMS[main.pad_param] == param else "Cruceta ←→"
 
 func _draw() -> void:
+	# In the recorded videos (Godot's Movie Maker) the list would cover half of every scene.
+	if OS.has_feature("movie"): return
 	if not enabled or main.mode != "SEARCH" or not main.eye_ready(): return
 	var r: Rect2 = main.view_rect
 	var classic = main.interface_mode == "clasica"
