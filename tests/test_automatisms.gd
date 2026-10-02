@@ -123,5 +123,40 @@ func run() -> void:
 	check(not game.exposure_locked,"The key again releases it")
 	for key in ["fotometria_puntual","fotometria_ponderada","fotometria_matricial","ayuda_fotometria","ayuda_bloqueo","bloqueo_puesto","bloqueo_suelto"]:
 		check(preload("res://scripts/texts.gd").get_text(key) != key,"Text %s" % key)
+	# --- AF-C (docs/futuro/12 §4.2): the lens follows what is under the active point by itself ---
+	check("AF continuo" in game.equipment.focus_modes(),"The SLR offers continuous AF")
+	game.equipment.body = 1
+	check(game.equipment.focus_modes() == ["MF"],"The rangefinder stays manual")
+	game.equipment.body = 2
+	game.equipment.focus_mode = "AF continuo"
+	game.finder.active = 4
+	game.focal = 50.0
+	var follow = func(who, seconds: float):
+		var t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec()-t0 < seconds*1000.0:
+			# Straight at the chest (aim_at() leads a walker, and at 7 m the lead misses the body).
+			var to = who.control_points()[1]-game.camera.global_position
+			game.angle = fposmod(rad_to_deg(atan2(to.x,-to.z)),360.0)
+			game.pitch = rad_to_deg(atan2(to.y,Vector2(to.x,to.z).length()))
+			game.update_camera()
+			await process_frame
+	var walker = game.people.filter(func(p): return p.lane == 2 and p.visible and p.state == "CAMINANDO" and not p.runner)[0]
+	game.focus_distance = 2.0
+	await follow.call(walker,1.2)
+	var far_d = game.camera.global_position.distance_to(walker.control_points()[1])
+	check(absf(game.focus_distance-far_d) < .6,"AF-C brings the focus to the person under the point (%.2f m away, lens at %.2f m)" % [far_d,game.focus_distance])
+	var near = game.people.filter(func(p): return p.lane == 1 and p.visible and p.state == "CAMINANDO")[0]
+	await follow.call(near,1.2)
+	var near_d = game.camera.global_position.distance_to(near.control_points()[1])
+	check(absf(game.focus_distance-near_d) < .6 and game.focus_distance < far_d-1.0,"…and follows when the camera turns to someone nearer (%.2f m away, lens at %.2f m)" % [near_d,game.focus_distance])
+	game.toggle_lock()
+	var held = game.focus_distance
+	await follow.call(walker,.8)
+	check(game.focus_distance == held,"A focus lock stops the continuous AF")
+	game.release_lock()
+	game.equipment.focus_mode = "AF puntual"
+	await follow.call(walker,.6)
+	check(game.focus_distance == held,"Single AF does not refocus by itself")
+	check(game.SHUTTER_LAG > 0.0 and game.AF_C_INTERVAL < .2,"AF-C refocuses several times a second and allows for the shutter lag")
 	print("AUTOMATISMS TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

@@ -1160,6 +1160,7 @@ func track_camera_turn(dt: float) -> void:
 func _process(dt: float) -> void:
 	total_time += dt
 	if not shooting: track_camera_turn(dt)
+	update_continuous_af(dt)
 	update_fps_counter(dt)
 	boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
@@ -2327,6 +2328,15 @@ func ray_to(point: Vector3) -> Dictionary:
 
 func autofocus() -> void:
 	if mode != "SEARCH" or equipment.focus_mode == "MF": return
+	if equipment.focus_mode == "AF continuo":
+		# The shot itself: the predicted distance, at once and without the beep of a single AF.
+		var wanted = continuous_distance()
+		finder.flash = .15
+		finder.success = wanted > 0.0
+		if wanted > 0.0:
+			focus_distance = wanted
+			refresh()
+		return
 	if equipment.focus_mode == "AF matricial": select_matrix_point()
 	var pixel = image_position(finder.points()[finder.active])
 	var origin = camera.project_ray_origin(pixel)
@@ -2345,6 +2355,35 @@ func autofocus() -> void:
 	else:
 		play_tone(230,.12)
 		notify_player(Texts.get_text("sin_superficie_bajo_ese_punto_el_enfoque_se_mantiene"))
+
+# AF-C (docs/futuro/12 §4.2): while this mode is on, the lens keeps following whatever is under
+# the active point, silently, eight times a second, and aims where a moving person will be when
+# the shutter opens (its speed times the shutter lag). A focus lock holds it still.
+const AF_C_INTERVAL = .12
+const SHUTTER_LAG = .04
+var af_c_timer = 0.0
+func continuous_distance() -> float:
+	var hit = point_hit(finder.points()[finder.active])
+	if hit.is_empty(): return -1.0
+	var where: Vector3 = hit.position
+	if hit.collider.has_meta("person"):
+		var person = hit.collider.get_meta("person")
+		if is_instance_valid(person) and "actual_velocity" in person: where += person.actual_velocity*SHUTTER_LAG
+	return maxf(.8,camera.global_position.distance_to(where))
+
+func update_continuous_af(dt: float) -> void:
+	if equipment.focus_mode != "AF continuo" or focus_locked or mode != "SEARCH" or shooting or not eye_ready(): return
+	af_c_timer -= dt
+	if af_c_timer > 0.0: return
+	af_c_timer = AF_C_INTERVAL
+	var wanted = continuous_distance()
+	if wanted < 0.0: return
+	# The lens takes a moment to get there: most of the way on each step.
+	var from = wanted if is_inf(focus_distance) else focus_distance
+	var next = lerpf(from,wanted,.7)
+	if absf(next-focus_distance) > .005:
+		focus_distance = next
+		refresh()
 
 # TLR crank (K): advances the film one frame with a ratchet sound; with the roll finished, loads a
 # new one (sandbox; in the arcade the film winds itself).

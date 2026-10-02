@@ -48,7 +48,8 @@ func lens() -> Dictionary:
 func zoom() -> bool:
 	return lens().min != lens().max
 func focus_modes() -> Array:
-	return ["MF"] if body in [1,3] else ["AF matricial", "AF puntual", "MF"]
+	# "AF continuo" (AF-C, docs/futuro/12 §4.2) keeps refocusing under the active point by itself.
+	return ["MF"] if body in [1,3] else ["AF matricial", "AF puntual", "AF continuo", "MF"]
 func tlr() -> bool:
 	return body == 3
 func apertures(focal: float) -> Array:
