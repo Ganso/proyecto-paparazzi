@@ -431,16 +431,29 @@ func animate(delta: float, traveled_distance = -1.0) -> void:
 # the legs. Now their last third is bent down by the amount of sitting: the springs keep the pose
 # as their target, so the cloth still sways a little (docs/futuro/19).
 const SKIRT_BEND = [0.0,0.0,-1.25,-.3,0.0]     # radians per joint of a chain, fully seated
+const SKIRT_BEND_BACK = [0.0,0.0,0.0,.25,0.0]
+const SKIRT_TUCK = .06                         # metres behind the thigh axis where the back of the skirt lies, seated
 func update_skirt_springs() -> void:
 	if chains.is_empty() or (seat <= 0.0 and skirt_seated <= 0.0): return
 	skirt_seated = seat
 	var e = smoothstep(0,1,seat)
 	for chain in chains:
 		if not str(chain.name).begins_with("falda"): continue
-		for k in mini(chain.points.size(),SKIRT_BEND.size()):
-			if SKIRT_BEND[k] == 0.0: continue
+		# The chains behind the hip end up under the thigh, on the seat: they hardly bend at the knee
+		# (bent like the front ones, they hung behind the calves in shreds).
+		var back = vector(chain.points[0]).z > 0.0
+		var bend: Array = SKIRT_BEND_BACK if back else SKIRT_BEND
+		if back:
+			# Their root hangs behind the hip; with the thigh forward that is *below* it, inside the
+			# seat. Seated, the root moves up against the underside of the thigh.
+			var root = bones.get("%s.0" % chain.name,-1)
+			if root >= 0:
+				var rest: Vector3 = rig.get_bone_rest(root).origin
+				rig.set_bone_pose_position(root,Vector3(rest.x,rest.y,lerpf(rest.z,minf(rest.z,SKIRT_TUCK),e)))
+		for k in mini(chain.points.size(),bend.size()):
+			if bend[k] == 0.0: continue
 			var id = bones.get("%s.%d" % [chain.name,k],-1)
-			if id >= 0: rig.set_bone_pose_rotation(id,Quaternion(Vector3.RIGHT,SKIRT_BEND[k]*e))
+			if id >= 0: rig.set_bone_pose_rotation(id,Quaternion(Vector3.RIGHT,bend[k]*e))
 var skirt_seated = -1.0
 
 # ---- Hand-held props (docs/futuro/19_VIDA_EN_EL_PARQUE.md) ----
