@@ -175,6 +175,34 @@ func run() -> void:
 		check(pressed_card or game.mode == "BRIEFING","A presses the focused button of a screen: a level card starts the level (focus %s, now %s)" % [focus_text,game.mode])
 	game.intro()
 	await process_frame
+	# The sandbox's scenario cards are reachable with the D-pad: ← → move along the row there.
+	var menu = game.find_children("*","",true,false).filter(func(n): return n.get_script() != null and n.get_script().resource_path.ends_with("main_menu.gd"))
+	if not menu.is_empty():
+		var m = menu[0]
+		m.current = m.MODES.find("sandbox")
+		m.build_card()
+		await process_frame
+		var grande: Button = m.cards["grande"]
+		check(grande.focus_mode == Control.FOCUS_ALL,"The scenario cards take the gamepad's focus")
+		m.cards["clasico"].grab_focus()
+		await process_frame
+		var right = InputEventJoypadButton.new()
+		right.button_index = JOY_BUTTON_DPAD_RIGHT
+		right.pressed = true
+		root.push_input(right)
+		await process_frame
+		check(m.MODES[m.current] == "sandbox" and root.gui_get_focus_owner() == grande,"On a scenario card the D-pad moves to the next card instead of changing mode (%s, %s)" % [m.MODES[m.current],str(root.gui_get_focus_owner().get("text"))+" "+str(root.gui_get_focus_owner().global_position)+" grande "+str(grande.global_position)])
+		root.push_input(accept_pad)
+		var a_up = InputEventJoypadButton.new()
+		a_up.button_index = JOY_BUTTON_A
+		root.push_input(a_up)
+		await process_frame
+		check(m.scenario == "grande","A on the big park's card chooses it")
+		m.select_scenario("clasico")
+		m.current = 0
+		m.build_card()
+	else:
+		check(false,"The main menu is found")
 	# A nudge of the mouse does not take the help away from the gamepad; really moving it does.
 	Glyphs.device = "mando"
 	Glyphs.mouse_travel = 0.0

@@ -162,6 +162,15 @@ func run() -> void:
 	check(not game.camera_raised and not game.eye_ready(),"The big park starts walking, camera down")
 	check(game.camera.fov > 70.0,"Walking: natural field of view")
 	check(not game.finder.visible and not game.hud_top.any(func(n): return n.visible),"Walking: no camera interface")
+	# Gamepad while walking: L3 runs (not the sticks' precision mode).
+	var l3 = InputEventJoypadButton.new()
+	l3.button_index = JOY_BUTTON_LEFT_STICK
+	l3.pressed = true
+	var precision = game.pad_precision
+	game.pad_button(l3)
+	check(game.pad_run and game.pad_precision == precision,"L3 while walking runs")
+	game.pad_button(l3)
+	check(not game.pad_run,"…and a second L3 walks again")
 	game.shots = 3
 	await game.take_photo()
 	check(game.mode == "SEARCH" and game.shots == 3,"No photo with the camera down")

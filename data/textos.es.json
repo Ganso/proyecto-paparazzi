@@ -441,7 +441,7 @@
   "modo_opciones_titulo": "Opciones",
   "modo_opciones_texto": "Equipo, gráficos, tema, ayuda, vibración, insignias y álbum.",
   "modo_entrar": "Entrar",
-  "modo_ayuda_menu": "{cambiar_modo} cambiar de modo · {aceptar} entrar",
+  "modo_ayuda_menu": "{cambiar_modo} cambiar de modo · {elegir_opcion} elegir opción · {aceptar} entrar",
   "opcion_tema": "Tema: %s",
   "opcion_interfaz": "Interfaz: %s",
   "opcion_ayuda": "Ayuda en pantalla: %s",

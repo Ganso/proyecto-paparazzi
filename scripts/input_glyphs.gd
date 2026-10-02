@@ -35,6 +35,7 @@ const CONTROLS = {
 	"pausa": ["⟦Esc⟧","⦅Menu⦆","⦅Options⦆","⦅+⦆"],
 	"atras": ["⟦Esc⟧","⦅B⦆","⦅◯⦆","⦅A⦆"],
 	"aceptar": ["⟦Intro⟧","⦅A⦆","⦅✕⦆","⦅B⦆"],
+	"elegir_opcion": ["⟦↑⟧⟦↓⟧","Cruceta ↑↓","Cruceta ↑↓","Cruceta ↑↓"],
 	"cambiar_modo": ["⟦←⟧⟦→⟧","Cruceta ←→ · ⦅LB⦆ ⦅RB⦆","Cruceta ←→ · ⦅L1⦆ ⦅R1⦆","Cruceta ←→ · ⦅L⦆ ⦅R⦆"],
 	"andar": ["⟦W⟧⟦A⟧⟦S⟧⟦D⟧","Stick izquierdo","Stick izquierdo","Stick izquierdo"],
 	"correr": ["⟦Mayús⟧","⦅L3⦆","⦅L3⦆","⦅L3⦆"],

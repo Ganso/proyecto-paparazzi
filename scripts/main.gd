@@ -135,6 +135,7 @@ var portrait_of = null
 const PAD_PARAMS = ["t","n","iso","ev_comp"]
 var pad_param = 1                   # which exposure setting the D-pad ↑/↓ changes (←/→ chooses)
 var pad_precision = false           # L3: sticks three times finer
+var pad_run = false                 # L3 while walking: run until the left stick is released
 var trigger_stage = 0               # RT: 0 rest, 1 half (AF), 2 fired
 var pad_repeat = 0.0                # D-pad ↑/↓ auto-repeat timer
 # ---- Scenarios (docs/futuro/01 Alternativa C) ----
@@ -2062,8 +2063,11 @@ func update_photographer(dt: float) -> void:
 		var forward = Vector3(sin(yaw),0,-cos(yaw))
 		var right = Vector3(cos(yaw),0,sin(yaw))
 		var wish = forward*(-input.y)+right*input.x
-		var crouching = Input.is_physical_key_pressed(KEY_CTRL)
-		var speed = (RUN_SPEED if Input.is_physical_key_pressed(KEY_SHIFT) else WALK_SPEED)*(.55 if crouching else 1.0)
+		# Gamepad: L3 toggles running (off again when the stick is let go), LT held crouches.
+		if pad.length() <= .2: pad_run = false
+		var crouching = Input.is_physical_key_pressed(KEY_CTRL) or Input.get_joy_axis(0,JOY_AXIS_TRIGGER_LEFT) > .5
+		var running = Input.is_physical_key_pressed(KEY_SHIFT) or pad_run
+		var speed = (RUN_SPEED if running else WALK_SPEED)*(.55 if crouching else 1.0)
 		var target_velocity = wish.limit_length(1.0)*speed
 		var walk_velocity = player.velocity.move_toward(target_velocity,dt*9.0)
 		var start = player.position
@@ -2772,7 +2776,9 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 		JOY_BUTTON_RIGHT_STICK:
 			if finder.golden: finder.golden = false
 			else: finder.thirds = not finder.thirds
-		JOY_BUTTON_LEFT_STICK: pad_precision = not pad_precision
+		JOY_BUTTON_LEFT_STICK:
+			if crowd and not camera_raised: pad_run = not pad_run
+			else: pad_precision = not pad_precision
 		_: return false
 	refresh()
 	return true

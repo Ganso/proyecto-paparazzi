@@ -211,7 +211,8 @@ func build_sandbox() -> void:
 		var c = Button.new()
 		c.position = Vector2(32+k*276,170)
 		c.size = Vector2(260,70)
-		c.focus_mode = Control.FOCUS_NONE
+		c.focus_mode = Control.FOCUS_ALL
+		c.add_theme_stylebox_override("focus",box(Color.TRANSPARENT,14,SKY,3))
 		c.pressed.connect(func(): select_scenario(which))
 		card.add_child(c)
 		text(c,Texts.get_text("escenario_"+which).capitalize(),Vector2(16,10),18,INK,body_medium)
@@ -223,13 +224,24 @@ func build_sandbox() -> void:
 		chip.text = Texts.get_text(times[k][1])
 		chip.position = Vector2(32+k*136,252)
 		chip.size = Vector2(126,38)
-		chip.focus_mode = Control.FOCUS_NONE
+		chip.focus_mode = Control.FOCUS_ALL
+		chip.add_theme_stylebox_override("focus",box(Color.TRANSPARENT,19,SKY,3))
 		chip.add_theme_font_override("font",body_medium)
 		chip.add_theme_font_size_override("font_size",14)
 		var tod = times[k][0]
 		chip.pressed.connect(func(): select_time(tod))
 		card.add_child(chip)
 		chips[tod] = chip
+	# Explicit neighbours: Godot's guess jumps from a card to a chip of the row below.
+	var rows = [cards.values(),chips.values()]
+	for r in rows.size():
+		var row: Array = rows[r]
+		for k in row.size():
+			var b: Control = row[k]
+			b.focus_neighbor_left = b.get_path_to(row[posmod(k-1,row.size())])
+			b.focus_neighbor_right = b.get_path_to(row[posmod(k+1,row.size())])
+			if r == 0: b.focus_neighbor_bottom = b.get_path_to(chips.values()[mini(k*2,chips.size()-1)])
+			else: b.focus_neighbor_top = b.get_path_to(cards.values()[mini(k/2,cards.size()-1)])
 	refresh()
 
 func build_options() -> void:
@@ -263,9 +275,15 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton and event.pressed:
 		if event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_LEFT_SHOULDER]: step = -1
 		elif event.button_index in [JOY_BUTTON_DPAD_RIGHT,JOY_BUTTON_RIGHT_SHOULDER]: step = 1
+	# On a scenario card or a time chip, ← → move along that row (↑ ↓ reach them from «Entrar»).
+	if step != 0 and in_rows(get_viewport().gui_get_focus_owner()) and (event is InputEventKey and event.physical_keycode in [KEY_LEFT,KEY_RIGHT] or event is InputEventJoypadButton and event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT]):
+		return
 	if step != 0:
 		get_viewport().set_input_as_handled()
 		change_mode(step)
+
+func in_rows(c: Control) -> bool:
+	return c != null and (c in cards.values() or c in chips.values())
 
 func select_scenario(which: String) -> void:
 	scenario = which
