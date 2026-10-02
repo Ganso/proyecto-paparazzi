@@ -84,7 +84,7 @@ Se pasan tras `--` (`godot-4 --path . -- <opción>`):
 |---|---|
 | `--smoke-test` | Prueba de humo (§3) y salida. |
 | `--metrics` | Tras 120 fotogramas en `SEARCH`, mide 600 fotogramas e imprime `METRICS frames=… median_ms=… p95_ms=… max_ms=… draw_calls=… shadow_draw_calls=…` (los draw calls son los del último fotograma del visor 3D, leídos con `RenderingServer.viewport_get_render_info`). Es la única medida de rendimiento disponible; no tiene umbral automatizado. |
-| `--timing` | Imprime al arrancar `TIMING total=… ms · mundo=… ({parque, palomas, figurantes, sonido}; parque: {entorno, disposicion, fusion, hierba, nubes_y_luz}) · interfaz=… · gente=…`: cuánto tarda cada etapa de la construcción de la escena. Referencia (02-10-2026, RX 6700 XT): clásico 3,8 s (parque 2,1 s, figurantes 0,7 s, gente 0,8 s); grande 4,7 s (parque 2,6 s, gente 1,8 s). Úsalo con `--quit-after 5`. |
+| `--timing` | Imprime al arrancar `TIMING total=… ms · mundo=… ({parque, palomas, figurantes, sonido}; parque: {entorno, disposicion, fusion, hierba, nubes_y_luz}) · interfaz=… · gente=…`: cuánto tarda cada etapa de la construcción de la escena. Referencia (02-10-2026, RX 6700 XT): clásico 3,5 s (parque 1,9 s, figurantes 0,75 s, gente 0,8 s); grande 4,5 s (parque 2,3 s, gente 1,9 s). Úsalo con `--quit-after 5`. |
 | `--pigeons=verja` | Coloca las bandadas ya posadas en la verja (parque clásico, `hd`) para las capturas. |
 | `--stress` | Confina a los viandantes en el sector $\theta \in [96^\circ, 144^\circ]$ para forzar congestión. |
 | `--screenshot=<ruta>` | Guarda una captura del fotograma 100 en `<ruta>`. |

@@ -142,6 +142,7 @@ func prop(mesh: Mesh, pos: Vector3, color: Color, label = "", parent: Node3D = s
 # ambient occlusion come baked in its vertex colours; glass and bulbs keep their own materials.
 # Far background that only hd draws (docs/futuro/17 §3): colliders are still built in every profile.
 var hd_only = false
+var mesh_triangles = {}
 
 func visual(asset: String, variant: String, parent: Node3D, offset: Transform3D = Transform3D.IDENTITY) -> void:
 	init_lantern_materials()
@@ -156,8 +157,13 @@ func visual(asset: String, variant: String, parent: Node3D, offset: Transform3D 
 		var own = {"glass":glass_material,"bulb":bulb_material,"water":water_material,"spray":spray_material,"windows":windows_material}
 		node.material_override = own.get(role,vertex_color_material()) if role != "" else vertex_color_material()
 		parent.add_child(node)
-		for surface in mesh.get_surface_count():
-			triangle_count += mesh.surface_get_arrays(surface)[Mesh.ARRAY_INDEX].size()/3
+		# Counted once per mesh: reading the arrays back for each of the hundreds of copies was a
+		# good part of the layout time.
+		if not mesh_triangles.has(mesh):
+			var count = 0
+			for surface in mesh.get_surface_count(): count += mesh.surface_get_arrays(surface)[Mesh.ARRAY_INDEX].size()/3
+			mesh_triangles[mesh] = count
+		triangle_count += mesh_triangles[mesh]
 
 func cube(size: Vector3, pos: Vector3, color: Color, label = "", parent: Node3D = self) -> MeshInstance3D:
 	# Window panes need a front face, not six closed faces; spend geometry on people.
@@ -709,13 +715,16 @@ func build_skyline(rng: RandomNumberGenerator) -> void:
 		visual("torre",str(rng.randi_range(0,5)),root)
 
 # Labelled collider from a mesh, with no visible geometry.
+var convex_shapes = {}
 func collider(mesh: Mesh, label: String, parent: Node3D) -> void:
 	var body = StaticBody3D.new()
 	body.collision_layer = 2
 	body.set_meta("label",label)
 	parent.add_child(body)
 	var shape = CollisionShape3D.new()
-	shape.shape = mesh.create_convex_shape()
+	# One convex hull per source mesh, shared by all its copies (hundreds of trees).
+	if not convex_shapes.has(mesh): convex_shapes[mesh] = mesh.create_convex_shape()
+	shape.shape = convex_shapes[mesh]
 	body.add_child(shape)
 
 # Bush: collider from the old ellipsoid (same volume in every profile) and a Blender bush scaled
@@ -1401,10 +1410,10 @@ func merge_static_meshes() -> void:
 	for node in find_children("*","MeshInstance3D",true,false):
 		if node.mesh != null and not node.has_meta("ground") and not node.material_override in [glass_material,bulb_material,water_material,spray_material,windows_material]:
 			add_occluder(node)
+	# Lantern glass (transparent) and bulbs (night emission) keep their own materials.
+	var own_key = {glass_material:"glass",bulb_material:"bulb",water_material:"water",spray_material:"spray",windows_material:"windows"}
 	for node in find_children("*","MeshInstance3D",true,false):
 		if node.mesh == null: continue
-		# Lantern glass (transparent) and bulbs (night emission) keep their own materials.
-		var own_key = {glass_material:"glass",bulb_material:"bulb",water_material:"water",spray_material:"spray",windows_material:"windows"}
 		var key = own_key.get(node.material_override,sector_key(node.global_position))
 		if detail == "hd" and node.has_meta("ground_layer"): key = "suelo:" + key
 		if not groups.has(key): groups[key] = {"v":PackedVector3Array(),"n":PackedVector3Array(),"c":PackedColorArray(),"i":PackedInt32Array(),"st":null}
