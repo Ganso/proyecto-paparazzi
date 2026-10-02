@@ -182,7 +182,9 @@ func run() -> void:
 	var t0 = Time.get_ticks_msec()
 	var frames_n = 0
 	key(KEY_W,true)
-	while Time.get_ticks_msec()-t0 < 1000:
+	# Until it has walked a metre (4 s at most): a fixed second failed when the machine stalled and
+	# few frames were drawn, because each frame's step is capped.
+	while Time.get_ticks_msec()-t0 < 4000 and game.player.position.z > start.z-1.0:
 		await process_frame
 		frames_n += 1
 	key(KEY_W,false)
