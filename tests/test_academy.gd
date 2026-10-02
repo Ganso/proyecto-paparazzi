@@ -41,7 +41,7 @@ func run() -> void:
 			check(words <= 60,"Lesson %d page %d stays short (%d words)" % [n,k,words])
 		check(academy.SETUP[n].pages.size() == academy.THEORY_PAGES[n],"Lesson %d has a diagram per page" % n)
 		for k in range(1,academy.TASKS+1): check(has_text("academia_l%d_p%d" % [n,k]),"Lesson %d task %d" % [n,k])
-	for key in ["academia_titulo","academia_examen_no_disponible","academia_fase_teoria","academia_fase_demo","academia_fase_practica","academia_boton_inicio"]:
+	for key in ["academia_titulo","academia_examen_boton","academia_fase_teoria","academia_fase_demo","academia_fase_practica","academia_boton_inicio"]:
 		check(has_text(key),"UI text %s" % key)
 
 	print("· menu")
@@ -50,7 +50,7 @@ func run() -> void:
 	await process_frame
 	check(game.mode == "ACADEMY","The Academy menu opens")
 	var texts_on_screen = game.modal.find_children("*","Label",true,false).map(func(l): return l.text)
-	check(texts_on_screen.count(Texts.get_text("academia_examen_no_disponible")) == academy.LESSONS,"Each lesson shows its exam as not available")
+	check(game.modal.find_children("*","Button",true,false).filter(func(b): return b.text == Texts.get_text("academia_examen_boton")).size() == academy.LESSONS,"Each lesson offers its exam")
 
 	print("· theory")
 	# --- Theory: pages, highlights and progress ---
@@ -168,6 +168,71 @@ func run() -> void:
 	check(academy.tasks[2] and academy.done(1,"practica"),"Lesson 1: a well exposed photo completes the practice")
 	game.resume_search()
 	check(academy.active and game.mode == "SEARCH","Back to the lesson after the result")
+
+	# --- Exams (docs/futuro/06 §2-§3): deterministic reports from fixed evidence ---
+	print("· exams")
+	var Academy = academy.get_script()
+	for n in range(1,academy.LESSONS+1): check(has_text("academia_l%d_examen" % n),"Lesson %d has its exam statement" % n)
+	var exam_base = {"f":50.0,"n":8.0,"t":1.0/125,"iso":400,"s":4.0,"d":4.0,"v":0.0}
+	var exam_r1 = Academy.exam_report(1,exam_base,{"delta":.2})
+	check(exam_r1.passed and exam_r1.lines.size() == 2 and Academy.exam_report(1,exam_base,{"delta":.2}) == exam_r1,"Exam 1: centred needle and steady hands pass, always the same")
+	check(not Academy.exam_report(1,exam_base,{"delta":-3.0}).passed,"Exam 1: three stops under fails")
+	var exam_slow = exam_base.duplicate()
+	exam_slow.t = 1.0/15
+	check(not Academy.exam_report(1,exam_slow,{"delta":0.0}).passed,"Exam 1: 1/15 s with a 50 mm fails for camera shake")
+	var exam_two = {"f":105.0,"n":11.0,"t":1.0/125,"iso":800,"s":4.0,"d":4.0,"v":0.0}
+	check(Academy.exam_report(2,exam_two,{"delta":0.0,"d_near":4.0,"d_far":4.4,"both":true}).passed,"Exam 2: f/11 focused on the near one holds both")
+	var exam_open = exam_two.duplicate()
+	exam_open.n = 1.8
+	check(not Academy.exam_report(2,exam_open,{"delta":0.0,"d_near":4.0,"d_far":4.4,"both":true}).passed,"Exam 2: wide open, the far one is soft")
+	check(not Academy.exam_report(2,exam_two,{"delta":0.0,"d_near":4.0,"d_far":4.4,"both":false}).passed,"Exam 2: both have to be in the photo")
+	var exam_zone = Photo.dof(105.0,11.0,4.0)
+	check(exam_zone.x <= 4.0 and exam_zone.y >= 4.4 and exam_zone.y < 4.7,"Exam 2 agrees with Photography.dof() (%.2f to %.2f m)" % [exam_zone.x,exam_zone.y])
+	var exam_run = {"f":50.0,"n":4.0,"t":1.0/1000,"iso":400,"s":7.0,"d":7.0,"v":2.8}
+	check(Academy.exam_report(3,exam_run,{"delta":0.0,"coc":.01}).passed,"Exam 3: the runner frozen at 1/1000 s passes")
+	var exam_dragged = exam_run.duplicate()
+	exam_dragged.t = 1.0/60
+	check(not Academy.exam_report(3,exam_dragged,{"delta":0.0,"coc":.01}).passed,"Exam 3: 1/60 s drags the runner")
+	var exam_walker = exam_run.duplicate()
+	exam_walker.v = .6
+	check(not Academy.exam_report(3,exam_walker,{"delta":0.0,"coc":.01}).passed,"Exam 3: a exam_walker is not the runner")
+	check(Academy.exam_report(4,exam_base,{"delta":0.0,"coc":.01,"thirds":"listo"}).passed and not Academy.exam_report(4,exam_base,{"delta":0.0,"coc":.01,"thirds":"aire"}).passed,"Exam 4: the thirds with lead room")
+	var exam_tele = {"f":135.0,"n":5.6,"t":1.0/250,"iso":200,"s":11.5,"d":11.5,"v":0.0}
+	check(Academy.exam_report(5,exam_tele,{"delta":0.0,"coc":.01,"fill":1.7*135.0/(11.5*20.25)}).passed,"Exam 5: whole body from afar with the 135 mm")
+	var exam_wide = exam_tele.duplicate()
+	exam_wide.f = 28.0
+	check(not Academy.exam_report(5,exam_wide,{"delta":0.0,"coc":.01,"fill":.2}).passed,"Exam 5: the wide angle does not pass")
+	check(not Academy.exam_report(5,exam_tele,{"delta":0.0,"coc":.09,"fill":1.0}).passed,"Exam 5: out of focus fails")
+	# A real exam: lesson 1, the sky clouds over and the player brings the needle back.
+	academy.begin(1,"examen")
+	for i in 5: await process_frame
+	check(academy.phase == "examen" and game.park.forced_cover == 1.0,"Exam 1 clouds the sky over")
+	game.update_meter()
+	check(game.finder.delta_ev < -2.0,"…and the exposure the tutor left is now far under (%.1f EV)" % game.finder.delta_ev)
+	await game.take_photo()
+	for i in 3: await process_frame
+	check(game.mode == "RESULT" and not academy.exam_last.passed and academy.exam_attempts == 1 and not academy.done(1,"examen"),"Shooting without correcting fails the exam, with its report")
+	game.resume_search()
+	academy.expose_correctly()
+	game.update_meter()
+	await game.take_photo()
+	for i in 3: await process_frame
+	check(academy.exam_last.passed and academy.done(1,"examen"),"With the needle back at 0 the exam is passed (%d/100)" % academy.exam_last.score)
+	var exam_text = "\n".join(game.modal.find_children("*","Label",true,false).map(func(l): return l.text))
+	check(exam_text.contains("APROBADO"),"The result screen shows the tutor's report")
+	game.resume_search()
+	# Exam 2 stages two people at different distances.
+	academy.begin(2,"examen")
+	for i in 5: await process_frame
+	check(is_instance_valid(academy.subject) and is_instance_valid(academy.second) and absf(academy.second.radius-academy.subject.radius-.4) < .01,"Exam 2 stages two people 40 cm apart in depth")
+	var exam_ctx = academy.exam_context({"evidence":exam_two,"delta":0.0,"coc":0.0})
+	check(exam_ctx.has("d_near") and exam_ctx.d_far > exam_ctx.d_near,"…and measures both distances for the report")
+	check(not academy.graduated() and academy.exams_done() == 1,"One exam passed: not a graduate yet")
+	for n in range(1,academy.LESSONS+1): academy.mark(n,"examen")
+	check(academy.graduated(),"Five exams passed: Graduate of the Academy")
+	game.show_academy()
+	await process_frame
+	check(game.modal.find_children("*","Label",true,false).any(func(l): return l.text.contains(Texts.get_text("academia_graduado"))),"The Academy menu shows the diploma")
 
 	# --- Progress persists ---
 	var saved = ConfigFile.new()

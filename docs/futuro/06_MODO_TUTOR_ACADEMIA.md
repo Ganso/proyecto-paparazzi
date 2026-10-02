@@ -3,7 +3,7 @@
 Este documento especifica la arquitectura pedagógica y los exámenes interactivos para el modo educativo **Academia de Fotografía**.
 
 > [!NOTE]
-> **Estado (01-10-2026): 🟡 implementado salvo los exámenes.** Las cinco lecciones tienen **teoría, demostración guiada y práctica**. El examen aparece en el menú como «todavía no disponible»: sus criterios de aprobado (§2, «Examen práctico»), el informe formativo (§3) y el título de graduado quedan para más adelante, por decisión del usuario. Lo implementado está en el §6. Evidencias en [`docs/evidencias/academia/`](../evidencias/academia/).
+> **Estado (02-10-2026): ✅ implementado, con exámenes.** Las cinco lecciones tienen **teoría, demostración guiada, práctica y examen** con informe del tutor; aprobar los cinco da el título de **Graduado de la Academia Fotográfica**. Lo implementado está en el §6 (los exámenes, en el §6.1). Evidencias en [`docs/evidencias/academia/`](../evidencias/academia/).
 
 ---
 
@@ -129,7 +129,7 @@ Cada lección prepara su escena delante de la cámara: oculta el paseo interior 
 
 ### 6.3 Pendiente
 
-- **Exámenes** (§2 y §4): criterios de aprobado deterministas, informe formativo (§3), intentos y título de graduado.
+- ~~Exámenes~~: hechos el 02-10-2026 (§6.1).
 - Narración hablada de la teoría (TTS local).
 - Controles táctiles y Android (el APK no se ha recompilado).
 - Lecciones extra (enfoque manual con telemétrica y réflex; luz nocturna, ISO y grano) y más escenarios.
@@ -141,3 +141,20 @@ Cada lección prepara su escena delante de la cámara: oculta el paseo interior 
 - `tools/capture_academy_video.sh`: vídeo de unos 3 min con una visita por lección (`--academy-tour=<segundos>:<páginas>`: pasa sola dos páginas de teoría, la demostración y la práctica), con la música del proyecto suave bajo el sonido del juego.
 - `tools/capture_academy.gd`: capturas en `docs/evidencias/academia/` (menú, teoría, demostraciones, prácticas y díptico de la lección 5).
 
+### 6.1 Exámenes (02-10-2026)
+
+Cuarta fase de cada lección (`academy.gd`, fase `"examen"`): se entra desde la práctica («Ir al examen») o desde el menú de la Academia («Examinarme»). Sin pistas ni resaltados: un enunciado, la escena preparada y tantos intentos como se quiera. Cada foto recibe el **informe del tutor** en la pantalla de resultado: veredicto (`TODAVÍA NO`, `APROBADO` o `APROBADO CON MENCIÓN`, con nota sobre 100) y una línea por criterio, con `+` o `−` y la explicación con sus números. Se aprueba cuando se cumplen **todos** los criterios; el aprobado se guarda en `user://academia.cfg` y con los cinco aparece el título de graduado en el menú de la Academia.
+
+| Lección | Escena del examen (`start_exam()`) | Criterios (`exam_report()`) |
+|---|---|---|
+| 1 Exposición | El cielo se nubla (`forced_cover = 1`) y los ajustes quedan unos 3 EV cortos | Error de exposición ≤ 0,5 EV · pulso (t ≤ 1/focal) |
+| 2 Profundidad de campo | Dos personas de altura parecida a 4,0 y 4,4 m, con el 105 mm | Ambas dentro de `Photography.dof()` · ambas en el encuadre · exposición ≤ 1 EV · pulso |
+| 3 Movimiento | El corredor pasa una y otra vez | Es el corredor · congelado (`Photography.needed_shutter()`) · nítido · exposición ≤ 1 EV · pulso |
+| 4 Composición | Una persona cruza andando, cuadrícula de tercios a la vista | Cabeza en un cruce con aire por delante (`thirds_check()`) · nítida · exposición · pulso |
+| 5 Focal | Alguien lejos en el paseo exterior; botones de 28 y 135 mm | Focal ≥ 120 mm · a más de 9 m y de cuerpo entero (45–130 % del alto) · nítido · exposición · pulso |
+
+- El examen 2 usa 4,4 m en lugar de los 4,7 m del §2: con el 105 mm a f/11 enfocando al primero, la zona nítida llega a 4,5 m, así que se aprueba cerrando a f/11 (o a f/8 enfocando entre los dos), como pedía el enunciado original.
+- `exam_report(lección, evidencia, contexto)` es estática y **determinista**: la misma evidencia da siempre el mismo informe. El contexto (`exam_context()`) añade lo que la evidencia no trae: las distancias de las dos personas, el estado de los tercios y cuánto llena el encuadre la persona.
+- La nota es el porcentaje de criterios cumplidos, menos hasta 12 puntos por el error de exposición cuando se aprueba; mención a partir de 94.
+- Textos: `academia_l<n>_examen`, `academia_ex_*` y `academia_examen_*` en `data/textos.es.json`.
+- Pruebas (`tests/test_academy.gd`, 164 comprobaciones): informes con evidencias fijas de las cinco lecciones (aprobado y suspenso por cada causa), coherencia del examen 2 con `Photography.dof()`, un examen real de la lección 1 (suspende sin corregir, aprueba con la aguja en 0, el informe sale en pantalla), la puesta en escena del examen 2 y el título de graduado.

@@ -28,6 +28,11 @@ const SETUP = {
 }
 const THEORY_PAGES = {1:5, 2:4, 3:4, 4:4, 5:4}
 const TASKS = 3
+# Exam (docs/futuro/06 §2 and §3): one statement per lesson, no hints; every photo gets the tutor's
+# report and the exam is passed when all its criteria are met. Passing the five gives the diploma.
+var exam_attempts = 0
+var exam_last = {}          # report of the last exam photo
+var second = null           # second staged person (exam of lesson 2)
 
 var main
 var active = false
@@ -234,6 +239,7 @@ func apply_setup() -> void:
 	main.angle = s.angle
 	main.pitch = s.pitch
 	main.finder.thirds = lesson == 4 and phase != "practica"
+	if phase == "examen": main.park.forced_cover = SETUP[lesson].get("cover",-1.0)
 	main.update_camera()
 	main.update_meter()
 	if not s.auto:
@@ -272,6 +278,9 @@ func set_phase(ph: String) -> void:
 		"practica":
 			apply_setup()
 			start_practice()
+		"examen":
+			apply_setup()
+			start_exam()
 	update_panel()
 
 func exit_lesson() -> void:
@@ -329,8 +338,9 @@ func go_next() -> void:
 		"demo":
 			if demo_done: set_phase("practica")
 			else: set_phase("practica")
-		"practica":
-			if lesson < LESSONS: begin(lesson+1)
+		"practica": set_phase("examen")
+		"examen":
+			if lesson < LESSONS and done(lesson,"examen"): begin(lesson+1)
 			else: exit_lesson()
 
 func go_back() -> void:
@@ -342,6 +352,7 @@ func go_back() -> void:
 				update_panel()
 		"demo": set_phase("teoria")
 		"practica": set_phase("demo")
+		"examen": set_phase("practica")
 
 # Which HUD control each theory page points at.
 func theory_highlight() -> String:
@@ -397,8 +408,19 @@ func update_panel() -> void:
 			hint_label.visible = hint != ""
 			hint_label.text = hint
 			hint_label.position.y = 252
-			next_button.text = text("academia_siguiente") if lesson < LESSONS else text("academia_volver_menu")
-	for b in extra_buttons: b.visible = phase == "practica" and lesson == 5
+			next_button.text = text("academia_ir_examen")
+		"examen":
+			header.text = "%s %d · %s" % [text("academia"),lesson,phase_name]
+			title_label.text = lesson_text("titulo")
+			body_label.text = lesson_text("examen")
+			body_label.size.y = 130
+			hint_label.visible = true
+			hint_label.position.y = 252
+			if done(lesson,"examen"): hint_label.text = text("academia_examen_superado")
+			elif exam_attempts == 0: hint_label.text = text("academia_examen_intro")
+			else: hint_label.text = text("academia_examen_intentos") % exam_attempts
+			next_button.text = text("academia_siguiente") if lesson < LESSONS and done(lesson,"examen") else text("academia_volver_menu")
+	for b in extra_buttons: b.visible = phase in ["practica","examen"] and lesson == 5
 
 func clear_thumbs() -> void:
 	demo_photos.clear()
@@ -429,8 +451,12 @@ func stage_subject() -> void:
 		5: subject = stand_person(0,SETUP[5].angle,2.3)
 		_: subject = null
 
-func stand_person(lane: int, theta: float, radius: float):
-	var p = main.pick(func(q): return q.lane == lane and not q.runner)
+# like: someone of about the same height as that person (the two of the exam of lesson 2 have to
+# fit in one frame).
+func stand_person(lane: int, theta: float, radius: float, like = null):
+	var fits = func(q): return like == null or absf(q.height-like.height) < .12
+	var p = main.pick(func(q): return q.lane == lane and not q.runner and fits.call(q))
+	if p == null: p = main.pick(func(q): return not q.runner and fits.call(q))
 	if p == null: p = main.pick(func(q): return not q.runner)   # anyone free walking elsewhere
 	if p == null: return null
 	main.clear_sector([0,1,2,3].slice(0,lane+1),[p],30.0,true)
@@ -708,6 +734,125 @@ func start_practice() -> void:
 	set_scene_pause(lesson != 3)
 	update_panel()
 
+# ---- Exam ----
+func start_exam() -> void:
+	exam_attempts = 0
+	exam_last = {}
+	hint = ""
+	highlight = ""
+	second = null
+	stage_subject()
+	main.finder.thirds = lesson == 4
+	for b in extra_buttons: b.queue_free()
+	extra_buttons = []
+	match lesson:
+		1:
+			# The sky clouds over after the tutor left the exposure right: about 3 EV are gone.
+			main.park.forced_cover = 1.0
+			main.park.update_weather(0)
+			main.update_meter()
+			# Where the lens points may be in the shade already and lose little: the settings are
+			# left about 3 EV short in any case (faster shutter, then a smaller aperture).
+			var guard = 0
+			while main.finder.delta_ev > -2.6 and guard < 12:
+				guard += 1
+				if main.t_index > 0: main.t_index -= 1
+				elif main.n_index < main.apertures().size()-1: main.n_index += 1
+				else: break
+				main.update_meter()
+		2:
+			# A second person a little further away: both have to be sharp in the same photo.
+			second = stand_person(1,SETUP[2].angle+5.0,EXAM_SECOND_RADIUS,subject)
+		5:
+			stand_person(3,SETUP[5].angle-10.0,11.5)
+			extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "28 mm",Rect2(12,314,168,32),func(): set_lens(3,28.0)))
+			extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "135 mm",Rect2(186,314,167,32),func(): set_lens(5,135.0)))
+	set_scene_pause(lesson != 3)
+	main.refresh()
+	update_panel()
+
+const EXAM_SECOND_RADIUS = 4.4
+
+# What the photo says beyond its evidence: the second person of lesson 2, the thirds of lesson 4.
+func exam_context(result: Dictionary) -> Dictionary:
+	var e: Dictionary = result.evidence
+	var x = {"delta":result.delta,"coc":result.coc,"thirds":main.academy_last_thirds,"fill":person_fill(e) if e.get("person",true) else 0.0}
+	if lesson == 5 and not e.get("person",true):
+		var far = extra_at_focus()
+		if far > 0.0:
+			x["d"] = far
+			x.fill = 1.7*e.f/(far*20.25)
+	if lesson == 2 and is_instance_valid(subject) and is_instance_valid(second):
+		var distances = [main.camera.global_position.distance_to(subject.control_points()[1]),main.camera.global_position.distance_to(second.control_points()[1])]
+		x["d_near"] = minf(distances[0],distances[1])
+		x["d_far"] = maxf(distances[0],distances[1])
+		var a = head_screen(subject)
+		var b = head_screen(second)
+		x["both"] = Photo.inside(a) and Photo.inside(b)
+	return x
+
+func on_exam_photo(result: Dictionary) -> Dictionary:
+	exam_attempts += 1
+	exam_last = exam_report(lesson,result.evidence,exam_context(result))
+	if exam_last.passed: mark(lesson,"examen")
+	update_panel()
+	return exam_last
+
+# The tutor's report: deterministic from the evidence and its context. Each line is [ok, text].
+static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
+	var lines = []
+	var delta: float = x.get("delta",0.0)
+	var denominator = roundi(1.0/e.t)
+	var exposure_limit = .5 if n == 1 else 1.0
+	lines.append([absf(delta) <= exposure_limit,Texts.get_text("academia_ex_expo_ok" if absf(delta) <= exposure_limit else "academia_ex_expo_mal") % ("%+.1f" % delta)])
+	# Hand-held rule: no slower than 1/focal.
+	var steady = e.t*e.f <= 1.0+.0001
+	var safe: int = Photo.DENOMINATORS.max()
+	for d in Photo.DENOMINATORS:
+		if d >= e.f-.5 and d < safe: safe = d
+	lines.append([steady,Texts.get_text("academia_ex_pulso_ok") % [denominator,roundi(e.f)] if steady else Texts.get_text("academia_ex_pulso_mal") % [denominator,roundi(e.f),safe]])
+	match n:
+		2:
+			var zone = Photo.dof(e.f,e.n,e.s)
+			var near: float = x.get("d_near",e.d)
+			var far: float = x.get("d_far",e.d)
+			var covered = zone.x <= near and zone.y >= far
+			var far_text = "∞" if is_inf(zone.y) else "%.1f" % zone.y
+			lines.append([covered,Texts.get_text("academia_ex_dos_ok") % ["%.1f" % zone.x,far_text] if covered else Texts.get_text("academia_ex_dos_mal") % ["%.1f" % zone.x,far_text,"%.1f" % near,"%.1f" % far]])
+			if not x.get("both",true): lines.append([false,Texts.get_text("academia_ex_dos_fuera")])
+		3:
+			var is_runner = e.v > 1.5
+			if not is_runner: lines.append([false,Texts.get_text("academia_ex_corredor_mal")])
+			else:
+				var needed = Photo.needed_shutter(e.v,e.f,e.d)
+				var frozen = needed > 0 and denominator >= needed
+				lines.append([frozen,Texts.get_text("academia_ex_congelado_ok") % denominator if frozen else Texts.get_text("academia_ex_congelado_mal") % [denominator,needed if needed > 0 else Photo.DENOMINATORS.max()]])
+		4:
+			var state = str(x.get("thirds",""))
+			lines.append([state == "listo",Texts.get_text("academia_ex_tercios_"+(state if state in ["listo","cruce","aire"] else "nadie"))])
+		5:
+			var tele = e.f >= 120.0
+			lines.append([tele,Texts.get_text("academia_ex_tele_ok" if tele else "academia_ex_tele_mal") % roundi(e.f)])
+			var distance: float = x.get("d",e.d)
+			var fill: float = x.get("fill",0.0)
+			var framed = distance > 9.0 and fill >= .45 and fill <= 1.3
+			lines.append([framed,Texts.get_text("academia_ex_lejos_ok") % ("%.1f" % distance) if framed else Texts.get_text("academia_ex_lejos_mal") % [roundi(fill*100),"%.1f" % distance]])
+	if n in [3,4,5]:
+		var sharp = x.get("coc",0.0) <= Photo.C+.0005
+		lines.append([sharp,Texts.get_text("academia_ex_nitido_ok") if sharp else Texts.get_text("academia_ex_nitido_mal") % x.get("coc",0.0)])
+	var right = lines.filter(func(l): return l[0]).size()
+	var passed = right == lines.size()
+	var score = roundi(100.0*right/lines.size()-(minf(absf(delta),1.0)*12.0 if passed else 0.0))
+	return {"passed":passed,"score":score,"mention":passed and score >= 94,"lines":lines}
+
+func exams_done() -> int:
+	var count = 0
+	for n in range(1,LESSONS+1): if done(n,"examen"): count += 1
+	return count
+
+func graduated() -> bool:
+	return exams_done() == LESSONS
+
 func set_lens(index: int, f: float) -> void:
 	main.equipment.lens_index = index
 	main.apply_equipment()
@@ -889,8 +1034,8 @@ func update(dt: float) -> void:
 	if tour_pages > 0: run_tour(dt)
 	if phase == "demo": run_demo(dt)
 	elif phase == "practica" and main.mode == "SEARCH": check_practice(dt)
-	elif phase == "teoria" and lesson == 3: loop_runner()
-	if lesson == 4 and phase == "practica": main.academy_last_thirds = thirds_check()
+	elif phase in ["teoria","examen"] and lesson == 3: loop_runner()
+	if lesson == 4 and phase in ["practica","examen"]: main.academy_last_thirds = thirds_check()
 	track_frame_goal(dt)
 	diagram.queue_redraw()
 	queue_redraw()
