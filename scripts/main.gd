@@ -1030,6 +1030,33 @@ func notify_player(message: String) -> void:
 	toast.text = message
 	toast_time = 4.0
 
+# Turning with the keys (degrees per second). The keys have one fixed speed, which made panning
+# with them a matter of luck: so, while a key is held, the camera falls in with whoever is crossing
+# the middle of the frame that way, like a photographer following a subject. Mouse and gamepad
+# stick stay fully manual.
+func key_turn(axis: float) -> float:
+	var speed = 42.0*24.0/view_focal()
+	if axis == 0.0: return 0.0
+	var follow = key_follow_speed(axis,speed)
+	return follow if follow != 0.0 else axis*speed
+
+func key_follow_speed(axis: float, speed: float) -> float:
+	if not eye_ready() or crowd != null: return 0.0
+	var best = 0.0
+	var best_offset = .3    # half the frame width, as a fraction: only the middle counts
+	for p in people:
+		if not p.visible or p.state != "CAMINANDO": continue
+		var chest: Vector3 = p.control_points()[1]
+		if camera.is_position_behind(chest): continue
+		var offset = absf(camera.unproject_position(chest).x/viewport.size.x-.5)
+		if offset >= best_offset: continue
+		var turn = rad_to_deg(p.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(chest)))
+		# Same way as the key, and not so slow or so fast that the key would feel hijacked.
+		if signf(turn) != signf(axis) or absf(turn) < speed*.3 or absf(turn) > speed*2.5: continue
+		best = turn
+		best_offset = offset
+	return best
+
 func track_camera_turn(dt: float) -> void:
 	var step = wrapf(angle-omega_last_angle,-180.0,180.0)
 	omega_last_angle = angle
@@ -1060,7 +1087,7 @@ func _process(dt: float) -> void:
 	if mode == "SEARCH" and not shooting:
 		if eye_ready() or not crowd:
 			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
-			angle = fposmod(angle+axis*dt*42*24/view_focal()+pan_velocity*dt,360)
+			angle = fposmod(angle+key_turn(axis)*dt+pan_velocity*dt,360)
 			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/view_focal()
 			pan_velocity = move_toward(pan_velocity,0,dt*180)
 			if eye_ready() and Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
@@ -2721,23 +2748,23 @@ func show_arcade() -> void:
 	label(root,Texts.get_text("arcade_titulo"),Rect2(65,26,600,55),38)
 	label(root,Texts.get_text("arcade_subtitulo"),Rect2(65,82,1100,26),16,Color("b5c3ad"))
 	var progress = Arcade.load_progress()
-	for block in 4:
-		var y = 128+block*124
+	for block in Arcade.BLOCKS.size():
+		var y = 116+block*103
 		label(root,Texts.get_text(Arcade.BLOCKS[block]),Rect2(65,y,1100,22),13,Color("b8d78c"))
 		for k in 5:
 			var n = block*5+k
 			var open = Arcade.unlocked(n,progress)
 			var card = Button.new()
-			card.position = Vector2(65+k*232,y+24)
-			card.size = Vector2(220,88)
+			card.position = Vector2(65+k*232,y+22)
+			card.size = Vector2(220,74)
 			card.focus_mode = Control.FOCUS_NONE
 			card.disabled = not open
 			card.pressed.connect(func(): start_level(n))
 			root.add_child(card)
-			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,8,190,18),11,Color("b8d78c"))
-			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,26,196,26),18)
+			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,5,190,16),11,Color("b8d78c"))
+			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,20,196,26),18)
 			var stars = int(progress[n].stars) if progress.has(n) else 0
-			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else "🔒",Rect2(14,56,196,24),16,Color("c9d790"))
+			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else "🔒",Rect2(14,46,196,24),16,Color("c9d790"))
 	button(root,Texts.get_text("arcade_menu"),Rect2(1035,640,180,52),intro)
 
 # A level fixes scenario, light and equipment; another scenario reloads the scene first.

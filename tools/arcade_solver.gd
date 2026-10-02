@@ -96,6 +96,11 @@ func solve(n: int) -> String:
 		game.focus_distance = e.get("d_eyes",e.d)
 		e.s = game.focus_distance
 		tries += 1
+		# A pan: the trial assumes the camera turns with the subject, as the follow below will do.
+		var pans = level.cond.has("barrido")
+		if pans:
+			var side: float = e.get("motion_sign",1.0)
+			e["camera_omega"] = e.v*side/e.d
 		var best = best_settings(e,level)
 		if best.is_empty():
 			if OS.has_environment("SOLVER_DEBUG") and tries % 40 == 1:
@@ -117,6 +122,16 @@ func solve(n: int) -> String:
 			game.t_index = best.t
 			if not game.equipment.film: game.iso_index = best.iso
 		game.refresh()
+		if pans:
+			# Follow the runner for half a second, frame by frame, and shoot without stopping.
+			for i in 30:
+				game.aim_at(target,1.0)
+				await process_frame
+			# The runner may have stopped to stretch meanwhile: wait for the next pass.
+			if target.state != "CAMINANDO" or target.actual_velocity.length() < 1.5: continue
+		else:
+			# Aiming moved the camera; a real photographer holds still before a frozen shot.
+			game.camera_omega = 0.0
 		await game.take_photo()
 	if game.mode == "RESULT": game.end_level()
 	elif game.mode == "SEARCH": game.end_level()

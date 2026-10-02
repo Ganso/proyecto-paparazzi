@@ -4,7 +4,7 @@
 
 ## 1. Arcade (`scripts/arcade.gd`)
 
-- **20 niveles en 4 bloques de 5**, un encargo por nivel. Se desbloquean en orden y se pueden repetir; se guardan la mejor nota y las estrellas de cada nivel superado en `user://arcade.cfg`.
+- **20 niveles en 4 bloques de 5** (25 en 5 desde el 02-10-2026: ver «Bloque 5» al final), un encargo por nivel. Se desbloquean en orden y se pueden repetir; se guardan la mejor nota y las estrellas de cada nivel superado en `user://arcade.cfg`.
 - **El nivel lo fija todo**: escenario, luz y equipo (en el sandbox se eligen en el menú). La curva va de lo automático a lo manual:
 
   | Bloque | Cámara | Escenarios y luz | Disparos | Tiempo | Nota mínima |
@@ -56,7 +56,7 @@ El límite de tiempo es una restricción más del nivel (`limit`).
 - `tests/test_game.gd`: flujo del arcade (equipo fijo, disparos, reloj, sujeto corredor, condiciones en la línea del encargo), TLR (cintura, foto cuadrada, evidencia sobre el cuadrado, carrete y manivela).
 - `tests/test_finders.gd`: visor espejado y cuadrado; misma nota con las dos interfaces también en la TLR.
 - `tests/test_equipment.gd`: preajuste y objetivo de la TLR.
-- `tools/arcade_solver.gd`: juega los 20 niveles solo y comprueba que **todos se pueden superar** (20/20).
+- `tools/arcade_solver.gd`: juega los niveles solo (los 25 desde el 02-10-2026) y comprueba que **todos se pueden superar** (20/20).
 - Capturas: `tools/capture_screens.gd` (`11_arcade` a `17_fin_nivel`). `--level=N` abre un nivel al arrancar.
 
 ## 5. Un control manual cada vez (02-10-2026)
@@ -81,3 +81,21 @@ En el parque clásico la cámara también se baja (tecla **Y**, botón en pantal
 ## 7. Pendiente
 
 Barrido (`congelado` exige congelar; el barrido sigue en [11](11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md)), insignias de [05 §3](05_DESAFIOS_Y_MODOS_JUEGO.md), condiciones de luz y de punto de interés (fuente, quiosco), sonido propio del obturador central de la TLR y la manivela animada.
+
+## Bloque 5 · Maestría, y la condición «barrido» (02-10-2026)
+
+El arcade tiene ahora **25 niveles en 5 bloques**. El quinto, «Maestría · la réflex a fondo», vuelve a la réflex con todo lo aprendido:
+
+| Nivel | Título | Luz · objetivo · exposición | Condiciones | Disparos · tiempo · mínimo |
+|---|---|---|---|---|
+| 21 | El barrido | Día · zoom 24–105 · prioridad S · corredor | `barrido` | 4 · 150 s · 65 |
+| 22 | Retrato de autor | Hora dorada · 105 mm f/1,8 · prioridad A | `fondo`, `aurea` | 3 · 120 s · 70 |
+| 23 | Sola y de cerca | Parque grande, día · 70–200 · manual | `aislado`, `grande` 60 % | 3 · 150 s · 70 |
+| 24 | Barrido al atardecer | Hora dorada · zoom 24–105 · manual · corredor | `barrido`, `grande` 45 % | 3 · 150 s · 70 |
+| 25 | Nocturno | Noche · 50 mm f/1,8 · manual, AF puntual | `ojos`, `aislado`, `grande` 50 % | 2 · 90 s · 80 |
+
+- **Condición `barrido`** (`conditions.gd`): un corredor (≥ 1,5 m/s) nítido con la cámara siguiéndolo —arrastre relativo ≤ `Photography.PAN_TOLERANCE` (0,075 mm)— y el fondo arrastrado al menos `PAN_STREAK` (0,5 mm). El motivo del rechazo distingue «no corre», «sale movido: gira a su ritmo» y «el fondo apenas se arrastra: usa una velocidad más lenta». `congelado` usa ahora también la velocidad relativa al giro de la cámara: un buen barrido cuenta como congelado, y mover la cámara al disparar emborrona.
+- **Barrido con teclas** (`main.gd::key_turn()`, `key_follow_speed()`): las teclas de girar tienen una sola velocidad (42·24/focal °/s), así que acertar con el ritmo del corredor era cuestión de suerte. Mientras se mantiene pulsada una tecla, la cámara **acompaña a quien cruza el centro del encuadre en ese sentido** (si su velocidad angular está entre 0,3 y 2,5 veces la de la tecla), como un fotógrafo que sigue al sujeto. Con ratón y con el stick del mando el giro sigue siendo del todo manual. La tolerancia del barrido se amplió de 0,030 a 0,075 mm: antes había que igualar el giro con un error de 1°/s; ahora, de alrededor de un 10 %.
+- La pantalla del arcade dibuja los bloques que haya (`Arcade.BLOCKS`), con tarjetas algo más bajas para que quepan cinco filas.
+- **Se pueden superar**: `tools/arcade_solver.gd` aprende a hacer barridos (sigue al corredor fotograma a fotograma y dispara sin parar) y pasa los 25 niveles; los nuevos, tres veces seguidas. El solucionador pone a cero el giro de la cámara antes de las fotos que no son barridos, como haría quien se detiene a disparar.
+- Pruebas: `tests/test_arcade.gd` (25 niveles, textos, la condición con sus cuatro motivos), `tests/test_photography.gd` (tolerancia) y `tests/test_input.gd` (la tecla sigue al corredor en su sentido y nunca en contra).

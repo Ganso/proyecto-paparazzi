@@ -98,6 +98,8 @@ func _initialize() -> void:
 	check(swept.lines[2].contains("Barrido"),"The movement line names the pan")
 	pan.camera_omega = -2.8/7.0
 	check(not Photo.evaluate(pan).panning and Photo.evaluate(pan).drag > still.drag,"Turning the other way doubles the drag")
+	pan.camera_omega = 2.8/7.0*.92
+	check(Photo.evaluate(pan).panning and Photo.evaluate(pan).movement == 1.0,"8 % off the runner's speed is still a pan (nobody pans perfectly)")
 	pan.camera_omega = 2.8/7.0*.5
 	check(not Photo.evaluate(pan).panning,"Half the speed is not enough: the runner is still dragged")
 	pan.v = 0.0

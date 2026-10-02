@@ -57,8 +57,24 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				var blur = Photo.coc(e.f,e.n,e.d+10.0,e.s)
 				ok = blur >= .07
 				text_value = Texts.get_text("cond_fondo") % blur
+			"barrido":
+				# A pan (docs/futuro/11 §1): the camera follows a runner, who stays sharp while the
+				# background streaks. Same thresholds as Photography.evaluate().
+				var pan: float = e.get("camera_omega",0.0)
+				var side: float = e.get("motion_sign",1.0)
+				if side == 0.0: side = 1.0
+				var pan_drag: float = absf(e.v*side-pan*e.d)*e.t*e.f/e.d
+				var streak: float = absf(pan)*e.t*e.f
+				ok = e.v >= 1.5 and streak >= Photo.PAN_STREAK and pan_drag <= Photo.PAN_TOLERANCE
+				var pan_why = ""
+				if e.v < 1.5: pan_why = Texts.get_text("cond_congelado_quieto")
+				elif ok: pan_why = Texts.get_text("cond_barrido_ok") % [roundi(1.0/e.t),streak]
+				elif pan_drag > Photo.PAN_TOLERANCE: pan_why = Texts.get_text("cond_barrido_movido")
+				else: pan_why = Texts.get_text("cond_barrido_corto") % [streak,roundi(1.0/e.t)]
+				text_value = Texts.get_text("cond_barrido") % pan_why
 			"congelado":
-				var drag: float = e.v*e.t*e.f/e.d
+				# Relative to the camera's own turn: a good pan freezes the runner too.
+				var drag: float = absf(e.v*(1.0 if e.get("motion_sign",1.0) == 0.0 else e.get("motion_sign",1.0))-e.get("camera_omega",0.0)*e.d)*e.t*e.f/e.d
 				ok = e.v >= 1.5 and drag <= Photo.C
 				# Said as shutter speeds at the focal length used, not as millimetres of drag.
 				var needed = Photo.needed_shutter(e.v,e.f,e.d)

@@ -1,5 +1,5 @@
 extends RefCounted
-# Arcade mode (docs/futuro/21_ARCADE_CONDICIONES_TLR.md §1): twenty levels in four blocks, one
+# Arcade mode (docs/futuro/21_ARCADE_CONDICIONES_TLR.md §1): twenty-five levels in five blocks, one
 # assignment each. The level fixes scenario, light and equipment (the sandbox lets you choose), the
 # shots, an optional time limit, the minimum score to pass and its conditions (scripts/conditions.gd).
 # The curve goes from the automatic compact to the SLR, the manual rangefinder and the TLR, adding
@@ -11,7 +11,7 @@ extends RefCounted
 #   auto: true (program), false (manual), "A" or "S" (priority) · pace: walkers' speed factor
 #   limit: seconds (0 = none) · target: "runner" picks someone running
 static var SAVE = "user://arcade.cfg"   # tests point it elsewhere
-const BLOCKS = ["arcade_bloque_1","arcade_bloque_2","arcade_bloque_3","arcade_bloque_4"]
+const BLOCKS = ["arcade_bloque_1","arcade_bloque_2","arcade_bloque_3","arcade_bloque_4","arcade_bloque_5"]
 const LEVELS = [
 	# Block 1 · first steps: automatic compact, classic park.
 	{"scenario":"clasico","time":"day","body":0,"lens":0,"auto":true,"shots":5,"limit":0,"min":50,"cond":{}},
@@ -38,6 +38,13 @@ const LEVELS = [
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":1,"pace":.6,"shots":2,"limit":120,"min":70,"cond":{"ojos":true,"fondo":true,"grande":.5}},
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":3,"target":"runner","shots":2,"limit":90,"min":70,"cond":{"congelado":true}},
 	{"scenario":"clasico","time":"blue","body":3,"lens":0,"auto":false,"iso":4,"pace":.6,"shots":1,"limit":60,"min":75,"cond":{"ojos":true,"aislado":true}},
+	# Block 5 · mastery: back to the SLR with everything learned, and the pan ("barrido": follow a
+	# runner with the camera at a slow shutter so the background streaks).
+	{"scenario":"clasico","time":"day","body":2,"lens":0,"auto":"S","target":"runner","shots":4,"limit":150,"min":65,"cond":{"barrido":true}},
+	{"scenario":"clasico","time":"golden","body":2,"lens":4,"auto":"A","shots":3,"limit":120,"min":70,"cond":{"fondo":true,"aurea":true}},
+	{"scenario":"grande","time":"day","body":2,"lens":1,"auto":false,"pace":.7,"shots":3,"limit":150,"min":70,"cond":{"aislado":true,"grande":.6}},
+	{"scenario":"clasico","time":"golden","body":2,"lens":0,"auto":false,"target":"runner","shots":3,"limit":150,"min":70,"cond":{"barrido":true,"grande":.45}},
+	{"scenario":"clasico","time":"night","body":2,"lens":2,"auto":false,"focus":"AF puntual","pace":.6,"shots":2,"limit":90,"min":80,"cond":{"ojos":true,"aislado":true,"grande":.5}},
 ]
 
 static func block_of(n: int) -> int:

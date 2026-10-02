@@ -89,6 +89,26 @@ func run() -> void:
 	game.begin_assignment()
 	check(game.control_help.exit_button.visible or true,"The exit button exists on screen")
 	check(game.stick(.1) == 0.0 and absf(game.stick(1.0)-1.0) < .001 and game.stick(.5) < .1,"Sticks: dead zone and cubic response")
+	# Panning with the keys: while a turn key is held, the camera falls in with the runner crossing
+	# the middle of the frame that way (the keys have one fixed speed; mouse and stick stay manual).
+	game.start_level(20)
+	for i in 3: await process_frame
+	game.begin_assignment()
+	for i in 40: await process_frame
+	var runner = game.target
+	check(runner.runner and preload("res://scripts/arcade.gd").LEVELS[20].cond.has("barrido"),"Level 21 asks for a pan of a runner")
+	game.focal = 50.0
+	for i in 20:
+		game.aim_at(runner,1.0)
+		await process_frame
+	var chest = runner.control_points()[1]
+	var turn = rad_to_deg(runner.actual_velocity.dot(game.camera.global_basis.x)/game.camera.global_position.distance_to(chest))
+	var key_speed = 42.0*24.0/game.view_focal()
+	check(absf(turn) > 8.0,"The runner crosses the view at %.1f°/s (the keys alone turn at %.1f°/s)" % [absf(turn),key_speed])
+	check(absf(game.key_turn(signf(turn))-turn) < .5,"Holding the key his way, the camera turns at his pace")
+	check(signf(game.key_turn(-signf(turn))) == -signf(turn),"The other way, the key still turns the other way (it never follows someone against the key)")
+	check(game.key_turn(0.0) == 0.0,"No key, no turn")
+	game.end_level()
 	# Vibration: asked for only with the gamepad in use and the option on.
 	Glyphs.device = "teclado"
 	var rumbles = game.rumbles

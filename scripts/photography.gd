@@ -10,6 +10,9 @@ const C = 0.030
 # 1280 px frame) behind a subject that really moves (m/s across the view).
 const PAN_STREAK = .5
 const PAN_SUBJECT_SPEED = .4
+# A pan is never perfect: the subject may keep this much drag (mm) and still read as sharp. With
+# 0.030 mm the turn had to match the runner within 1°/s; with 0.075 mm, within some 10 %.
+const PAN_TOLERANCE = .075
 
 static func ev(n: float, t: float, iso: float, scene_ev: float) -> float:
 	return log(n*n/t)/log(2.0) - log(iso/100.0)/log(2.0) - scene_ev
@@ -49,12 +52,12 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	var lateral: float = e.v*direction-pan*e.d
 	var drag: float = absf(lateral)*e.t*e.f/e.d
 	var background: float = absf(pan)*e.t*e.f
-	var panning: bool = background >= PAN_STREAK and drag <= C and e.v >= PAN_SUBJECT_SPEED
+	var panning: bool = background >= PAN_STREAK and drag <= PAN_TOLERANCE and e.v >= PAN_SUBJECT_SPEED
 	var focus = clampf((5*C-blur)/(4*C), 0, 1)
 	var exposure = clampf(1-maxf(0, abs(delta)-0.5)/2.5, 0, 1)
 	# A good pan is a deliberate slow shutter: the hand rule does not count against it.
 	var shake = 1.0 if panning else clampf(1-(ratio-1)/2, 0, 1)
-	var subject = clampf((3*C-drag)/(2*C), 0, 1)
+	var subject = 1.0 if panning else clampf((3*C-drag)/(2*C), 0, 1)
 	var movement = minf(shake, subject)
 	var occlusion = (5.0-e.blockers.size())/5.0
 	var h: float = abs(e.feet.y-e.head.y)
