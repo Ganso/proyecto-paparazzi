@@ -8,6 +8,7 @@ const Person = preload("res://scripts/person.gd")
 const Cast = preload("res://scripts/casting.gd")
 const BANDSTAND = Vector2(120.0, 24.0)
 const POND = Vector2(245.0, 21.0)
+const PICNIC_TABLE_FAR = Vector3(102.5,21.5,-.35)   # park.gd::MEADOW_TABLES[1]
 const PICNIC_TABLE = Vector3(106.5,18.0,.25)   # park.gd::MEADOW_TABLES[0] (azimuth, radius, turn)
 
 var extras: Array = []
@@ -82,6 +83,11 @@ func build(detail: String) -> void:
 	for bench in [-1.0,1.0]:
 		var seat_pos = table+turn*Vector3(bench*.35,0,bench*.66)
 		day_only.append(add_still(seat_pos,facing(seat_pos,table+turn*Vector3(bench*.35,0,0)),"banco","cafe" if bench < 0 else "movil"))
+	# And someone alone with a newspaper at the far table (park.gd::MEADOW_TABLES[1]).
+	var far_table = polar(PICNIC_TABLE_FAR.x,PICNIC_TABLE_FAR.y)
+	var far_turn = Basis(Vector3.UP,atan2(-far_table.x,-far_table.z)+PICNIC_TABLE_FAR.z)
+	var reader_seat = far_table+far_turn*Vector3(-.3,0,.66)
+	day_only.append(add_still(reader_seat,facing(reader_seat,far_table+far_turn*Vector3(-.3,0,0)),"banco","leer"))
 
 # ---- Playground of the big park (docs/futuro/19 §10): there are always children playing ----
 # One on a swing (the seat really swings), one going up the ladder and down the slide in a loop,

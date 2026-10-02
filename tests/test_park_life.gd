@@ -88,6 +88,7 @@ func run() -> void:
 		check(game.extras.PICNIC_TABLE == game.park.MEADOW_TABLES[0],"The friends at the picnic table sit at a table that is there")
 		var at_table = game.extras.extras.filter(func(p): return p.state == "SENTADO" and p.seat_kind == "banco" and p.position.distance_to(game.park.polar(game.park.MEADOW_TABLES[0].x,game.park.MEADOW_TABLES[0].y)) < 1.0)
 		check(at_table.size() == 2,"Two people sit at the picnic table")
+		check(game.extras.PICNIC_TABLE_FAR == game.park.MEADOW_TABLES[1] and game.extras.extras.any(func(p): return p.activity == "leer" and p.seat_kind == "banco" and p.position.distance_to(game.park.polar(game.park.MEADOW_TABLES[1].x,game.park.MEADOW_TABLES[1].y)) < 1.0),"A reader sits at the far picnic table")
 		check(game.park.polar(game.park.MEADOW_TAP.x,game.park.MEADOW_TAP.y).length() > 13.5,"Drinking fountain beyond the fence")
 		check(game.park.ParkAssets.available("mesa_picnic") and game.park.ParkAssets.available("fuente_beber"),"Meadow furniture assets are there")
 		# By day a scared flock may perch on the fence: one bird per post or pillar.
