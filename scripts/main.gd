@@ -291,7 +291,7 @@ func _ready() -> void:
 	populate()
 	# -- --timing: where the start-up time goes (the park by stage, the people, the interface).
 	if "--timing" in OS.get_cmdline_user_args():
-		print("TIMING total=%d ms · mundo=%d (parque %d: %s) · interfaz=%d · gente=%d" % [Time.get_ticks_msec()-t_start,t_world-t_start,world_times.get("parque",0),str(park.build_times),t_ui-t_world,Time.get_ticks_msec()-t_people])
+		print("TIMING total=%d ms · mundo=%d (%s; parque: %s) · interfaz=%d · gente=%d" % [Time.get_ticks_msec()-t_start,t_world-t_start,str(world_times),str(park.build_times),t_ui-t_world,Time.get_ticks_msec()-t_people])
 	sound = AudioStreamPlayer.new()
 	add_child(sound)
 	await settle_population()
@@ -371,10 +371,12 @@ func build_world() -> void:
 	park = (preload("res://scripts/park_grande.gd") if scenario == "grande" else ParkScene).new()
 	park.detail = "hd" if ParkScene.forward_plus() else "lo"
 	Person.detail = "lo" if "lo_people" in debug_off else park.detail
+	Person.preload_pieces(["res://data/piezas","res://data/piezas_hd"] if Person.detail == "hd" else ["res://data/piezas"])
 	viewport.add_child(park)
 	var t_park = Time.get_ticks_msec()
 	park.build()
 	world_times["parque"] = Time.get_ticks_msec()-t_park
+	var t_stage = Time.get_ticks_msec()
 	pigeons = preload("res://scripts/pigeons.gd").new()
 	if scenario == "grande":
 		# Two flocks on the lawns beside the plaza.
@@ -385,11 +387,15 @@ func build_world() -> void:
 	if scenario == "grande": pigeons.perches = park.tree_spots
 	else: pigeons.fence = park.fence_perches
 	if "--pigeons=verja" in OS.get_cmdline_user_args() and not pigeons.fence.is_empty(): pigeons.settle_fence()
+	world_times["palomas"] = Time.get_ticks_msec()-t_stage
+	t_stage = Time.get_ticks_msec()
 	extras = preload("res://scripts/extras.gd").new()
 	viewport.add_child(extras)
 	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.
 	if scenario == "clasico": extras.build(Person.detail)
 	else: extras.build_playground(park.PLAYGROUND_POS,Person.detail)
+	world_times["figurantes"] = Time.get_ticks_msec()-t_stage
+	t_stage = Time.get_ticks_msec()
 	ambience = preload("res://scripts/ambience.gd").new()
 	if scenario == "grande":
 		ambience.fountain_pos = Vector3(0,.8,0)
@@ -397,6 +403,7 @@ func build_world() -> void:
 		ambience.cricket_points = [Vector3(-20,.3,14),Vector3(20,.3,-14),Vector3(0,.3,-40),Vector3(-48,.3,0),Vector3(48,.3,8)]
 	viewport.add_child(ambience)
 	ambience.build(park,pigeons)
+	world_times["sonido"] = Time.get_ticks_msec()-t_stage
 	camera = Camera3D.new()
 	camera.position.y = 1.6
 	camera.near = .08

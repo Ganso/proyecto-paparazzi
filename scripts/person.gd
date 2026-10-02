@@ -81,7 +81,34 @@ var chains: Array = []
 # Parsed once for everybody: each hd piece is hundreds of kilobytes of JSON.
 static var piece_cache = {}
 
+# The pieces are read and parsed in worker threads while the park is being built (main.gd calls
+# preload_pieces() first thing): 35 MB of JSON that the first people to wear them used to wait for.
+static var preload_paths: PackedStringArray = []
+static var preload_results: Array = []
+static var preload_task = -1
+static func preload_pieces(folders: Array) -> void:
+	if preload_task >= 0 or not piece_cache.is_empty(): return
+	for folder in folders:
+		for file in DirAccess.get_files_at(folder):
+			if file.ends_with(".json"): preload_paths.append(folder+"/"+file)
+	if preload_paths.is_empty(): return
+	preload_results.resize(preload_paths.size())
+	preload_task = WorkerThreadPool.add_group_task(parse_piece,preload_paths.size(),-1,true)
+
+static func parse_piece(index: int) -> void:
+	preload_results[index] = JSON.parse_string(FileAccess.get_file_as_string(preload_paths[index]))
+
+static func finish_preload() -> void:
+	if preload_task < 0: return
+	WorkerThreadPool.wait_for_group_task_completion(preload_task)
+	preload_task = -1
+	for i in preload_paths.size():
+		if preload_results[i] != null: piece_cache[preload_paths[i]] = preload_results[i]
+	preload_paths.clear()
+	preload_results.clear()
+
 func piece_resource(path: String) -> Dictionary:
+	finish_preload()
 	if not piece_cache.has(path): piece_cache[path] = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return piece_cache[path]
 
@@ -667,24 +694,60 @@ func build_skinned_mesh(shape: Dictionary, color: Color) -> void:
 		var u2_out = PackedVector2Array()
 		var b_out = PackedInt32Array()
 		var w_out = PackedFloat32Array()
-		for k in vertices.size():
-			var v = vector(vertices[k])
+		# Inverse rest of each bone once, not per vertex; plain indexing instead of helper calls:
+		# this loop runs over every vertex of every piece the first time somebody wears it.
+		var inverse_rests = {}
+		var count: int = vertices.size()
+		v_out.resize(count)
+		n_out.resize(count)
+		c_out.resize(count)
+		u_out.resize(count)
+		u2_out.resize(count)
+		b_out.resize(count*4)
+		w_out.resize(count*4)
+		var ground_span = .3*height
+		for k in count:
+			var raw: Array = vertices[k]
+			var v = Vector3(raw[0],raw[1],raw[2])
+			var k4 = k*4
+			var w0: float = weights[k4]
+			var w1: float = weights[k4+1]
+			var w2: float = weights[k4+2]
+			var w3: float = weights[k4+3]
 			var best = 0
-			for j in 4:
-				if weights[k*4+j] > weights[k*4+best]: best = j
-			var dominant: int = mapped[joints[k*4+best]]
+			var best_w = w0
+			if w1 > best_w:
+				best = 1
+				best_w = w1
+			if w2 > best_w:
+				best = 2
+				best_w = w2
+			if w3 > best_w: best = 3
+			var b0: int = mapped[joints[k4]]
+			var b1: int = mapped[joints[k4+1]]
+			var b2: int = mapped[joints[k4+2]]
+			var b3: int = mapped[joints[k4+3]]
+			var dominant: int = [b0,b1,b2,b3][best]
+			if not inverse_rests.has(dominant): inverse_rests[dominant] = rests[dominant].affine_inverse()
 			# Position in the dominant bone's space: the procedural pattern sticks to the piece.
-			var local = rests[dominant].affine_inverse()*v
-			u_out.append(Vector2(local.x,local.y))
-			u2_out.append(Vector2(local.z,zone_base+dominant))
-			v_out.append(v)
-			var n = vector(normals[k]).normalized()
-			n_out.append(n)
-			var shade = occlusion(v,n)
-			c_out.append(Color(shade,shade,shade))
-			for j in 4:
-				b_out.append(mapped[joints[k*4+j]])
-				w_out.append(weights[k*4+j])
+			var local: Vector3 = inverse_rests[dominant]*v
+			u_out[k] = Vector2(local.x,local.y)
+			u2_out[k] = Vector2(local.z,zone_base+dominant)
+			v_out[k] = v
+			raw = normals[k]
+			var n = Vector3(raw[0],raw[1],raw[2]).normalized()
+			n_out[k] = n
+			# occlusion(), inlined.
+			var shade = 1.0-minf(clampf(-n.y,0.0,1.0)*.28+clampf(-n.x*signf(v.x),0.0,1.0)*clampf((absf(v.x)-.03)/.08,0.0,1.0)*.18+clampf(1.0-v.y/ground_span,0.0,1.0)*.15,.4)
+			c_out[k] = Color(shade,shade,shade)
+			b_out[k4] = b0
+			b_out[k4+1] = b1
+			b_out[k4+2] = b2
+			b_out[k4+3] = b3
+			w_out[k4] = w0
+			w_out[k4+1] = w1
+			w_out[k4+2] = w2
+			w_out[k4+3] = w3
 		arrays[Mesh.ARRAY_VERTEX] = v_out
 		arrays[Mesh.ARRAY_NORMAL] = n_out
 		arrays[Mesh.ARRAY_COLOR] = c_out
