@@ -136,6 +136,14 @@ Los cambios de hora funden los volúmenes a 20 dB/s. Nivel medido en una grabaci
 
 ---
 
+### 3.3 Cielo (`shaders/park_sky.gdshader`)
+Desde el 02-10-2026 el cielo es un shader propio (antes, el `ProceduralSkyMaterial` del motor), con el mismo degradado vertical y el mismo sol, y lo que a aquel le faltaba:
+- **Noche**: estrellas (rejilla de celdas con posición, tamaño, brillo y tinte por hash, que se apagan hacia el horizonte) y **luna** con sus mares y un halo tenue. La luna se dibuja a 34° de altura en el mismo acimut que la luz que proyecta (que sigue a 72°): así las sombras apuntan hacia donde deben y el fotógrafo puede verla (θ ≈ 215°).
+- **Cirros altos**: vetas de ruido estiradas en un plano lejano, teñidas por la hora y más claras cerca del sol.
+- **Resplandor de poniente** en la hora dorada y en la azul: una banda cálida baja sobre el horizonte, hacia el acimut por donde se pone el sol.
+- Los colores por hora se fijan en `park.gd::set_time_of_day()` (`sky_extras()` para luna, estrellas, cirros y resplandor). El shader no usa `TIME`: la radiancia del cielo se calcula una vez por hora del día, no en cada fotograma. Funciona igual en `gl_compatibility`.
+- Las nubes lejanas de noche se aclararon (antes eran manchas negras). Nada de esto toca el fotómetro ni la puntuación (`sky_ev()` es analítico). Comprobado en `test_game.gd`.
+
 ## 4. Parque Fusionado y Oclusión Horneada (`merge_static_meshes`)
 
 Implementado en el paso 1 de la hoja de ruta ([futuro/16](futuro/16_PARQUE_ILUSTRADO_QUICK_WIN.md)), que detalla parámetros, resultados y comparativas. Desde el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)):

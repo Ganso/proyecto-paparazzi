@@ -731,10 +731,15 @@ func build_environment() -> void:
 	add_child(environment)
 	var sky = Sky.new()
 	sky.radiance_size = Sky.RADIANCE_SIZE_32
-	var sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("87b2c5")
-	sky_mat.sky_horizon_color = Color("d4e1dc")
-	sky_mat.ground_horizon_color = Color("c5d4c9")
+	# Own sky shader: gradient and sun as before, plus stars, moon, cirrus and afterglow.
+	var sky_mat = ShaderMaterial.new()
+	sky_mat.shader = preload("res://shaders/park_sky.gdshader")
+	sky_mat.set_shader_parameter("sky_top_color",Color("87b2c5"))
+	sky_mat.set_shader_parameter("sky_horizon_color",Color("d4e1dc"))
+	sky_mat.set_shader_parameter("ground_horizon_color",Color("c5d4c9"))
+	# Where the sun sets (the azimuth of the golden-hour sun): the afterglow hangs over it.
+	sky_mat.set_shader_parameter("moon_direction",Basis.from_euler(Vector3(deg_to_rad(-34),deg_to_rad(-35),0)).z)
+	sky_mat.set_shader_parameter("glow_direction",Basis.from_euler(Vector3(deg_to_rad(-15),deg_to_rad(-48),0)).z)
 	sky.sky_material = sky_mat
 	environment.environment.sky = sky
 	environment.environment.background_mode = Environment.BG_SKY
@@ -1100,6 +1105,15 @@ func apply_preset_values(preset: String) -> void:
 	# SDFGI shadowing), so its exposure is scaled to match Ultra's image (measured on the same shot).
 	if not forward_plus(): env.tonemap_exposure *= LO_EXPOSURE
 
+# What the engine's procedural sky lacked: moon and stars (night), cirrus and the afterglow.
+func sky_extras(sky_mat: ShaderMaterial, moon: float, stars: float, cirrus: float, cirrus_color: Color, glow: float, glow_color: Color) -> void:
+	sky_mat.set_shader_parameter("moon",moon)
+	sky_mat.set_shader_parameter("stars",stars)
+	sky_mat.set_shader_parameter("cirrus",cirrus)
+	sky_mat.set_shader_parameter("cirrus_color",cirrus_color)
+	sky_mat.set_shader_parameter("glow",glow)
+	sky_mat.set_shader_parameter("glow_color",glow_color)
+
 func set_time_of_day(tod: String) -> void:
 	time_of_day = tod
 	Pedestrian.screen_glow = {"day":0.0,"golden":.45,"blue":.8,"night":1.0}.get(tod,0.0)
@@ -1116,11 +1130,12 @@ func set_time_of_day(tod: String) -> void:
 		environment.environment.ambient_light_sky_contribution = 0.0
 		environment.environment.fog_light_color = Color("192139")
 		environment.environment.tonemap_exposure = 0.95
-		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
-		sky_mat.sky_top_color = Color("060d21")
-		sky_mat.sky_horizon_color = Color("192139")
-		sky_mat.ground_horizon_color = Color("192139")
-		sky_mat.ground_bottom_color = Color("060d15")
+		var sky_mat: ShaderMaterial = environment.environment.sky.sky_material
+		sky_mat.set_shader_parameter("sky_top_color",Color("060d21"))
+		sky_mat.set_shader_parameter("sky_horizon_color",Color("192139"))
+		sky_mat.set_shader_parameter("ground_horizon_color",Color("192139"))
+		sky_mat.set_shader_parameter("ground_bottom_color",Color("060d15"))
+		sky_extras(sky_mat,1.0,1.0,.35,Color("27324f"),0.0,Color.BLACK)
 		for light in lamps:
 			light.light_energy = 2.2
 			light.light_color = Color("ffcd82")
@@ -1141,11 +1156,12 @@ func set_time_of_day(tod: String) -> void:
 		environment.environment.ambient_light_sky_contribution = 0.0
 		environment.environment.fog_light_color = Color("3c5590")
 		environment.environment.tonemap_exposure = 1.0
-		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
-		sky_mat.sky_top_color = Color("142553")
-		sky_mat.sky_horizon_color = Color("7d8fbf")
-		sky_mat.ground_horizon_color = Color("c58a6a")
-		sky_mat.ground_bottom_color = Color("10162a")
+		var sky_mat: ShaderMaterial = environment.environment.sky.sky_material
+		sky_mat.set_shader_parameter("sky_top_color",Color("142553"))
+		sky_mat.set_shader_parameter("sky_horizon_color",Color("7d8fbf"))
+		sky_mat.set_shader_parameter("ground_horizon_color",Color("c58a6a"))
+		sky_mat.set_shader_parameter("ground_bottom_color",Color("10162a"))
+		sky_extras(sky_mat,0.0,.45,.6,Color("8d93c4"),.75,Color("e8936a"))
 		for light in lamps:
 			light.light_energy = 1.8
 			light.light_color = Color("ffcd82")
@@ -1166,11 +1182,12 @@ func set_time_of_day(tod: String) -> void:
 		environment.environment.ambient_light_sky_contribution = 0.0
 		environment.environment.fog_light_color = Color("e58b3e")
 		environment.environment.tonemap_exposure = 0.94
-		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
-		sky_mat.sky_top_color = Color("18355e")
-		sky_mat.sky_horizon_color = Color("ed8234")
-		sky_mat.ground_horizon_color = Color("b55e24")
-		sky_mat.ground_bottom_color = Color("2e1c12")
+		var sky_mat: ShaderMaterial = environment.environment.sky.sky_material
+		sky_mat.set_shader_parameter("sky_top_color",Color("18355e"))
+		sky_mat.set_shader_parameter("sky_horizon_color",Color("ed8234"))
+		sky_mat.set_shader_parameter("ground_horizon_color",Color("b55e24"))
+		sky_mat.set_shader_parameter("ground_bottom_color",Color("2e1c12"))
+		sky_extras(sky_mat,0.0,0.0,.7,Color("ffc9a0"),.45,Color("ffb35e"))
 		# Incipient twilight illumination on park lampposts
 		# Twilight lamps cast no shadows (see update_lamp_shadows()).
 		for light in lamps:
@@ -1191,11 +1208,12 @@ func set_time_of_day(tod: String) -> void:
 		environment.environment.ambient_light_sky_contribution = 1.0
 		environment.environment.fog_light_color = Color("cddcdd")
 		environment.environment.tonemap_exposure = 0.88
-		var sky_mat: ProceduralSkyMaterial = environment.environment.sky.sky_material
-		sky_mat.sky_top_color = Color("6fa3cf")
-		sky_mat.sky_horizon_color = Color("dce8ea")
-		sky_mat.ground_horizon_color = Color("c5d4c9")
-		sky_mat.ground_bottom_color = Color("738064")
+		var sky_mat: ShaderMaterial = environment.environment.sky.sky_material
+		sky_mat.set_shader_parameter("sky_top_color",Color("6fa3cf"))
+		sky_mat.set_shader_parameter("sky_horizon_color",Color("dce8ea"))
+		sky_mat.set_shader_parameter("ground_horizon_color",Color("c5d4c9"))
+		sky_mat.set_shader_parameter("ground_bottom_color",Color("738064"))
+		sky_extras(sky_mat,0.0,0.0,.5,Color("ffffff"),0.0,Color.BLACK)
 		# Hidden, not just at zero energy: gl_compatibility still draws a pass per lit object.
 		# illumination_ev() reads light_energy and its own rays, so the meter is unaffected.
 		for light in lamps:
@@ -1536,11 +1554,11 @@ func update_sky_clouds(dt: float) -> void:
 	if not is_instance_valid(sky_clouds): return
 	sky_clouds.rotation.y += dt*deg_to_rad(.35)
 	var tint = Color(1,1,1)
-	if is_night: tint = Color("2a3450")
+	if is_night: tint = Color("3a4666")
 	elif time_of_day == "golden": tint = Color("f3b07a")
 	elif time_of_day == "blue": tint = Color("6a7fb4")
 	sky_cloud_material.albedo_color = tint
-	sky_cloud_material.emission = tint*(.25 if is_night else 1.0)
+	sky_cloud_material.emission = tint*(.9 if is_night else 1.0)
 
 func sun_transmission() -> float:
 	return lerpf(1.0,.09,cloud_cover)

@@ -245,7 +245,16 @@ func run() -> void:
 	var day_draw_calls = RenderingServer.viewport_get_render_info(game.viewport.get_viewport_rid(),RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
 	print("DAY DRAW CALLS: %d" % day_draw_calls)
 	check(day_draw_calls <= 300,"Day draw calls within budget (%d <= 300)" % day_draw_calls)
+	# The sky (shaders/park_sky.gdshader): stars and moon only at night, afterglow at dusk.
+	var sky_mat = game.park.environment.environment.sky.sky_material
+	check(sky_mat is ShaderMaterial and sky_mat.shader.resource_path.ends_with("park_sky.gdshader"),"The park uses its own sky shader")
+	check(sky_mat.get_shader_parameter("stars") == 0.0 and sky_mat.get_shader_parameter("moon") == 0.0 and sky_mat.get_shader_parameter("glow") == 0.0,"Day sky: no stars, moon or afterglow")
+	for dusk in ["golden","blue"]:
+		game.park.set_time_of_day(dusk)
+		check(sky_mat.get_shader_parameter("glow") > 0.0 and sky_mat.get_shader_parameter("moon") == 0.0,"%s sky: afterglow over the horizon" % dusk)
 	game.park.set_time_of_day("night")
+	check(sky_mat.get_shader_parameter("stars") == 1.0 and sky_mat.get_shader_parameter("moon") == 1.0,"Night sky: stars and moon")
+	check(sky_mat.get_shader_parameter("moon_direction").y > .3 and sky_mat.get_shader_parameter("moon_direction").y < .75,"The moon hangs where it can be seen")
 	check(game.park.lamps.all(func(l): return l.visible and l.shadow_enabled),"Ultra night: all lamps cast shadows")
 	game.apply_graphics_preset("Alto")
 	check(game.park.lamps.filter(func(l): return l.shadow_enabled).size() == 4,"Alto night: only the 4 inner lamps cast shadows")
