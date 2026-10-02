@@ -25,6 +25,10 @@ var v_rad = 0.0
 var pref_offset = 0.0
 # Side (+1 outward, -1 inward) chosen to pass someone; kept for a while so it never flip-flops.
 var pass_side = 0.0
+# Line across the path (radius) the person is heading for, and the one latched for a pass (NAN:
+# none), see main.gd::walk_step().
+var r_goal = NAN
+var pass_r = NAN
 var pass_timer = 0.0
 var side_flip_cd = 0.0
 var heading = 0.0

@@ -70,10 +70,11 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 
 ### 3.3 Sistema de Carriles y Navegación 2D
 - Origen en jugador: $(0, 1.60\text{ m}, 0)$.
-- **Carril 0**: $r = 1.8\text{ m}$ (aforo máx. 3). Calzada útil $[1.05, 2.70]\text{ m}$ (ensanchada el 30-09-2026 para que dos personas quepan al cruzarse).
-- **Carril 1**: $r = 4.0\text{ m}$ (aforo máx. 7). Calzada útil ancha $[2.9, 4.85]\text{ m}$ con 4 bancos exteriores a $r = 4.85\text{ m}$.
-- **Carril 2**: $r = 7.0\text{ m}$ (aforo máx. 7).
-- **Carril 3**: $r = 11.5\text{ m}$ (aforo máx. 6).
+- **Carril 0**: $r = 1.8\text{ m}$ (aforo máx. 3). Calzada $[1.05, 2.70]\text{ m}$; líneas $1.33$ y $2.12\text{ m}$ (la exterior no llega a las farolas de $2.6\text{ m}$).
+- **Carril 1**: $r = 4.0\text{ m}$ (aforo máx. 7). Calzada $[2.9, 4.85]\text{ m}$ con 4 bancos exteriores a $r = 4.85\text{ m}$; líneas $3.07 \cdot 3.82 \cdot 4.57\text{ m}$ ($4.30$ junto a los bancos).
+- **Carril 2**: $r = 7.0\text{ m}$ (aforo máx. 7); líneas $6.38 \cdot 7.00 \cdot 7.62\text{ m}$. Un corredor.
+- **Carril 3**: $r = 11.5\text{ m}$ (aforo máx. 6); líneas $10.80 \cdot 11.42 \cdot 12.04\text{ m}$. Dos corredores.
+- **Tres líneas por camino** (03-10-2026, [docs/NAVEGACION_Y_COLISIONES.md §3.2](docs/NAVEGACION_Y_COLISIONES.md)): cada paseante va por el borde de su derecha y el centro queda libre para adelantar y para los corredores. Nadie entra en una línea si no va a seguir libre lo que dura la maniobra (`free_time()` frente a `pass_need()`); los corredores tienen preferencia, corren todos en el mismo sentido y no cambian de carril. Las líneas (`LANE_LINES`) están comprobadas contra todo lo fijo. **Antes de tocar `walk_step()`, mide con `tools/measure_flow.gd` y vuelve a medir después** (cifras de referencia en el §6.1 de ese documento).
 - **Fondo vegetal**: Cortina densa de setos y arbolado entre $r = 13.2\text{ m}$ y $r = 17.5\text{ m}$.
 - **Figurantes, palomas, patos y objetos de mano** no tienen colisionadores y los figurantes no están en `main.people` (siguen siendo 21 viandantes). El **perro** sí tiene colisionador, en la capa 1 (fotos) y fuera de la máscara 2 de la navegación.
 
@@ -116,8 +117,8 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
   En `scripts/arcade.gd::LEVELS` (escenario, luz, cuerpo, objetivo, exposición, disparos, `limit`, `min`, `cond`, `target`), con su título y texto en `data/textos.es.json` (`arcade_nivel_<n>_titulo`/`_texto`). Una condición nueva va en `scripts/conditions.gd` (`check()` y `describe()`, textos `cond_*`). Comprueba con `tests/test_arcade.gd` y que se puede superar con `tools/arcade_solver.gd -- --only=<n>`.
 - **¿Cómo cambio la velocidad de los viandantes?**  
   En `scripts/person.gd:49` (`speed = rng.randf_range(...)`). La animación de pisada se adapta automáticamente en `gait.gd` sin deslizar.
-- **¿Por qué los viandantes no se atascan en el Carril 1?**  
-  Porque los bancos se movieron al borde exterior a $r = 4.85\text{ m}$ y los viandantes usan navegación espacial continua 2D (`space_out` vs `space_in`) dentro de `LANE_BOUNDS`.
+- **¿Por qué los viandantes no se atascan?**  
+  Porque cada camino se reparte en tres líneas (cada fila por su borde derecho, el centro libre para adelantar y para los corredores) y nadie entra en una línea que no vaya a seguir libre lo que dura la maniobra (`main.gd::walk_step()`, `free_time()`, `pass_need()`); ver [docs/NAVEGACION_Y_COLISIONES.md §3](docs/NAVEGACION_Y_COLISIONES.md). Se mide con `tools/measure_flow.gd`.
 - **¿Cómo añado un nuevo objeto al parque?**  
   Modélalo por código en `tools/blender/build_park_assets.py` (una función `build_<nombre>(lod)` que devuelva sus `Builder` por rol, registrada en `ASSETS`), regenera con `./tools/build_park_assets.sh --only <nombre>` y revísalo con `tools/blender/preview_assets.py`. En `scripts/park.gd::build()` colócalo con `visual("<nombre>", variante, padre)` y dale colisionador con las primitivas de siempre (`collider_only = true` y `cube()`/`cylinder()` con etiqueta) o con `landmark()`/`collider()` desde su malla `lo`. Si interactúa con el fotómetro o el AF, etiquétalo con `Texts.get_text(...)` y registra el texto en `data/textos.es.json`.
 - **¿Cómo añado una actividad nueva (p. ej. «hacer estiramientos»)?**  

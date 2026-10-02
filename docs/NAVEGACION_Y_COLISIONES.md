@@ -26,18 +26,23 @@ $$\omega = \frac{v}{r} \quad (\text{rad/s}) \implies \Delta\theta = \text{rad\_t
 
 ## 2. Estructura de Carriles y Capacidad de Aforo
 
-El parque cuenta con **4 calzadas peatonales circulares concéntricas** donde circulan los **21 viandantes**:
+El parque cuenta con **4 calzadas peatonales circulares concéntricas** donde circulan los **21 viandantes**. Cada calzada se reparte en **tres líneas** (§3): la del borde interior, la del centro y la del borde exterior.
 
-| Carril | Radio Nominal ($r$) | Sub-offset ($\pm$) | Límites Físicos (`LANE_BOUNDS`) | Población | Aforo Máx. (`LANE_CAPACITIES`) | Función en el Juego |
+| Carril | Radio nominal | Límites físicos (`LANE_BOUNDS`) | Líneas interior · centro · exterior (`LANE_LINES`) | Población | Aforo máx. | Quién lo usa |
 |:---:|:---:|:---:|:---:|:---:|:---:|---|
-| **0** | $1.8\text{ m}$ | $0.33\text{ m}$ | $[1.05, 2.70]\text{ m}$ (ancho: $1.65\text{ m}$) | 3 | 3 | Primer plano de oclusión dinámica |
-| **1** | $4.0\text{ m}$ | $0.35\text{ m}$ | $[2.90, 4.85]\text{ m}$ (ancho: $1.95\text{ m}$) | 7 | 7 | Plaza central / Sujeto principal |
-| **2** | $7.0\text{ m}$ | $0.35\text{ m}$ | $[6.10, 7.90]\text{ m}$ (ancho: $1.80\text{ m}$) | 6 | 7 | Tránsito intermedio y encargos secundarios |
-| **3** | $11.5\text{ m}$ | $0.35\text{ m}$ | $[10.60, 12.40]\text{ m}$ (ancho: $1.80\text{ m}$) | 5 | 6 | Tránsito perimetral lejano |
+| **0** | $1.8\text{ m}$ | $[1.05, 2.70]\text{ m}$ | $1.33$ · — · $2.12\text{ m}$ (dos filas, sin centro) | 3 | 3 | Paseantes; primer plano de oclusión |
+| **1** | $4.0\text{ m}$ | $[2.90, 4.85]\text{ m}$ | $3.07$ · $3.82$ · $4.57\text{ m}$ ($4.30$ junto a los bancos) | 7 | 7 | Paseantes y bancos; sujeto principal |
+| **2** | $7.0\text{ m}$ | $[6.10, 7.90]\text{ m}$ | $6.38$ · $7.00$ · $7.62\text{ m}$ | 6 | 7 | Paseantes y **un corredor** |
+| **3** | $11.5\text{ m}$ | $[10.60, 12.40]\text{ m}$ | $10.80$ · $11.42$ · $12.04\text{ m}$ | 5 | 6 | Paseantes y **dos corredores** |
 
 **Población** es el reparto inicial de `populate()` (`counts = [3, 7, 6, 5]`, 21 en total); **aforo** es el máximo que `try_change_lane()` admite tras los cambios de carril (`LANE_CAPACITIES = [3, 7, 7, 6]`).
 
-El carril 0 se ensanchó el 30-09-2026 de $[1.20, 2.40]$ a $[1.05, 2.70]\text{ m}$ (sigue sobre las losas de la plaza, que llegan a $2.8\text{ m}$): con los márgenes de $0.28\text{ m}$ de la marcha suave, el ancho antiguo dejaba $0.64\text{ m}$ útiles, menos que el espacio personal de $0.72\text{ m}$, y dos viandantes nunca podían cruzarse.
+Las líneas de `LANE_LINES` están comprobadas con un barrido del cuerpo (cápsula de $0.30\text{ m}$) contra todo lo fijo, grado a grado (`tools/measure_flow.gd -- --edges` y `tests/test_navigation.gd`):
+- **Carril 0**: la línea exterior se queda en $2.12\text{ m}$ porque a $2.6\text{ m}$ hay cuatro farolas ($\theta = 8^\circ, 98^\circ, 188^\circ, 278^\circ$). A $2.42\text{ m}$, como estaba, quien caminaba por ella se quedaba clavado contra la base de cada farola hasta dar media vuelta. Quedan dos filas a $0.79\text{ m}$, sin línea central.
+- **Carril 1**: la fila interior camina a $0.17\text{ m}$ del bordillo interior, porque quien se sienta en un banco ocupa parte del lado exterior (sus pies llegan a $r \approx 4.5\text{ m}$): junto a un banco la línea exterior baja a $4.30\text{ m}$ (`BENCH_CLEAR`) y siguen cabiendo tres líneas.
+- **Carril 3**: desplazado $6\text{–}8\text{ cm}$ hacia dentro, libre de los arbustos de detrás del bordillo exterior.
+
+**Corredores** (`RUNNER_PLACES`): los tres corren por los caminos exteriores (uno en el carril 2 y dos en el 3), **todos en el mismo sentido**, como en cualquier pista: nunca se encuentran de frente. No cambian de carril ni dan media vuelta. Antes había uno en cada uno de los carriles 0, 1 y 2: el del carril 0 daba una vuelta al fotógrafo cada cuatro segundos y el del carril 1 corría por el camino más corto y concurrido.
 
 ### Despeje de Calzadas y Obstáculos Físicos
 Para asegurar que la calzada del carril 1 mantenga más de $1.9\text{ m}$ de paso continuo sin barreras:
@@ -60,27 +65,38 @@ Cada viandante guarda una velocidad de avance `v_fwd` y una radial `v_rad` que s
 | `WALK_ACCEL` | $0.55\text{ m/s}^2$ ($\times 2.5$ en corredores) | arrancar y recuperar el paso |
 | `WALK_BRAKE` | $1.6\text{ m/s}^2$ | frenar ante alguien |
 | `LATERAL_MAX` | $0.32\text{ m/s}$ ($\times 1.9$ en corredores) | desplazamiento lateral máximo |
-| `PERSONAL_SPACE` | $0.72\text{ m}$ | distancia entre centros al cruzarse o adelantar |
+| `PASS_SPACE` | $0.62\text{ m}$ | distancia entre líneas contiguas (entre centros, al cruzarse o adelantar) |
+| `HARD_SPACE` | $0.52\text{ m}$ | distancia mínima entre centros que admite `travel_clear()` |
 | `FOLLOW_GAP` | $1.3\text{ m}$ | distancia al seguir a alguien más lento |
 
-`v_rad` persigue $(r_{\text{des}} - r)\cdot 1.4$, acotada a `LATERAL_MAX`, con una aceleración lateral de $1.2\text{ m/s}^2$. La velocidad configurada (caminantes $0.55$–$0.85$, corredores $2.6$–$3.0\text{ m/s}$) no cambia; lo que cambia es cómo se llega a ella.
+`v_rad` persigue $(r_{\text{des}} - r)\cdot 1.4$ (con un mínimo de $0.1\text{ m/s}$ para que los últimos centímetros hasta la línea no sean un arrastre interminable), acotada a `LATERAL_MAX`, con una aceleración lateral de $1.2\text{ m/s}^2$ ($2.6$ los corredores). La velocidad configurada (caminantes $0.55$–$0.85$, corredores $2.6$–$3.0\text{ m/s}$) no cambia; lo que cambia es cómo se llega a ella.
 
-### 3.2 Radio deseado y sub-carriles por sentido
-El radio deseado parte del sub-carril por sentido de marcha (`LANES[lane] + LANE_OFFSETS[lane]·direction`, es decir, cada uno por su derecha) acotado a `LANE_BOUNDS` con un margen de $0.28\text{ m}$. Junto a los bancos del carril 1 el borde exterior baja a $r = 4.43\text{ m}$, para que la cápsula de $0.30\text{ m}$ no roce sus patas.
+### 3.2 Tres líneas por camino (03-10-2026)
 
-### 3.3 Lado de paso fijado y adelantamientos
-Para cada viandante visible entre $0.9\text{ m}$ por detrás y $4.0\text{ m}$ por delante, con $|\Delta r| < 1.1\text{ m}$:
-- **A la par** (ya se están cruzando): solo se mantiene el lado de paso hasta dejarlo atrás.
-- **Sin acercamiento** (va igual o más rápido en el mismo sentido): se ignora.
-- **Se acercará a menos del espacio personal**: se elige **una vez** un lado de paso (`pass_side`) y se mantiene al menos $3\text{ s}$ (`pass_timer`). Quien viene de frente siempre se aparta por su derecha, aunque tuviera otro lado fijado de antes: así los dos eligen lados opuestos y nunca se imitan hasta bloquearse. En un adelantamiento se va hacia el lado con más hueco. El radio deseado se mezcla con el del lado de paso según la distancia (del todo a $1.5\text{ m}$).
-- Si el lado fijado queda tapiado (borde del carril, banco) por alguien **parado** y el otro lado cabe, cambia de lado, como mucho una vez cada $2.5\text{ s}$ (`side_flip_cd`). Antes se quedaba esperando detrás, como en una cola.
-- Si no cabe por ningún lado, **sigue** a la otra persona a `FOLLOW_GAP`, y afloja el paso con antelación si tiene delante a alguien que camina más despacio (a los parados los rodea).
-- Quien va hacia un banco no esquiva a quien ya está sentado en él: se acerca por el camino y solo se arrima al banco en el último medio metro.
+**El problema que resuelve.** Un camino da para dos o tres personas a la par. Hasta ahora las dos filas de paseantes (una por sentido, a $\pm 0.35\text{ m}$ del centro) ocupaban los dos sitios que había, y adelantar exigía meterse en la fila contraria, que casi nunca estaba libre. Medido en 5 minutos de parque: el corredor objetivo de un nivel iba a su velocidad el **10 %** del tiempo y pasaba el **88 %** retenido detrás de alguien, y un atasco se resolvía dando media vuelta casi cien veces.
+
+**El reparto.** Cada paseante camina por **el borde de su derecha** (`home_radius()`: la línea exterior si va en sentido $+1$, la interior si va en $-1$) y **el centro queda libre**: es por donde se adelanta a quien está parado o va más despacio, y por donde **corren los corredores**. Las líneas están a $0.62\text{ m}$ entre sí (`PASS_SPACE`); dos personas nunca se acercan a menos de $0.52\text{ m}$ entre centros (`HARD_SPACE`, lo que comprueba `travel_clear()`).
+
+**La regla de paso** (`main.gd::walk_step()`, `free_time()`, `pass_need()`). Nadie entra en una línea si no va a estar libre el tiempo que dura la maniobra:
+- `free_time(p, c)` da los segundos que la línea de radio $c$ seguirá libre para $p$: quien está delante en ella cuenta según la velocidad a la que $p$ se le acerca; quien está al lado, de inmediato; quien viene por detrás solo si $p$ se metería en su línea (o si es un corredor: **tienen preferencia**). Para cruzar a una línea tampoco puede haber nadie al lado por el camino.
+- `pass_need()` da los segundos que $p$ necesita fuera de su línea para rebasar a quien le estorba (infinito si el otro camina igual de rápido: entonces le sigue).
+- Con la línea propia libre al menos $4\text{ s}$ (`HOME_CLEAR`) se queda en ella. Si no, busca la línea más cercana a la suya que cumpla `free_time > pass_need + margen` (margen de $2.5\text{ s}$ los paseantes, que además solo usan la línea contigua a la suya, y $0.5\text{ s}$ los corredores) y **se compromete con ella** (`pass_r`) hasta rebasar: no hay cambios de idea fotograma a fotograma. Si ninguna sirve, sigue a quien tiene delante a `FOLLOW_GAP`.
+- En la práctica: un paseante retenido detrás de alguien parado **espera a que pase el corredor** y entonces rodea por el centro; un paseante solo adelanta a otro que camina si le sobra tiempo (en los caminos con corredor, casi nunca: le sigue); el corredor pasa entre las dos filas sin tocar el freno y, si encuentra a alguien en el centro, usa un borde si está libre o afloja.
+- Quien se va a parar (a mirar, al móvil, a charlar) lo hace **en su borde**, no en mitad del camino, y espera a estar en él para quedarse quieto. Los corredores estiran en el borde exterior.
+
+**Velocidad.** Con alguien en medio de su paso ahora mismo (a menos de `HARD_SPACE` de lado): si va en su mismo sentido o está parado, le sigue a distancia; si viene de frente, frena antes de llegar. Dos personas frente a frente y las dos esperando no son una cola sino un atasco en ciernes: cuenta como `stuck_time` y una de las dos cede.
+
+### 3.3 Fuera del camino y bancos
+
+- Quien queda **fuera de su camino** (un cruce entre carriles cancelado a medias, al levantarse de un banco) vuelve andando, sin comprobar lo fijo. Antes el radio se recortaba de golpe al camino, un salto de medio metro que nunca pasaba el barrido de colisión: la persona se quedaba en el césped dando media vuelta cada cinco segundos, indefinidamente.
+- **Bancos**: quien llega a un banco toma la plaza que alcanza primero; la del fondo, solo si quien tiene la cercana ya está sentado (`choose_bench()`). Antes, dos personas que iban al mismo banco desde lados opuestos tenían que cruzarse justo delante de él y se quedaban frente a frente esperándose.
+- Quien va hacia un banco no esquiva a quien ya está sentado en él.
+- Nadie empieza a cruzar a otro carril si un corredor de ese carril llega en menos de $7\text{ s}$ (`runner_due()`).
 
 ### 3.4 Pasos de reserva, orientación y atascos
-- Si el paso completo no es válido (`travel_clear`), prueba solo el lateral mientras frena; si tampoco, frena del todo y acumula `stuck_time`.
+- Si el paso completo no es válido (`travel_clear`), prueba solo el lateral mientras frena, luego solo el avance en su línea; si tampoco, frena del todo y acumula `stuck_time`.
 - La **orientación** (`turn_heading`) sigue a la velocidad real cuando supera $0.12\text{ m/s}$, girando como mucho $75^\circ/\text{s}$ ($120^\circ/\text{s}$ los corredores). Parado, conserva la orientación y gira despacio ($70^\circ/\text{s}$) hacia lo que mira.
-- Con `stuck_time` $> 2\text{ s}$ cambia de lado (como mucho una vez cada $1.5\text{ s}$): se aparta de quien tiene más cerca delante, hacia el lado con sitio. Ya atascado, la regla de pasar por la derecha ante quien viene de frente deja de imponerse; antes podía empujarle contra alguien parado; con $> 3\text{ s}$ intenta cambiar de carril; con $> 5\text{ s}$ da media vuelta con suavidad.
+- **Red de seguridad** (el plan del §3.2 no debería llegar aquí): con `stuck_time` $> 2\text{ s}$ se aparta de quien tiene más cerca delante, hacia el lado con sitio; con $> 3\text{ s}$ intenta cambiar de carril; con $> 5\text{ s}$ da media vuelta (los corredores, nunca). Cada media vuelta por atasco se cuenta en `main.jam_turns`.
 
 ### 3.5 Transición Diagonal entre Carriles
 Cuando un viandante cambia de carril (`destination_lane >= 0`):
@@ -112,7 +128,7 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true
 1. **Barrido de cápsula 3D (`CapsuleShape3D`) contra el mundo estático**:
    - Radio: $0.30\text{ m}$, altura: altura anatómica del personaje.
    - Consulta de intersección y `cast_motion` en `collision_mask = 2` (árboles, bancos, papeleras, farolas).
-2. **Distancia mínima entre personajes ($0.58\text{ m}$)**:
+2. **Distancia mínima entre personajes ($0.52\text{ m}$, `HARD_SPACE`)**:
    - Se obtiene el punto más cercano del segmento de avance respecto a los demás viandantes (`Geometry3D.get_closest_point_to_segment`).
    - **Desbloqueo de pasos de separación**: Si la distancia final $d_{to}$ es mayor o igual que la distancia inicial $d_{from} - 0.0005\text{ m}$, el paso se autoriza aunque los personajes estén cerca. Esto permite que los viandantes se separen libremente sin bloquearse mutuamente. La tolerancia era de $5\text{ mm}$ y con la marcha suave dejaba que dos personas lentas (menos de $0.15\text{ m/s}$) se fueran metiendo la una en la otra.
 3. **Figurantes, palomas y objetos de mano** no intervienen: no tienen colisionadores. El perro tiene uno en la capa 1 (fotos), fuera de la máscara 2 de la navegación.
@@ -140,10 +156,24 @@ stateDiagram-v2
 - Las actividades y sus posturas se describen en [futuro/19_VIDA_EN_EL_PARQUE.md](futuro/19_VIDA_EN_EL_PARQUE.md).
 
 ### Escalado Anti-Deadlock
-Ver §3.4: otro lado de paso a los $2\text{ s}$, cambio de carril a los $3\text{ s}$ y media vuelta a los $5\text{ s}$ de `stuck_time`. Esperar detrás de alguien no cuenta como atasco.
+Ver §3.4: otro lado de paso a los $2\text{ s}$, cambio de carril a los $3\text{ s}$ y media vuelta a los $5\text{ s}$ de `stuck_time`. Esperar detrás de alguien no cuenta como atasco; quedarse frente a frente con otro que también espera, sí.
 
 ---
 
 ## 6. Verificación Determinista de Navegación
 
 Suites `tests/simulate_jams.gd`, `tests/test_navigation.gd`, `tests/test_crowd.gd` (60 s de multitud: giro $\le 125^\circ/\text{s}$, sin inversiones laterales rápidas, sin solapes, ningún atasco de más de $5.5\text{ s}$ y al menos un $60\ \%$ del tiempo caminando) y `tests/test_park_life.gd` (ciclo del banco sin teletransportes y charla frente a frente). Todas requieren display. Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+
+### 6.1 Medida de la fluidez (`tools/measure_flow.gd`)
+
+`~/bin/godot-4-fp --path . --disable-vsync --script tools/measure_flow.gd [-- --seconds=300 --level=10 --edges --debug]` simula varios minutos de parque y dice, para cada corredor y para los paseantes, qué parte del tiempo van a su velocidad, cuánto pasan retenidos y cuántos atascos acaban en media vuelta. `--level=N` mide con el corredor objetivo de ese nivel, `--edges` comprueba que las líneas de cada camino están libres de obstáculos fijos y `--debug` enseña quién dio media vuelta y quién tenía alrededor. **Hay que pasarla antes y después de tocar `walk_step()`.**
+
+| Medida (5 min de parque clásico) | Antes (02-10-2026) | Con tres líneas (03-10-2026) |
+|---|:---:|:---:|
+| Corredores a su velocidad (≥ 80 %) | 36 % del tiempo (el peor, 21 %) | **98 %** (el peor, 96 %) |
+| Corredor objetivo de un nivel (`--level=10`) | **10 %** del tiempo; retenido el 88 % | **96 %**; retenido el 1 % |
+| Paseantes a su velocidad | 82 % | 94 % |
+| Paseantes retenidos (< 40 % de su velocidad) | 15 % | 4 % |
+| Medias vueltas (atascos y salidas de banco) | 98 | 16 en 10 min, todas al levantarse de un banco |
+| Atascos resueltos con media vuelta | casi todas las anteriores | **0** en 15 min |
+| `test_crowd.gd`: mayor `stuck_time` en 60 s | hasta 5 s | 0,0 s |

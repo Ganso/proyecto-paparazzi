@@ -451,6 +451,11 @@ func build_world() -> void:
 		dof_pass.material_override = dof_material
 		camera.add_child(dof_pass)
 
+# Which of the 21 run (in the order they are created: 0–2 the inner path, 3–9 the benches' path,
+# 10–15 the third, 16–20 the outer one). One on the third path and two on the outer one: the inner
+# paths are short and busy, and a runner lapping the photographer every four seconds was only in
+# the way.
+const RUNNER_PLACES = [12,17,20]
 func populate() -> void:
 	if scenario == "grande":
 		populate_grande()
@@ -461,10 +466,12 @@ func populate() -> void:
 		for i in counts[lane]:
 			var p = Person.new()
 			viewport.add_child(p)
-			p.setup(casting.generate(people.size()%7 == 0),casting.catalog,people.size()+905)
+			p.setup(casting.generate(people.size() in RUNNER_PLACES),casting.catalog,people.size()+905)
 			p.lane = lane
 			p.direction = -1 if i%2 == 0 else 1
-			p.radius = radii[lane] + (LANE_OFFSETS[lane] if p.direction > 0 else -LANE_OFFSETS[lane])
+			# Runners all go round the same way, like on any track: they never meet head-on.
+			if p.runner: p.direction = 1
+			p.radius = home_radius(lane,p.direction,p.runner)
 			p.theta = i*(360.0/counts[lane])+lane*7.0
 			p.place()
 			p.animate(0)
@@ -993,11 +1000,11 @@ func new_assignment() -> void:
 		# Never the runner passing right in front (lane 0): one further away, to follow.
 		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO" and p.lane >= 1)
 		if runners.is_empty(): runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO")
-		# Of those, the one on the outermost path: the inner ones are held up by walkers all the
-		# time, and a runner who cannot run is no subject for freezing or panning.
+		# Of those, the one on the third path (7 m): near enough to fill the frame, far enough to
+		# follow; the outer path otherwise.
 		if not runners.is_empty():
-			var outer_lane = runners.map(func(p): return p.lane).max()
-			runners = runners.filter(func(p): return p.lane == outer_lane)
+			var best_lane = 2 if runners.any(func(p): return p.lane == 2) else runners.map(func(p): return p.lane).max()
+			runners = runners.filter(func(p): return p.lane == best_lane)
 		if not runners.is_empty(): candidates = runners
 	if candidates.is_empty(): candidates = people.filter(func(p): return p.visible)
 	var all_traits = people.map(func(p): return p.traits)
@@ -1159,18 +1166,25 @@ func key_turn(axis: float) -> float:
 func key_follow_speed(axis: float, speed: float) -> float:
 	if not eye_ready() or crowd != null: return 0.0
 	var best = 0.0
-	var best_offset = .3    # half the frame width, as a fraction: only the middle counts
+	var best_score = 0.0
+	var zone = .3    # of the frame width, round its middle: only who is there counts
 	for p in people:
 		if not p.visible or p.state != "CAMINANDO": continue
 		var chest: Vector3 = p.control_points()[1]
 		if camera.is_position_behind(chest): continue
-		var offset = absf(camera.unproject_position(chest).x/viewport.size.x-.5)
-		if offset >= best_offset: continue
+		# Distance to the middle of the frame, across and up and down.
+		var on_screen = camera.unproject_position(chest)/Vector2(viewport.size)-Vector2(.5,.5)
+		var offset = Vector2(on_screen.x,on_screen.y*float(viewport.size.y)/viewport.size.x).length()
+		if offset >= zone: continue
 		var turn = rad_to_deg(p.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(chest)))
 		# Same way as the key, and not so slow or so fast that the key would feel hijacked.
 		if signf(turn) != signf(axis) or absf(turn) < speed*.3 or absf(turn) > speed*2.5: continue
-		best = turn
-		best_offset = offset
+		# The faster and the nearer the middle, the more it is the one being followed: a runner a
+		# little off-centre (the camera leads it) rather than a walker who happens to be dead centre.
+		var score = absf(turn)*(1.0-offset/zone)
+		if score > best_score:
+			best_score = score
+			best = turn
 	return best
 
 var meter_bar: Control
@@ -1337,7 +1351,9 @@ func update_person(p: Pedestrian, dt: float) -> void:
 			p.visible = true
 	elif p.state == "CAMINANDO":
 		if p.destination_lane >= 0:
-			var target_r = LANES[p.destination_lane] + (LANE_OFFSETS[p.destination_lane] if p.direction > 0 else -LANE_OFFSETS[p.destination_lane])
+			var target_r = home_radius(p.destination_lane,p.direction,p.runner)
+			p.r_goal = target_r
+			p.pass_r = NAN
 			# Crossing between paths: slow diagonal walk with the same smooth speeds as walk_step().
 			if p.v_fwd < 0: p.v_fwd = p.speed
 			p.v_fwd = move_toward(p.v_fwd, p.speed*.55, WALK_BRAKE*dt)
@@ -1386,7 +1402,7 @@ func update_person(p: Pedestrian, dt: float) -> void:
 					p.activity = "movil"
 					p.act_time = 0.0
 					p.state_time = p.rng.randf_range(8,18)
-				else: try_change_lane(p)
+				elif not p.runner: try_change_lane(p)
 		if stress:
 			if p.theta < 96 or p.theta > 144:
 				p.theta = clampf(p.theta,96,144)
@@ -1394,10 +1410,11 @@ func update_person(p: Pedestrian, dt: float) -> void:
 		var interest = int(p.theta/30)
 		if interest != p.poi and p.theta < 240:
 			p.poi = interest
-			if p.runner and p.pending_stop.is_empty() and p.rng.randf() < .05:
-				# Runners stop now and then to stretch by the path.
+			if p.runner and p.pending_stop.is_empty() and p.rng.randf() < .015:
+				# Runners stop now and then to stretch by the path (once every few minutes: at 5 %
+				# per sector they spent a sixth of their time standing).
 				if not runner_on_duty(p): p.pending_stop = {"activity":"estirar","time":p.rng.randf_range(6,10),"face":face_view(p)}
-			elif not p.runner and not p.has_meta("staged") and p.bench_goal < 0 and p.pending_stop.is_empty() and p.rng.randf() < .12:
+			elif not p.runner and not p.has_meta("staged") and p.bench_goal < 0 and p.pending_stop.is_empty() and is_nan(p.pass_r) and p.rng.randf() < .12:
 				var poi_blocked = false
 				for other in people:
 					if other != p and other.lane == p.lane and (other.state == "DETENIDO" or other.state == "SENTADO") and absf(other.theta - p.theta) < 12.0:
@@ -1407,7 +1424,7 @@ func update_person(p: Pedestrian, dt: float) -> void:
 		if not p.runner and p.lane == 1 and p.destination_lane < 0 and not p.protected_target and not p.has_meta("staged") and p.bench_goal < 0 and p.pending_stop.is_empty():
 			choose_bench(p)
 		if p.bench_goal >= 0: approach_bench(p)
-		elif not p.pending_stop.is_empty() and p.v_fwd < .04:
+		elif not p.pending_stop.is_empty() and p.v_fwd < .04 and (is_nan(p.r_goal) or absf(p.radius-p.r_goal) < .05 or p.stuck_time > 1.0):
 			var stop: Dictionary = p.pending_stop
 			p.pending_stop = {}
 			p.state = "DETENIDO"
@@ -1475,7 +1492,7 @@ func plan_stop(p: Pedestrian) -> void:
 	var time = p.rng.randf_range(6,16)
 	for q in people:
 		if q == p or q.runner or q.protected_target or q.has_meta("staged") or q.lane != p.lane or q.direction == p.direction: continue
-		if q.state != "CAMINANDO" or q.destination_lane >= 0 or q.bench_goal >= 0 or not q.pending_stop.is_empty(): continue
+		if q.state != "CAMINANDO" or q.destination_lane >= 0 or q.bench_goal >= 0 or not q.pending_stop.is_empty() or not is_nan(q.pass_r): continue
 		var ahead = ahead_of(p,q.theta)
 		if ahead < 1.4 or ahead > 3.6 or absf(q.radius-p.radius) > 1.0: continue
 		if p.rng.randf() < .55:
@@ -1514,9 +1531,14 @@ func choose_bench(p: Pedestrian) -> void:
 		p.set_meta("bench_seen",i)
 		var company = bench.seats[0] != null or bench.seats[1] != null
 		if p.rng.randf() < (.55 if company else .4):
-			# The free place, or the nearer one if both are free.
-			var slot = 0 if bench.seats[0] == null else 1
-			if bench.seats[0] == null and bench.seats[1] == null and ahead_of(p,seat_theta(bench,1)) < ahead_of(p,seat_theta(bench,0)): slot = 1
+			# The place reached first. The far one only if whoever has the near one is already
+			# sitting: two people walking to the same bench from opposite ends would have to cross
+			# each other right in front of it, and stood there face to face instead.
+			var near = 1 if ahead_of(p,seat_theta(bench,1)) < ahead_of(p,seat_theta(bench,0)) else 0
+			var slot = near
+			if bench.seats[near] != null:
+				if bench.seats[near].state != "SENTADO": return
+				slot = 1-near
 			set_seat(bench,slot,p)
 			p.bench_goal = i
 			p.bench_slot = slot
@@ -1586,7 +1608,9 @@ func reset_walker(q: Pedestrian, lane: int, theta: float, direction: float) -> v
 	q.stuck_time = 0.0
 	q.direction = direction
 	q.theta = fposmod(theta,360)
-	q.radius = LANES[lane]+LANE_OFFSETS[lane]*direction
+	q.radius = home_radius(lane,direction,q.runner)
+	q.pass_r = NAN
+	q.r_goal = NAN
 	q.v_fwd = q.speed
 	q.lane_timer = 99.0
 	q.place()
@@ -1710,22 +1734,117 @@ func stand_up_clear(p: Pedestrian) -> bool:
 		if other.position.distance_to(spot) < .9: return false
 	return true
 
+# ---- Three lines per path (docs/NAVEGACION_Y_COLISIONES.md §3) ----
+# A path is just wide enough for three people abreast. Walkers keep to the edge on their right
+# (one file each way) and the middle stays free: it is where anyone passes someone standing or
+# slower, and where the runners run. Nobody steps into a line unless it will stay free for as long
+# as the manoeuvre takes (free_time() against pass_need()), so a walker never pulls out in front of
+# a runner and two people never meet head-on in the middle. Before this, the two files took the
+# two places the path had and overtaking meant using the oncoming file, which was hardly ever
+# free: runners spent most of their time held up behind somebody.
+const PASS_SPACE = .62          # centre-to-centre distance between neighbouring lines
+const ALONGSIDE = .8            # along the path, closer than this two people are side by side
+const HOME_CLEAR = 4.0          # seconds of free way ahead that make one's own line good enough
+# Innermost and outermost line of each path (radius of the body's centre), checked against the
+# fixed things beside it with a swept body (tools/measure_flow.gd -- --edges):
+#   0  the outer line stops short of the four lamps that stand at 2.6 m (two files, no middle);
+#   1  the inner file walks close to the inner kerb, because whoever sits on a bench takes some of
+#      the outer side (their feet reach r ≈ 4.5 m): three lines still fit beside a bench;
+#   3  a little inwards, clear of the shrubs behind the outer kerb.
+const LANE_LINES = [Vector2(1.33,2.12), Vector2(3.07,4.57), Vector2(6.38,7.62), Vector2(10.80,12.04)]
+const BENCH_CLEAR = .55         # outer line this far inside the bench's own radius, next to it
+var jam_turns = 0               # how many jams ended with someone turning back (tools/measure_flow.gd)
+
+# Usable band of a path (inner, outer).
+func lane_edges(lane: int) -> Vector2:
+	return LANE_LINES[lane]
+
+# The line a person keeps when nothing is in the way: runners the middle, walkers their right edge.
+func home_radius(lane: int, direction: float, runner: bool) -> float:
+	var edges = lane_edges(lane)
+	if runner: return (edges.x+edges.y)*.5
+	return edges.y if direction > 0 else edges.x
+
+# Everybody who matters to p's lateral choice: {a: metres ahead (negative behind), r: radius,
+# g: radius they are heading for, v: speed along p's direction, still, runner}.
+func people_around(p: Pedestrian, lo: float, hi: float) -> Array:
+	var around = []
+	for other in people:
+		if other == p or not other.visible: continue
+		if other.radius < lo-PASS_SPACE or other.radius > hi+PASS_SPACE+.45: continue
+		# Walking up to a bench: whoever already sits on it is not in the way.
+		if p.bench_goal >= 0 and other.bench_index == p.bench_goal and other.state == "SENTADO": continue
+		var a = deg_to_rad(fposmod((other.theta-p.theta)*p.direction+180.0,360.0)-180.0)*p.radius
+		var still = other.state != "CAMINANDO"
+		var v = 0.0 if still else other.v_fwd*(1.0 if other.direction == p.direction else -1.0)
+		var goal = other.radius if still or is_nan(other.r_goal) else other.r_goal
+		around.append({"a":a,"r":other.radius,"g":goal,"v":v,"still":still,"runner":other.runner,"facing":not still and other.direction != p.direction})
+	return around
+
+# Seconds until line c stops being free for p (INF if nothing is coming, 0 if it is taken right
+# now). Someone in the line ahead counts by how fast p closes on them; someone beside it, at once;
+# someone coming up from behind only if p would be moving into their line (or they are a runner:
+# runners have the right of way). Stepping across also needs nobody beside p on the way there.
+func free_time(p: Pedestrian, c: float, around: Array, v_plan: float) -> float:
+	var best = INF
+	var moving = absf(c-p.radius) > .15
+	var lateral_speed = LATERAL_MAX*(1.9 if p.runner else 1.0)
+	var crossing = absf(c-p.radius)/lateral_speed+.3
+	for o in around:
+		var closing: float = v_plan-o.v
+		if minf(absf(o.r-c),absf(o.g-c)) < PASS_SPACE-.03:
+			if o.a > ALONGSIDE:
+				if closing > .02: best = minf(best,(o.a-ALONGSIDE)/closing)
+			elif o.a > -ALONGSIDE:
+				best = 0.0
+			elif -closing > .02 and (moving or o.runner):
+				best = minf(best,(-o.a-ALONGSIDE)/-closing)
+		elif moving and signf(o.r-p.radius) == signf(c-p.radius) and absf(o.r-p.radius) >= HARD_SPACE+.025 and absf(o.r-p.radius) < absf(c-p.radius)+PASS_SPACE-.03:
+			# Only in the way of the sidestep: beside p now, or while it crosses. (Whoever is in p's
+			# own line is not: p is following them, see the speed rule in walk_step().)
+			var later: float = o.a-closing*crossing
+			if absf(o.a) < ALONGSIDE or absf(later) < ALONGSIDE or (o.a > 0.0) != (later > 0.0): best = 0.0
+	return best
+
+# Seconds p needs out of its own line to get past whoever blocks it there (INF if it cannot: the
+# other walks as fast).
+func pass_need(home: float, around: Array, v_plan: float) -> float:
+	var need = 0.0
+	for o in around:
+		if absf(o.r-home) >= PASS_SPACE-.03 or o.a < -ALONGSIDE or o.a > 12.0: continue
+		var closing: float = v_plan-o.v
+		if closing <= .05:
+			if o.a < 3.0: return INF
+			continue
+		if (o.a-ALONGSIDE)/closing > HOME_CLEAR: continue
+		need = maxf(need,(o.a+ALONGSIDE+.4)/closing)
+	return need
+
 func walk_step(p: Pedestrian, dt: float) -> void:
 	var bounds: Vector2 = LANE_BOUNDS[p.lane]
-	var margin = .28
-	var lo = bounds.x+margin
-	var hi = bounds.y-margin
+	var lo: float = LANE_LINES[p.lane].x
+	var hi: float = LANE_LINES[p.lane].y
 	if p.v_fwd < 0: p.v_fwd = p.speed
-	var v_des = p.speed*(1.0 if p.runner else walk_pace)
-	# Preferred place across the lane: keep-right by direction plus a personal offset.
-	var keep_right = LANE_OFFSETS[p.lane]*p.direction
-	var r_des = clampf(lane_center(p)+keep_right+p.pref_offset,lo,hi)
+	var v_own = p.speed*(1.0 if p.runner else walk_pace)*(.8 if p.activity == "movil" else 1.0)
+	var v_des = v_own
 	if not p.pending_stop.is_empty(): v_des = 0.0
-	if p.activity == "movil": v_des *= .8
 	# Keep the swept body clear of bench legs; the last metre to a chosen bench ignores them.
 	var static_check = true
 	for bench in park.benches:
-		if p.lane == 1 and absf(ahead_of(p,bench.theta)) < 1.5: hi = minf(hi,bench.get("radius",4.85)-.42)
+		if p.lane == 1 and absf(ahead_of(p,bench.theta)) < 1.5: hi = minf(hi,bench.get("radius",4.85)-BENCH_CLEAR)
+	var mid = (lo+hi)*.5
+	# Own line: runners the middle (the outer edge while they slow down to stretch), walkers the
+	# edge on their right.
+	var home = hi if p.direction > 0 else lo
+	if p.runner and p.pending_stop.is_empty(): home = mid
+	elif p.runner: home = hi
+	home = clampf(home+p.pref_offset,lo,hi)
+	var around = people_around(p,lo,hi)
+	var target = home
+	# Off the path (a crossing between paths given up half way, standing up from a bench): walk
+	# back onto it across whatever is there, at walking pace. Clamping the radius to the path made
+	# a half-metre jump that never passed the collision sweep, and the person stayed out there.
+	var off_path = p.radius < bounds.x-.02 or p.radius > hi+.02
 	if p.bench_goal >= 0:
 		var bench = park.benches[p.bench_goal]
 		var to_go = ahead_of(p,seat_theta(bench,p.bench_slot))
@@ -1734,88 +1853,80 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 		if to_go < .6:
 			hi = bench_front(bench,p)
 			static_check = false
-			r_des = clampf(bench_front(bench,p),lo,hi)
+			target = clampf(bench_front(bench,p),lo,hi)
 		else:
-			r_des = minf(r_des,4.2)
+			target = clampf(4.2,lo,hi)
 		v_des = minf(v_des,maxf(.07,(to_go-.05)*.9))
-	elif p.radius > hi+.02: static_check = false
-	r_des = clampf(r_des,lo,hi)
-	p.pass_timer = maxf(0.0,p.pass_timer-dt)
-	p.side_flip_cd = maxf(0.0,p.side_flip_cd-dt)
-	if p.pass_timer <= 0: p.pass_side = 0.0
-	var blocking_ahead = INF
+		p.pass_r = NAN
+	else:
+		if off_path: static_check = false
+		var v_plan = maxf(v_own,.3)
+		var home_free = free_time(p,home,around,v_plan)
+		if home_free >= HOME_CLEAR or not p.pending_stop.is_empty():
+			# Own line free (or stopping: no passing while slowing down to stop).
+			p.pass_r = NAN
+		elif not is_nan(p.pass_r) and free_time(p,p.pass_r,around,v_plan) > 1.0:
+			# Committed to a pass: keep the line until past (no flip-flopping).
+			target = clampf(p.pass_r,lo,hi)
+		else:
+			p.pass_r = NAN
+			var need = pass_need(home,around,v_plan)
+			var best_cost = INF
+			# The lines of the path first, then just clear of whoever is nearest.
+			var options = [mid,lo,hi]
+			for o in around:
+				if o.a > -ALONGSIDE and o.a < 6.0:
+					options.append(o.r+PASS_SPACE)
+					options.append(o.r-PASS_SPACE)
+			# Walkers leave a wide margin (a runner brakes long before reaching whoever is in its
+			# line) and only use the line next to their own: crossing the middle to walk down the
+			# oncoming file is the runners' business.
+			var margin = .5 if p.runner else 2.5
+			for c in options:
+				if c < lo-.001 or c > hi+.001 or absf(c-home) < .2: continue
+				if not p.runner and absf(c-home) > PASS_SPACE+.12: continue
+				if free_time(p,c,around,v_plan) <= need+margin: continue
+				# Nearest to the own side wins: the oncoming file is the last resort.
+				var cost = absf(c-home)+.3*absf(c-p.radius)
+				if cost < best_cost:
+					best_cost = cost
+					p.pass_r = c
+			if not is_nan(p.pass_r): target = p.pass_r
+			elif home_free <= 0.0 and absf(p.radius-home) > .2:
+				# Out of the own line with someone beside it: hold this line until they are past.
+				target = p.radius
+	target = clampf(target,lo,hi)
+	p.r_goal = target
+	p.pass_side = signf(target-home) if absf(target-home) > .05 else 0.0
+	# Speed: never run into whoever is in the way right now. Behind someone going the same way (or
+	# standing), follow at a distance; facing someone, brake until one of the two has moved over.
 	var nearest_r = NAN
 	var nearest_ahead = INF
-	for other in people:
-		if other == p or not other.visible: continue
-		var ahead = deg_to_rad(fposmod((other.theta-p.theta)*p.direction+180.0,360.0)-180.0)*p.radius
-		if ahead > -.2 and ahead < nearest_ahead and absf(other.radius-p.radius) < .9:
-			nearest_ahead = ahead
-			nearest_r = other.radius
-		if ahead <= -.9 or ahead > 4.0: continue
-		var lateral = other.radius-p.radius
-		if absf(lateral) > 1.1: continue
-		# Walking up to a bench: whoever already sits on it is not in the way (the approach keeps to
-		# the path and only steps to the bench in front of the free place).
-		if p.bench_goal >= 0 and other.bench_index == p.bench_goal and other.state == "SENTADO": continue
-		var still = other.state != "CAMINANDO"
-		var other_v = 0.0 if still else other.v_fwd*(1.0 if other.direction == p.direction else -1.0)
-		var closing = p.v_fwd-other_v
-		# Alongside (just passing): only keep the side, until well past.
-		if ahead <= .05:
-			if p.pass_side != 0.0 and absf(lateral) < PERSONAL_SPACE+.05:
-				r_des = clampf(other.radius+p.pass_side*PERSONAL_SPACE,lo,hi)
-				p.pass_timer = maxf(p.pass_timer,.8)
-			continue
-		if closing <= .02 and not still: continue
-		# Will we come closer than personal space? Then pick a side (once) and move over.
-		if absf(lateral) < PERSONAL_SPACE+.1:
-			# Oncoming walkers always keep to their own right, whatever side was latched before:
-			# both pick opposite sides, so they never mirror each other into a standoff.
-			# (Unless already stuck: then the side that frees the way wins, see below.)
-			if other.direction != p.direction and not still and p.pass_side != p.direction and p.stuck_time < 1.0:
-				p.pass_side = 0.0
-			if p.pass_side == 0.0:
-				var room_out = hi-(other.radius+PERSONAL_SPACE)
-				var room_in = (other.radius-PERSONAL_SPACE)-lo
-				if other.direction != p.direction and not still:
-					p.pass_side = p.direction
-				else:
-					p.pass_side = 1.0 if room_out >= room_in else -1.0
-				if (p.pass_side > 0 and room_out < -.05) or (p.pass_side < 0 and room_in < -.05):
-					p.pass_side = -p.pass_side
-				p.pass_timer = 3.0
-			var side_target = clampf(other.radius+p.pass_side*PERSONAL_SPACE,lo,hi)
-			var can_pass = absf(side_target-other.radius) > PERSONAL_SPACE-.12
-			if not can_pass and p.side_flip_cd <= 0 and still:
-				# The latched side is walled off (bench, lane edge) by someone who is not moving:
-				# take the other one if it fits (at most once every 2.5 s, never flip-flopping).
-				var other_side = clampf(other.radius-p.pass_side*PERSONAL_SPACE,lo,hi)
-				if absf(other_side-other.radius) > PERSONAL_SPACE-.12:
-					p.side_flip_cd = 2.5
-					p.pass_timer = 3.0
-					p.pass_side = -p.pass_side
-					side_target = other_side
-					can_pass = true
-			var weight = clampf((4.0-ahead)/2.5,0.0,1.0)
-			r_des = lerpf(r_des,side_target,weight)
-			p.pass_timer = maxf(p.pass_timer,1.2)
-			if not can_pass:
-				blocking_ahead = minf(blocking_ahead,ahead)
-				if other.direction == p.direction or still:
-					v_des = minf(v_des,maxf(0.0,other_v)+maxf(0.0,ahead-FOLLOW_GAP)*.8)
-		# Someone slow in front, not yet reached: ease off early instead of braking late.
-		if absf(lateral) < PERSONAL_SPACE-.2 and ahead < 2.0 and other.direction == p.direction and not still:
-			v_des = minf(v_des,maxf(0.0,other_v)+maxf(0.0,ahead-FOLLOW_GAP)*1.2)
+	for o in around:
+		if o.a <= .3 or absf(o.r-p.radius) >= HARD_SPACE+.025: continue
+		if o.a < nearest_ahead:
+			nearest_ahead = o.a
+			nearest_r = o.r
+		if not o.facing: v_des = minf(v_des,maxf(0.0,o.v)+maxf(0.0,o.a-FOLLOW_GAP)*.8)
+		else:
+			# Coming the other way (even if it has stopped to wait, as p may have): brake short of
+			# them. Face to face and both waiting is a jam in the making, not a queue: it counts as
+			# being stuck, so one of the two gives way.
+			v_des = minf(v_des,maxf(0.0,o.a-1.1)*.9)
+			if o.a < 1.4 and p.v_fwd < .05: p.stuck_time += dt*1.5
 	# Forward speed with limited acceleration.
-	var accel = (WALK_ACCEL*(2.5 if p.runner else 1.0)) if v_des > p.v_fwd else WALK_BRAKE
+	var accel = (WALK_ACCEL*(2.5 if p.runner else 1.0)) if v_des > p.v_fwd else WALK_BRAKE*(1.6 if p.runner else 1.0)
 	p.v_fwd = move_toward(p.v_fwd,v_des,accel*dt)
 	# Radial speed: damped approach to the lateral target, capped.
 	var lat_max = LATERAL_MAX*(1.9 if p.runner else 1.0)
-	var v_rad_des = clampf((r_des-p.radius)*1.4,-lat_max,lat_max)
-	p.v_rad = move_toward(p.v_rad,v_rad_des,1.2*dt)
+	# (With a floor: the last centimetres to the line are not an endless crawl, which left people
+	# a hand's breadth inside the next line, in the way.)
+	var off = target-p.radius
+	var v_rad_des = 0.0 if absf(off) < .004 else signf(off)*minf(lat_max,maxf(.1,absf(off)*(2.2 if p.runner else 1.4)))
+	p.v_rad = move_toward(p.v_rad,v_rad_des,(2.6 if p.runner else 1.2)*dt)
 	var new_theta = fposmod(p.theta+rad_to_deg(p.v_fwd*dt/maxf(p.radius,.5))*p.direction,360.0)
-	var new_radius = clampf(p.radius+p.v_rad*dt,bounds.x,bounds.y)
+	var new_radius = p.radius+p.v_rad*dt
+	if p.radius >= bounds.x and p.radius <= bounds.y: new_radius = clampf(new_radius,bounds.x,bounds.y)
 	if travel_clear(p,p.position,park.polar(new_theta,new_radius),static_check):
 		p.theta = new_theta
 		p.radius = new_radius
@@ -1825,27 +1936,33 @@ func walk_step(p: Pedestrian, dt: float) -> void:
 		p.radius = new_radius
 		p.v_fwd = move_toward(p.v_fwd,0.0,WALK_BRAKE*2.0*dt)
 		p.stuck_time += dt*.5
+	elif travel_clear(p,p.position,park.polar(new_theta,p.radius),static_check):
+		# Blocked sideways only: walk on in this line.
+		p.theta = new_theta
+		p.v_rad = 0.0
+		p.stuck_time = maxf(0.0,p.stuck_time-dt)
 	else:
 		p.v_fwd = move_toward(p.v_fwd,0.0,WALK_BRAKE*3.0*dt)
 		p.v_rad = 0.0
 		p.stuck_time += dt
-	# Waiting behind someone is not being stuck; being stopped by nothing for long is.
+	# Waiting behind someone is not being stuck; being stopped by nothing for long is. The plan
+	# above should never get here: this is the safety net.
 	if p.stuck_time > 2.0:
-		# Try the other side, at most once every 1.5 s (never flip-flop frame by frame).
-		if p.pass_timer < 1.5:
-			if not is_nan(nearest_r):
-				# Step away from whoever is closest in front, towards the side with room.
-				var away = 1.0 if p.radius >= nearest_r else -1.0
-				if (away > 0 and p.radius > hi-.05) or (away < 0 and p.radius < lo+.05): away = -away
-				p.pass_side = away
-			else:
-				p.pass_side = (-p.pass_side if p.pass_side != 0.0 else 1.0)*(1.0 if p.rng.randf() < .7 else -1.0)
-			p.pass_timer = 3.0
-		if p.stuck_time > 3.0 and not try_change_lane(p) and p.stuck_time > 5.0:
+		# Step away from whoever is closest in front, towards the side with room (held for a while:
+		# never flip-flopping frame by frame).
+		p.pass_timer = maxf(0.0,p.pass_timer-dt)
+		if p.pass_timer <= 0.0:
+			var away = 1.0 if is_nan(nearest_r) or p.radius >= nearest_r else -1.0
+			if (away > 0 and p.radius > hi-.05) or (away < 0 and p.radius < lo+.05): away = -away
+			p.pass_r = clampf((nearest_r if not is_nan(nearest_r) else p.radius)+away*PASS_SPACE,lo,hi)
+			p.pass_timer = 2.0
+		if not p.runner and p.stuck_time > 3.0 and not try_change_lane(p) and p.stuck_time > 5.0:
 			# Give way: turn back (the heading turns smoothly, see turn_heading()).
 			p.direction *= -1
 			p.v_fwd = 0.0
 			p.stuck_time = 0.0
+			p.pass_r = NAN
+			jam_turns += 1
 
 # Heading follows the real motion at a bounded turn rate; stands still when barely moving.
 func turn_heading(p: Pedestrian, dt: float, previous: float) -> void:
@@ -2637,8 +2754,9 @@ func update_trigger(rt: float) -> void:
 var trigger_lock = false         # the lock in force was set by the trigger's half press
 
 # Sticks, triggers and D-pad repeat, every frame while searching.
+var pad_polling = true           # tests switch it off: a gamepad left plugged in must not drive them
 func update_pad(dt: float) -> void:
-	if Input.get_connected_joypads().is_empty(): return
+	if Input.get_connected_joypads().is_empty() or not pad_polling: return
 	var slow = 1.0/3.0 if pad_precision else 1.0
 	var lx = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_X))
 	var ly = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
@@ -3868,7 +3986,7 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true
 		if other == p or not other.visible: continue
 		var nearest = Geometry3D.get_closest_point_to_segment(other.position,from,to)
 		var near_dist = nearest.distance_to(other.position)
-		if near_dist < .58:
+		if near_dist < HARD_SPACE:
 			var d_from = from.distance_to(other.position)
 			var d_to = to.distance_to(other.position)
 			if d_to >= d_from - 0.0005:
@@ -3876,9 +3994,21 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true
 			return false
 	return true
 
+const HARD_SPACE = .52          # two people never come closer than this (centre to centre)
 const LANE_CAPACITIES = [3, 7, 7, 6]
+# Seconds until a runner of that path reaches the angle theta (INF if none will soon).
+func runner_due(lane: int, theta: float) -> float:
+	var due = INF
+	for q in people:
+		if not q.runner or not q.visible or q.state != "CAMINANDO" or q.lane != lane: continue
+		var ahead = deg_to_rad(fposmod((theta-q.theta)*q.direction,360.0))*q.radius
+		due = minf(due,ahead/maxf(q.v_fwd,1.0))
+	return due
+
 func try_change_lane(p: Pedestrian) -> bool:
 	if p.destination_lane >= 0: return true
+	# Runners keep to their path.
+	if p.runner: return false
 	var choices = range(LANES.size())
 	choices.sort_custom(func(a,b): return absf(LANES[a]-p.radius) < absf(LANES[b]-p.radius))
 	for lane in choices:
@@ -3887,6 +4017,8 @@ func try_change_lane(p: Pedestrian) -> bool:
 		for other in people:
 			if (other.lane == lane or other.destination_lane == lane) and other.visible: in_lane += 1
 		if in_lane >= LANE_CAPACITIES[lane]: continue
+		# Crossing a path takes a few seconds: not in front of a runner.
+		if runner_due(lane,p.theta) < 7.0 or runner_due(p.lane,p.theta) < 4.0: continue
 		var end = park.polar(p.theta,LANES[lane])
 		if travel_clear(p,p.position,end):
 			p.destination_lane = lane
