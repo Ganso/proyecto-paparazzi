@@ -36,6 +36,12 @@ func run() -> void:
 	# --- Extras: out of the playable area, not pedestrians, no colliders ---
 	check(game.people.size() == 21,"Still exactly 21 pedestrians")
 	if hd: check(game.extras.extras.size() >= 10,"Meadow extras populated in hd")
+	# Way of walking (docs/futuro/15 P4): each pedestrian has its own, within sane limits.
+	var arms = {}
+	for p in game.people: arms[snappedf(p.style.arm,.01)] = true
+	check(arms.size() >= 12,"Pedestrians swing their arms differently (%d styles)" % arms.size())
+	check(game.people.all(func(p): return p.style.arm >= .65 and p.style.arm <= 1.4 and p.style.elbow >= 0.0 and p.style.elbow <= .28 and absf(p.style.lean) <= .035),"Walking styles stay within their limits")
+	check(game.people.filter(func(p): return p.runner).all(func(p): return p.style.lean == 0.0 and p.style.elbow == 0.0),"Runners keep their own running form")
 	for p in game.extras.extras:
 		check(not game.people.has(p),"Extras are not in the pedestrian list")
 		check(p.ambient and p.colliders.is_empty(),"Extras have no colliders")

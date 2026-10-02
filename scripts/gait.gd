@@ -173,13 +173,14 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 		var hip_joint = Vector3(p.profile.hombros*.22*sign_side,hip,0)
 		solve_leg(side,targets[side]-hip_joint,foot_rotations[side],a,b)
 		var cycle = fposmod(cycle_base+(0 if side == "I" else .5),1)
-		var arm = -cos(cycle*TAU)*(.55 if p.runner else .27)
-		var elbow = 1.30+arm*.16 if p.runner else .20+arm*.25
+		# Each person swings the arms and carries the elbows in a way of their own (p.style).
+		var arm = -cos(cycle*TAU)*(.55 if p.runner else .27)*p.style.arm
+		var elbow = 1.30+arm*.16 if p.runner else .20+p.style.elbow+arm*.25
 		var shoulder = Quaternion(Vector3.BACK,sign_side*p.arm_out[side])*Quaternion(Vector3.RIGHT,arm)
 		p.rig.set_bone_pose_rotation(p.bones["brazo."+side],shoulder)
 		p.pose_bone("antebrazo."+side,elbow)
-	var lean = -.12 if p.runner else -.025
-	p.rig.set_bone_pose_rotation(p.bones.lumbar,Quaternion(Vector3.RIGHT,lean)*Quaternion(Vector3.UP,sin(p.phase)*.035))
+	var lean = -.12 if p.runner else -.025+p.style.lean
+	p.rig.set_bone_pose_rotation(p.bones.lumbar,Quaternion(Vector3.RIGHT,lean)*Quaternion(Vector3.UP,sin(p.phase)*.035*p.style.sway))
 	p.pose_bone("cuello",-lean*.6)
 	if weight < 1:
 		p.rig.set_bone_pose_position(p.bones.caderas,p.rests[p.bones.caderas].origin.lerp(Vector3(0,hip,0),weight))

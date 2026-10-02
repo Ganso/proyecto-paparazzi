@@ -70,6 +70,10 @@ var build_pass = "both"
 var ambient = false
 # "banco" (bench-height seat) or "suelo" (sitting on the grass, legs stretched out).
 var seat_kind = "banco"
+# Way of walking (docs/futuro/15 P4): arm swing and shoulder sway as factors, extra elbow bend and
+# torso lean in radians. Drawn per person from its seed; never named in a brief, never scored
+# apart (the legs and the planted feet do not change).
+var style = {"arm":1.0,"sway":1.0,"elbow":0.0,"lean":0.0}
 # Walks a dog (scripts/dog.gd): the left hand holds the leash.
 var has_dog = false
 # The 20 bones of the universal rig; secondary chain bones come after them.
@@ -189,6 +193,13 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	speed = rng.randf_range(2.6, 3.0) if runner else rng.randf_range(0.55, 0.85)
 	stride *= 1.4 if runner else .8
 	phase = rng.randf()*TAU
+	# Its own generator: the sequence that decides speed, phase and activities is not shifted.
+	var style_rng = RandomNumberGenerator.new()
+	style_rng.seed = seed_value*7919+13
+	style.arm = style_rng.randf_range(.9,1.1) if runner else style_rng.randf_range(.65,1.4)
+	style.sway = style_rng.randf_range(.6,1.7)
+	style.elbow = 0.0 if runner else style_rng.randf_range(0.0,.28)
+	style.lean = 0.0 if runner else style_rng.randf_range(-.035,.02)
 	rig = Skeleton3D.new()
 	rig.name = "Rig"
 	add_child(rig)

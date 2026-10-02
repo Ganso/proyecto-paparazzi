@@ -89,6 +89,7 @@ const SPECIES = {
 ### P4 · Accesorios y actitudes
 - Nuevos accesorios de [02 §7](02_ESTILO_VISUAL_Y_POLIGONOS.md) (mochila, bolso, gafas de sol, periódico, paraguas) como piezas rígidas paramétricas.
 - **Estilo de paso** por persona dentro de la banda de velocidad: cadencia, amplitud del braceo, rebote vertical e inclinación del torso. No se nombra en el briefing, pero hace que la multitud no marche «en formación».
+  - ✅ **Hecho el 02-10-2026** (braceo, codos, vaivén de hombros e inclinación): `person.gd::style` (`arm` 0,65–1,4, `sway` 0,6–1,7, `elbow` 0–0,28 rad, `lean` −0,035–0,02 rad; los corredores conservan su forma), sorteado con un generador propio para no desplazar la secuencia de velocidad, fase y actividades, y aplicado en `gait.gd::pose()`. Piernas y pies apoyados no cambian (`test_gait.gd`: deriva 0); comprobado en `test_park_life.gd`. Quedan la cadencia y el rebote vertical.
 
 ---
 
