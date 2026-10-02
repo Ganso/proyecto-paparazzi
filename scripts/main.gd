@@ -1053,6 +1053,7 @@ func _process(dt: float) -> void:
 			for p in people: update_person(p,1.0/30)
 			pigeons.update(1.0/30,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			if dog: dog.update(1.0/30)
+			if extras: extras.update(1.0/30)
 	if boot_frames == 12 and academy_start != "":
 		var parts = academy_start.split(":")
 		if parts[0] == "menu":
