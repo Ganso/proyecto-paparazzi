@@ -762,7 +762,68 @@ def build_torre(lod):
     return variants
 
 
+def build_mesa_picnic(lod):
+    """Mesa de pícnic de tablones con sus dos bancos (1,8 × 1,5 m, tablero a 0,75 m, asientos a
+    0,45 m), sobre dos caballetes en A. A lo largo de x; los bancos quedan a z = ±0,61."""
+    b = Builder()
+    detail = lod["detail"]
+    wood = "9a6b3c"
+    # Tablero: cinco tablones con un tono distinto cada uno y una rendija entre ellos.
+    for j in range(5):
+        box(b, (1.8, 0.04, 0.145), (0, 0.75, (j - 2) * 0.15), srgb(wood, (0.96, 1.03, 0.98, 1.05, 0.94)[j]), 0.008, lod)
+    # Bancos: dos tablones cada uno.
+    for side in (-1.0, 1.0):
+        for j in range(2):
+            box(b, (1.8, 0.04, 0.135), (0, 0.45, side * (0.54 + j * 0.14)), srgb(wood, (1.0, 0.95)[j]), 0.008, lod)
+    for x in (-0.66, 0.66):
+        # Caballete en A: dos patas inclinadas, travesaño bajo el tablero y larguero de los bancos.
+        for side in (-1.0, 1.0):
+            tilt = Matrix.Rotation(math.radians(-side * 24), 4, "X")
+            box(b, (0.045, 0.78, 0.095), (x, 0.35, side * 0.3), srgb(wood, 0.82), 0.006, lod, tilt)
+        box(b, (0.045, 0.085, 0.72), (x, 0.69, 0), srgb(wood, 0.8), 0.006, lod)
+        box(b, (0.045, 0.085, 1.44), (x, 0.39, 0), srgb(wood, 0.78), 0.006, lod)
+        if detail:
+            # Tornillos pasantes donde se cruzan patas y travesaños.
+            for side in (-1.0, 1.0):
+                for y, z in ((0.69, 0.16), (0.39, 0.29)):
+                    box(b, (0.062, 0.022, 0.022), (x, y, side * z), srgb("6e6a5e"), 0.004, lod)
+    if detail:
+        # Riostras en diagonal del centro del tablero a cada caballete.
+        for side in (-1.0, 1.0):
+            tilt = Matrix.Rotation(math.radians(side * 38), 4, "Z")
+            box(b, (0.62, 0.04, 0.07), (side * 0.4, 0.55, 0), srgb(wood, 0.76), 0.005, lod, tilt)
+    return {"": b}
+
+
+def build_fuente_beber(lod):
+    """Fuente de beber de fundición (1,05 m): pedestal estriado, taza, caño curvo y pulsador,
+    sobre una losa de piedra con rejilla."""
+    b = Builder()
+    seg = lod["lathe"]
+    detail = lod["detail"]
+    iron, iron_hi = srgb("2f4a42"), srgb("3d5d53")
+    box(b, (0.7, 0.05, 0.7), (0, 0.025, 0), srgb("b9b2a2"), 0.012, lod)
+    lathe(b, [(0.2, 0.05), (0.2, 0.1), (0.17, 0.13), (0.15, 0.2), (0.12, 0.24)], (0, 0, 0), iron, seg)
+    flutes = (lambda t, y: 1.0 + 0.06 * math.cos(10 * t)) if detail else None
+    lathe(b, [(0.115, 0.24), (0.1, 0.5), (0.095, 0.8)], (0, 0, 0), iron_hi, seg, radial=flutes)
+    lathe(b, [(0.1, 0.8), (0.125, 0.82), (0.125, 0.85), (0.11, 0.87)], (0, 0, 0), iron, seg)
+    # Taza: por fuera, el labio y el vaso interior, más oscuro.
+    lathe(b, [(0.11, 0.87), (0.2, 0.93), (0.235, 0.99), (0.24, 1.02)], (0, 0, 0), iron_hi, seg, cap_top=False)
+    lathe(b, [(0.24, 1.02), (0.225, 1.025), (0.21, 1.0), (0.12, 0.95), (0.0, 0.945)], (0, 0, 0), srgb("22332e"), seg, cap_bottom=False)
+    # Caño de latón que sale del borde y vuelve sobre la taza, y pulsador a un lado.
+    brass = srgb("b08d4a")
+    tube(b, [(0, 0.96, 0.17), (0, 1.07, 0.16), (0, 1.13, 0.1), (0, 1.1, 0.04)], 0.012, brass, lod)
+    cylinder(b, 0.022, 1.0, 1.035, (0.15, 0, 0.09), brass, 10)
+    if detail:
+        # Rejilla del desagüe al pie.
+        for k in range(-2, 3):
+            box(b, (0.012, 0.012, 0.16), (k * 0.03, 0.055, 0.25), srgb("3a3f3c"))
+    return {"": b}
+
+
 ASSETS = {
+    "mesa_picnic": build_mesa_picnic,
+    "fuente_beber": build_fuente_beber,
     "banco": build_banco,
     "farola": build_farola,
     "papelera": build_papelera,

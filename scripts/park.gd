@@ -542,6 +542,10 @@ const TREE_ASSETS = ["arbol_platano", "arbol_cipres", "arbol_tilo", "arbol_arce"
 const BANDSTAND = Vector2(120.0, 24.0)   # (azimuth in degrees, radius in m)
 const POND = Vector2(245.0, 21.0)
 
+# Picnic tables (azimuth °, radius m, extra turn in radians) and the drinking fountain.
+const MEADOW_TABLES = [Vector3(106.5,18.0,.25),Vector3(102.5,21.5,-.35)]
+const MEADOW_TAP = Vector2(229.0,17.6)
+
 func in_view_opening(theta: float) -> bool:
 	for feature in [BANDSTAND, POND]:
 		if absf(angle_difference(deg_to_rad(theta),deg_to_rad(feature.x))) < deg_to_rad(20): return true
@@ -633,6 +637,27 @@ func build_meadow(rng: RandomNumberGenerator) -> void:
 		add_child(lamp)
 		build_farola_mesh(lamp,false)
 		meadow_light(lamp.position+Vector3.UP*2.69,1.6,7.5)
+	# Meadow furniture (hd only, beyond the fence): two picnic tables and a bin to the left of the
+	# bandstand, and a drinking fountain on the way to the pond.
+	hd_only = true
+	if ParkAssets.available("mesa_picnic"):
+		for spot in MEADOW_TABLES:
+			var table = Node3D.new()
+			table.position = polar(spot.x,spot.y)
+			table.rotation.y = facing_center(table.position)+spot.z
+			add_child(table)
+			visual("mesa_picnic","",table)
+		var bin = Node3D.new()
+		bin.position = polar(104.3,19.6)
+		add_child(bin)
+		visual("papelera","",bin)
+	if ParkAssets.available("fuente_beber"):
+		var tap = Node3D.new()
+		tap.position = polar(MEADOW_TAP.x,MEADOW_TAP.y)
+		tap.rotation.y = facing_center(tap.position)
+		add_child(tap)
+		visual("fuente_beber","",tap)
+	hd_only = false
 	# Scattered trees in small groups across the lawn, clear of the landmarks.
 	var placed = 0
 	var attempt = 0
@@ -667,6 +692,7 @@ func build_meadow(rng: RandomNumberGenerator) -> void:
 		var theta = rng.randf_range(0,360)
 		var pos = polar(theta,rng.randf_range(17.0,45.0))
 		if pos.distance_to(bandstand) < 4.5 or pos.distance_to(pond) < 5.0: continue
+		if MEADOW_TABLES.any(func(t): return pos.distance_to(polar(t.x,t.y)) < 2.4) or pos.distance_to(polar(MEADOW_TAP.x,MEADOW_TAP.y)) < 1.5: continue
 		var radius = rng.randf_range(.5,1.0)
 		bush(radius,radius*rng.randf_range(1.3,1.8),pos+Vector3.UP*radius*.6,Color("4d6836"),i)
 	hd_only = false

@@ -51,6 +51,13 @@ func run() -> void:
 		check(game.pigeons.triangle_count() < 40000,"Pigeons are cheap (%d triangles)" % game.pigeons.triangle_count())
 		for b in game.pigeons.birds:
 			if game.pigeons.flocks[b.flock].state == "suelo": check(b.pos.y < .1,"Pigeons on the ground stay on the ground")
+		# Meadow furniture: beyond the fence and clear of the strollers' circle round the bandstand.
+		var bandstand_pos = game.park.polar(game.park.BANDSTAND.x,game.park.BANDSTAND.y)
+		for t in game.park.MEADOW_TABLES:
+			var table_pos = game.park.polar(t.x,t.y)
+			check(table_pos.length() > 13.5 and absf(table_pos.distance_to(bandstand_pos)-6.2) > 1.0,"Picnic table beyond the fence, off the strollers' path")
+		check(game.park.polar(game.park.MEADOW_TAP.x,game.park.MEADOW_TAP.y).length() > 13.5,"Drinking fountain beyond the fence")
+		check(game.park.ParkAssets.available("mesa_picnic") and game.park.ParkAssets.available("fuente_beber"),"Meadow furniture assets are there")
 		# By day a scared flock may perch on the fence: one bird per post or pillar.
 		check(game.pigeons.fence.size() > 50 and game.pigeons.fence.all(func(v): return absf(Vector2(v.x,v.z).length()-12.8) < .01 and v.y > 1.1),"The fence offers its posts and pillars as perches")
 		var fence_flock = game.pigeons.flocks[0]

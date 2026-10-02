@@ -49,6 +49,7 @@ tools/build_park_assets.sh          ejecuta los dos
 | Tramo de verja de lanzas (72) | 1.418 / 50 |
 | Árboles: 4 especies × 4 variantes | ~2.500–4.000 / ~150–300 |
 | Arbusto (6 variantes), quiosco, estanque, torre (6 estilos) | 240–320 / 20 · ~13.300 / ~770 · ~2.600 / ~330 · ~500–700 / 24–100 |
+| Mesa de pícnic, fuente de beber (02-10-2026; pradera, solo se dibujan en `hd`) | 5.076 / 204 · 1.674 / 374 |
 
 ### 2.3 Reglas de coherencia (obligatorias)
 1. **Los colisionadores no cambian con el perfil.** Siguen siendo las primitivas de siempre sin malla visible (`Park.collider_only`) o se sacan de la envolvente de la malla `lo` (árboles, quiosco, estanque). Los maniquíes `hd` construyen sus colisionadores con las piezas base.
