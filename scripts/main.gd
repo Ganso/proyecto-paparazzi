@@ -90,6 +90,7 @@ var toast_time = 0.0
 var boot_frames = 0
 var screenshot_path = ""
 var advance_seconds = 0.0
+var ducks: Node3D
 var pigeons
 var dog
 var ambience
@@ -393,6 +394,12 @@ func build_world() -> void:
 	viewport.add_child(extras)
 	# The meadow extras belong to the classic park; in the big park the crowd itself fills it.
 	if scenario == "clasico": extras.build(Person.detail)
+	# Ducks on the pond (desktop only, beyond the fence).
+	if scenario == "clasico" and Person.detail == "hd" and park.detail == "hd":
+		ducks = preload("res://scripts/ducks.gd").new()
+		viewport.add_child(ducks)
+		var pond_pos = park.polar(park.POND.x,park.POND.y)
+		ducks.build(pond_pos,park.facing_center(pond_pos)+PI*.5)
 	else: extras.build_playground(park.PLAYGROUND_POS,Person.detail)
 	world_times["figurantes"] = Time.get_ticks_msec()-t_stage
 	t_stage = Time.get_ticks_msec()
@@ -835,6 +842,7 @@ func update_menu_background(dt: float) -> void:
 	for p in people: update_person(p,dt)
 	pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 	if extras: extras.update(dt)
+	if ducks: ducks.update(dt)
 	if dog: dog.update(dt)
 	ambience.update(dt)
 	angle = fposmod(angle+dt*2.2,360)
@@ -847,6 +855,7 @@ func preview_time(tod: String) -> void:
 	park.set_time_of_day(tod)
 	if pigeons:
 		pigeons.night = night
+		if ducks: ducks.night = night
 		if night: pigeons.settle_night()
 	if extras: extras.set_time_of_day(tod)
 
@@ -897,6 +906,7 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	park.set_time_of_day(time_of_day)
 	if pigeons:
 		pigeons.night = night
+		if ducks: ducks.night = night
 		if night: pigeons.settle_night()
 	if extras: extras.set_time_of_day(time_of_day)
 	records.clear()
@@ -1031,6 +1041,7 @@ func _process(dt: float) -> void:
 			for p in people: update_person(p,dt)
 			pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			extras.update(dt)
+			if ducks: ducks.update(dt)
 			if dog: dog.update(dt)
 		ambience.update(dt)
 		if academy: academy.update(dt)
@@ -1054,6 +1065,7 @@ func _process(dt: float) -> void:
 			pigeons.update(1.0/30,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			if dog: dog.update(1.0/30)
 			if extras: extras.update(1.0/30)
+			if ducks: ducks.update(1.0/30)
 	if boot_frames == 12 and academy_start != "":
 		var parts = academy_start.split(":")
 		if parts[0] == "menu":
@@ -2933,6 +2945,7 @@ func smoke_test() -> void:
 		assert(p.ambient and p.colliders.is_empty(),"Meadow extras must have no colliders")
 		triangles += p.triangle_count
 	triangles += pigeons.triangle_count()
+	if ducks: triangles += ducks.triangle_count()
 	# Scene budget per profile (docs/futuro/17 §3): the park detail follows the renderer.
 	# The mesh detail sets the budget: a saved Ultra profile running in gl_compatibility builds "lo".
 	var budget = SCENE_TRIANGLES["Ultra"] if park.detail == "hd" else SCENE_TRIANGLES["Medio"]

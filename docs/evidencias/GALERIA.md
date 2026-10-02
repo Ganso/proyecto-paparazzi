@@ -84,6 +84,7 @@ Demostración interactiva en bucles GIF animados cuantizados con paleta de color
 | **Mobiliario de la pradera**: mesas de pícnic, papelera y fuente de beber | ![Pradera](estados/pradera_mobiliario.jpg) | [ESCENARIO_Y_RENDIMIENTO.md §2.2](../ESCENARIO_Y_RENDIMIENTO.md) |
 | **Dos amigos en la mesa de pícnic** | ![Mesa](estados/pradera_mesa_picnic.jpg) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
 | **Perros**: el de siempre y el pequeño con manchas | ![Perros](estados/perros.png) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
+| **Patos en el estanque** | ![Patos](estados/patos.png) | [futuro/19 §9](../futuro/19_VIDA_EN_EL_PARQUE.md) |
 | **Pantalla de carga e icono** | ![Carga](interfaz/00_carga.png) | [futuro/20](../futuro/20_INTERFAZ_CLARA.md) |
 | **Opciones**, con la vibración del mando | ![Opciones](interfaz/12_opciones.png) | [futuro/22](../futuro/22_MENU_TUTORIAL_MANDO.md) |
 

@@ -40,6 +40,25 @@ func run() -> void:
 		check(game.extras.dogs.size() == 2,"Two dogs in the meadow: by the pond and round the bandstand")
 		check(game.extras.dogs[1].size < .7 and game.extras.dogs[0].size > .75,"The bandstand dog is a small one")
 		check(game.extras.dogs.all(func(d): return d.find_children("*","CollisionObject3D",true,false).is_empty()),"Meadow dogs have no colliders")
+	if hd:
+		# Ducks on the pond: always on the water, no colliders, still at night.
+		check(game.ducks != null and game.ducks.ducks.size() == 3,"Three ducks on the pond")
+		check(game.ducks.find_children("*","CollisionObject3D",true,false).is_empty(),"Ducks have no colliders")
+		var afloat = true
+		for step in 900:
+			game.ducks.update(1.0/30)
+			for d in game.ducks.ducks:
+				var q: Vector3 = d.body.position
+				if pow(q.x/3.0,2)+pow(q.z/1.8,2) > 1.0 or Vector2(q.x,q.z).length() < 1.48 or absf(q.y-.2) > .02: afloat = false
+		check(afloat,"Ducks stay on the water, between the rim and the fountain")
+		check(game.ducks.global_position.length() > 13.5,"The duck pond is beyond the fence")
+		var before = game.ducks.ducks.map(func(d): return d.angle)
+		game.ducks.night = true
+		for step in 240: game.ducks.update(1.0/30)
+		var asleep = game.ducks.ducks.map(func(d): return d.angle)
+		for step in 60: game.ducks.update(1.0/30)
+		check(game.ducks.ducks.map(func(d): return d.angle) == asleep and asleep != before,"At night the ducks drift to a stop")
+		game.ducks.night = false
 	# Way of walking (docs/futuro/15 P4): each pedestrian has its own, within sane limits.
 	var arms = {}
 	for p in game.people: arms[snappedf(p.style.arm,.01)] = true
