@@ -2585,6 +2585,8 @@ func update_lens_effects() -> void:
 		dof_material.set_shader_parameter("focal_mm",focal)
 		dof_material.set_shader_parameter("aperture",apertures()[n_index])
 		dof_material.set_shader_parameter("focus_m",-1.0 if is_inf(focus_distance) else focus_distance)
+		# Longitudinal chromatic aberration: the lens's own, strongest wide open (docs/futuro/07 §6).
+		dof_material.set_shader_parameter("loca",clampf(lens_strengths(focal).y*1.6,0.0,1.0) if Graphics.settings(graphics_preset).lens else 0.0)
 
 func photo_material(result: Dictionary) -> ShaderMaterial:
 	var mat = ShaderMaterial.new()

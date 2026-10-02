@@ -16,6 +16,10 @@ uniform float focus_m = 4.0;
 // Largest blur radius in pixels of a 2560 px wide view (scaled to the real width).
 uniform float max_radius = 34.0;
 uniform bool enabled = true;
+// Longitudinal chromatic aberration (0…1, by lens and aperture): green focuses a little behind
+// red and blue, so what is blurred in front of the focus plane fringes magenta and what is
+// blurred behind it fringes green. Sharp areas are untouched.
+uniform float loca = 0.0;
 
 const int TAPS = 64;
 
@@ -89,7 +93,8 @@ void fragment() {
 			ALBEDO = base;
 		} else {
 			vec3 sum = base;
-			float total = 1.0;
+			vec3 total = vec3(1.0);
+			float focus_z = focus_m < 0.0 ? 1e5 : focus_m;
 			float lod = log2(max(1.0, search / 7.0));
 			for (int i = 0; i < TAPS; i++) {
 				float t = (float(i) + 0.5) / float(TAPS);
@@ -101,7 +106,11 @@ void fragment() {
 				float rs = coc_radius(zs, size.x);
 				// In front: its own blur decides. Behind: limited by this pixel's blur.
 				float reach = zs < z0 ? rs : min(rs, r0);
-				float w = clamp(reach - dist + 1.0, 0.0, 1.0);
+				// Behind the focus plane green spreads a little further than red and blue; in front, less.
+				float side = (zs > focus_z ? 1.0 : -1.0) * loca * 0.14;
+				float w_green = clamp(reach * (1.0 + side) - dist + 1.0, 0.0, 1.0);
+				float w_magenta = clamp(reach * (1.0 - side) - dist + 1.0, 0.0, 1.0);
+				vec3 w = vec3(w_magenta, w_green, w_magenta);
 				vec3 tap = textureLod(screen_texture, uv, lod).rgb;
 				sum += (finite(tap) ? tap : base) * w;
 				total += w;
