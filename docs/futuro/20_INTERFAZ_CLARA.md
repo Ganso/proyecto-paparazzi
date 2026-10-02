@@ -16,3 +16,7 @@ Evidencias: `tools/capture_screens.gd` → `docs/evidencias/interfaz/`.
 ## Tema claro u oscuro
 
 Selector **Tema: Claro / Oscuro** en la esquina superior derecha del menú principal. El oscuro pone textos claros sobre cristal oscuro: `UiStyle.set_dark()` cambia entre `LIGHT_PALETTE` y `DARK_PALETTE` (tinta `eef4fa`, acentos `7cc6ff`, avisos `ff9a76`, superficies pizarra) y el tinte del cristal (`tint` en `frosted_glass.gdshader`). La elección se guarda en `user://interfaz.cfg` (`[interfaz] tema`) y, como toda la interfaz se construye con la paleta, `main.gd::set_theme()` recarga la escena (solo se cambia desde el menú). `--ui=claro|oscuro` fuerza uno al arrancar. Por defecto, claro. Lo comprueba `tests/test_game.gd`; capturas con `tools/capture_screens.gd -- --out=<dir> --ui=oscuro`.
+
+## Pantalla de carga e icono (02-10-2026)
+
+Mientras se construye el parque (unos 4 s) el motor mostraba su propio logotipo. Ahora muestra `assets/marca/carga.png` (el nombre del juego, «Cargando el parque…» y un diafragma sobre el azul de la interfaz), y la ventana y los ejecutables llevan `assets/marca/icono.png`. Las dos imágenes las genera `bash tools/build_branding.sh` con ImageMagick y las fuentes del proyecto; se envían sin importar (`importer="keep"`). El texto de la pantalla de carga va dentro de la imagen, porque se muestra antes de que exista `texts.gd`: es la única excepción a la regla de textos. Ajustes en `project.godot` (`boot_splash/*`, `config/icon`); comprobado en `tests/test_export.gd`.

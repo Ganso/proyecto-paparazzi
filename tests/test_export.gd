@@ -32,5 +32,10 @@ func _initialize() -> void:
 	check(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile") == "gl_compatibility","Mobile renderer")
 	var ignore = Array(FileAccess.get_file_as_string("res://.gitignore").split("\n")).map(func(line): return line.strip_edges())
 	check("!build/paparazzi-debug.apk" in ignore and not "build/" in ignore,"APK versioned")
+	# Branding (tools/build_branding.sh): the loading screen and the icon exist and are shipped raw.
+	for key in ["application/boot_splash/image","application/config/icon"]:
+		var path: String = ProjectSettings.get_setting(key,"")
+		check(path.begins_with("res://assets/marca/") and FileAccess.file_exists(path),"%s points at a file of assets/marca" % key)
+		check(FileAccess.get_file_as_string(path+".import").contains("keep"),"%s is shipped as it is (importer keep)" % key)
 	print("EXPORT TESTS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
