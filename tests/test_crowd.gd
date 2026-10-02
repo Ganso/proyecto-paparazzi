@@ -47,6 +47,7 @@ func run() -> void:
 	var moving_flag = {}
 	var toggles = {}
 	var worst_toggles = 0
+	var worst_splay = 0.0
 	for step in steps:
 		for p in game.people: game.update_person(p, dt)
 		for p in game.people:
@@ -67,6 +68,13 @@ func run() -> void:
 					worst_toggles = maxi(worst_toggles,toggles[p].size())
 					if toggles[p].size() > 2 and OS.has_environment("CROWD_DEBUG"): print("  twitch t=%.2f weight %.2f " % [step*dt,w], describe(p))
 				moving_flag[p] = dw
+		# Splayed legs: the feet far apart sideways (a planted foot left behind while the body turns).
+		for p in game.people:
+			if not p.visible or p.state != "CAMINANDO": continue
+			var left = p.global_transform*p.rig.get_bone_global_pose(p.bones["pie.I"]).origin
+			var right = p.global_transform*p.rig.get_bone_global_pose(p.bones["pie.D"]).origin
+			var across = Vector3(cos(p.rotation.y),0,-sin(p.rotation.y))
+			worst_splay = maxf(worst_splay,absf((right-left).dot(across)))
 		for p in game.people:
 			if not p.visible: continue
 			if p.state == "CAMINANDO":
@@ -112,6 +120,8 @@ func run() -> void:
 	# (runners swerving, the escalation of a jam); 5 or more would be real trembling.
 	check(worst_flips <= 4, "No sideways trembling (lateral direction reversals)")
 	check(min_gap >= .42, "Walkers never overlap")
+	print("CROWD LEGS: feet at most %.2f m apart sideways" % worst_splay)
+	check(worst_splay < .5,"Nobody's legs splay when the body turns (feet under 0.5 m apart sideways)")
 	print("CROWD TWITCH: most walk blend reversals in 2 s: %d" % worst_toggles)
 	check(worst_toggles <= 3, "Nobody trembles: the walk never blends in and out repeatedly (one stop and go at most)")
 	print("CROWD STUCK: longest %.1f s %s" % [max_stuck, stuck_who if max_stuck > 2.0 else ""])

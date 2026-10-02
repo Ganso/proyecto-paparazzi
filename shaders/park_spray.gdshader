@@ -1,5 +1,6 @@
-// Moving water of the fountain (docs/futuro/17 fase 4): the jet rises and the curtains fall as
-// streaks of varying thickness scrolling along the flow, with sparkle and a foam ring at the foot.
+// Falling water of the fountain (docs/futuro/17): the curtains of the two bowls as separate
+// threads that break into drops on the way down, matt white like aerated water, and a foam ring
+// at the foot. The jet on top is made of drops (park.gd::add_fountain_jet(), CPUParticles3D).
 // `center` is the fountain axis in world xz; the geometry has no UVs, so the pattern uses the
 // angle around the axis and the height.
 shader_type spatial;
@@ -30,18 +31,26 @@ void fragment() {
 	float radius = length(offset);
 	// atan(0, 0) is undefined on the axis (NaN on AMD).
 	float angle = radius < 1e-5 ? 0.0 : atan(offset.y, offset.x);
-	// The central jet (thin, near the axis) rises; the curtains fall.
-	float jet = step(radius, 0.12);
-	float flow = mix(1.0, -1.4, jet);
 	float y = world_position.y;
-	vec2 streak_uv = vec2(angle * (radius * 9.0 + 6.0), y * 3.0 + TIME * 2.6 * flow);
-	float streaks = noise(vec2(streak_uv.x * 1.0, streak_uv.y * 0.35)) * 0.65 + noise(streak_uv * vec2(2.3, 0.9)) * 0.35;
-	float sparkle = smoothstep(0.82, 0.97, noise(streak_uv * vec2(3.0, 2.0) + 11.0));
+	// How far down its curtain this point is (0 at the bowl's lip, 1 at the foot): the upper
+	// curtain falls from 1.66 to 0.99 m, the lower one from 0.96 to 0.22 m.
+	float fall = y > 0.975 ? (1.66 - y) / 0.67 : (0.96 - y) / 0.74;
+	fall = clamp(fall, 0.0, 1.0);
+	// Separate threads of water (thin along the angle, long along the fall), not a sheet: between
+	// them the curtain is empty. They speed up and break into drops as they fall.
+	float around = angle * (radius * 26.0 + 18.0);
+	float speed = TIME * (2.2 + 2.6 * fall);
+	float threads = smoothstep(0.52, 0.72, noise(vec2(around, y * 0.7 + speed * 0.35)));
+	float drops = smoothstep(0.38, 0.62, noise(vec2(around * 1.4, y * 6.0 + speed * 2.4)));
+	float body = threads * mix(1.0, drops, fall * 0.85);
+	// A continuous lip where the water leaves the bowl, thinning at once.
+	float lip = smoothstep(0.12, 0.0, fall) * 0.75;
 	// Foam band: the flat ring on the pond surface.
 	float foam = smoothstep(0.3, 0.22, y) * (0.6 + 0.4 * noise(offset * 18.0 + TIME * 1.5));
-	ALBEDO = water_color;
-	EMISSION = water_color * (0.08 + 0.5 * sparkle);
-	ROUGHNESS = 0.08;
-	SPECULAR = 0.8;
-	ALPHA = clamp(0.18 + 0.62 * smoothstep(0.35, 0.8, streaks) + 0.3 * sparkle + foam * 0.6, 0.0, 0.95);
+	// White, matt water (aerated): no mirror highlight, which is what made it look like glass.
+	ALBEDO = mix(water_color, vec3(1.0), 0.35);
+	EMISSION = water_color * 0.16;
+	ROUGHNESS = 0.65;
+	SPECULAR = 0.25;
+	ALPHA = clamp(max(body * (0.85 - 0.3 * fall), lip) + foam * 0.7, 0.0, 0.95);
 }

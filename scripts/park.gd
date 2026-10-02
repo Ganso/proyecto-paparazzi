@@ -561,11 +561,47 @@ func landmark(asset: String, label: String, pos: Vector3, rotation_y: float) -> 
 	if lo.has(""): collider(lo[""],label,root)
 	visual(asset,"",root)
 
+# The jet on top of the fountain: drops that shoot up, open slightly and fall back on the upper
+# bowl (CPUParticles3D, so it also works in gl_compatibility). A smooth tube looked like glass.
+func add_fountain_jet(at: Vector3) -> void:
+	var jet = CPUParticles3D.new()
+	jet.position = at+Vector3.UP*1.95
+	jet.amount = 260
+	jet.lifetime = .72
+	jet.local_coords = false
+	jet.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	jet.emission_sphere_radius = .025
+	jet.direction = Vector3.UP
+	jet.spread = 7.0
+	jet.initial_velocity_min = 3.3
+	jet.initial_velocity_max = 3.9
+	jet.gravity = Vector3(0,-9.8,0)
+	jet.scale_amount_min = .5
+	jet.scale_amount_max = 1.1
+	var drop = SphereMesh.new()
+	drop.radius = .015
+	drop.height = .045          # a little stretched along its path
+	drop.radial_segments = 6
+	drop.rings = 3
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(.9,.96,1.0,.85)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.roughness = .5
+	mat.emission_enabled = true
+	mat.emission = Color(.75,.88,1.0)
+	mat.emission_energy_multiplier = .25
+	drop.material = mat
+	jet.mesh = drop
+	jet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	jet.visibility_aabb = AABB(Vector3(-1,-1.2,-1),Vector3(2,2.4,2))
+	add_child(jet)
+
 func build_meadow(rng: RandomNumberGenerator) -> void:
 	var bandstand = polar(BANDSTAND.x,BANDSTAND.y)
 	var pond = polar(POND.x,POND.y)
 	landmark("quiosco",Texts.get_text("un_quiosco"),bandstand,facing_center(bandstand))
 	landmark("estanque",Texts.get_text("un_estanque"),pond,facing_center(pond)+PI*.5)
+	add_fountain_jet(pond)
 	# Ripples and falling streaks are centred on the fountain axis.
 	water_material.set_shader_parameter("center",Vector2(pond.x,pond.z))
 	spray_material.set_shader_parameter("center",Vector2(pond.x,pond.z))

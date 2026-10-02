@@ -21,6 +21,11 @@ func _init(p) -> void:
 			var point = Vector2(vertex.y,vertex.z)
 			if not sole_outline.has(point): sole_outline.append(point)
 
+# How far sideways a planted foot may be left from under its hip (m, scaled by the body) and how
+# much its toes may point away from the body before it pivots with it.
+const SPLAY_LIMIT = .10
+const TWIST_LIMIT = .7
+
 func reset_contacts() -> void:
 	plants.clear()
 	was_contact.clear()
@@ -136,6 +141,18 @@ func pose(delta: float, traveled_distance = -1.0) -> void:
 				if not was_contact.get(side,false) or not plants.has(side):
 					plants[side] = {"position":p.to_global(Vector3(x,0,s.z)),"heading":p.global_basis}
 				var plant: Dictionary = plants[side]
+				# A planted shoe never slides while walking straight, but when the body turns a lot
+				# during one step (setting off facing elsewhere, turning back, a tight curve) it was
+				# left far to the side and the legs splayed. Past SPLAY_LIMIT the foot pivots with
+				# the body, as a person turning on the spot does, and its toes follow the turn.
+				var planted = p.to_local(plant.position)
+				var side_gap = planted.x-x
+				if absf(side_gap) > SPLAY_LIMIT:
+					planted.x = x+signf(side_gap)*SPLAY_LIMIT
+					plant.position = p.to_global(planted)
+				var twist = plant.heading.get_rotation_quaternion().angle_to(p.global_basis.get_rotation_quaternion())
+				if twist > TWIST_LIMIT:
+					plant.heading = Basis(plant.heading.get_rotation_quaternion().slerp(p.global_basis.get_rotation_quaternion(),1.0-TWIST_LIMIT/twist))
 				target = p.to_local(plant.position+Vector3.UP*s.y+plant.heading*Vector3(0,0,s.roll_z))
 				foot_basis = p.global_basis.inverse()*plant.heading*foot_basis
 			else:

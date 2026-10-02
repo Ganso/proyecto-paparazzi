@@ -692,11 +692,10 @@ def build_estanque(lod):
     else:
         lathe(b, [(0.3, 0.0), (0.15, 0.4), (0.15, 0.8), (0.95, 0.95), (0.0, 0.95)], (0, 0, 0), stone, 8)
         lathe(b, [(0.1, 0.95), (0.08, 1.6), (0.5, 1.65), (0.0, 1.7)], (0, 0, 0), stone, 8)
-    # Agua en movimiento (material translúcido propio): surtidor central y cortinas que caen de
-    # cada taza, abiertas hacia fuera como una lámina real.
+    # Agua en movimiento (material translúcido propio): cortinas que caen de cada taza, abiertas
+    # hacia fuera; el shader las rompe en hilos y gotas.
     s2 = 32 if detail else 8
-    jet = [(0.0, 1.95), (0.03, 2.0), (0.022, 2.35), (0.05, 2.55), (0.09, 2.6), (0.0, 2.63)]
-    lathe(spray, jet, (0, 0, 0), srgb("dff3ff"), 16 if detail else 6)
+    # (El surtidor de arriba ya no es una malla: son gotas, park.gd::add_fountain_jet().)
     curtain_upper = [(0.52, 1.66), (0.56, 1.5), (0.6, 1.25), (0.63, 0.99)] if detail else [(0.52, 1.66), (0.63, 0.99)]
     curtain_lower = [(1.0, 0.96), (1.06, 0.8), (1.12, 0.55), (1.16, 0.22)] if detail else [(1.0, 0.96), (1.16, 0.22)]
     lathe(spray, curtain_upper, (0, 0, 0), srgb("d4ecf7"), s2, cap_top=False, cap_bottom=False)

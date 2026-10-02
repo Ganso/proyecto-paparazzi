@@ -44,6 +44,7 @@ func build_layout() -> void:
 	if ParkAssets.available("torre"): build_skyline(rng)
 	# Landmarks: the fountain in the plaza, the bandstand on its own small plaza.
 	landmark("estanque",Texts.get_text("una_fuente"),Vector3.ZERO,0.0)
+	add_fountain_jet(Vector3.ZERO)
 	water_material.set_shader_parameter("center",Vector2(0,0))
 	spray_material.set_shader_parameter("center",Vector2(0,0))
 	landmark("quiosco",Texts.get_text("un_quiosco"),BANDSTAND_POS,atan2(-BANDSTAND_POS.x,-BANDSTAND_POS.z)+PI)
