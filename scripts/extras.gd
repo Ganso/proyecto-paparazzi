@@ -78,8 +78,24 @@ var swing_time = 0.0
 var slider: Pedestrian
 var slide_origin = Vector3.ZERO
 var slide_time = 0.0
-# Slide loop, relative to the slide's base: [seconds, position, seated]
-const SLIDE_PATH = [[0.0,Vector3(0,0,-1.35),false],[2.2,Vector3(0,1.6,-.62),false],[3.0,Vector3(0,1.62,-.12),true],[4.3,Vector3(0,.3,1.95),true],[5.0,Vector3(0,0,2.45),false],[6.6,Vector3(1.15,0,2.3),false],[9.6,Vector3(1.15,0,-1.35),false],[10.6,Vector3(0,0,-1.35),false]]
+# The slide, as park_grande.gd::build_playground() builds it (metres from its base, +z down the
+# chute): five rungs 0.3 m apart on the ladder at z = −0.82, the platform's top at 1.59 m from
+# z = −0.77 (just past the ladder) to −0.15, and the chute from (1.547, −0.127) down to (0.153, 1.827).
+const RUNG_Z = -.82
+const RUNG_STEP = .3
+const RUNGS = 5
+const PLATFORM_Y = 1.59
+const CHUTE_TOP = Vector3(0,1.547,-.127)
+const CHUTE_DIR = Vector3(0,-.581,.814)
+const CHUTE_UP = Vector3(0,.814,.581)
+const CHUTE_SLOPE = .62
+const CHUTE_LEN = 2.4
+const PLATFORM_EDGE = -.77
+const TOE_REACH = .17                   # the toes on the rung, the body this far behind it
+const HAND_RUNGS = 3                    # the hands hold three rungs above the feet (0.9 m)
+# Phases of the loop and their seconds: walk to the ladder, climb, cross the platform, sit, slide,
+# get up, walk round.
+const SLIDE_PHASES = [["subir",3.4],["plataforma",1.1],["sentarse",.7],["bajar",1.15],["levantarse",.8],["volver",6.2]]
 
 func build_playground(center: Vector3, detail: String) -> void:
 	if detail != "hd": return
@@ -130,12 +146,14 @@ func build_playground(center: Vector3, detail: String) -> void:
 	# Sandpit: a child sitting on the sand.
 	var sand = center+Vector3(-1.2,0,-2.2)
 	day_only.append(add_still(sand+Vector3(.2,0,.1),2.4,"suelo","",true))
-	# Three children running round the playground, spaced out, two one way and one the other.
+	# Three children running round the playground, spaced out, all the same way.
 	for k in 3:
 		var runner = spawn(true)
 		runner.state = "CAMINANDO"
 		runner.speed = rng.randf_range(1.25,1.6)
-		runner.set_meta("route",{"center":center,"radius":6.4+k*.55,"angle":k*2.2,"dir":1.0 if k != 1 else -1.0})
+		# Inside the gravel ring, clear of the equipment (the slide's exit reaches 4.3 m) and of
+		# the benches and the path outside it.
+		runner.set_meta("route",{"center":center,"radius":4.55+k*.14,"angle":k*2.2,"dir":1.0})
 		place_walker(runner,0.0)
 		runner.animate(0)
 		day_only.append(runner)
@@ -144,22 +162,121 @@ func update_playground(dt: float) -> void:
 	if swing_pivot != null and swing_pivot.visible:
 		swing_time += dt
 		swing_pivot.rotation.x = .5*sin(swing_time*2.3)
-	if slider != null and slider.visible:
-		slide_time = fmod(slide_time+dt,SLIDE_PATH[-1][0])
-		var k = 0
-		while k < SLIDE_PATH.size()-2 and slide_time >= SLIDE_PATH[k+1][0]: k += 1
-		var a: Array = SLIDE_PATH[k]
-		var b: Array = SLIDE_PATH[k+1]
-		var u = clampf((slide_time-a[0])/(b[0]-a[0]),0,1)
-		var before = slider.position
-		slider.position = slide_origin+a[1].lerp(b[1],u)
-		var step = slider.position-before
-		var flat = Vector3(step.x,0,step.z)
-		if flat.length() > .0005 and not a[2]: slider.rotation.y = lerp_angle(slider.rotation.y,atan2(-flat.x,-flat.z),minf(1.0,dt*6))
-		if a[2]: slider.rotation.y = lerp_angle(slider.rotation.y,PI,minf(1.0,dt*8))   # sliding down, facing the chute's end
-		slider.state = "SENTADO" if a[2] else "CAMINANDO"
-		slider.seat_kind = "suelo" if a[2] else ""
-		slider.animate(dt,flat.length() if not a[2] else 0.0)
+	if slider != null and slider.visible: update_slider(dt)
+
+# Height of a foot on the ladder, in rungs, at climb progress c (rungs): the feet go up one rung at
+# a time, one after the other (a child's legs are too short to skip rungs). The left foot leads.
+static func rung_of(c: float, leading: bool) -> float:
+	var n = floorf(c)
+	var u = c-n
+	var move = smoothstep(0.0,.5,u) if leading else smoothstep(.5,1.0,u)
+	return n+move
+
+func update_slider(dt: float) -> void:
+	var total = 0.0
+	for ph in SLIDE_PHASES: total += ph[1]
+	slide_time = fmod(slide_time+dt,total)
+	var t = slide_time
+	var phase = ""
+	var u = 0.0
+	for ph in SLIDE_PHASES:
+		if t < ph[1]:
+			phase = ph[0]
+			u = t/ph[1]
+			break
+		t -= ph[1]
+	var ladder_foot = Vector3(0,0,RUNG_Z-TOE_REACH)
+	var local = Vector3.ZERO
+	var pitch = 0.0
+	var before = slider.position
+	slider.state = "DETENIDO"
+	slider.seat_kind = ""
+	match phase:
+		"subir":
+			# Up the five rungs, then the last short step onto the platform's edge.
+			var c = u*(RUNGS+.6)
+			var left = minf(rung_of(c,true),RUNGS)
+			var right = minf(rung_of(c,false),RUNGS)
+			var low = minf(left,right)*RUNG_STEP
+			local = ladder_foot+Vector3.UP*low
+			slider.position = slide_origin+local
+			slider.rotation = Vector3(0,PI,0)
+			# Hands: each on a rung three above the feet, going up as the opposite foot does; past
+			# the last rung they press on the platform's edge to get up onto it.
+			var top_grip = PLATFORM_Y+.02
+			var hand_l = minf((rung_of(c,false)+HAND_RUNGS)*RUNG_STEP,top_grip)
+			var hand_r = minf((rung_of(c,true)+HAND_RUNGS)*RUNG_STEP,top_grip)
+			slider.gait.climb(left*RUNG_STEP-low,right*RUNG_STEP-low,TOE_REACH,hand_l-low,hand_r-low,TOE_REACH+.01)
+			return
+		"plataforma":
+			# From the top rung onto the platform and across it to the chute's mouth, walking.
+			var from = ladder_foot+Vector3.UP*RUNGS*RUNG_STEP
+			var to = Vector3(0,PLATFORM_Y,CHUTE_TOP.z-.18)
+			local = from.lerp(to,smoothstep(0,1,u))
+			local.y = lerpf(from.y,PLATFORM_Y,smoothstep(0.0,.35,u))
+			slider.position = slide_origin+local
+			slider.rotation = Vector3(0,PI,0)
+			slider.state = "CAMINANDO"
+			slider.animate(dt,Vector3(slider.position.x-before.x,0,slider.position.z-before.z).length())
+			return
+		"sentarse":
+			# Sit down at the top of the chute, the body tipping to its slope.
+			var from = Vector3(0,PLATFORM_Y,CHUTE_TOP.z-.18)
+			var to = CHUTE_TOP+CHUTE_DIR*.3+CHUTE_UP*.03
+			local = from.lerp(to,smoothstep(0,1,u))
+			pitch = CHUTE_SLOPE*smoothstep(.2,1.0,u)
+			slider.position = slide_origin+local
+			slider.transform.basis = Basis(Vector3.RIGHT,pitch)*Basis(Vector3.UP,PI)
+			slider.state = "SENTADO"
+			slider.seat_kind = "suelo"
+			slider.seat = smoothstep(0,1,u)
+			slider.gait.slide(.25*u)
+			return
+		"bajar":
+			# Down the chute, faster and faster (uniform acceleration), sitting on it.
+			var s = .3+(CHUTE_LEN-.3-.45)*u*u
+			local = CHUTE_TOP+CHUTE_DIR*s+CHUTE_UP*.03
+			slider.position = slide_origin+local
+			slider.transform.basis = Basis(Vector3.RIGHT,CHUTE_SLOPE)*Basis(Vector3.UP,PI)
+			slider.state = "SENTADO"
+			slider.seat_kind = "suelo"
+			slider.seat = 1.0
+			slider.gait.slide(.25)
+			return
+		"levantarse":
+			# Off the end of the chute and up on the feet.
+			var from = CHUTE_TOP+CHUTE_DIR*(CHUTE_LEN-.45)+CHUTE_UP*.03
+			var to = Vector3(0,0,2.25)
+			local = from.lerp(to,smoothstep(0,.6,u))
+			slider.position = slide_origin+local
+			slider.transform.basis = Basis(Vector3.RIGHT,CHUTE_SLOPE*(1.0-smoothstep(0,.5,u)))*Basis(Vector3.UP,PI)
+			slider.state = "SENTADO" if u < .98 else "DETENIDO"
+			slider.seat_kind = "suelo"
+			slider.seat = 1.0-smoothstep(.15,1.0,u)
+			slider.gait.pose(dt,0.0)
+			return
+		"volver":
+			# Round the slide and back to the foot of the ladder.
+			var path = [Vector3(0,0,2.25),Vector3(1.1,0,2.5),Vector3(1.15,0,-1.5),Vector3(0,0,-1.55),ladder_foot]
+			var lengths = []
+			var sum = 0.0
+			for k in path.size()-1:
+				lengths.append(path[k].distance_to(path[k+1]))
+				sum += lengths[k]
+			var d = u*sum
+			var k = 0
+			while k < lengths.size()-1 and d > lengths[k]:
+				d -= lengths[k]
+				k += 1
+			local = path[k].lerp(path[k+1],clampf(d/lengths[k],0,1))
+			slider.position = slide_origin+local
+			var step = slider.position-before
+			var facing = atan2(-step.x,-step.z) if step.length() > .0005 else slider.rotation.y
+			if u > .93: facing = PI                 # squared up to the ladder for the climb
+			slider.rotation = Vector3(0,lerp_angle(slider.rotation.y,facing,minf(1.0,dt*7)),0)
+			slider.state = "CAMINANDO"
+			slider.seat = 0.0
+			slider.animate(dt,Vector3(step.x,0,step.z).length())
 
 func spawn(child = false) -> Pedestrian:
 	var p = Person.new()

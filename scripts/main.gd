@@ -1696,10 +1696,17 @@ func update_photographer(dt: float) -> void:
 			motion = hit.get_remainder().slide(normal.normalized()) if normal.length() > .01 else Vector3.ZERO
 		player.position.y = 0.0
 		# Never through anyone: step back out of a pedestrian's personal circle.
-		for q in people:
-			if not q.visible: continue
-			var away = Vector3(player.position.x-q.position.x,0,player.position.z-q.position.z)
-			if away.length() < .55: player.position = Vector3(q.position.x,0,q.position.z)+away.normalized()*.55
+		# (Also the children of the playground, the swing with its child and the dogs, which have
+		# no colliders of their own: nothing in the park can be walked through.)
+		var bodies: Array = people.duplicate()
+		if extras: bodies += extras.extras+extras.dogs
+		if dog: bodies.append(dog)
+		for q in bodies:
+			if not q.visible or not q.is_inside_tree(): continue
+			var at: Vector3 = q.global_position
+			if at.y > 1.2: continue     # up on the slide's platform
+			var away = Vector3(player.position.x-at.x,0,player.position.z-at.z)
+			if away.length() < .55 and away.length() > .0001: player.position = Vector3(at.x,0,at.z)+away.normalized()*.55
 		var moved = player.position.distance_to(start)
 		moving = moved > .0005
 		walk_phase += moved*TAU/1.5

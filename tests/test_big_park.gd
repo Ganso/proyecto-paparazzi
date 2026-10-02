@@ -65,6 +65,33 @@ func run() -> void:
 		for i in 60: game.extras.update(1.0/30)
 		check(absf(game.extras.swing_pivot.rotation.x-swing0) > .05,"The swing swings")
 		check(game.extras.slider.position.distance_to(slide0) > .3,"A child goes round the slide")
+		# The slide's child follows the real ladder and chute (docs/futuro/19 §10).
+		var ex = game.extras
+		var base = park.PLAYGROUND_POS+Vector3(2.0,0,.6)
+		var phases_seen = {}
+		var worst_chute = 0.0
+		var worst_foot = 0.0
+		ex.slide_time = 0.0
+		for i in 400:
+			ex.update(1.0/30)
+			var t = ex.slide_time
+			var local = ex.slider.position-base
+			if t < 3.4:
+				phases_seen["subir"] = true
+				# Feet on rungs: each foot's height is a whole rung when it is not moving.
+				for side in ["I","D"]:
+					var foot = (ex.slider.global_transform*ex.slider.rig.get_bone_global_pose(ex.slider.bones["pie."+side]).origin)-base
+					if absf(foot.z-ex.RUNG_Z) < .12: worst_foot = maxf(worst_foot,absf(foot.z-ex.RUNG_Z))
+				if i == 30: check(absf(local.z-(ex.RUNG_Z-ex.TOE_REACH)) < .001,"Climbing: the child stays at the ladder")
+			elif t > 5.3 and t < 6.3:
+				phases_seen["bajar"] = true
+				# Sitting on the chute: the root lies on its surface.
+				var along = (local-ex.CHUTE_TOP).dot(ex.CHUTE_DIR)
+				var off = (local-ex.CHUTE_TOP-ex.CHUTE_DIR*along).length()
+				worst_chute = maxf(worst_chute,off)
+		check(phases_seen.has("subir") and phases_seen.has("bajar"),"The loop climbs the ladder and slides down")
+		check(worst_chute < .05,"Sliding: the child stays on the chute (%.3f m off)" % worst_chute)
+		check(ex.RUNGS*ex.RUNG_STEP < ex.PLATFORM_Y and ex.PLATFORM_EDGE > ex.RUNG_Z,"The platform starts just past the ladder")
 		check(kids.all(func(k): return k.global_position.distance_to(park.PLAYGROUND_POS) < 9.0),"All of them stay by the playground")
 	# --- Lamps clear of the benches, the slide slopes down, pigeons flee to real trees ---
 	var worst_lamp = INF
@@ -80,6 +107,21 @@ func run() -> void:
 	game.pigeons.update(1.0/30,game.people,[game.player_proxy])
 	check(flock.state == "vuelo" and flock.next == "posada","Walking up to the pigeons puts them to flight")
 	game.player_proxy.state = "DETENIDO"
+	# --- Nothing in the playground can be walked through ---
+	var labels = {}
+	for body in park.find_children("*","StaticBody3D",true,false):
+		var l = str(body.get_meta("label",""))
+		labels[l] = labels.get(l,0)+1
+	check(labels.get(game.Texts.get_text("un_arenero"),0) == 8,"The sandpit's eight boards are solid")
+	check(labels.get(game.Texts.get_text("un_tobogan"),0) >= 11,"The slide's posts, platform, chute and rungs are solid (%d)" % labels.get(game.Texts.get_text("un_tobogan"),0))
+	if park.detail == "hd":
+		var kid = game.extras.extras[game.extras.extras.size()-1]
+		game.set_raised(false)
+		game.raise_anim = 0.0
+		game.player.position = Vector3(kid.global_position.x+.1,0,kid.global_position.z)
+		game.mode = "SEARCH"
+		for i in 3: await process_frame
+		check(Vector2(game.player.position.x-kid.global_position.x,game.player.position.z-kid.global_position.z).length() >= .5,"The photographer cannot walk through a child of the playground")
 	# --- The crowd walks the paths ---
 	game.start_session("day")
 	game.begin_assignment()

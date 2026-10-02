@@ -567,5 +567,6 @@
   "gfx_integrada": "Gráfica integrada: en los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla.",
   "gfx_fps": "FPS",
   "gfx_resolucion_imagen": "Resolución de la imagen",
-  "gfx_nativa": "Nativa de la pantalla"
+  "gfx_nativa": "Nativa de la pantalla",
+  "un_arenero": "un arenero"
 }

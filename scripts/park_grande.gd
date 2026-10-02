@@ -447,22 +447,23 @@ func build_playground() -> void:
 	beam.rotation.z = PI*.5
 	# The left swing is built by extras.gd on desktop: it swings with a child on it.
 	for x in ([.7] if detail == "hd" else [-.7,.7]):
-		cube(Vector3(.45,.05,.2),sw+Vector3(x,.48,0),Color("303030"))
+		cube(Vector3(.45,.05,.2),sw+Vector3(x,.48,0),Color("303030"),Texts.get_text("un_columpio"))
 		for k in [-.18,.18]:
-			cylinder(.008,1.7,sw+Vector3(x+k,1.35,0),Color("8a8a8a"))
+			cylinder(.008,1.7,sw+Vector3(x+k,1.35,0),Color("8a8a8a"),Texts.get_text("un_columpio"))
 	# Slide: ladder, platform and the chute.
 	var sl = p+Vector3(2.0,0,.6)
 	for x in [-.35,.35]:
 		cylinder(.04,1.6,sl+Vector3(x,.8,-.8),steel,Texts.get_text("un_tobogan"))
 		cylinder(.04,1.6,sl+Vector3(x,.8,-.2),steel,Texts.get_text("un_tobogan"))
-	cube(Vector3(.8,.08,.7),sl+Vector3(0,1.55,-.5),wood,Texts.get_text("un_tobogan"))
+	# The platform ends at the ladder (z = −0.77): it used to overhang it and the climber's head went through.
+	cube(Vector3(.8,.08,.62),sl+Vector3(0,1.55,-.46),wood,Texts.get_text("un_tobogan"))
 	var chute = cube(Vector3(.55,.05,2.4),sl+Vector3(0,.85,.85),Color("e8c33a"),Texts.get_text("un_tobogan"))
 	chute.rotation.x = .62      # down and away from the platform (it sloped the wrong way)
-	for k in 5: cube(Vector3(.7,.04,.04),sl+Vector3(0,.3+k*.3,-.82),steel)
+	for k in 5: cube(Vector3(.7,.04,.04),sl+Vector3(0,.3+k*.3,-.82),steel,Texts.get_text("un_tobogan"))
 	# Sandpit border.
 	for k in 8:
 		var a = k*TAU/8
 		# Eight boards round the sand, each along its side of the octagon (they pointed outwards,
 		# like a star).
-		var seg = cube(Vector3(1.08,.22,.18),p+Vector3(-1.2,0,-2.2)+Vector3(sin(a),0,cos(a))*1.2+Vector3.UP*.11,wood)
+		var seg = cube(Vector3(1.08,.22,.18),p+Vector3(-1.2,0,-2.2)+Vector3(sin(a),0,cos(a))*1.2+Vector3.UP*.11,wood,Texts.get_text("un_arenero"))
 		seg.rotation.y = a

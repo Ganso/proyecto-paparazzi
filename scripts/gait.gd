@@ -235,6 +235,53 @@ func sit_ground(e: float, a: float, b: float, ground: float, standing: float) ->
 		arm(side,lerpf(0,-.55,e),-.1,.05,1.0)
 	p.pose_bone("lumbar",lerpf(0,.18,e)-.3*sin(PI*e))
 
+# Climbing a ladder (the playground's slide, extras.gd): each foot on its rung, `left` and
+# `right` metres above the root (which stands on the lower one), `reach` metres ahead; each hand
+# grips a rung too, `hand_left` and `hand_right` metres above the root and `hand_reach` ahead
+# (two-bone IK in the plane of each arm).
+func climb(left: float, right: float, reach: float, hand_left: float, hand_right: float, hand_reach: float) -> void:
+	var p = person
+	weight = 0.0
+	reset_contacts()
+	neutral()
+	var a = p.nz*(.542-.323)
+	var b = p.nz*(.323-.03)
+	var ground = sole_support(0).x
+	# Hips as high as the lower leg allows, a little bent.
+	var hip = ground+sqrt(maxf(.01,pow((a+b)*.97,2)-reach*reach))
+	p.rig.set_bone_pose_position(p.bones.caderas,Vector3(0,hip,0))
+	var shoulder = hip+p.nz*(.929-.542)
+	var upper = p.nz*.215
+	var fore = p.nz*.2            # to the palm, a little beyond the wrist
+	for side in ["I","D"]:
+		var rel = left if side == "I" else right
+		solve_leg(side,Vector3(0,ground+rel-hip,-reach),Quaternion.IDENTITY,a,b)
+		# Arm: the hand on its rung. Angles from straight down, positive forward.
+		var hand = hand_left if side == "I" else hand_right
+		var v = Vector2(hand_reach,hand-shoulder)                 # (forward, up) from the shoulder
+		var d = clampf(v.length(),absf(upper-fore)+.005,upper+fore-.005)
+		var line = atan2(v.x,-v.y)
+		var open = acos(clampf((upper*upper+d*d-fore*fore)/(2*upper*d),-1,1))
+		var elbow = PI-acos(clampf((upper*upper+fore*fore-d*d)/(2*upper*fore),-1,1))
+		arm(side,line-open,0.0,elbow,1.0)
+	p.pose_bone("lumbar",0.0)
+	head(-.2,0,1.0)
+
+# Sitting on the slide's chute: hips on it, legs stretched down the slope, hands on its edges, the
+# back a little upright against the slope (`back`, radians). The root is pitched by the caller.
+func slide(back: float) -> void:
+	var p = person
+	weight = 0.0
+	reset_contacts()
+	neutral()
+	var a = p.nz*(.542-.323)
+	var b = p.nz*(.323-.03)
+	var ground = sole_support(0).x
+	sit_ground(1.0,a,b,ground,p.rests[p.bones.caderas].origin.y)
+	for side in ["I","D"]: arm(side,.35,-.12,.35,1.0)
+	p.pose_bone("lumbar",back)
+	head(.15,0,1.0)
+
 const WALKING_ACTIVITIES = ["movil","taparse"]
 
 func arm(side: String, pitch: float, inward: float, elbow: float, weight_arm: float) -> void:
