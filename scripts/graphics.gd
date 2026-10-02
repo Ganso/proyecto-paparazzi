@@ -111,7 +111,7 @@ static func choice_index(option: Array, value) -> int:
 # ---- Display (any profile): window mode, window size and vertical sync ----
 const WINDOW_MODES = [["@gfx_ventana","ventana"],["@gfx_sin_bordes","sin_bordes"],["@gfx_completa","completa"]]
 const WINDOW_SIZES = [["1280 × 720","1280x720"],["1600 × 900","1600x900"],["1920 × 1080","1920x1080"],["2560 × 1440","2560x1440"],["3840 × 2160","3840x2160"]]
-static var display = {"mode":"ventana","size":"1440x810","vsync":true}
+static var display = {"mode":"ventana","size":"1440x810","vsync":true,"fps":false}
 
 static func load_display() -> bool:
 	var config = ConfigFile.new()

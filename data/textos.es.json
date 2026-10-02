@@ -564,5 +564,6 @@
   "gfx_desc_Medio": "Resolución al 70 %, iluminación global con 3 cascadas, oclusión ambiental y sombras de 2048; sin niebla volumétrica.",
   "gfx_desc_Alto": "Resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra física y profundidad de campo en el visor.",
   "gfx_desc_Ultra": "Resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba completa y sombras en todas las farolas.",
-  "gfx_integrada": "Gráfica integrada: en los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla."
+  "gfx_integrada": "Gráfica integrada: en los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla.",
+  "gfx_fps": "FPS"
 }

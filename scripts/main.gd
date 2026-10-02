@@ -969,6 +969,7 @@ func notify_player(message: String) -> void:
 
 func _process(dt: float) -> void:
 	total_time += dt
+	update_fps_counter(dt)
 	boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
@@ -3127,8 +3128,10 @@ func show_graphics_settings() -> void:
 	label(root,Texts.get_text("gfx_resolucion"),Rect2(440,194,170,30),14)
 	var sizes = option(root,Graphics.WINDOW_SIZES.map(func(c): return c[0]),maxi(0,Graphics.WINDOW_SIZES.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",Graphics.WINDOW_SIZES[i][1]))
 	sizes.disabled = d.mode != "ventana"
-	label(root,Texts.get_text("gfx_vsync"),Rect2(820,194,170,30),14)
-	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,90,36),func(i): set_display("vsync",i == 0))
+	label(root,Texts.get_text("gfx_vsync"),Rect2(815,194,175,30),14)
+	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,76,36),func(i): set_display("vsync",i == 0))
+	label(root,Texts.get_text("gfx_fps"),Rect2(1080,194,60,30),14)
+	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(1144,190,76,36),func(i): set_display("fps",i == 0))
 	for o in [sub]: o.autowrap_mode = TextServer.AUTOWRAP_OFF
 	var body = panel(root,Rect2(60,240,1160,372),Color(.075,.115,.085,.91))
 	if not Graphics.is_custom(graphics_preset):
@@ -3196,6 +3199,37 @@ func show_graphics_settings() -> void:
 			_: close_modal()
 		refresh()
 	, true)
+
+# Frames per second, top left over everything (Graphics.display.fps): the average of the last
+# half second and its frame time.
+var fps_counter: Label
+var fps_time = 0.0
+var fps_frames = 0
+func update_fps_counter(dt: float) -> void:
+	var show = bool(Graphics.display.get("fps",false))
+	if not show:
+		if is_instance_valid(fps_counter): fps_counter.visible = false
+		return
+	if not is_instance_valid(fps_counter):
+		var layer = CanvasLayer.new()
+		layer.layer = 50
+		add_child(layer)
+		fps_counter = Label.new()
+		fps_counter.position = Vector2(8,4)
+		fps_counter.add_theme_font_size_override("font_size",14)
+		fps_counter.add_theme_color_override("font_color",Color(.6,1,.6))
+		fps_counter.add_theme_color_override("font_shadow_color",Color(0,0,0,.9))
+		fps_counter.add_theme_constant_override("shadow_offset_x",1)
+		fps_counter.add_theme_constant_override("shadow_offset_y",1)
+		fps_counter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(fps_counter)
+	fps_counter.visible = true
+	fps_time += dt
+	fps_frames += 1
+	if fps_time >= .5:
+		fps_counter.text = "%d FPS · %.1f ms" % [roundi(fps_frames/fps_time),1000.0*fps_time/fps_frames]
+		fps_time = 0.0
+		fps_frames = 0
 
 func set_display(key: String, value) -> void:
 	Graphics.display[key] = value

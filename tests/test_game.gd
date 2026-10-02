@@ -427,6 +427,12 @@ func run() -> void:
 	Graphics.save_display()
 	Graphics.display = {"mode":"completa","size":"1280x720","vsync":false}
 	check(Graphics.load_display() and Graphics.display.mode == "ventana" and Graphics.display.size == "1600x900","The display settings are kept")
+	Graphics.display["fps"] = true
+	await create_timer(.7).timeout
+	check(is_instance_valid(game.fps_counter) and game.fps_counter.visible and game.fps_counter.text.contains("FPS"),"The FPS counter shows when asked")
+	Graphics.display["fps"] = false
+	await frames(3)
+	check(not game.fps_counter.visible,"…and hides again")
 	game.show_graphics_settings()
 	await process_frame
 	check(game.mode == "GRAPHICS","The graphics screen opens")

@@ -35,7 +35,7 @@ Coste medido en la RX 6700 XT a 2560 × 1440 de día (`--metrics`): Ultra 11,4 m
 
 ## 2. Pantalla (cualquier perfil)
 
-Modo **Ventana**, **Ventana a pantalla completa** (sin bordes) o **Pantalla completa** (exclusiva); tamaño de la ventana (1280 × 720 a 3840 × 2160, limitado a la pantalla y centrado; solo en modo ventana) y sincronización vertical. Se guarda en `user://graficos.cfg` (`[pantalla]`) y se aplica al arrancar una partida normal, nunca en pruebas, capturas ni ejecuciones guionizadas. La vista 3D sigue los píxeles de la ventana (`update_render_resolution()`).
+Modo **Ventana**, **Ventana a pantalla completa** (sin bordes) o **Pantalla completa** (exclusiva); tamaño de la ventana (1280 × 720 a 3840 × 2160, limitado a la pantalla y centrado; solo en modo ventana) sincronización vertical y **contador de FPS** (arriba a la izquierda, media del último medio segundo y tiempo por fotograma; `main.gd::update_fps_counter()`). Se guarda en `user://graficos.cfg` (`[pantalla]`) y se aplica al arrancar una partida normal, nunca en pruebas, capturas ni ejecuciones guionizadas. La vista 3D sigue los píxeles de la ventana (`update_render_resolution()`).
 
 ## 3. Pruebas y herramientas
 
