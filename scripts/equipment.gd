@@ -28,6 +28,12 @@ var film_iso_index = 2 # ISO 400 loaded film; changed only in equipment selector
 var body = 0
 var lens_index = 0
 var focus_mode = "AF matricial"
+# Metering (docs/futuro/12 §3): "puntual" reads under the active focus point (the behaviour of
+# always), "ponderada" weighs the centre of the frame, "matricial" the whole frame by zones.
+const METERING = ["puntual","ponderada","matricial"]
+var metering = "puntual"
+func next_metering() -> void:
+	metering = METERING[(METERING.find(metering)+1) % METERING.size()]
 var auto_exposure = true
 # Semi-automatic exposure (docs/futuro/21 §5): with auto_exposure on, "A" leaves the aperture to the
 # player (the camera sets shutter and ISO) and "S" the shutter; "" is the full program.

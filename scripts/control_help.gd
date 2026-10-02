@@ -99,6 +99,8 @@ func rows() -> Array:
 	else: out.append([pad_key("iso","iso"),"ISO",str(Photo.ISOS[main.iso_index]),"manual" if m == "M" else "auto"])
 	if m != "M": out.append([pad_key("compensacion","ev_comp"),Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual"])
 	else: out.append(["",Texts.get_text("ayuda_exposimetro"),"%+.1f EV" % main.finder.delta_ev,"meter"])
+	out.append([Glyphs.k("fotometria"),Texts.get_text("ayuda_fotometria"),Texts.get_text("fotometria_"+e.metering),"manual"])
+	out.append([Glyphs.k("bloqueo"),Texts.get_text("ayuda_bloqueo"),Texts.get_text("bloqueo_activo") if main.exposure_locked or main.focus_locked else "","manual" if main.exposure_locked or main.focus_locked else "info"])
 	if e.tlr():
 		out.append([Glyphs.k("lupa"),Texts.get_text("tlr_lupa"),"3×" if main.tlr_loupe else "","info"])
 		if main.sandbox: out.append([Glyphs.k("manivela"),Texts.get_text("ayuda_manivela"),"%d / 12" % main.tlr_frames,"info"])

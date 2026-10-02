@@ -903,6 +903,7 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	tlr_loupe = false
 	sandbox_paused = false
 	shot_serial = 0
+	release_lock()
 	park.weather_time = 0
 	if not free_play: park.clouds_enabled = true
 	if time_mode is bool:
@@ -2615,9 +2616,10 @@ func take_photo() -> void:
 		if not tlr_wound:
 			notify_player(Texts.get_text("tlr_manivela"))
 			return
-	if equipment.focus_mode != "MF": autofocus()
+	if equipment.focus_mode != "MF" and not focus_locked: autofocus()
 	update_meter()
-	if equipment.auto_exposure: auto_expose()
+	if equipment.auto_exposure and not exposure_locked: auto_expose()
+	release_lock()
 	shooting = true
 	rumble(.2,.75,.09)
 	# The turn of the camera at the instant of the shot (0 in the guided demonstrations, where the
@@ -3041,6 +3043,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				if finder.golden: finder.golden = false
 				else: finder.thirds = not finder.thirds
 			KEY_K: wind_film()
+			KEY_M: next_metering()
+			KEY_B: toggle_lock()
 			KEY_L:
 				if equipment.tlr():
 					tlr_loupe = not tlr_loupe
@@ -3589,10 +3593,81 @@ func select_matrix_point() -> void:
 	else:
 		finder.active = 4
 
+# Light (EV) of whatever is under a point of the viewfinder: never the assignment's subject as
+# such (docs/futuro/12 §2.1), only what the ray finds there, or the sky.
+func ev_under(point: Vector2) -> float:
+	var hit = point_hit(point)
+	return park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
+
+# Metering modes (docs/futuro/12 §3). Spot: under the active focus point. Centre-weighted: 75 % for
+# the centre of the frame (the centre and a ring round it) and 25 % for the periphery. Matrix: 5 × 5
+# zones, the zone of the active point counts 2.5 times and zones far brighter than the rest (the
+# sky) count a quarter. With the exposure locked (AE-L) the reading stays as it was.
 func update_meter() -> void:
-	var hit = point_hit(finder.points()[finder.active])
-	# The meter reads what is under the active point, never the assignment's subject (12 §2.1).
-	measured_ev = park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
+	if exposure_locked: return
+	var active: Vector2 = finder.points()[finder.active]
+	match equipment.metering:
+		"ponderada":
+			var total = .3*ev_under(view_point(Vector2(.5,.5)))
+			for k in 4: total += .1125*ev_under(view_point(Vector2(.5,.5)+Vector2.from_angle(k*PI*.5+PI*.25)*Vector2(.14,.2)))
+			for k in 8: total += .03125*ev_under(view_point(Vector2(.5,.5)+Vector2.from_angle(k*PI*.25)*Vector2(.4,.4)))
+			measured_ev = total
+		"matricial":
+			var readings = []
+			var weights = []
+			var mean = 0.0
+			for row in 5:
+				for col in 5:
+					var at = view_point(Vector2((col+.5)/5.0,(row+.5)/5.0))
+					readings.append(ev_under(at))
+					var cell = Rect2(finder.view.position+finder.view.size*Vector2(col/5.0,row/5.0),finder.view.size/5.0)
+					weights.append(2.5 if cell.has_point(active) else 1.0)
+					mean += readings[-1]/25.0
+			var total = 0.0
+			var weight_sum = 0.0
+			for k in readings.size():
+				var w: float = weights[k]*(.25 if readings[k] > mean+3.0 else 1.0)
+				total += readings[k]*w
+				weight_sum += w
+			measured_ev = total/weight_sum
+		_:
+			measured_ev = ev_under(active)
+
+func view_point(fraction: Vector2) -> Vector2:
+	return finder.view.position+finder.view.size*fraction
+
+# AF-L / AE-L (docs/futuro/12 §4.1): focus and meter on what is under the active point, then keep
+# both while recomposing; the next photo (or the key again) releases them.
+var exposure_locked = false
+var focus_locked = false
+func toggle_lock() -> void:
+	if mode != "SEARCH": return
+	if exposure_locked or focus_locked:
+		release_lock()
+		notify_player(Texts.get_text("bloqueo_suelto"))
+		refresh()
+		return
+	if equipment.focus_mode != "MF": autofocus()
+	update_meter()
+	if equipment.auto_exposure: auto_expose()
+	exposure_locked = true
+	focus_locked = equipment.focus_mode != "MF"
+	notify_player(Texts.get_text("bloqueo_puesto") % [Texts.get_text("infinito") if is_inf(focus_distance) else Texts.get_text("2f_m") % focus_distance,measured_ev])
+	play_tone(1320,.06)
+	refresh()
+
+func release_lock() -> void:
+	exposure_locked = false
+	focus_locked = false
+
+func next_metering() -> void:
+	if mode != "SEARCH": return
+	equipment.next_metering()
+	release_lock()
+	update_meter()
+	if equipment.auto_exposure: auto_expose()
+	notify_player(Texts.get_text("fotometria_cambiada") % Texts.get_text("fotometria_"+equipment.metering))
+	refresh()
 
 # Correct exposure for a given scene EV (same criteria as auto_expose()).
 func expose_for(scene_ev: float) -> void:

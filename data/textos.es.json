@@ -488,7 +488,7 @@
   "raton_arrastrar": "Arrastrar: mirar (la vista va hacia donde lo mueves)",
   "teclado_mirar": "Mirar: ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧ · giro continuo ⟦A⟧⟦D⟧",
   "teclado_objetivo": "Zoom ⟦W⟧⟦S⟧ · enfoque manual ⟦R⟧⟦T⟧ · autofoco ⟦F⟧ · punto de enfoque ⟦1⟧–⟦9⟧",
-  "teclado_exposicion": "Diafragma ⟦Q⟧⟦E⟧ · velocidad ⟦Z⟧⟦X⟧ · ISO ⟦C⟧⟦V⟧ · compensación ⟦[⟧⟦]⟧",
+  "teclado_exposicion": "Diafragma ⟦Q⟧⟦E⟧ · velocidad ⟦Z⟧⟦X⟧ · ISO ⟦C⟧⟦V⟧ · compensación ⟦[⟧⟦]⟧ · fotometría ⟦M⟧ · bloqueo ⟦B⟧",
   "teclado_disparar": "Disparar: ⟦Espacio⟧",
   "teclado_camara": "Bajar la cámara ⟦Y⟧ · tercios ⟦G⟧ · TLR: lupa ⟦L⟧, manivela ⟦K⟧ · controles ⟦Tab⟧",
   "teclado_ayuda": "Esta ayuda ⟦H⟧ · ayuda en pantalla ⟦F1⟧ · pausa y salir ⟦Esc⟧ · aceptar ⟦Intro⟧",
@@ -653,5 +653,14 @@
   "album_borrar": "Borrar esta foto",
   "album_barrido": "barrido",
   "album_nivel": "Nivel %d",
-  "album_tutorial": "Tutorial"
+  "album_tutorial": "Tutorial",
+  "fotometria_puntual": "Puntual",
+  "fotometria_ponderada": "Ponderada al centro",
+  "fotometria_matricial": "Matricial",
+  "fotometria_cambiada": "Fotometría: %s",
+  "ayuda_fotometria": "Fotometría",
+  "ayuda_bloqueo": "Bloqueo AF/AE",
+  "bloqueo_activo": "puesto",
+  "bloqueo_puesto": "Foco (%s) y exposición (EV %.1f) bloqueados: reencuadra y dispara.",
+  "bloqueo_suelto": "Bloqueo suelto."
 }

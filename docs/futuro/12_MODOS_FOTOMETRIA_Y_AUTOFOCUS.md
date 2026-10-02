@@ -147,7 +147,11 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 ## 7. Orden de Implementación y Criterios de Aceptación
 
 1. **Fase 0** ✅ (30-09-2026): AF matricial y AE sin conocer al objetivo (§2.1).
-2. **Fase 1**: fotometría puntual y ponderada al centro, y AF-S con bloqueo mediante el disparador de dos fases.
+2. **Fase 1** ✅ (02-10-2026): los tres modos de fotometría y el bloqueo AF-L/AE-L.
+   - **Fotometría** (`equipment.metering`, `main.gd::update_meter()`): `puntual` (lo de siempre: lo que hay bajo el punto de enfoque activo, y sigue siendo el modo por defecto para no cambiar ningún nivel), `ponderada` (75 % para el centro del encuadre —el centro y un anillo— y 25 % para la periferia) y `matricial` (5 × 5 zonas; la del punto activo pesa 2,5 veces y las que superan en 3 EV a la media —el cielo— pesan un cuarto). Todas leen `park.illumination_ev()` de lo que el rayo encuentra o `sky_ev()` si no hay nada: ninguna sabe quién es el objetivo. Se cambia con la tecla de fotometría (`{fotometria}`, `next_metering()`); la ayuda en pantalla muestra el modo.
+   - **Bloqueo AF-L/AE-L** (`toggle_lock()`, control `{bloqueo}`): enfoca y mide sobre el punto activo y conserva foco y exposición mientras se reencuadra; lo suelta la siguiente foto o la misma tecla. Es un conmutador, no una pulsación mantenida (el disparador de dos fases del mando sigue pendiente, [14 §3](14_SOPORTE_GAMEPAD.md)), y por ahora solo tiene tecla: en el mando no está asignado.
+   - Diferencias con el §3: los modos no dependen del cuerpo (los tres están en todas las cámaras) y no hay selector en el menú de equipo.
+   - Pruebas: `tests/test_automatisms.gd` (49 comprobaciones): la puntual lee exactamente `illumination_ev()` del punto activo; ponderada y matricial son deterministas, no dependen del objetivo y la matricial queda dentro del rango de sus zonas y no se va con el cielo; el bloqueo aguanta el reencuadre, la foto sale con el foco y la exposición bloqueados y después se suelta.
 3. **Fase 2 (opcional)**: AF-A y AF-C predictivo, con el valor limitado que explica §4.2.
 
 **Criterios de aceptación** (ampliar `test_equipment.gd`):

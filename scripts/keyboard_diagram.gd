@@ -21,7 +21,7 @@ const ROWS = [
 const GROUPS = {
 	"mirar": [Color("3a9be8"),["A","D","←","→","↑","↓"]],
 	"objetivo": [Color("2fb39a"),["W","S","R","T","F","1","2","3","4","5","6","7","8","9","Mayús"]],
-	"exposicion": [Color("e0a030"),["Q","E","Z","X","C","V","[","]"]],
+	"exposicion": [Color("e0a030"),["Q","E","Z","X","C","V","[","]","M","B"]],
 	"disparar": [Color("e05a4a"),["Espacio"]],
 	"camara": [Color("8a6ad8"),["Y","G","L","K","Tab"]],
 	"ayuda": [Color("7a8a9a"),["H","F1","Esc","Intro"]],
