@@ -36,6 +36,10 @@ func run() -> void:
 	# --- Extras: out of the playable area, not pedestrians, no colliders ---
 	check(game.people.size() == 21,"Still exactly 21 pedestrians")
 	if hd: check(game.extras.extras.size() >= 10,"Meadow extras populated in hd")
+	if hd:
+		check(game.extras.dogs.size() == 2,"Two dogs in the meadow: by the pond and round the bandstand")
+		check(game.extras.dogs[1].size < .7 and game.extras.dogs[0].size > .75,"The bandstand dog is a small one")
+		check(game.extras.dogs.all(func(d): return d.find_children("*","CollisionObject3D",true,false).is_empty()),"Meadow dogs have no colliders")
 	# Way of walking (docs/futuro/15 P4): each pedestrian has its own, within sane limits.
 	var arms = {}
 	for p in game.people: arms[snappedf(p.style.arm,.01)] = true

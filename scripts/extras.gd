@@ -47,6 +47,13 @@ func build(detail: String) -> void:
 	add_child(dog)
 	dog.setup(owner_node,91,Color("2b2622"),false)
 	dogs.append(dog)
+	# A small white dog with brown patches trots round the bandstand with the first stroller.
+	var small_owner = extras[0]
+	small_owner.has_dog = true
+	var small_dog = preload("res://scripts/dog.gd").new()
+	add_child(small_dog)
+	small_dog.setup(small_owner,133,Color("ece5d6"),false,"pequeno")
+	dogs.append(small_dog)
 	# Picnic in front of the bandstand: blanket, basket and two people on the grass.
 	var picnic = polar(116.5,18.4)   # inside the open bays of the fence (the pillars stand at ±7.5° from 120°)
 	add_blanket(picnic,facing(picnic,bandstand))

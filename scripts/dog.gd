@@ -21,11 +21,15 @@ var leash: MeshInstance3D
 var with_collider = true
 var clock = 0.0
 
-func setup(owner_node: Node3D, seed_value: int, coat: Color, collider = true) -> void:
+# breed: "" (medium, pricked ears) or "pequeno" (small, drooping ears, short upright tail and
+# patches of `patch` on the back and one ear).
+func setup(owner_node: Node3D, seed_value: int, coat: Color, collider = true, breed = "", patch = Color("7a4a2a")) -> void:
 	walker = owner_node
 	with_collider = collider
 	rng.seed = seed_value
 	size = rng.randf_range(.8,1.1)
+	var small = breed == "pequeno"
+	if small: size = rng.randf_range(.56,.64)
 	var material = StandardMaterial3D.new()
 	material.vertex_color_use_as_albedo = true
 	material.vertex_color_is_srgb = true
@@ -41,11 +45,17 @@ func setup(owner_node: Node3D, seed_value: int, coat: Color, collider = true) ->
 	blob(head,Vector3(0,.04,-.04)*size,Vector3(.17,.16,.2)*size,coat)
 	blob(head,Vector3(0,.0,-.16)*size,Vector3(.09,.08,.14)*size,light_c)       # snout
 	blob(head,Vector3(0,.02,-.235)*size,Vector3(.04,.035,.03)*size,Color("1c1a19"))  # nose
+	if small:
+		# Saddle patch on the back and a smaller one on the rump.
+		blob(body,Vector3(.01,.075,.02)*size,Vector3(.2,.13,.26)*size,patch)
+		blob(body,Vector3(-.03,.06,.2)*size,Vector3(.14,.1,.12)*size,patch)
 	for x in [-.055,.055]:
-		blob(head,Vector3(x*size,.13*size,.0),Vector3(.05,.1,.035)*size,dark)       # ears
+		if small: blob(head,Vector3(x*1.5*size,.05*size,.01*size),Vector3(.045,.13,.07)*size,patch if x > 0 else dark)   # drooping ears
+		else: blob(head,Vector3(x*size,.13*size,.0),Vector3(.05,.1,.035)*size,dark)       # ears
 		blob(head,Vector3(x*.7*size,.07*size,-.1*size),Vector3(.02,.02,.02)*size,Color("1c1a19"))
 	var tail = part("cola",Vector3(0,.47,.24)*size,material)
-	blob(tail,Vector3(0,.05,.08)*size,Vector3(.05,.05,.22)*size,coat,-.8)
+	if small: blob(tail,Vector3(0,.08,.03)*size,Vector3(.045,.045,.15)*size,coat,-1.35)
+	else: blob(tail,Vector3(0,.05,.08)*size,Vector3(.05,.05,.22)*size,coat,-.8)
 	for id in ["pata.DI","pata.DD","pata.TI","pata.TD"]:
 		var x = (-.075 if id.ends_with("I") else .075)*size
 		var z = (-.2 if id.begins_with("pata.D") else .19)*size
