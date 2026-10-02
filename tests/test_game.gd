@@ -3,7 +3,7 @@ const Main = preload("res://main.tscn")
 var game
 var checks = 0
 var failures = 0
-var output = "/tmp"
+var output = "/tmp" if DirAccess.dir_exists_absolute("/tmp") else OS.get_cache_dir()   # Windows has no /tmp
 func check(ok: bool, message: String) -> void:
 	checks += 1
 	if not ok:
@@ -264,12 +264,16 @@ func run() -> void:
 	check(game.mode != "GRAPHICS","ESC exits graphics settings modal")
 	# Interface theme (docs/futuro/20): light by default, dark palette swaps and comes back intact.
 	var UiStyle = preload("res://scripts/ui_style.gd")
-	check(not UiStyle.dark and UiStyle.INK == Color("0e1924"),"Light theme by default")
+	# The player's saved theme (user://interfaz.cfg) may be the dark one: test from the light palette.
+	var saved_dark = UiStyle.dark
+	UiStyle.set_dark(false)
+	check(not UiStyle.dark and UiStyle.INK == Color("0e1924"),"Light theme palette")
 	UiStyle.set_dark(true)
 	check(UiStyle.lum(UiStyle.INK) > .85 and UiStyle.lum(UiStyle.SURFACE) < .2,"Dark theme: light ink on dark surfaces")
 	check(UiStyle.lum(UiStyle.text_color(Color("0e1924"))) > .85,"Dark theme maps dark text to light")
 	UiStyle.set_dark(false)
 	check(UiStyle.INK == Color("0e1924") and UiStyle.SURFACE == Color(1,1,1),"Light theme restored")
+	UiStyle.set_dark(saved_dark)
 	game.intro()
 	await process_frame
 	game.modal.current = 5

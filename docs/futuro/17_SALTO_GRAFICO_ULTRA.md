@@ -69,11 +69,10 @@ tools/build_park_assets.sh          ejecuta los dos
 
 **GPU integradas (02-10-2026)**: en una Intel Iris Xe (Vulkan, Windows) SDFGI inunda la escena de luz de cielo: parque lavado y azulado y maniquíes blancos en Ultra, Alto y Medio, mientras Bajo se veía bien. Por eso `park.gd::sdfgi_cascades()` devuelve 0 si el adaptador no es una GPU dedicada, en cualquier perfil, y se usa el ambiente calibrado de Bajo (`NO_GI_AMBIENT`). Lo comprueba `test_game.gd` («SDFGI only on a dedicated GPU»). El resto de efectos del perfil se mantiene.
 
-Pendiente de esa sesión (se cerró sin terminar de verificar):
-- Confirmar con capturas en la Iris Xe que Alto y Ultra quedan como la referencia (`docs/evidencias/ultra/01_quiosco_dia.png`). Medio sin SDFGI se comprobó bien; una toma en Alto con `--advance=5` salió muy oscura y con `--advance=1` salió bien: falta distinguir si fue una nube o un segundo fallo (penumbra del sol, atlas de 4096).
+Verificado el 02-10-2026 en la Iris Xe con capturas de Medio, Alto y Ultra (interfaz clásica, `--angle=120 --pitch=3 --focal=24 --time=day`): los tres coinciden con la referencia (`docs/evidencias/ultra/01_quiosco_dia.png`). Notas para repetirlo:
+- Falla SDFGI entero, no una opción: con `sdfgi_use_occlusion = false` la imagen sigue lavada. No se ha probado en otras integradas (AMD); la regla las cubre igualmente.
 - `--debug-off=sdfgi` no sirve para aislar SDFGI: al apagarlo así la luz ambiente no se recalibra y la imagen sigue lavada.
-- No se ha averiguado si falla SDFGI entero en Intel o solo una opción (`sdfgi_use_occlusion`); tampoco se ha probado en otras integradas (AMD).
-- `test_game.gd` en Windows: 92 comprobaciones, 1 fallo («Light theme by default»), no investigado y en apariencia ajeno a este cambio; además sus capturas escriben en `/tmp`, que no existe en Windows. La comprobación nueva de SDFGI pasa, igual que `--smoke-test`.
+- Una captura que sale muy oscura es el frente de nubes, no un fallo: cruza entre los segundos 6 y 9 de cada ciclo de 45 s (`park.gd::update_weather()`), y en una GPU lenta una captura con `--advance` pequeño puede caer ahí. Usa `--advance=15` o más.
 - En Windows el binario es `Godot_v4.7.2-stable_win64_console.exe`, en la raíz del repositorio (sin versionar).
 
 Sombras de farola de noche: Ultra las 12, Alto las 4 interiores, Medio y Bajo ninguna. La hierba se baraja al construirla (`set_grass_fraction()` usa `visible_instance_count`), así que cada densidad aclara el césped por igual.

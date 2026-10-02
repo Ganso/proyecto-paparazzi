@@ -11,7 +11,9 @@ func frames(n = 3) -> void:
 	for i in n: await process_frame
 func screenshot(id: String) -> void:
 	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("/tmp/paparazzi-"+id+".png")
+	# Windows has no /tmp.
+	var output = "/tmp" if DirAccess.dir_exists_absolute("/tmp") else OS.get_cache_dir()
+	root.get_texture().get_image().save_png(output+"/paparazzi-"+id+".png")
 func run() -> void:
 	game = load("res://main.tscn").instantiate()
 	root.add_child(game)
