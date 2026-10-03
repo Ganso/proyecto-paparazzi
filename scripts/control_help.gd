@@ -121,7 +121,7 @@ func rows() -> Array:
 # With a gamepad the D-pad changes the selected exposure setting: mark which one.
 func pad_key(control: String, param: String) -> String:
 	if not Glyphs.pad(): return Glyphs.k(control)
-	return "▶ Cruceta ↑↓" if main.current_control() == param else "Cruceta ←→"
+	return "Cruceta ↑↓" if main.current_control() == param else ""   # only the control in hand names the D-pad
 
 func _draw() -> void:
 	# In the recorded videos (Godot's Movie Maker) the list would cover half of every scene.

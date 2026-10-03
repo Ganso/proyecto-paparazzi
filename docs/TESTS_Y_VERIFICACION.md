@@ -158,7 +158,7 @@ Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una 
 | Búsqueda | Ajuste de la tira de control en mano (nombre y valor) | ~14 por línea | **≤ 12** | 12 |
 | Academia · lista | Resumen de la lección (`academia_l<n>_resumen`) | 1 línea, ~80 | **≤ 60** | 55 |
 | Academia · panel | Título de la página (`…_t<k>_titulo`) | 1 línea, ~34 | **≤ 30** | 31 |
-| Academia · panel | Teoría y enunciado del examen (`…_t<k>_texto`, `…_examen`) | 7 líneas, ~330 | **≤ 240** | 228 |
+| Academia · panel | Teoría y enunciado del examen (`…_t<k>_texto`, `…_examen`) | 7 líneas, ~330 | **≤ 240** | 240 |
 | Academia · panel | Tarea de la práctica (`…_p<k>`) | 2 líneas, ~100 | **≤ 75** | 72 |
 | Academia · panel | Pista (`…_pista_*`) | 4 líneas, ~200 | **≤ 130** | 115 |
 | Academia · demostración | Subtítulo (`…_d<k>`) | 2 líneas, ~170 | **≤ 110** | 68 |
