@@ -184,7 +184,14 @@ func run() -> void:
 	# The light meter the first lesson points at is really drawn on the top bar.
 	academy.begin(1,"teoria")
 	for i in 3: await process_frame
-	check(academy.highlight == "exposimetro" and academy.highlight_rect() == Rect2(game.meter_bar.position,game.meter_bar.size) and game.meter_bar.visible and game.meter_bar.size.x > 150,"Lesson 1 highlights the light meter, and the meter is there")
+	if game.interface_mode == "camara":
+		# One interface everywhere: the lesson points at the meter of the camera's own finder.
+		check(academy.highlight == "exposimetro" and academy.highlight_rect() == game.camera_body.meter_box and game.camera_body.meter_box.size.x > 60 and game.hud_top.all(func(n): return not n.visible),"Lesson 1 highlights the light meter of the finder, with no classic bars")
+		academy.highlight = "velocidad"
+		check(academy.highlight_rect() == game.control_strip.chip_rect("t") and academy.highlight_rect().size.x > 60,"…and the shutter speed on the strip of the control in hand")
+		academy.highlight = "exposimetro"
+	else:
+		check(academy.highlight == "exposimetro" and academy.highlight_rect() == Rect2(game.meter_bar.position,game.meter_bar.size) and game.meter_bar.visible and game.meter_bar.size.x > 150,"Lesson 1 highlights the light meter, and the meter is there")
 	print("· exams")
 	var Academy = academy.get_script()
 	for n in range(1,academy.LESSONS+1): check(has_text("academia_l%d_examen" % n),"Lesson %d has its exam statement" % n)

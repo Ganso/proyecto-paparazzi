@@ -1,0 +1,4 @@
+Control en mano · teclado y ratón: clic o Tab elige, la rueda cambia|11|--time=day --interface=camara --lens=2,0 --manual --angle=120 --pitch=-3 --focal=35 --strip-demo
+Ayuda de teclado y ratón|6|--screen=ayuda
+Control en mano · mando: cruceta ←→ elige, ↑↓ cambia|9|--device=mando --time=day --interface=camara --lens=2,0 --manual --angle=120 --pitch=-3 --focal=35 --strip-demo
+Ayuda de mando|6|--device=mando --screen=ayuda

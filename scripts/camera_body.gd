@@ -32,6 +32,7 @@ const RECTS = {0: Rect2(70,82,904,508.5), 1: Rect2(96,40,1088,612), 2: Rect2(152
 static func square_of(r: Rect2) -> Rect2:
 	return Rect2(r.position.x+(r.size.x-r.size.y)*.5,r.position.y,r.size.y,r.size.y)
 
+var meter_box = Rect2()   # where the exposure meter was last drawn (the Academy points at it)
 func _init(owner_main) -> void:
 	main = owner_main
 
@@ -206,6 +207,7 @@ func draw_slr(r: Rect2) -> void:
 	x += 20
 	x += seg_text(Vector2(x,y),aperture_digits(),30,led_red,led_dim)+46
 	# Match-LED meter: + ● − (the lit one tells where the exposure is; both ± blink when far off).
+	meter_box = Rect2(x-6,y-6,112,44)
 	var d = meter_delta()
 	var blink = fmod(Time.get_ticks_msec()/1000.0,.5) < .25
 	var plus_on = d > .34 and (d < 2.0 or blink)

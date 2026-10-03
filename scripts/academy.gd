@@ -1087,6 +1087,16 @@ func track_frame_goal(dt: float) -> void:
 	main.update_camera()
 
 func highlight_rect() -> Rect2:
+	# With the camera interface the lesson points at the camera's own things: the chip of the
+	# control on the strip over the finder and the meter of the finder.
+	if main.interface_mode == "camara":
+		match highlight:
+			"exposimetro": return main.camera_body.meter_box
+			"diafragma": return main.control_strip.chip_rect("n")
+			"velocidad": return main.control_strip.chip_rect("t")
+			"iso": return main.control_strip.chip_rect("iso")
+			"zoom": return main.control_strip.chip_rect("zoom")
+		return Rect2()
 	match highlight:
 		"exposimetro": return Rect2(main.meter_bar.position,main.meter_bar.size)
 		"diafragma": return Rect2(main.aperture_button.position,main.aperture_button.size)

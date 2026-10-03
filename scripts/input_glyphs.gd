@@ -21,7 +21,7 @@ const CONTROLS = {
 	"velocidad": ["⟦Z⟧⟦X⟧","Cruceta","Cruceta","Cruceta"],
 	"iso": ["⟦C⟧⟦V⟧","Cruceta","Cruceta","Cruceta"],
 	"compensacion": ["⟦[⟧⟦]⟧","Cruceta","Cruceta","Cruceta"],
-	"elegir_control": ["clic · ⟦,⟧⟦.⟧","Cruceta ←→","Cruceta ←→","Cruceta ←→"],
+	"elegir_control": ["clic · ⟦Tab⟧","Cruceta ←→","Cruceta ←→","Cruceta ←→"],
 	"cambiar_control": ["rueda · ⟦Re Pág⟧⟦Av Pág⟧","Cruceta ↑↓","Cruceta ↑↓","Cruceta ↑↓"],
 	"parametro": ["⟦Q⟧⟦E⟧ · ⟦Z⟧⟦X⟧ · ⟦C⟧⟦V⟧","Cruceta ←→ elige · ↑↓ cambia","Cruceta ←→ elige · ↑↓ cambia","Cruceta ←→ elige · ↑↓ cambia"],
 	"punto_enfoque": ["⟦1⟧–⟦9⟧ · clic","⦅LB⦆ ⦅RB⦆","⦅L1⦆ ⦅R1⦆","⦅L⦆ ⦅R⦆"],

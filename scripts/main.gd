@@ -272,7 +272,11 @@ func _ready() -> void:
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
-		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot"]: demo[arg.trim_prefix("--")] = true
+		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot","--strip-demo"]: demo[arg.trim_prefix("--")] = true
+		# Capture helper: the help texts of a device (teclado, mando) whatever is plugged in.
+		if arg.begins_with("--device="):
+			preload("res://scripts/input_glyphs.gd").device = arg.get_slice("=",1)
+			pad_polling = false
 		# Capture helpers: --shutter=30 fixes the speed of the demo shot (a pan needs a slow one),
 		# --pan-shot lets the scripted camera's own turn count as a pan, --screen= opens a screen.
 		if arg.begins_with("--shutter="): demo["shutter"] = int(arg.get_slice("=",1))
@@ -1365,6 +1369,7 @@ func _process(dt: float) -> void:
 	if boot_frames == 12 and start_screen != "":
 		match start_screen:
 			"insignias": show_badges()
+			"ayuda": show_help()
 			"album": show_album()
 			"opciones":
 				if is_instance_valid(modal) and modal.has_method("change_mode"): modal.change_mode(modal.MODES.find("opciones")-modal.current)
@@ -2524,7 +2529,10 @@ func load_interface() -> void:
 func update_hud_visibility(dt: float) -> void:
 	if hud_top.is_empty(): return
 	hud_hover = maxf(0.0,hud_hover-dt)
-	var show = interface_mode != "camara" or controls_shown or hud_hover > 0 or (academy and academy.active) or mode != "SEARCH"
+	# One interface everywhere: with the camera interface (desktop) the bars of the classic HUD
+	# never show — not in the Academy, not with Tab. The camera's own finder, the strip of the
+	# control in hand and the on-screen help are the whole interface, in every mode.
+	var show = interface_mode != "camara"
 	if mode == "SEARCH" and not eye_ready(): show = false
 	if mode == "INTRO": show = false
 	finder.visible = eye_ready() and mode != "INTRO"
@@ -3384,7 +3392,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if crowd and mode == "SEARCH" and photographer_input(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
-		controls_shown = not controls_shown
+		select_control(1)   # Tab / View: the next control in hand
 		return
 	if event is InputEventJoypadButton and pad_button(event): return
 	# B on a screen goes back, as Escape does.
@@ -3396,7 +3404,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_unhandled_input(esc)
 		return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
-		controls_shown = not controls_shown
+		select_control(1)   # Tab / View: the next control in hand
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "SEARCH" and academy and academy.handle_key(event): return
@@ -3407,7 +3415,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			control_help.set_enabled(not control_help.enabled)
 			return
 		if mode == "SEARCH" and event.is_action_pressed("camara_controles"):
-			controls_shown = not controls_shown
+			select_control(1)   # Tab / View: the next control in hand
 			return
 		if event.keycode == KEY_ENTER and mode == "RESULT" and academy and academy.active:
 			resume_search()
@@ -3614,6 +3622,15 @@ func update_demo(dt: float) -> void:
 		if academy.exam_needle() < -.5 and t_index < Photo.DENOMINATORS.size()-1:
 			t_index += 1
 			refresh()
+	if demo.has("strip-demo") and demo_time > 4.6:
+		# Capture helper: the control in hand at work — choose one, change it, choose the next.
+		var beat = int((demo_time-4.6)/.7)
+		if beat != int(demo.get("strip-beat",-1)):
+			demo["strip-beat"] = beat
+			var script = ["next","up","up","next","down","down","next","up","next","up","up","down","down"]
+			var act: String = script[beat%script.size()]
+			if act == "next": select_control(1)
+			else: change_control(1 if act == "up" else -1)
 	if demo.has("shutter") and not demo.has("shot"):
 		var wanted_t = Photo.DENOMINATORS.find(int(demo["shutter"]))
 		if wanted_t >= 0 and t_index != wanted_t:

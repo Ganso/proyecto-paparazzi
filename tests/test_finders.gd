@@ -46,11 +46,17 @@ func run() -> void:
 		var pts = game.finder.points()
 		check(r.grow(1).has_point(pts[0]-game.view_shift) and r.grow(1).has_point(pts[8]-game.view_shift),"Body %d: AF points inside the image" % body)
 		check(game.hud_top.all(func(n): return not n.visible),"Body %d: HUD bars folded away in the camera interface" % body)
-		game.controls_shown = true
+		# One interface everywhere: Tab no longer unfolds the classic bars, it takes the next control.
+		var tab = InputEventKey.new()
+		tab.physical_keycode = KEY_TAB
+		tab.keycode = KEY_TAB
+		tab.pressed = true
+		var controls: Array = game.selectable_controls()
+		var in_hand: String = game.current_control()
+		game._unhandled_input(tab)
 		await frames(2)
-		check(game.hud_top.all(func(n): return n.visible) and game.hud_bottom.all(func(n): return n.visible),"Body %d: Tab shows the controls" % body)
-		game.controls_shown = false
-		await frames(2)
+		check(game.hud_top.all(func(n): return not n.visible) and game.hud_bottom.all(func(n): return not n.visible),"Body %d: the classic bars never show over the camera" % body)
+		check(controls.size() < 2 or game.current_control() == controls[(controls.find(in_hand)+1)%controls.size()],"Body %d: Tab takes the next control in hand" % body)
 	# TLR: the waist-level finder is mirrored, so a point on the left of the finder is on the right
 	# of the photo; the finder shows only the central square (docs/futuro/21 §3).
 	game.equipment.preset(3)

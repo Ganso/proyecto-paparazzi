@@ -44,6 +44,11 @@ func value_of(id: String) -> String:
 		"ev_comp": return "%+.1f EV" % main.equipment.exposure_compensation()
 	return ""
 
+# Where a control's chip is (the Academy frames the one it is talking about).
+func chip_rect(id: String) -> Rect2:
+	var k = ids.find(id)
+	return Rect2(chips[k].position,chips[k].size) if visible and k >= 0 else Rect2()
+
 func rebuild(list: Array) -> void:
 	for c in chips: c.queue_free()
 	chips = []
@@ -64,7 +69,6 @@ func rebuild(list: Array) -> void:
 
 func _process(_dt: float) -> void:
 	var list: Array = main.selectable_controls() if main.mode == "SEARCH" and main.eye_ready() else []
-	if main.academy and main.academy.active and main.academy.phase == "demo": list = []   # the tutor drives
 	visible = not list.is_empty()
 	if not visible: return
 	if list != ids: rebuild(list)

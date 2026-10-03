@@ -126,7 +126,7 @@ func pad_key(control: String, param: String) -> String:
 func _draw() -> void:
 	# In the recorded videos (Godot's Movie Maker) the list would cover half of every scene.
 	panel_rect = Rect2()
-	if OS.has_feature("movie"): return
+	if OS.has_feature("movie") and not main.demo.has("strip-demo"): return
 	if not enabled or main.mode != "SEARCH" or not main.eye_ready(): return
 	var r: Rect2 = main.view_rect
 	var classic = main.interface_mode == "clasica"
