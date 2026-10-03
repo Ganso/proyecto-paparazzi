@@ -209,6 +209,28 @@ func run() -> void:
 		root.push_input(accept_up)
 		await process_frame
 		check(pressed_card or game.mode == "BRIEFING","A presses the focused button of a screen: a level card starts the level (focus %s, now %s)" % [focus_text,game.mode])
+	# Equipment screen with the D-pad: ← → change a list in place and the list keeps the focus.
+	game.intro()
+	game.arcade_level = -1
+	game.equipment.preset(2)
+	game.show_equipment()
+	await process_frame
+	var lists = game.modal.find_children("*","OptionButton",true,false)
+	check(lists.size() >= 5,"The equipment screen has its lists")
+	if lists.size() >= 5:
+		var lens_list: OptionButton = lists[1]
+		lens_list.grab_focus()
+		var lens_before = game.equipment.lens_index
+		var go_right = InputEventJoypadButton.new()
+		go_right.button_index = JOY_BUTTON_DPAD_RIGHT
+		go_right.pressed = true
+		root.push_input(go_right)
+		for i in 4: await process_frame
+		check(game.equipment.lens_index == lens_before+1,"D-pad right on a list takes the next value (%d → %d)" % [lens_before,game.equipment.lens_index])
+		var focused_now = root.gui_get_focus_owner()
+		check(focused_now is OptionButton and focused_now.position.is_equal_approx(Vector2(330,280)),"…and the rebuilt screen keeps the focus on that list")
+	game.equipment.preset(2)
+	game.apply_equipment()
 	game.intro()
 	await process_frame
 	# The sandbox's scenario cards are reachable with the D-pad: ← → move along the row there.

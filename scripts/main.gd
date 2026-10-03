@@ -3660,9 +3660,29 @@ func option(parent: Control, values: Array, selected: int, rect: Rect2, callback
 	control.add_theme_font_size_override("font_size",20)
 	for value in values: control.add_item(str(value))
 	control.select(selected)
-	control.item_selected.connect(callback)
+	# Choosing rebuilds the screen: the same list keeps the focus (gamepad and keyboard), instead of
+	# jumping back to the screen's main button after every change.
+	var choose = func(i):
+		option_refocus = rect.position
+		callback.call(i)
+	control.item_selected.connect(choose)
+	# ← → change the value in place, without opening the list (D-pad or arrows).
+	control.gui_input.connect(func(event):
+		var step = (1 if event.is_action_pressed("ui_right") else 0)-(1 if event.is_action_pressed("ui_left") else 0)
+		if step == 0: return
+		control.accept_event()
+		var next = clampi(control.selected+step,0,control.item_count-1)
+		if next != control.selected:
+			control.select(next)
+			choose.call(next))
+	control.add_theme_stylebox_override("focus",UiStyle.box(Color.TRANSPARENT,8,UiStyle.SKY,3))
 	parent.add_child(control)
+	if option_refocus.is_equal_approx(rect.position):
+		option_refocus = Vector2(-1,-1)
+		get_tree().process_frame.connect(func(): if is_instance_valid(control) and control.is_inside_tree(): control.grab_focus(),CONNECT_ONE_SHOT)
 	return control
+
+var option_refocus = Vector2(-1,-1)
 
 var equipment_return = "INTRO"
 func show_equipment() -> void:
@@ -3854,6 +3874,7 @@ func show_graphics_settings() -> void:
 		scroll.position = Vector2(16,48)
 		scroll.size = Vector2(1132,316)
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.follow_focus = true   # the D-pad walks the list and it scrolls along
 		body.add_child(scroll)
 		var list = Control.new()
 		scroll.add_child(list)
