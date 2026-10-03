@@ -157,7 +157,7 @@ Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una 
 | Tutorial · final | Texto de cada salida (`tutorial_*_texto`) | 2 líneas, ~170 | **≤ 120** | 113 |
 | Búsqueda | Ajuste de la tira de control en mano (nombre y valor) | ~14 por línea | **≤ 12** | 12 |
 | Academia · lista | Resumen de la lección (`academia_l<n>_resumen`) | 1 línea, ~80 | **≤ 60** | 55 |
-| Academia · panel | Título de la página (`…_t<k>_titulo`) | 1 línea, ~34 | **≤ 30** | 31 |
+| Academia · panel | Título de la página (`…_t<k>_titulo`) | 1 línea, ~34 | **≤ 30** | 30 |
 | Academia · panel | Teoría y enunciado del examen (`…_t<k>_texto`, `…_examen`) | 7 líneas, ~330 | **≤ 240** | 240 |
 | Academia · panel | Tarea de la práctica (`…_p<k>`) | 2 líneas, ~100 | **≤ 75** | 72 |
 | Academia · panel | Pista (`…_pista_*`) | 4 líneas, ~200 | **≤ 130** | 115 |
@@ -166,7 +166,7 @@ Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una 
 | Búsqueda | Aviso (`notify_player`) | 1 línea, ~95 | **≤ 85** | 78 |
 | Botones | Texto de cualquier botón | ancho ÷ 9 | dos tercios de eso | — |
 
-Los que están pegados a su tamaño razonable (título de la Academia de 31, insignia de 100, tutorial de 205) no deben crecer más.
+Los que están pegados a su tamaño razonable (título de la Academia de 30, teoría de 240, insignia de 100, tutorial de 205) no deben crecer más.
 
 ## 5. Cifras de Referencia (Fuente Única)
 
