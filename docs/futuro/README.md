@@ -2,6 +2,10 @@
 
 Este directorio contiene las especificaciones de diseño, análisis de viabilidad técnica y propuestas arquitectónicas para futuras expansiones de **Proyecto Paparazzi**.
 
+> **Idea fundamental del proyecto (usuario, 03-10-2026): enseñar fotografía como Jaime Altozano enseña la música.** Divulgación que entusiasma, con ejemplos que se ven y se tocan, cercanía y rigor: cada concepto se entiende porque se experimenta haciendo la foto.
+
+Toda propuesta de este banco se valora contra ella.
+
 > [!IMPORTANT]
 > **Paso 1 completado: [16 · Parque fusionado, oclusión horneada y atmósfera](16_PARQUE_ILUSTRADO_QUICK_WIN.md).** **Paso 2 completado (salvo optimización): [17 · Salto gráfico](17_SALTO_GRAFICO_ULTRA.md)**: Ultra en Forward+ a 1440p nativos, objetos de Blender en `hd` y `lo`, suelo texturizado, pradera con quiosco y estanque, maniquíes con texturas de madera y tela y hierba al viento. **Paso 2c completado: [19 · Vida en el parque](19_VIDA_EN_EL_PARQUE.md)**: marcha suave sin temblequeo, bancos, actividades con objetos de mano, perro, palomas, figurantes y sonido ambiente. **Paso 6 adelantado y en curso: [06 · Academia](06_MODO_TUTOR_ACADEMIA.md)**, con teoría, demostración, práctica y examen de cinco lecciones. **Siguiente: paso 3**, la migración a `InputMap` ([14](14_SOPORTE_GAMEPAD.md) fase 1) y el AF/AE que no conoce al objetivo ([12](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md) fase 0). El orden completo está en la [hoja de ruta (§4)](#4-hoja-de-ruta-recomendada).
 

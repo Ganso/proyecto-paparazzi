@@ -2,6 +2,13 @@
 
 Bienvenido a **Proyecto Paparazzi**. Este documento es el **punto de entrada principal y enrutador maestro** para cualquier agente de IA o desarrollador automatizado.
 
+> [!IMPORTANT]
+> **Idea fundamental del proyecto: ENSEÑAR FOTOGRAFÍA COMO JAIME ALTOZANO ENSEÑA LA MÚSICA.**
+> Divulgación que entusiasma: la teoría se cuenta desde ejemplos que se ven y se tocan, con humor y
+> cercanía, sin rebajar el rigor, y cada concepto se entiende porque se experimenta (aquí,
+> haciendo la foto). Toda decisión de diseño —modos, niveles, textos, Academia, informe de cada
+> foto— se mide contra esta idea: ¿ayuda a que alguien entienda y disfrute la fotografía?
+
 ---
 
 ## 1. Identificación del Entorno y Motor
@@ -132,7 +139,7 @@ Los comandos de todas las suites, qué valida cada una, las opciones de arranque
 - **¿Cómo cambio o regenero el sonido ambiente?**  
   Edita `tools/audio/build_ambience.py` y ejecuta `python3 tools/audio/build_ambience.py` (escribe `assets/audio/ambiente/*.wav`). Dónde suena cada uno y a qué volumen está en `scripts/ambience.gd`. Graba una prueba con `--write-movie` y mide el nivel con `ffmpeg -af volumedetect`.
 - **¿Cómo genero el vídeo de evidencias?**  
-  `./tools/capture_video.sh` (≈15 min, MP4 de unos 175 s en `build/video/`: 27 secuencias cortas con un poco de todo —pantalla de carga, menú, arcade de 25 niveles, las cuatro luces y el cielo, la vida del parque, los cuerpos con su visor, disparo y revelado, un barrido, el parque grande, sandbox, Academia con su examen, insignias y opciones—). El audio es la música mezclada sobre el sonido del juego. **Música de fondo de todos los vídeos del proyecto: `assets/audio/musica_videos.mp3`** (del usuario), con fundido de salida en los últimos 10 s. **El último vídeo largo se sube siempre a GitHub**: el script deja una copia ligera (< 50 MB) en `docs/evidencias/video/evidencias.mp4`, que se versiona. La ayuda en pantalla no se dibuja en los vídeos y no se usan los ajustes gráficos del jugador. Solo bajo demanda y para cambios grandes. Detalle en [docs/TESTS_Y_VERIFICACION.md §4.2](docs/TESTS_Y_VERIFICACION.md).
+  `./tools/capture_video.sh` (≈20 min, MP4 de unos 180 s en `build/video/`). **«Vídeo largo» significa un tráiler de presentación del proyecto**, no un repaso de las últimas mejoras: capítulos rotulados (el parque y sus luces, la vida del parque, las cámaras, los modos de juego, el parque grande, el progreso) que enseñan todo lo implementado, con sus detalles (palomas volando, patos, niños en el columpio, cada cámara, el álbum…). Al añadir algo vistoso al juego, dale su plano en `SEQUENCES`. El audio es la música mezclada sobre el sonido del juego. **Música de fondo de todos los vídeos del proyecto: `assets/audio/musica_videos.mp3`** (del usuario), con fundido de salida en los últimos 10 s. **El último vídeo largo se sube siempre a GitHub**: el script deja una copia ligera (< 50 MB) en `docs/evidencias/video/evidencias.mp4`, que se versiona. La ayuda en pantalla no se dibuja en los vídeos y no se usan los ajustes gráficos del jugador. Solo bajo demanda y para cambios grandes. Detalle en [docs/TESTS_Y_VERIFICACION.md §4.2](docs/TESTS_Y_VERIFICACION.md).
 - **¿Cómo veo Ultra?**  
   `~/bin/godot-4-fp --path . --rendering-method forward_plus --resolution 2560x1440 -- --screenshot=/tmp/x.png --angle=120 --pitch=3 --focal=24 --time=day`, o `./tools/capture_ultra.sh`. Mide con `-- --metrics` (imprime `METRICS_GPU`).
 - **¿Cómo cambio la ropa, el pelo o el maniquí de escritorio?**  

@@ -260,6 +260,7 @@ func _ready() -> void:
 		if arg == "--walk-demo": walk_demo = 0.0
 		if arg == "--photo-walk": photo_walk = {"t":0.0,"phase":"walk","timer":3.0}
 		if arg == "--sandbox": pending_start["sandbox_demo"] = true
+		if arg == "--tutorial": pending_start["tutorial"] = true
 		if arg.begins_with("--level="): pending_start["level"] = int(arg.trim_prefix("--level="))-1
 		# Cheat code: every arcade level open for this run (the saved progress is not touched).
 		if arg == "--cheat=niveles": Arcade.all_open = true
@@ -1322,7 +1323,7 @@ func _process(dt: float) -> void:
 			"insignias": show_badges()
 			"album": show_album()
 			"opciones":
-				if is_instance_valid(modal) and modal.has_method("change_mode"): modal.change_mode(-1)
+				if is_instance_valid(modal) and modal.has_method("change_mode"): modal.change_mode(modal.MODES.find("opciones")-modal.current)
 	if boot_frames == 20 and forced_activity != "":
 		# --activity=movil: everyone stops where they are and does it (evidence captures).
 		for p in people:
@@ -2118,7 +2119,7 @@ func update_photographer(dt: float) -> void:
 	var walking_view = mode == "SEARCH" and not ready
 	if is_instance_valid(walk_label):
 		walk_label.visible = walking_view
-		walk_hint.visible = walking_view
+		walk_hint.visible = walking_view and not OS.has_feature("movie")
 		walk_label.text = briefing.text if not sandbox else Texts.get_text("paseo_sandbox")
 	var want = Input.MOUSE_MODE_CAPTURED if walking_view and not camera_raised and get_window().has_focus() else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != want and not smoke and screenshot_path == "": Input.mouse_mode = want
@@ -2139,7 +2140,7 @@ func update_classic_raise(dt: float) -> void:
 	var naked = mode == "SEARCH" and not ready
 	if is_instance_valid(walk_label):
 		walk_label.visible = naked
-		walk_hint.visible = naked
+		walk_hint.visible = naked and not OS.has_feature("movie")
 		walk_label.text = briefing.text
 		walk_hint.set_rich(Texts.get_rich("buscar_ayuda"))
 
@@ -3523,6 +3524,11 @@ func update_demo(dt: float) -> void:
 		for f in pigeons.flocks:
 			if f.center.distance_to(view) < nearest.center.distance_to(view): nearest = f
 		pigeons.take_off(nearest,pigeons.roost(nearest),"posada")
+	if demo.has("expose") and academy and academy.active and academy.phase == "examen" and not demo.has("shot") and demo_time > 4.5 and fmod(demo_time,.45) < dt:
+		# Exam 1 on video: the needle is brought back to the centre, one click at a time.
+		if academy.exam_needle() < -.5 and t_index < Photo.DENOMINATORS.size()-1:
+			t_index += 1
+			refresh()
 	if demo.has("shutter") and not demo.has("shot"):
 		var wanted_t = Photo.DENOMINATORS.find(int(demo["shutter"]))
 		if wanted_t >= 0 and t_index != wanted_t:

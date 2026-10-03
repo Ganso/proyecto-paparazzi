@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Vídeo de evidencias (bajo demanda, para cambios grandes): el proyecto entero en unos 180 s.
-# Muchas secuencias cortas, un poco de todo: pantalla de carga, menú y arcade (25 niveles, una
+# Vídeo largo de evidencias (bajo demanda): un tráiler de presentación del proyecto en unos 180 s,
+# por capítulos rotulados (el parque, su vida, las cámaras, los modos de juego, el parque grande y
+# el progreso), que enseña todo lo implementado. Contenido: pantalla de carga, menú y arcade (25 niveles, una
 # condición, la TLR, el barrido), las cuatro luces con el cielo propio, los dos escenarios
 # (parque clásico y parque grande a pie), la vida del parque (bancos, palomas, perro, figurantes,
 # móviles de noche), los tres cuerpos con su visor real (compacta, telemétrica con enfoque manual,
@@ -42,35 +43,48 @@ mkdir -p "$(dirname "$OUT")"
 FONT="$(fc-match -f '%{file}' 'sans:bold')"
 MUSIC="${MUSIC:-$PROJECT_DIR/assets/audio/musica_videos.mp3}"
 
-# título | segundos | argumentos del juego (tras --); sin argumentos de demo arranca el menú
+# título | segundos | argumentos del juego (tras --); sin argumentos de demo arranca el menú.
+# «@img:fichero» es una imagen fija y «@card:subtítulo» un rótulo de capítulo sobre la pantalla de
+# carga desenfocada. El guion es un tráiler de presentación: capítulos (el parque, su vida, las
+# cámaras, los modos de juego, el parque grande, el progreso) que enseñan todo lo implementado.
 SEQUENCES=(
 	"Proyecto Paparazzi|3|@img:assets/marca/carga.png"
-	"Menú · Arcade, Tutorial, Sandbox, Academia y Opciones|5|"
-	"Arcade · 25 niveles en cinco bloques|5|--arcade --cheat=niveles"
-	"Parque clásico de día · 21 viandantes, gran angular 24 mm|6|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
-	"Hora dorada · el estanque a 35 mm|5|--time=golden --lens=0,0 --angle=200 --pitch=3 --focal=35 --pan=4 --af"
-	"Hora azul · cirros y resplandor de poniente|5|--time=blue --lens=0,0 --angle=300 --pitch=12 --focal=24 --pan=4 --af"
-	"Noche · luna, estrellas y farolas|6|--time=night --lens=0,0 --angle=205 --pitch=20 --focal=28 --pan=3 --af"
-	"Vida en el parque · bancos y charlas|6|--time=day --stage=banco --angle=125 --pitch=-7 --focal=40 --af"
-	"Palomas que acuden a las migas|5|--time=day --stage=palomas --angle=125 --pitch=-12 --focal=40 --af"
-	"Palomas posadas en la verja|5|--time=day --pigeons=verja --lens=2,1 --angle=94 --pitch=-1 --focal=70 --pan=1.5 --af"
-	"Paseando al perro|5|--time=day --stage=perro --pitch=-12 --focal=24 --af"
-	"La pradera · mesas de pícnic, lector y figurantes|6|--time=day --lens=2,1 --angle=103 --pitch=-2 --focal=85 --pan=1.2 --advance=6 --af"
-	"Patos en el estanque|5|--time=day --lens=2,1 --angle=243 --pitch=-4 --focal=135 --pan=.8 --af"
-	"El quiosco · paseantes y el perro pequeño|5|--time=golden --lens=2,1 --angle=116 --pitch=-2 --focal=90 --pan=1.2 --advance=8 --af"
-	"Andar sin rebote · cada uno con su paso|6|--time=day --lens=2,0 --angle=40 --pitch=-6 --focal=35 --pan=5 --af"
-	"Compacta · su visor real y zoom 24–120|5|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
-	"Réflex · teleobjetivo siguiendo a un viandante|6|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
-	"Telemétrica 90 mm · enfoque manual, disparo y revelado|10|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=6"
-	"Nivel 8 · condición: cara nítida y sujeto grande|9|--level=8 --interface=camara --follow-target --mf-rack --shoot-at=5"
-	"TLR 6×6 · a la cintura, visor espejado y foto cuadrada|11|--level=16 --interface=camara --follow-target --mf-rack --expose --shoot-at=7"
-	"Nivel 21 · barrido: corredor nítido, fondo arrastrado|10|--level=21 --interface=camara --focal=85 --follow-target --pan-shot --shutter=30 --shoot-at=6"
-	"Parque grande · paseo libre y cámara al ojo|12|--scenario=grande --time=golden --photo-walk"
-	"Modo sandbox · fotografía libre, sin encargo|5|--sandbox --time=day --lens=2,0 --angle=150 --pitch=-2 --focal=50 --pan=3 --af"
-	"Academia · teoría y demostración guiada|12|--academy=2:teoria --academy-tour=3:2"
-	"Academia · examen con informe del tutor|9|--academy=1:examen --shoot-at=4"
+	"Un juego de fotografía: encuentra a tu objetivo y haz la foto|5|"
+	"El parque|2|@card:Un diorama vivo, a cualquier hora"
+	"De día · 21 viandantes, cada uno con su ropa y su paso|5|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
+	"Hora dorada|4|--time=golden --lens=0,0 --angle=200 --pitch=3 --focal=35 --pan=4 --af"
+	"Hora azul|4|--time=blue --lens=0,0 --angle=300 --pitch=12 --focal=24 --pan=4 --af"
+	"Noche · luna, estrellas y farolas|5|--time=night --lens=0,0 --angle=205 --pitch=20 --focal=28 --pan=3 --af"
+	"Vida en el parque|2|@card:Gente, animales y sonido ambiente"
+	"Bancos · leer, charlar, mirar el móvil|5|--time=day --stage=banco --angle=125 --pitch=-7 --focal=40 --af"
+	"Palomas · acuden a las migas y echan a volar|6|--time=day --stage=palomas --angle=125 --pitch=-12 --focal=40 --af --scare-at=8"
+	"Palomas posadas en la verja|4|--time=day --pigeons=verja --lens=2,1 --angle=94 --pitch=-1 --focal=70 --pan=1.5 --af"
+	"Paseando al perro|4|--time=day --stage=perro --pitch=-12 --focal=24 --af"
+	"La pradera · pícnic, lectores y figurantes|4|--time=day --lens=2,1 --angle=103 --pitch=-2 --focal=85 --pan=1.2 --advance=6 --af"
+	"Patos en el estanque|4|--time=day --lens=2,1 --angle=243 --pitch=-4 --focal=135 --pan=.8 --af"
+	"El quiosco · un balón y el perro pequeño|4|--time=golden --lens=2,1 --angle=116 --pitch=-2 --focal=90 --pan=1.2 --advance=8 --af"
+	"Las cámaras|2|@card:Cuatro cuerpos, cada uno con su visor"
+	"Compacta · zoom 24–120 y todo automático|4|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
+	"Réflex · teleobjetivo y autofoco continuo|5|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
+	"Telemétrica · enfoque manual, disparo y revelado|9|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=5"
+	"TLR 6×6 · a la cintura, visor espejado y foto cuadrada|10|--level=16 --interface=camara --follow-target --mf-rack --expose --shoot-at=6"
+	"Modos de juego|2|@card:Tutorial, Arcade, Sandbox y Academia"
+	"Tutorial · los controles, paso a paso|4|--tutorial"
+	"Arcade · 25 niveles en cinco bloques|3|--arcade --cheat=niveles"
+	"Arcade · cada nivel, su encargo y su condición|5|--level=8"
+	"Arcade · barrido: corredor nítido, fondo arrastrado|9|--level=21 --interface=camara --focal=85 --follow-target --pan-shot --shutter=30 --shoot-at=5"
+	"Sandbox · fotografía libre, sin encargo|4|--sandbox --time=day --lens=0,0 --angle=150 --pitch=-2 --focal=50 --pan=3 --af"
+	"Academia · cinco lecciones con teoría y demostración|9|--academy=2:teoria --academy-tour=3:2"
+	"Academia · examen con informe del tutor|10|--academy=1:examen --expose --shoot-at=8.5"
+	"El parque grande|2|@card:Paseo libre con la cámara al cuello"
+	"Camina, busca y llévate la cámara al ojo|10|--scenario=grande --time=golden --photo-walk"
+	"Parque infantil · columpio, tobogán y arenero|6|--scenario=grande --time=day --at=27.5,21,202 --pitch=-6 --pan=-1.5"
+	"La plaza de la fuente|5|--scenario=grande --time=day --at=3,12.5,346 --pitch=-3 --pan=2"
+	"Tu progreso|2|@card:Álbum, insignias y opciones"
+	"Álbum · tus mejores fotos|4|--screen=album"
 	"Insignias de maestría|4|--screen=insignias"
-	"Opciones · gráficos, tema, vibración, insignias y álbum|4|--screen=opciones"
+	"Opciones · equipo, gráficos, tema y mando|3|--screen=opciones"
+	"Proyecto Paparazzi|3|@card:Windows · Linux · macOS · Android"
 )
 
 if [ -n "$SEQ_FILE" ]; then mapfile -t SEQUENCES < <(grep -v '^\s*\(#\|$\)' "$SEQ_FILE"); fi
@@ -87,7 +101,14 @@ for entry in "${SEQUENCES[@]}"; do
 	frames=$(( (LEAD + LENGTH) * FPS ))
 	echo "=== [$index/${#SEQUENCES[@]}] $title"
 	raw="$WORK/raw_$index.avi"
-	if [[ "$args" == @img:* ]]; then
+	card=""
+	if [[ "$args" == @card:* ]]; then
+		# Rótulo de capítulo: la pantalla de carga desenfocada y oscurecida, con el título grande.
+		card="${args#@card:}"
+		ffmpeg -loglevel error -y -loop 1 -framerate "$FPS" -t "$((LEAD + LENGTH))" -i "$PROJECT_DIR/assets/marca/carga.png" \
+			-f lavfi -t "$((LEAD + LENGTH))" -i anullsrc=r=48000:cl=stereo -vf "scale=${RES%x*}:${RES#*x},gblur=sigma=28,eq=brightness=-0.22" \
+			-c:v mjpeg -q:v 3 -c:a pcm_s16le "$raw"
+	elif [[ "$args" == @img:* ]]; then
 		# Una imagen fija (la pantalla de carga no se puede grabar: sale antes del primer fotograma).
 		ffmpeg -loglevel error -y -loop 1 -framerate "$FPS" -t "$((LEAD + LENGTH))" -i "$PROJECT_DIR/${args#@img:}" \
 			-f lavfi -t "$((LEAD + LENGTH))" -i anullsrc=r=48000:cl=stereo -c:v mjpeg -q:v 3 -c:a pcm_s16le "$raw"
@@ -101,6 +122,14 @@ for entry in "${SEQUENCES[@]}"; do
 	fi
 	clip="$WORK/clip_$index.mp4"
 	safe_title="${title//:/\\:}"
+	if [ -n "$card" ]; then
+		safe_card="${card//:/\\:}"
+		ffmpeg -loglevel error -y -ss "$LEAD" -t "$LENGTH" -i "$raw" \
+			-vf "drawtext=fontfile=$FONT:text='$safe_title':x=(w-text_w)/2:y=h/2-110:fontsize=104:fontcolor=white,drawtext=fontfile=$FONT:text='$safe_card':x=(w-text_w)/2:y=h/2+40:fontsize=40:fontcolor=white@0.85,fade=t=in:st=0:d=0.3,fade=t=out:st=$((LENGTH - 1)).7:d=0.3" \
+			-c:a aac -b:a 192k -ar 48000 -ac 2 -r "$FPS" -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p "$clip"
+		echo "file '$clip'" >> "$list"
+		continue
+	fi
 	ffmpeg -loglevel error -y -ss "$LEAD" -t "$LENGTH" -i "$raw" \
 		-vf "scale=${RES%x*}:${RES#*x}:flags=lanczos,drawbox=x=0:y=ih-90:w=iw:h=90:color=black@0.45:t=fill:enable='lt(t,4)',drawtext=fontfile=$FONT:text='$safe_title':x=40:y=h-62:fontsize=34:fontcolor=white:alpha='if(lt(t,3),1,max(0,4-t))',fade=t=in:st=0:d=0.4,fade=t=out:st=$((LENGTH - 1)).6:d=0.4" \
 		-af "afade=t=in:st=0:d=0.4,afade=t=out:st=$((LENGTH - 1)).6:d=0.4" -c:a aac -b:a 192k -ar 48000 -ac 2 \

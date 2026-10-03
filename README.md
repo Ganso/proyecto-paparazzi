@@ -1,5 +1,7 @@
 # Proyecto Paparazzi (v0.1.0-alpha)
 
+> **Idea fundamental del proyecto: enseñar fotografía como Jaime Altozano enseña la música.** Divulgación que entusiasma, con ejemplos que se ven y se tocan, cercanía y rigor: cada concepto se entiende porque se experimenta haciendo la foto.
+
 Simulador fotográfico y juego de observación procedural desarrollado en **Godot 4**. El jugador se sitúa en un parque urbano y debe localizar a objetivos específicos descritos por sus rasgos y vestuario, capturándolos con la técnica fotográfica adecuada (exposición, enfoque, distancia focal, velocidad y encuadre).
 
 El visor toma como referencia compositiva [`docs/futuro/referencia.jpg`](docs/futuro/referencia.jpg); el parque, la iluminación, el mobiliario y la multitud de viandantes son geometría 3D generada y ensamblada proceduralmente a partir de datos paramétricos.
