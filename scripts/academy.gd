@@ -194,7 +194,7 @@ func build_ui() -> void:
 	back_button = make_button(panel,Texts.get_text("academia_atras"),Rect2(12,394,120,46),go_back)
 	next_button = make_button(panel,Texts.get_text("academia_siguiente"),Rect2(138,394,215,46),go_next,true)
 	subtitle_panel = Panel.new()
-	subtitle_panel.position = Vector2(40,556)
+	subtitle_panel.position = Vector2(40,536)   # clear of the LED strip under the SLR finder
 	subtitle_panel.size = Vector2(840,58)
 	subtitle_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	subtitle_panel.add_theme_stylebox_override("panel",UiStyle.box(UiStyle.surf(.84),12,UiStyle.LINE))
