@@ -143,6 +143,29 @@ Se pasan tras `--` (`godot-4 --path . -- <opción>`):
 
 ---
 
+### 4.3 Tamaño razonable de los textos por pantalla
+
+Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una captura de su pantalla** (además de `tools/check_text_fit.gd`), y se escribe para el **tamaño razonable** de su hueco, no para lo máximo que entra. La capacidad es aproximada (caracteres con espacios, sin contar las marcas de teclas); el tamaño razonable deja en torno a un tercio libre. Si un texto no cabe con holgura, se acorta o se rediseña el hueco y se actualiza esta tabla.
+
+| Pantalla | Hueco | Capacidad aprox. | Tamaño razonable | Más largo hoy |
+|---|---|---:|---:|---:|
+| Menú principal | Descripción del modo (`modo_*_texto`) | 3 líneas, ~240 | **≤ 180** | 174 |
+| Arcade · lista | Título del nivel en su tarjeta (`arcade_nivel_<n>_titulo`) | ~30 | **≤ 22** | 20 |
+| Arcade · encargo | Texto del nivel (`arcade_nivel_<n>_texto`), sobre los rasgos del objetivo (hasta 5 líneas) | 4 líneas, ~300 | **≤ 220** | 219 |
+| Arcade · encargo y resultado | Cada condición (`cond_*`) | 2 líneas, ~150 | **≤ 100** | 98 |
+| Tutorial | Texto del paso (`tutorial_*`) | 3 líneas, ~240 | **≤ 210** (mejor ≤ 160: dos líneas) | 205 |
+| Academia · lista | Resumen de la lección (`academia_l<n>_resumen`) | 1 línea, ~80 | **≤ 60** | 55 |
+| Academia · panel | Título de la página (`…_t<k>_titulo`) | 1 línea, ~34 | **≤ 30** | 31 |
+| Academia · panel | Teoría y enunciado del examen (`…_t<k>_texto`, `…_examen`) | 7 líneas, ~330 | **≤ 240** | 228 |
+| Academia · panel | Tarea de la práctica (`…_p<k>`) | 2 líneas, ~100 | **≤ 75** | 72 |
+| Academia · panel | Pista (`…_pista_*`) | 4 líneas, ~200 | **≤ 130** | 115 |
+| Academia · demostración | Subtítulo (`…_d<k>`) | 2 líneas, ~170 | **≤ 110** | 68 |
+| Insignias | Descripción (`insignia_*_texto`) | 1 línea, ~115 | **≤ 100** | 100 |
+| Búsqueda | Aviso (`notify_player`) | 1 línea, ~85 | **≤ 70** | — |
+| Botones | Texto de cualquier botón | ancho ÷ 9 | dos tercios de eso | — |
+
+Los que están pegados a su tamaño razonable (título de la Academia de 31, insignia de 100, tutorial de 205) no deben crecer más.
+
 ## 5. Cifras de Referencia (Fuente Única)
 
 Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en GPU Radeon RX 6700 XT) y actualizadas el **2026-09-30** con el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)). Cada cifra es la que imprime la suite indicada; si cambia el código, vuelve a ejecutar la suite y actualiza esta tabla.

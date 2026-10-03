@@ -29,8 +29,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
 	panel = Panel.new()
-	panel.position = Vector2(300,452)
-	panel.size = Vector2(680,150)
+	panel.position = Vector2(300,438)
+	panel.size = Vector2(680,164)
 	add_child(panel)
 	counter = Label.new()
 	counter.position = Vector2(20,12)
@@ -38,11 +38,11 @@ func _ready() -> void:
 	panel.add_child(counter)
 	body = GlyphLabel.new()
 	body.position = Vector2(20,34)
-	body.size = Vector2(640,70)
+	body.size = Vector2(640,82)   # three lines with room to spare (docs/TESTS_Y_VERIFICACION.md §4.3)
 	body.font_size = 17
 	panel.add_child(body)
 	status = Label.new()
-	status.position = Vector2(20,112)
+	status.position = Vector2(20,126)
 	status.add_theme_font_size_override("font_size",14)
 	panel.add_child(status)
 
@@ -103,15 +103,15 @@ func update_panel() -> void:
 	for b in buttons: b.queue_free()
 	buttons = []
 	if id() == "bienvenida":
-		add_button(Texts.get_text("tutorial_empezar"),Rect2(470,104,190,36),next,true)
+		add_button(Texts.get_text("tutorial_empezar"),Rect2(470,118,190,36),next,true)
 		status.text = ""
 	elif id() == "fin":
-		add_button(Texts.get_text("tutorial_ir_arcade"),Rect2(270,104,190,36),func(): stop(); main.show_arcade(),true)
-		add_button(Texts.get_text("tutorial_menu"),Rect2(470,104,190,36),func(): stop(); main.intro())
+		add_button(Texts.get_text("tutorial_ir_arcade"),Rect2(270,118,190,36),func(): stop(); main.show_arcade(),true)
+		add_button(Texts.get_text("tutorial_menu"),Rect2(470,118,190,36),func(): stop(); main.intro())
 		status.text = ""
 	else:
-		add_button(Texts.get_text("tutorial_saltar"),Rect2(470,104,90,36),next)
-		add_button(Texts.get_text("tutorial_salir"),Rect2(570,104,90,36),func(): stop(); main.intro())
+		add_button(Texts.get_text("tutorial_saltar"),Rect2(470,118,90,36),next)
+		add_button(Texts.get_text("tutorial_salir"),Rect2(570,118,90,36),func(): stop(); main.intro())
 	if dark: pass
 
 func add_button(label_text: String, rect: Rect2, callback: Callable, primary = false) -> void:

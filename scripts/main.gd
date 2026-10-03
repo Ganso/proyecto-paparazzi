@@ -4183,15 +4183,15 @@ func show_assignment() -> void:
 # Arcade briefing: who, then the level's rules (camera, shots, time, pass mark, conditions).
 func show_level_briefing(root: Control) -> void:
 	var level: Dictionary = Arcade.LEVELS[arcade_level]
-	var description = label(root,Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1))+"\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,165,640,190),20)
+	var description = label(root,Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1))+"\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,160,640,215),18)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var rules = [Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],
 		(Texts.get_text("arcade_un_disparo") if level.shots == 1 else Texts.get_text("arcade_disparos_d") % level.shots)+" · "+(Texts.get_text("arcade_tiempo_d") % level.limit if level.limit > 0 else Texts.get_text("arcade_sin_tiempo"))+" · "+Texts.get_text("arcade_nota_minima_d") % level.min]
-	label(root,"\n".join(rules),Rect2(565,365,640,56),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,430,640,24),15,Color("b8d78c"))
+	label(root,"\n".join(rules),Rect2(565,385,640,50),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,442,640,24),15,Color("b8d78c"))
 	var conds = []
 	for key in level.cond: conds.append("• "+Conditions.describe(key,level.cond[key]))
-	label(root,"\n".join(conds) if not conds.is_empty() else Texts.get_text("arcade_sin_condiciones"),Rect2(565,456,640,150),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label(root,"\n".join(conds) if not conds.is_empty() else Texts.get_text("arcade_sin_condiciones"),Rect2(565,468,640,140),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)
 
