@@ -151,7 +151,9 @@ func _process(dt: float) -> void:
 
 func _draw() -> void:
 	if main == null or mode != "camara" or body < 0: return
-	if main.mode == "INTRO": return
+	# Only while searching: behind a screen (briefing, result, pause…) the LEDs showed through the
+	# frosted glass, sharp over the blurred park.
+	if main.mode != "SEARCH": return
 	draw_texture_rect(mask(body),Rect2(Vector2.ZERO,Vector2(1280,720)),false)
 	var r: Rect2 = RECTS[body]
 	match body:
@@ -188,6 +190,11 @@ func draw_slr(r: Rect2) -> void:
 	for k in 48:
 		var a0 = TAU*k/48.0
 		draw_line(c+Vector2.from_angle(a0)*ring*1.12,c+Vector2.from_angle(a0)*ring*1.68,Color(1,1,1,.05),1.0)
+	# Focal length, small in the corner of the screen (zoom lenses).
+	draw_string(font,Vector2(r.position.x+12,r.end.y-12),"%d mm" % roundi(main.focal),HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color(1,1,1,.5))
+	# With the HUD bars unfolded (Tab, Academy lessons) the bottom bar covers half of the LED strip
+	# and shows the same values: the strip is not drawn then.
+	if not main.hud_bottom.is_empty() and main.hud_bottom[0].visible: return
 	# LED strip under the focusing screen (red 7-segment, unlit segments faintly visible).
 	var y = r.end.y+30
 	var x = r.position.x+40
@@ -225,8 +232,6 @@ func draw_slr(r: Rect2) -> void:
 	var frames = main.shots if not main.sandbox else 36
 	seg_text(Vector2(r.end.x-90,y),"%02d" % clampi(frames,0,99),30,led_red,led_dim)
 	draw_string(font,Vector2(r.end.x-130,y+26),"▣",HORIZONTAL_ALIGNMENT_LEFT,-1,18,led_red)
-	# Focal length, small in the corner of the screen (zoom lenses).
-	draw_string(font,Vector2(r.position.x+12,r.end.y-12),"%d mm" % roundi(main.focal),HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color(1,1,1,.5))
 
 # Rangefinder parallax (fraction of the image): the finder window sits above-left of the lens, so
 # at close range the frame lines move down and right to show what the lens takes.

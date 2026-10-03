@@ -4280,7 +4280,7 @@ func show_assignment() -> void:
 	var description = label(root,"Busca a esta persona en el parque.\n\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,190,640,285),24)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,"Corre con ropa deportiva: cuida la velocidad de obturación." if target.runner else "Recuerda su ropa, peinado y accesorios.",Rect2(565,505,635,65),18,Color("b8d78c")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	button(root,"Entrar en la fase · Intro",Rect2(750,625,455,60),begin_assignment,true)
+	button(root,Texts.get_text("entrar_fase"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,"Menú",Rect2(565,625,165,60),intro)
 
 # Arcade briefing: who, then the level's rules (camera, shots, time, pass mark, conditions).
@@ -4433,4 +4433,4 @@ func show_sandbox_result() -> void:
 	label(root,"La foto conserva los ajustes del disparo. Prueba otro enfoque, exposición o equipo.",Rect2(25,584,825,50),17).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,"Menú",Rect2(25,647,165,50),intro)
 	button(root,"Cambiar equipo",Rect2(210,647,260,50),show_equipment)
-	button(root,"Seguir probando · Intro",Rect2(885,620,360,75),resume_search,true)
+	button(root,Texts.get_text("seguir_probando"),Rect2(885,620,360,75),resume_search,true)
