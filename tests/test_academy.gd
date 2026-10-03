@@ -142,6 +142,10 @@ func run() -> void:
 	var walker = academy.subject
 	check(walker != null,"Lesson 4 places a walker")
 	if walker:
+		# Only the walker counts here: anyone else whose head happened to fall on a crossing made
+		# this check pass or fail by chance.
+		for other in game.people:
+			if other != walker: other.visible = false
 		academy.frame_goal = {"who":walker,"x":.5,"y":.5,"snap":true}
 		var t0 = Time.get_ticks_msec()
 		while Time.get_ticks_msec()-t0 < 1500: await process_frame
@@ -151,6 +155,7 @@ func run() -> void:
 		while Time.get_ticks_msec()-t0 < 3000: await process_frame
 		check(academy.thirds_check() == "listo","Lesson 4: head on the crossing with lead room (%s)" % academy.thirds_check())
 		academy.frame_goal = {}
+		for other in game.people: other.visible = true
 
 	# --- A real practice: lesson 1 by hand ---
 	academy.begin(1,"practica")
