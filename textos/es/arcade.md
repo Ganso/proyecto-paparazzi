@@ -48,7 +48,7 @@ nota mínima %d
 Condiciones
 
 ### arcade_sin_condiciones
-Ninguna: solo la nota mínima.
+Ninguna: Solo la nota mínima.
 
 ### arcade_empezar
 Empezar
@@ -99,7 +99,7 @@ Cámara: %s · %s
 Maestría · la réflex a fondo
 
 ### arcade_trampa
-Trampa activa: todos los niveles abiertos en esta partida.
+Trampa activa: Todos los niveles abiertos en esta partida.
 
 ## Condiciones
 
@@ -181,7 +181,7 @@ a %d mm hace falta 1/%d s o más rápido; usaste 1/%d s
 
 ### cond_congelado_imposible
 > máximo 100 caracteres
-a %d mm y esta distancia ni 1/1000 s basta: usa menos focal o fotografíala cuando venga hacia ti
+a %d mm y esta distancia ni 1/1000 s basta: Usa menos focal o fotografíala cuando venga hacia ti
 
 ### cond_congelado_quieto
 > máximo 100 caracteres
@@ -197,11 +197,11 @@ corredor nítido a 1/%d s con el fondo arrastrado %.1f mm
 
 ### cond_barrido_movido
 > máximo 100 caracteres
-el corredor sale movido: gira la cámara a su ritmo mientras disparas
+el corredor sale movido: Gira la cámara a su ritmo mientras disparas
 
 ### cond_barrido_corto
 > máximo 100 caracteres
-el fondo apenas se arrastra (%.1f mm a 1/%d s): usa una velocidad más lenta, como 1/30 s
+el fondo apenas se arrastra (%.1f mm a 1/%d s): Usa una velocidad más lenta, como 1/30 s
 
 ### cond_corta_barrido
 > máximo 100 caracteres
@@ -209,7 +209,7 @@ Barrido (sigue al corredor)
 
 ### cond_barrido_corto_focal
 > máximo 100 caracteres
-el fondo apenas se arrastra (%.1f mm a 1/%d s): acércate con el zoom o espera a que pase más cerca
+el fondo apenas se arrastra (%.1f mm a 1/%d s): Acércate con el zoom o espera a que pase más cerca
 
 ## Nivel 1 · Primer encargo
 
@@ -229,7 +229,7 @@ De cerca
 
 ### arcade_nivel_2_texto · encargo
 > máximo 220 caracteres
-Que llene al menos el 60 % de la altura de la foto: usa el zoom.
+Que llene al menos el 60 % de la altura de la foto: Usa el zoom.
 
 ## Nivel 3 · Sin compañía
 
@@ -279,7 +279,7 @@ Fondo desenfocado
 
 ### arcade_nivel_7_texto · encargo
 > máximo 220 caracteres
-Prioridad a la apertura: tú eliges el diafragma ({diafragma}) y la cámara el resto. Ábrelo para desenfocar el fondo.
+Prioridad a la apertura: Tú eliges el diafragma ({diafragma}) y la cámara el resto. Ábrelo para desenfocar el fondo.
 
 ## Nivel 8 · Cara nítida
 
@@ -309,7 +309,7 @@ Congela al corredor
 
 ### arcade_nivel_10_texto · encargo
 > máximo 220 caracteres
-Prioridad a la velocidad: tú eliges el tiempo ({velocidad}) y la cámara el resto. A un corredor con tele hace falta 1/500 s o más rápido.
+Prioridad a la velocidad: Tú eliges el tiempo ({velocidad}) y la cámara el resto. A un corredor con tele hace falta 1/500 s o más rápido.
 
 ## Nivel 11 · Enfoque manual
 
@@ -319,7 +319,7 @@ Enfoque manual
 
 ### arcade_nivel_11_texto · encargo
 > máximo 220 caracteres
-La telemétrica no tiene autofoco: superpón la doble imagen (rueda o R/T). La exposición sigue siendo automática y la gente va más despacio.
+La telemétrica no tiene autofoco: Superpón la doble imagen (rueda o R/T). La exposición sigue siendo automática y la gente va más despacio.
 
 ## Nivel 12 · Parque grande
 
@@ -339,7 +339,7 @@ Hora azul
 
 ### arcade_nivel_13_texto · encargo
 > máximo 220 caracteres
-Poca luz: prioridad a la apertura. Diafragma abierto y enfoque manual a la cara.
+Poca luz: Prioridad a la apertura. Diafragma abierto y enfoque manual a la cara.
 
 ## Nivel 14 · Tres en el encuadre
 
@@ -349,7 +349,7 @@ Tres en el encuadre
 
 ### arcade_nivel_14_texto · encargo
 > máximo 220 caracteres
-Todo manual por primera vez: la exposición empieza bien medida; ajústala con el exposímetro. El sujeto y exactamente dos personas más.
+Todo manual por primera vez: La exposición empieza bien medida; ajústala con el exposímetro. El sujeto y exactamente dos personas más.
 
 ## Nivel 15 · Noche en el quiosco
 
@@ -419,7 +419,7 @@ El barrido
 
 ### arcade_nivel_21_texto · encargo
 > máximo 220 caracteres
-Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro; con ratón o mando, el pulso es tuyo.
+Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: Él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro; con ratón o mando, el pulso es tuyo.
 
 ## Nivel 22 · Retrato de autor
 
@@ -429,7 +429,7 @@ Retrato de autor
 
 ### arcade_nivel_22_texto · encargo
 > máximo 220 caracteres
-Con el 105 mm: fondo desenfocado y la persona en la proporción áurea.
+Con el 105 mm: Fondo desenfocado y la persona en la proporción áurea.
 
 ## Nivel 23 · Sola y de cerca
 
@@ -439,7 +439,7 @@ Sola y de cerca
 
 ### arcade_nivel_23_texto · encargo
 > máximo 220 caracteres
-Todo manual: encuéntrala, que salga grande y sin nadie más.
+Todo manual: Encuéntrala, que salga grande y sin nadie más.
 
 ## Nivel 24 · Barrido al atardecer
 
@@ -459,4 +459,4 @@ Nocturno
 
 ### arcade_nivel_25_texto · encargo
 > máximo 220 caracteres
-Dos disparos, de noche y todo manual: pon el punto de enfoque en la cara; que salga grande y sin nadie más.
+Dos disparos, de noche y todo manual: Pon el punto de enfoque en la cara; que salga grande y sin nadie más.

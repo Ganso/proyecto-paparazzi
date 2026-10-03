@@ -6,7 +6,7 @@
 AF confirmado · %.2f m
 
 ### visor_tab_controles
-{ayuda}: ayuda
+{ayuda}: Ayuda
 
 ### visor_compacta_af
 AF
@@ -27,7 +27,7 @@ Cámara · el visor real de cada cuerpo (Tab muestra los controles)
 Clásica · controles siempre a la vista
 
 ### paseo_ayuda
-{andar}: andar · {correr}: correr · {agacharse}: agacharse · {mirar_paseo}: mirar · {sacar}: sacar la cámara · {pausa}: pausa
+{andar}: Andar · {correr}: Correr · {agacharse}: Agacharse · {mirar_paseo}: Mirar · {sacar}: Sacar la cámara · {pausa}: Pausa
 
 ### paseo_sandbox
 Paseo libre · saca la cámara con el clic derecho
@@ -51,7 +51,7 @@ Bajar la cámara · {bajar}
 Al ojo · {bajar}
 
 ### buscar_ayuda
-Buscando sin la cámara · {mirar}: mirar · {bajar} o el botón: llévatela al ojo
+Buscando sin la cámara · {mirar}: Mirar · {bajar} o el botón: Llévatela al ojo
 
 ### visor_interfaz_corta_camara
 cámara
@@ -79,7 +79,7 @@ Fotometría: %s
 puesto
 
 ### bloqueo_puesto
-Foco (%s) y exposición (EV %.1f) bloqueados: reencuadra y dispara.
+Foco (%s) y exposición (EV %.1f) bloqueados: Reencuadra y dispara.
 
 ### bloqueo_suelto
 Bloqueo suelto.

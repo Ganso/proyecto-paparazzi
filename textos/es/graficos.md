@@ -39,7 +39,7 @@ Personalizado
 Partir de:
 
 ### gfx_aviso
-Por encima de Ultra el coste sube mucho: prueba una opción cada vez.
+Por encima de Ultra el coste sube mucho: Prueba una opción cada vez.
 
 ### gfx_volver
 Aceptar y volver
@@ -60,7 +60,7 @@ DETALLE
 CÁMARA
 
 ### gfx_scale
-Resolución 3D (más de 100 %: supermuestreo)
+Resolución 3D (más de 100 %: Supermuestreo)
 
 ### gfx_upscaler
 Reescalado (por debajo de 100 %)
@@ -171,7 +171,7 @@ Máximo siempre
 Bilineal
 
 ### gfx_desc_Bajo
-Mismo aspecto con el mínimo coste: resolución al 50 % (FSR 2), sin iluminación global ni oclusión ambiental y con poca hierba.
+Mismo aspecto con el mínimo coste: Resolución al 50 % (FSR 2), sin iluminación global ni oclusión ambiental y con poca hierba.
 
 ### gfx_desc_Medio
 Resolución al 70 %, iluminación global con 3 cascadas, oclusión ambiental y sombras de 2048; sin niebla volumétrica.
@@ -183,7 +183,7 @@ Resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra
 Resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba completa y sombras en todas las farolas.
 
 ### gfx_integrada
-Gráfica integrada: en los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla.
+Gráfica integrada: En los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla.
 
 ### gfx_fps
 FPS

@@ -84,7 +84,7 @@ punto de enfoque anterior
 punto de enfoque siguiente
 
 ### pad_stick_izq
-Stick izquierdo: mirar · pulsado (L3): precisión
+Stick izquierdo: Mirar · pulsado (L3): Precisión
 
 ### pad_cruceta
 Cruceta: ←→ elige el ajuste · ↑↓ lo cambia
@@ -108,7 +108,7 @@ ayuda en pantalla
 enfocar (AF) · manivela (TLR) · aceptar
 
 ### pad_stick_der
-Stick derecho: ↕ zoom · ↔ enfoque manual · pulsado: tercios
+Stick derecho: ↕ zoom · ↔ enfoque manual · pulsado: Tercios
 
 ### pad_menu
 pausa · salir al menú
@@ -117,33 +117,33 @@ pausa · salir al menú
 Controles con mando
 
 ### ayuda_texto_teclado
-Mirar: arrastra con el ratón (la vista va hacia donde lo mueves) o ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧ · ⟦A⟧⟦D⟧: giro continuo.
-Zoom: rueda o ⟦W⟧⟦S⟧, solo con objetivo zoom.
-AF: clic, ⟦F⟧ o ENFOCAR. El matricial elige la superficie más cercana entre nueve puntos; ⟦1⟧–⟦9⟧ elige el punto.
+Mirar: Arrastra con el ratón (la vista va hacia donde lo mueves) o ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧ · ⟦A⟧⟦D⟧: Giro continuo.
+Zoom: Rueda o ⟦W⟧⟦S⟧, solo con objetivo zoom.
+AF: Clic, ⟦F⟧ o ENFOCAR. El matricial elige la superficie más cercana entre nueve puntos; ⟦1⟧–⟦9⟧ elige el punto.
 MF: ⟦Mayús⟧ + rueda, ⟦R⟧⟦T⟧ o el deslizador. Con objetivo fijo también sirve la rueda sola.
-Réflex: alinea las dos mitades del círculo. Telemétrica: superpón la doble imagen.
-Exposición manual: ⟦Q⟧⟦E⟧ diafragma, ⟦Z⟧⟦X⟧ velocidad, ⟦C⟧⟦V⟧ ISO. Modo A: tú eliges el diafragma; modo S, el tiempo.
+Réflex: Alinea las dos mitades del círculo. Telemétrica: Superpón la doble imagen.
+Exposición manual: ⟦Q⟧⟦E⟧ diafragma, ⟦Z⟧⟦X⟧ velocidad, ⟦C⟧⟦V⟧ ISO. Modo A: Tú eliges el diafragma; modo S, el tiempo.
 Automática con compensación: ⟦[⟧⟦]⟧ o la rueda sobre el botón AUTO.
 ⟦Espacio⟧ disparar · ⟦G⟧ tercios · ⟦Tab⟧ controles sobre el visor · ⟦F1⟧ ayuda en pantalla.
 ⟦Y⟧ baja la cámara para buscar y la vuelve a llevar al ojo (parque clásico).
-TLR: se mira desde arriba y el visor invierte izquierda y derecha. ⟦L⟧ lupa 3× · ⟦K⟧ manivela (sandbox, 12 fotos).
-Arcade: cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones.
+TLR: Se mira desde arriba y el visor invierte izquierda y derecha. ⟦L⟧ lupa 3× · ⟦K⟧ manivela (sandbox, 12 fotos).
+Arcade: Cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones.
 Con un mando conectado, esta ayuda muestra el mando y sus botones.
 
 ### control_en_mano_ayuda
 {elegir_control} elegir · {cambiar_control} cambiar
 
 ### raton_clic
-Clic: enfocar (AF) en ese punto
+Clic: Enfocar (AF) en ese punto
 
 ### raton_rueda
-Rueda: cambia el control elegido (zoom al empezar) · clic central: el siguiente
+Rueda: Cambia el control elegido (zoom al empezar) · clic central: El siguiente
 
 ### raton_derecho
-Clic derecho y arrastrar: enfoque manual
+Clic derecho y arrastrar: Enfoque manual
 
 ### raton_arrastrar
-Arrastrar: mirar (la vista va hacia donde lo mueves)
+Arrastrar: Mirar (la vista va hacia donde lo mueves)
 
 ### teclado_mirar
 Mirar: ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧ · giro continuo ⟦A⟧⟦D⟧
@@ -158,7 +158,7 @@ Diafragma ⟦Q⟧⟦E⟧ · velocidad ⟦Z⟧⟦X⟧ · ISO ⟦C⟧⟦V⟧ · co
 Disparar: ⟦Espacio⟧
 
 ### teclado_camara
-Elegir control ⟦Tab⟧ y cambiarlo ⟦Re Pág⟧⟦Av Pág⟧ · bajar la cámara ⟦Y⟧ · tercios ⟦G⟧ · TLR: lupa ⟦L⟧, manivela ⟦K⟧
+Elegir control ⟦Tab⟧ y cambiarlo ⟦Re Pág⟧⟦Av Pág⟧ · bajar la cámara ⟦Y⟧ · tercios ⟦G⟧ · TLR: Lupa ⟦L⟧, manivela ⟦K⟧
 
 ### teclado_ayuda
 Esta ayuda ⟦H⟧ · ayuda en pantalla ⟦F1⟧ · pausa y salir ⟦Esc⟧ · aceptar ⟦Intro⟧

@@ -18,7 +18,7 @@ ENCARGO %02d
 Busca a esta persona en el parque.
 
 ### encargo_corredor
-Corre con ropa deportiva: cuida la velocidad de obturación.
+Corre con ropa deportiva: Cuida la velocidad de obturación.
 
 ### encargo_recuerda
 Recuerda su ropa, peinado y accesorios.
@@ -188,7 +188,7 @@ Arcade
 
 ### modo_arcade_texto
 > máximo 180 caracteres
-Veinticinco niveles con encargos cada vez más exigentes: de la compacta automática a la TLR manual y al barrido, un control nuevo cada vez.
+Veinticinco niveles con encargos cada vez más exigentes: De la compacta automática a la TLR manual y al barrido, un control nuevo cada vez.
 
 ### modo_arcade_progreso
 %d de 25 niveles superados · %d ★
@@ -198,7 +198,7 @@ Tutorial
 
 ### modo_tutorial_texto
 > máximo 180 caracteres
-Aprende a usar el juego desde cero, paso a paso: mirar, zoom, enfocar, disparar, leer el resultado y controlar la exposición. Unos cinco minutos.
+Aprende a usar el juego desde cero, paso a paso: Mirar, zoom, enfocar, disparar, leer el resultado y controlar la exposición. Unos cinco minutos.
 
 ### modo_sandbox_titulo
 Sandbox
@@ -212,7 +212,7 @@ Academia
 
 ### modo_academia_texto
 > máximo 180 caracteres
-Diez lecciones de fotografía, cada una con teoría, demostración, práctica y examen: de la exposición y la composición a las cámaras, los objetivos y los modos.
+Diez lecciones de fotografía, cada una con teoría, demostración, práctica y examen: De la exposición y la composición a las cámaras, los objetivos y los modos.
 
 ### modo_academia_progreso
 %d de 5 prácticas completadas

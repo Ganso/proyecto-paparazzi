@@ -40,7 +40,7 @@ Velocidad pura
 
 ### insignia_velocidad_texto
 > máximo 100 caracteres
-Un barrido: un corredor nítido con el fondo arrastrado al menos 40 píxeles.
+Un barrido: Un corredor nítido con el fondo arrastrado al menos 40 píxeles.
 
 ### insignia_graduado_nombre
 Graduado de la Academia

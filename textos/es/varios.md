@@ -156,23 +156,23 @@ Controles
 
 ### mirar_y_encontrar_arrastra_horizontalmente_o_usa_a_d_y_las_flech
 MIRAR Y ENCONTRAR
-Arrastra horizontalmente o usa A/D y las flechas. W/S o rueda: zoom.
-Clic sobre la escena: selecciona el punto AF más cercano y enfoca.
-F: enfocar de nuevo · 1–9: punto AF · G: guías de tercios.
+Arrastra horizontalmente o usa A/D y las flechas. W/S o rueda: Zoom.
+Clic sobre la escena: Selecciona el punto AF más cercano y enfoca.
+F: Enfocar de nuevo · 1–9: Punto AF · G: Guías de tercios.
 
 AJUSTAR Y DISPARAR
-Q/E: apertura · Z/X: velocidad · C/V: ISO · R/T: distancia de enfoque.
-También puedes pulsar o arrastrar los valores de la barra superior. Clic derecho: disminuir.
-Espacio: disparo · Intro: continuar · Esc: cerrar ayuda · ?: abrir ayuda.
+Q/E: Apertura · Z/X: Velocidad · C/V: ISO · R/T: Distancia de enfoque.
+También puedes pulsar o arrastrar los valores de la barra superior. Clic derecho: Disminuir.
+Espacio: Disparo · Intro: Continuar · Esc: Cerrar ayuda · ?: Abrir ayuda.
 
 EN PANTALLA TÁCTIL
-Un dedo: paneo con inercia · Pellizco: zoom · Dos dedos verticales: enfoque manual.
-Un toque: punto AF y enfoque · Arrastra un ajuste para modificarlo.
+Un dedo: Paneo con inercia · Pellizco: Zoom · Dos dedos verticales: Enfoque manual.
+Un toque: Punto AF y enfoque · Arrastra un ajuste para modificarlo.
 
 LEE LA LUZ
-Aguja a 0: exposición correcta. ΔEV positivo: foto oscura; negativo: demasiado clara.
+Aguja a 0: Exposición correcta. ΔEV positivo: Foto oscura; negativo: Demasiado clara.
 A focal larga, usa tiempos más cortos. Para ganar nitidez, enfoca y cierra el diafragma.
-La cámara permanece a 1,60 m: a 24 mm caben los adultos del carril de 4 m.
+La cámara permanece a 1,60 m: A 24 mm caben los adultos del carril de 4 m.
 
 ### volver
 VOLVER
@@ -184,7 +184,7 @@ Presupuesto por viandante
 Presupuesto de escena
 
 ### el_objetivo_esta_fuera_del_encuadre_su_pecho_debe_verse_dentro_d
-El objetivo está fuera del encuadre: su pecho debe verse dentro de la imagen.
+El objetivo está fuera del encuadre: Su pecho debe verse dentro de la imagen.
 
 ### el_objetivo_esta_tapado_en_d_de_los_5_puntos_de_control
 El objetivo está tapado en %d de los 5 puntos de control.

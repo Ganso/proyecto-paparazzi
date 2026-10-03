@@ -16,7 +16,7 @@ const SAVED = ["teoria","demo","practica","examen"]   # what the progress file k
 
 # Good light by default (user, 03-10-2026): day, overcast where a wide aperture or a slow shutter
 # would burn the photo in full sun; another light only when the light is the lesson (1: the golden
-# hour for the exposure, 7: the blue hour for the fast lens).
+# hour for the exposure, 6: the blue hour for the fast lens).
 # Per lesson: equipment and light, the diagram of each theory page and the practice setup.
 # body/lens index into Equipment.LENSES; lens 3/4/5 of the réflex are the Academy primes.
 const SETUP = {
@@ -33,9 +33,9 @@ const SETUP = {
 	# Lessons on the equipment (03-10-2026). No diagram: the finder itself is the example. "page_do"
 	# is what each theory page puts in the player's hands (a body, a lens, a mode); "mode" the
 	# exposure mode the lesson starts in.
-	6: {"time":"day","body":0,"lens":0,"focal":35.0,"auto":true,"focus":"AF matricial","angle":125.0,"pitch":-3.0,
+	7: {"time":"day","body":0,"lens":0,"focal":35.0,"auto":true,"focus":"AF matricial","angle":125.0,"pitch":-3.0,
 		"pages":["","","","",""],"practice_diagram":"","page_do":["body:0","body:0","body:1","body:2","body:3"]},
-	7: {"time":"blue","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":125.0,"pitch":-3.0,"n":4.0,"iso":100,
+	6: {"time":"blue","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":125.0,"pitch":-3.0,"n":4.0,"iso":100,
 		"pages":["","","",""],"practice_diagram":"","page_do":["lens:0:24","lens:0:105","lens:2:50","lens:2:50"]},
 	8: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":125.0,"pitch":-3.0,
 		"pages":["","","",""],"practice_diagram":""},
@@ -44,12 +44,12 @@ const SETUP = {
 	10: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"mode":"P","focus":"AF puntual","angle":125.0,"pitch":-3.0,
 		"pages":["","","","",""],"practice_diagram":"","page_do":["mode:P","mode:P","mode:A","mode:S","mode:M"]},
 }
-const THEORY_PAGES = {1:5, 2:4, 3:5, 4:4, 5:4, 6:5, 7:4, 8:4, 9:4, 10:5}
+const THEORY_PAGES = {1:5, 2:4, 3:5, 4:4, 5:4, 6:4, 7:5, 8:4, 9:4, 10:5}
 # Lessons whose practice and exam put choices on the panel (lenses, bodies, metering, modes).
 const CHOICES = {
 	5: [["academia_op_28","lens:3:28"],["academia_op_135","lens:5:135"]],
-	6: [["academia_op_compacta","body:0"],["academia_op_telemetrica","body:1"],["academia_op_reflex","body:2"],["academia_op_tlr","body:3"]],
-	7: [["academia_op_zoom","lens:0:50"],["academia_op_fijo","lens:2:50"]],
+	7: [["academia_op_compacta","body:0"],["academia_op_telemetrica","body:1"],["academia_op_reflex","body:2"],["academia_op_tlr","body:3"]],
+	6: [["academia_op_zoom","lens:0:50"],["academia_op_fijo","lens:2:50"]],
 	9: [["academia_op_matricial","meter:matricial"],["academia_op_centro","meter:ponderada"],["academia_op_puntual","meter:puntual"]],
 	10: [["academia_op_p","mode:P"],["academia_op_a","mode:A"],["academia_op_s","mode:S"],["academia_op_m","mode:M"]],
 }
@@ -393,7 +393,7 @@ func theory_highlight() -> String:
 		1: return ["exposimetro","diafragma","velocidad","iso",""][page]
 		2: return ["nitidez","diafragma","zoom","nitidez"][page]
 		3: return ["velocidad","","velocidad","diafragma","velocidad"][page]
-		7: return ["zoom","zoom","diafragma","velocidad"][page]
+		6: return ["zoom","zoom","diafragma","velocidad"][page]
 		10: return ["","","diafragma","velocidad","exposimetro"][page]
 	return ""
 
@@ -588,14 +588,14 @@ func start_demo() -> void:
 			[11.0,4,"shoot:135 mm"],
 			[14.5,5,""],
 			[19.0,-1,"end"]]
-		6: demo_steps = [
+		7: demo_steps = [
 			[0.3,1,"body:0"],
 			[4.0,2,"body:1"],
 			[8.0,3,"body:2"],
 			[12.0,4,"body:3"],
 			[16.0,5,""],[16.5,-1,"shoot:TLR 6×6"],
 			[20.5,-1,"end"]]
-		7: demo_steps = [
+		6: demo_steps = [
 			[0.3,1,"lens:0:50"],[0.9,-1,"n:min"],
 			[4.5,2,""],[5.0,-1,"shoot:Zoom · f/4"],
 			[9.0,3,"lens:2:50"],[9.6,-1,"n:min"],
@@ -675,7 +675,7 @@ func do_action(action: String, _from_page = false) -> void:
 		"body": set_body(int(parts[1]),phase != "practica" and phase != "examen")
 		"lens":
 			set_lens(int(parts[1]),float(parts[2]))
-			if lesson == 7 and phase != "practica" and phase != "examen":
+			if lesson == 6 and phase != "practica" and phase != "examen":
 				# Wide open at ISO 100: the shutter speed tells the story of the lens.
 				main.iso_index = Photo.ISOS.find(100)
 				main.n_index = 0
@@ -928,7 +928,7 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 	var lines = []
 	var delta: float = x.get("delta",0.0)
 	var denominator = roundi(1.0/e.t)
-	var exposure_limit = .5 if n in [1,7,9,10] else 1.0
+	var exposure_limit = .5 if n in [1,6,9,10] else 1.0
 	lines.append([absf(delta) <= exposure_limit,Texts.get_text("academia_ex_expo_ok" if absf(delta) <= exposure_limit else "academia_ex_expo_mal") % ("%+.1f" % -delta)])   # as the needle reads: negative is underexposed
 	# Hand-held rule: no slower than 1/focal.
 	var steady = e.t*e.f <= 1.0+.0001
@@ -965,10 +965,10 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 			var framed = distance > 9.0 and fill >= .45 and fill <= 1.3
 			lines.append([framed,Texts.get_text("academia_ex_lejos_ok") % ("%.1f" % distance) if framed else Texts.get_text("academia_ex_lejos_mal") % [roundi(fill*100),"%.1f" % distance]])
 	match n:
-		6:
+		7:
 			var rangefinder = int(x.get("body",1)) == 1
 			lines.append([rangefinder,Texts.get_text("academia_ex_cuerpo_ok" if rangefinder else "academia_ex_cuerpo_mal")])
-		7:
+		6:
 			var low = int(e.iso) <= 100
 			lines.append([low,Texts.get_text("academia_ex_iso_ok" if low else "academia_ex_iso_mal") % int(e.iso)])
 		8:
@@ -988,7 +988,9 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 		lines.append([sharp,Texts.get_text("academia_ex_nitido_ok") if sharp else Texts.get_text("academia_ex_nitido_mal") % x.get("coc",0.0)])
 	var right = lines.filter(func(l): return l[0]).size()
 	var passed = right == lines.size()
-	var score = roundi(100.0*right/lines.size()-(minf(absf(delta),1.0)*12.0 if passed else 0.0))
+	# The dials move in whole stops, so half a stop off is the best the light may allow: only what
+	# goes beyond it costs points.
+	var score = roundi(100.0*right/lines.size()-(clampf(absf(delta)-.5,0.0,.5)*24.0 if passed else 0.0))
 	return {"passed":passed,"score":score,"mention":passed and score >= 94,"lines":lines}
 
 func exams_done() -> int:
@@ -1067,9 +1069,9 @@ func check_practice(dt: float) -> void:
 		5:
 			if not tasks[0]: new_hint = lesson_text("pista_angular")
 			elif not tasks[1]: new_hint = lesson_text("pista_tele")
-		6:
-			new_hint = lesson_text(["pista_telemetrica","pista_tlr","pista_reflex"][tasks.find(false)]) if tasks.has(false) else ""
 		7:
+			new_hint = lesson_text(["pista_telemetrica","pista_tlr","pista_reflex"][tasks.find(false)]) if tasks.has(false) else ""
+		6:
 			var needle = exam_needle()
 			var at_100 = Photo.ISOS[main.iso_index] == 100
 			if main.equipment.lens_index == 0 and at_100 and absf(needle) <= .34: tasks[0] = true
@@ -1110,7 +1112,7 @@ func practice_highlight() -> String:
 		1: return ["diafragma","velocidad","disparar"][next]
 		2: return ["nitidez","diafragma","diafragma"][next]
 		3: return "velocidad"
-		7: return "velocidad"
+		6: return "velocidad"
 		10: return ["diafragma","velocidad","exposimetro"][next]
 	return ""
 
@@ -1188,12 +1190,12 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 			elif e.f >= 120.0 and e.d <= 9.0: notes.append(lesson_text("pista_lejos"))
 			if (e.f <= 35.0 or e.f >= 120.0) and (fill < .45 or fill > 1.3) and e.d < 40.0: notes.append(lesson_text("pista_tamano"))
 			if tasks[0] and tasks[1]: tasks[2] = true
-		6:
+		7:
 			var sharp = result.coc <= Photo.C+.0005 and e.get("person",true)
 			var which = {1:0, 3:1, 2:2}.get(main.equipment.body,-1)
 			if which >= 0 and sharp: tasks[which] = true
 			elif which >= 0: notes.append(lesson_text("pista_borrosa"))
-		7:
+		6:
 			var steady = e.t*e.f <= 1.0+.0001
 			if tasks[1] and main.equipment.lens_index == 2 and steady and absf(result.delta) <= .7: tasks[2] = true
 			elif not steady: notes.append(lesson_text("pista_trepidada") % roundi(1.0/e.t))

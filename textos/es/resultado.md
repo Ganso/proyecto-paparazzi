@@ -26,19 +26,19 @@ Altura %s %% (ideal 45–85 %%). %s%s
 Nítido: 1/%d s basta a %d mm.
 
 ### mov_pulso
-Tu pulso tiembla a 1/%d s con %d mm: usa 1/%d s o más rápido (regla práctica: 1/focal).
+Tu pulso tiembla a 1/%d s con %d mm: Usa 1/%d s o más rápido (regla práctica: 1/focal).
 
 ### mov_sujeto
-La persona se mueve demasiado para 1/%d s: a %d mm hace falta 1/%d s o más rápido.
+La persona se mueve demasiado para 1/%d s: A %d mm hace falta 1/%d s o más rápido.
 
 ### mov_barrido
-Barrido: seguiste a la persona con la cámara a 1/%d s; sale nítida y el fondo, arrastrado %.1f mm.
+Barrido: Seguiste a la persona con la cámara a 1/%d s; sale nítida y el fondo, arrastrado %.1f mm.
 
 ### mov_camara
-Moviste la cámara durante el disparo a 1/%d s: quieta, o sigue a alguien que se mueva.
+Moviste la cámara durante el disparo a 1/%d s: Quieta, o sigue a alguien que se mueva.
 
 ### mov_imposible
-Se mueve tanto que a %d mm ni 1/1000 s la congela: usa menos focal o espera a que venga hacia ti.
+Se mueve tanto que a %d mm ni 1/1000 s la congela: Usa menos focal o espera a que venga hacia ti.
 
 ### ficha_foto
 %.0f mm · f/%s

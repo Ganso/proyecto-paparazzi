@@ -64,7 +64,7 @@ func run() -> void:
 	check(academy.page == academy.THEORY_PAGES[1]-1 and academy.done(1,"teoria"),"Reaching the last page marks the theory as seen")
 
 	# --- Demonstrations: they run to the end and take the photos they narrate ---
-	var expected_photos = {1:1, 2:2, 3:2, 4:1, 5:2, 6:1, 7:2, 8:1, 9:1, 10:1}
+	var expected_photos = {1:1, 2:2, 3:2, 4:1, 5:2, 6:2, 7:1, 8:1, 9:1, 10:1}
 	for n in range(1,academy.LESSONS+1):
 		print("· demo %d" % n)
 		academy.begin(n,"demo")
@@ -138,32 +138,32 @@ func run() -> void:
 	print("· equipment lessons")
 	# --- Lessons 6 to 10 (equipment): choices on the panel, practice criteria and exam reports ---
 	check(academy.LESSONS >= 10,"The Academy has at least ten lessons")
-	academy.begin(6,"teoria")
+	academy.begin(7,"teoria")
 	for i in 3: await process_frame
-	check(game.equipment.body == 0,"Lesson 6 opens with the compact camera in hand")
+	check(game.equipment.body == 0,"Lesson 7 opens with the compact camera in hand")
 	academy.page = 2
 	academy.update_panel()
 	check(game.equipment.body == 1,"…and its rangefinder page hands over the rangefinder")
 	academy.page = 4
 	academy.update_panel()
 	check(game.equipment.body == 3 and game.equipment.tlr(),"…and the TLR page the TLR")
-	academy.begin(6,"practica")
-	check(academy.extra_buttons.size() == 4,"Lesson 6: four bodies to choose on the panel")
+	academy.begin(7,"practica")
+	check(academy.extra_buttons.size() == 4,"Lesson 7: four bodies to choose on the panel")
 	academy.do_action("body:1")
 	check(game.equipment.body == 1 and game.equipment.focus_mode == "MF","Choosing the rangefinder mounts it, manual focus and all")
 	academy.on_practice_photo(null,fake.call({"person":true}))
-	check(academy.tasks[0] and not academy.tasks[1],"Lesson 6: a sharp photo with the rangefinder ticks its task")
+	check(academy.tasks[0] and not academy.tasks[1],"Lesson 7: a sharp photo with the rangefinder ticks its task")
 	academy.do_action("body:3")
 	var blurred = fake.call({"person":true})
 	blurred.coc = .2
 	academy.on_practice_photo(null,blurred)
-	check(not academy.tasks[1],"Lesson 6: a blurred TLR photo does not count")
+	check(not academy.tasks[1],"Lesson 7: a blurred TLR photo does not count")
 	academy.on_practice_photo(null,fake.call({"person":true}))
 	academy.do_action("body:2")
 	academy.on_practice_photo(null,fake.call({"person":true}))
-	check(academy.tasks == [true,true,true] and academy.done(6,"practica"),"Lesson 6: one sharp photo with each of the three bodies passes the practice")
-	academy.begin(7,"practica")
-	check(game.time_of_day == "blue" and academy.extra_buttons.size() == 2,"Lesson 7 runs at the blue hour with the zoom and the prime on the panel")
+	check(academy.tasks == [true,true,true] and academy.done(7,"practica"),"Lesson 7: one sharp photo with each of the three bodies passes the practice")
+	academy.begin(6,"practica")
+	check(game.time_of_day == "blue" and academy.extra_buttons.size() == 2,"Lesson 6 runs at the blue hour with the zoom and the prime on the panel")
 	academy.do_action("lens:2:50")
 	check(game.equipment.lens_index == 2 and game.apertures()[0] <= 1.81,"The prime opens to f/1.8")
 	academy.begin(9,"practica")
@@ -183,10 +183,10 @@ func run() -> void:
 	check(academy.tasks[2] and game.equipment.exposure_mode() == "M","Lesson 10: a well exposed photo in M completes it")
 	var ok_e = {"f":50.0,"n":2.0,"t":1.0/125,"iso":100,"s":4.0,"d":4.0,"v":0.0,"person":true}
 	var AcademyScript = academy.get_script()
-	check(AcademyScript.exam_report(6,ok_e,{"delta":0.0,"coc":0.0,"body":1,"person":true}).passed and not AcademyScript.exam_report(6,ok_e,{"delta":0.0,"coc":0.0,"body":2,"person":true}).passed,"Exam 6 asks for the rangefinder")
+	check(AcademyScript.exam_report(7,ok_e,{"delta":0.0,"coc":0.0,"body":1,"person":true}).passed and not AcademyScript.exam_report(7,ok_e,{"delta":0.0,"coc":0.0,"body":2,"person":true}).passed,"Exam 7 asks for the rangefinder")
 	var grainy = ok_e.duplicate()
 	grainy.iso = 800
-	check(AcademyScript.exam_report(7,ok_e,{"delta":0.2,"coc":0.0,"person":true}).passed and not AcademyScript.exam_report(7,grainy,{"delta":0.2,"coc":0.0,"person":true}).passed,"Exam 7 asks for ISO 100")
+	check(AcademyScript.exam_report(6,ok_e,{"delta":0.2,"coc":0.0,"person":true}).passed and not AcademyScript.exam_report(6,grainy,{"delta":0.2,"coc":0.0,"person":true}).passed,"Exam 6 asks for ISO 100")
 	check(AcademyScript.exam_report(8,ok_e,{"delta":0.0,"sub_in":true,"sub_x":.3,"sub_sharp":true}).passed and not AcademyScript.exam_report(8,ok_e,{"delta":0.0,"sub_in":true,"sub_x":.5,"sub_sharp":true}).passed and not AcademyScript.exam_report(8,ok_e,{"delta":0.0,"sub_in":true,"sub_x":.3,"sub_sharp":false}).passed,"Exam 8 asks for the subject sharp and off-centre")
 	check(AcademyScript.exam_report(9,ok_e,{"delta":0.3,"coc":0.0,"metering":"puntual","person":true}).passed and not AcademyScript.exam_report(9,ok_e,{"delta":0.3,"coc":0.0,"metering":"matricial","person":true}).passed,"Exam 9 asks for spot metering")
 	check(AcademyScript.exam_report(10,ok_e,{"delta":0.3,"coc":0.0,"mode":"M","person":true}).passed and not AcademyScript.exam_report(10,ok_e,{"delta":0.3,"coc":0.0,"mode":"A","person":true}).passed and not AcademyScript.exam_report(10,ok_e,{"delta":0.8,"coc":0.0,"mode":"M","person":true}).passed,"Exam 10 asks for M and half a stop")

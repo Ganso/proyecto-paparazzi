@@ -34,6 +34,7 @@ Hacer una foto es llenar un cubo de luz: si te quedas corto, sale oscura…
 - `### clave · etiqueta` abre un texto. **La clave no se cambia** (es por la que el juego lo pide); la etiqueta tras el `·` es libre.
 - Las líneas que empiezan por `> ` son notas: no llegan al juego (el tamaño máximo, para qué sirve).
 - El texto puede ocupar varias líneas; los saltos de línea se conservan.
+- **Mayúscula tras punto y tras dos puntos** (estilo del proyecto: «La velocidad: El tiempo»).
 - `{control}` es una tecla o un botón: lo pone el juego según el dispositivo en uso (lista en `scripts/input_glyphs.gd`).
 - `%s`, `%d`, `%.1f`… son huecos que rellena el juego: hay que conservarlos, y en el mismo orden.
 
