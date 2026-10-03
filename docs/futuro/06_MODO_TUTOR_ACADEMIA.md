@@ -164,3 +164,18 @@ Cuarta fase de cada lección (`academy.gd`, fase `"examen"`): se entra desde la 
 ## Tono de las lecciones: la idea fundamental (03-10-2026)
 
 Las cinco lecciones se reescribieron para **enseñar fotografía como Jaime Altozano enseña la música** (idea fundamental del proyecto, cabecera de `AGENTS.md`): cada página arranca con una pregunta o una imagen cotidiana (la foto como un cubo de luz y tres grifos, el ISO como subir el volumen de una grabación floja, el fondo «hecho crema»), trata de tú, avisa de las trampas («número pequeño, agujero GRANDE»), guarda un giro para el final («la focal no cambia la perspectiva: la cambia dónde te pones») y enlaza unas lecciones con otras. El rigor no se toca: las cifras, las reglas y lo que comprueban la práctica y el examen son los de antes. Solo cambian textos de `data/textos.es.json` (`academia_l<n>_*`, 73 entradas), dentro de los tamaños de [TESTS_Y_VERIFICACION §4.3](../TESTS_Y_VERIFICACION.md) y sin teclas escritas a mano. Al escribir una página nueva: una idea por página, un ejemplo que se vea en el visor o en el esquema, y una frase que apetezca repetir.
+
+## Diez lecciones: las cinco del equipo (03-10-2026, usuario: «mínimo el doble de lecciones»)
+
+| Nº | Lección | Luz | Lo que pone en las manos | Práctica | Examen |
+|---|---|---|---|---|---|
+| 6 | **Las cámaras** | Día | Cada página monta su cuerpo: compacta, telemétrica, réflex, TLR | Una foto nítida de una persona con la telemétrica, la TLR y la réflex (botones de cuerpo en el panel) | Foto nítida con la telemétrica (enfoque manual) |
+| 7 | **Los objetivos** | Hora azul (la poca luz es el tema) | Zoom 24–105 f/4 y fijo 50 f/1,8 | Centrar el exposímetro a ISO 100 con el zoom (velocidad lentísima), luego con el fijo a f/1,8, y disparar sin trepidar | Foto nítida, a pulso y bien expuesta a ISO 100: solo el fijo puede |
+| 8 | **El enfoque** | Día | Los nueve puntos y el bloqueo | Elegir otro punto, bloquear el foco sobre alguien, reencuadrar y disparar | La persona nítida y a un lado del encuadre |
+| 9 | **Medir la luz** | Día | Matricial, ponderada y puntual (botones en el panel: el mando no tiene control de fotometría) y la compensación | Elegir puntual, compensar a +1 EV, volver a 0 y exponer bien | Foto bien expuesta (±0,5 EV) y nítida midiendo en puntual |
+| 10 | **P, A, S y M** | Día | Cada página pone su modo; botones P A S M en el panel | En A, foto a f/2,8 o más abierto; en S, a 1/500 o más; en M, bien expuesta | En M: nítida, a pulso y a medio paso |
+
+- **Implementación** (`scripts/academy.gd`): `LESSONS = 10`; `SETUP[6..10]` con `page_do` (la acción que ejecuta cada página de teoría: `body:k`, `lens:i:f`, `mode:X`, `meter:nombre`) y `mode`; `CHOICES` (los botones de elección de práctica y examen, también los de la lección 5); acciones nuevas de `do_action()` (`body`, `lens`, `mode`, `meter`, `comp`, `lock`, `expose_m`, `shoot_now`); `set_body()`; criterios en `check_practice()`, `on_practice_photo()`, `exam_context()` y `exam_report()`. Sin esquema (`pages` vacías): el propio visor es el ejemplo.
+- **Luz de las lecciones** (usuario): buena luz salvo que la luz sea el tema. De día las lecciones 2, 3 (nubladas: f/1,8 o 1/30 quemarían la foto a pleno sol), 4, 5, 6, 8, 9 y 10; hora dorada la 1 (exposición) y hora azul la 7.
+- El menú de la Academia pasa a diez filas compactas; el título de graduado y su insignia piden los diez exámenes. El progreso guarda también los exámenes entre sesiones (`SAVED`; antes se perdían al reiniciar el juego).
+- Pruebas: `tests/test_academy.gd` (293 comprobaciones: las diez demostraciones, criterios de práctica y de examen de las lecciones nuevas); textos dentro de los tamaños de [TESTS_Y_VERIFICACION §4.3](../TESTS_Y_VERIFICACION.md).

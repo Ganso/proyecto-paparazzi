@@ -7,7 +7,7 @@ extends RefCounted
 #   decisiva   5 assignments solved with their first shot, score ≥ 85
 #   noche      5 night photos exposed within 0.3 EV, score ≥ 75
 #   velocidad  a pan: a runner sharp with the background streaked at least 40 px (of 1280)
-#   graduado   the five exams of the Academy (given by academy.gd)
+#   graduado   the ten exams of the Academy (given by academy.gd)
 static var SAVE = OS.get_environment("PAPARAZZI_BADGES_CFG") if OS.has_environment("PAPARAZZI_BADGES_CFG") else "user://insignias.cfg"
 const BADGES = ["halcon","decisiva","noche","velocidad","graduado"]
 const GOALS = {"halcon":5,"decisiva":5,"noche":5,"velocidad":1,"graduado":1}

@@ -298,7 +298,7 @@ func run() -> void:
 			game.open_academy()
 			await sync()
 			await check(d+"academia")
-			for n in range(1,6):
+			for n in range(1,game.academy.LESSONS+1):
 				for k in game.academy.THEORY_PAGES[n]:
 					game.intro()
 					game.academy.begin(n,"teoria")

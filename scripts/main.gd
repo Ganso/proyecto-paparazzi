@@ -4336,26 +4336,27 @@ func show_academy() -> void:
 	label(root,Texts.get_text("academia_titulo"),Rect2(75,30,1100,52),36,Color("e6ebdb"))
 	var sub = label(root,Texts.get_text("academia_subtitulo"),Rect2(75,86,1100,50),18,Color("b7c5ad"))
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Ten lessons: one compact row each (title and summary, the four marks, exam and start).
 	for n in range(1,academy.LESSONS+1):
-		var y = 146+(n-1)*86
-		panel(root,Rect2(75,y,1130,78),Color(.075,.115,.085,.95))
-		label(root,"%d" % n,Rect2(92,y+12,40,50),38,Color("b8d78c"))
-		label(root,Texts.get_text("academia_l%d_titulo" % n),Rect2(145,y+8,520,32),23,Color("e6ebdb"))
-		label(root,Texts.get_text("academia_l%d_resumen" % n),Rect2(145,y+42,520,26),15,Color("a9b8a0"))
-		var columns = [675,772,912]
-		for k in academy.PHASES.size():
-			var ph = academy.PHASES[k]
+		var y = 132+(n-1)*49
+		panel(root,Rect2(75,y,1130,45),Color(.075,.115,.085,.95))
+		label(root,"%d" % n,Rect2(88,y+6,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(root,Texts.get_text("academia_l%d_titulo" % n),Rect2(140,y+2,440,24),18,Color("e6ebdb"))
+		label(root,Texts.get_text("academia_l%d_resumen" % n),Rect2(140,y+25,440,18),12,Color("a9b8a0"))
+		var columns = [590,662,774,856]
+		var marks: Array = academy.PHASES+["examen"]
+		for k in marks.size():
+			var ph: String = marks[k]
 			var ok = academy.done(n,ph)
-			label(root,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+10,140,24),14,Color("b8d78c") if ok else Color("8f9f86"))
-		var passed = academy.done(n,"examen")
-		label(root,"%s %s" % [Texts.get_text("academia_hecho") if passed else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_examen")],Rect2(675,y+46,100,24),14,Color("b8d78c") if passed else Color("8f9f86"))
-		var exam_button = button(root,Texts.get_text("academia_examen_boton"),Rect2(772,y+42,128,30),func(): close_modal(); academy.begin(n,"examen"))
+			label(root,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+12,112,22),13,Color("b8d78c") if ok else Color("8f9f86"))
+		var exam_button = button(root,Texts.get_text("academia_examen_boton"),Rect2(940,y+6,112,33),func(): close_modal(); academy.begin(n,"examen"))
 		exam_button.add_theme_font_size_override("font_size",13)
 		var started = academy.done(n,"teoria")
-		button(root,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(1010,y+16,180,46),func(): close_modal(); academy.begin(n),not started)
-	label(root,Texts.get_text("academia_progreso") % [academy.practices_done(),academy.LESSONS]+" · "+(Texts.get_text("academia_graduado") if academy.graduated() else Texts.get_text("academia_examenes_progreso") % [academy.exams_done(),academy.LESSONS]),Rect2(75,586,900,28),15,Color("a7c683"))
-	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,630,260,55),intro)
-	button(root,Texts.get_text("academia_reiniciar"),Rect2(350,630,240,55),func(): academy.reset_progress(); show_academy())
+		var first = n == 1 if academy.practices_done() == 0 and not academy.done(1,"teoria") else (not started and (n == 1 or academy.done(n-1,"teoria")))
+		button(root,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(1062,y+6,133,33),func(): close_modal(); academy.begin(n),first).add_theme_font_size_override("font_size",14)
+	label(root,Texts.get_text("academia_progreso") % [academy.practices_done(),academy.LESSONS]+" · "+(Texts.get_text("academia_graduado") if academy.graduated() else Texts.get_text("academia_examenes_progreso") % [academy.exams_done(),academy.LESSONS]),Rect2(620,650,585,28),15,Color("a7c683"))
+	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,636,260,50),intro)
+	button(root,Texts.get_text("academia_reiniciar"),Rect2(350,636,240,50),func(): academy.reset_progress(); show_academy())
 
 func show_academy_result() -> void:
 	var root = create_modal()

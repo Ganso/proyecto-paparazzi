@@ -1,5 +1,6 @@
 extends Control
-# Academia de fotografía (docs/futuro/06_MODO_TUTOR_ACADEMIA.md): five lessons, each with theory
+# Academia de fotografía (docs/futuro/06_MODO_TUTOR_ACADEMIA.md): ten lessons (five on technique,
+# five on the equipment), each with theory
 # pages drawn over the live viewfinder, a guided demonstration (the camera moves by itself, with
 # subtitles and highlighted controls) and a practice with tasks and live hints. The exam is shown
 # as «not available yet». Runs on top of the sandbox session of main.gd (no assignment, unlimited
@@ -9,24 +10,51 @@ const Photo = preload("res://scripts/photography.gd")
 const Diagram = preload("res://scripts/academy_diagram.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 var progress_path = "user://academia.cfg"   # tests point it elsewhere
-const LESSONS = 5
+const LESSONS = 10
 const PHASES = ["teoria","demo","practica"]
+const SAVED = ["teoria","demo","practica","examen"]   # what the progress file keeps
 
+# Good light by default (user, 03-10-2026): day, overcast where a wide aperture or a slow shutter
+# would burn the photo in full sun; another light only when the light is the lesson (1: the golden
+# hour for the exposure, 7: the blue hour for the fast lens).
 # Per lesson: equipment and light, the diagram of each theory page and the practice setup.
 # body/lens index into Equipment.LENSES; lens 3/4/5 of the réflex are the Academy primes.
 const SETUP = {
 	1: {"time":"golden","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":125.0,"pitch":-3.0,"n":4.0,
 		"pages":["triangulo","pasos_n","pasos_t","pasos_iso","pasos"],"practice_diagram":"pasos"},
-	2: {"time":"golden","cover":1.0,"body":2,"lens":4,"focal":105.0,"auto":false,"focus":"AF puntual","angle":118.0,"pitch":-2.0,"n":1.8,
+	2: {"time":"day","cover":1.0,"body":2,"lens":4,"focal":105.0,"auto":false,"focus":"AF puntual","angle":118.0,"pitch":-2.0,"n":1.8,
 		"pages":["dof","dof","dof","dof"],"practice_diagram":"dof"},
-	3: {"time":"golden","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":70.0,"pitch":-4.0,"t":250,
+	3: {"time":"day","cover":1.0,"body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":70.0,"pitch":-4.0,"t":250,
 		"pages":["movimiento","movimiento","movimiento","pasos","movimiento"],"practice_diagram":"movimiento"},
-	4: {"time":"golden","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":122.0,"pitch":-3.0,
+	4: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":122.0,"pitch":-3.0,
 		"pages":["tercios","tercios","tercios","tercios"],"practice_diagram":"tercios"},
 	5: {"time":"day","body":2,"lens":3,"focal":28.0,"auto":true,"focus":"AF puntual","angle":121.0,"pitch":-4.0,
 		"pages":["compresion","compresion","compresion","compresion"],"practice_diagram":"compresion"},
+	# Lessons on the equipment (03-10-2026). No diagram: the finder itself is the example. "page_do"
+	# is what each theory page puts in the player's hands (a body, a lens, a mode); "mode" the
+	# exposure mode the lesson starts in.
+	6: {"time":"day","body":0,"lens":0,"focal":35.0,"auto":true,"focus":"AF matricial","angle":125.0,"pitch":-3.0,
+		"pages":["","","","",""],"practice_diagram":"","page_do":["body:0","body:0","body:1","body:2","body:3"]},
+	7: {"time":"blue","body":2,"lens":0,"focal":50.0,"auto":false,"focus":"AF puntual","angle":125.0,"pitch":-3.0,"n":4.0,"iso":100,
+		"pages":["","","",""],"practice_diagram":"","page_do":["lens:0:24","lens:0:105","lens:2:50","lens:2:50"]},
+	8: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":125.0,"pitch":-3.0,
+		"pages":["","","",""],"practice_diagram":""},
+	9: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"mode":"A","focus":"AF puntual","angle":125.0,"pitch":-3.0,
+		"pages":["","","",""],"practice_diagram":"","page_do":["meter:matricial","meter:matricial","meter:ponderada","meter:puntual"]},
+	10: {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"mode":"P","focus":"AF puntual","angle":125.0,"pitch":-3.0,
+		"pages":["","","","",""],"practice_diagram":"","page_do":["mode:P","mode:P","mode:A","mode:S","mode:M"]},
 }
-const THEORY_PAGES = {1:5, 2:4, 3:5, 4:4, 5:4}
+const THEORY_PAGES = {1:5, 2:4, 3:5, 4:4, 5:4, 6:5, 7:4, 8:4, 9:4, 10:5}
+# Lessons whose practice and exam put choices on the panel (lenses, bodies, metering, modes).
+const CHOICES = {
+	5: [["28 mm","lens:3:28"],["135 mm","lens:5:135"]],
+	6: [["Compacta","body:0"],["Telemétr.","body:1"],["Réflex","body:2"],["TLR","body:3"]],
+	7: [["Zoom · f/4","lens:0:50"],["Fijo 50 · f/1,8","lens:2:50"]],
+	9: [["Matricial","meter:matricial"],["Centro","meter:ponderada"],["Puntual","meter:puntual"]],
+	10: [["P","mode:P"],["A","mode:A"],["S","mode:S"],["M","mode:M"]],
+}
+var locked_person = null    # lesson 8: who the focus was locked on
+var page_applied = ""
 const TASKS = 3
 # Exam (docs/futuro/06 §2 and §3): one statement per lesson, no hints; every photo gets the tutor's
 # report and the exam is passed when all its criteria are met. Passing the five gives the diploma.
@@ -100,7 +128,7 @@ func load_progress() -> void:
 	var config = ConfigFile.new()
 	if config.load(progress_path) != OK: return
 	for n in range(1,LESSONS+1):
-		for ph in PHASES:
+		for ph in SAVED:
 			if config.get_value("leccion_%d" % n,ph,false): progress["%d_%s" % [n,ph]] = true
 
 func save_progress() -> void:
@@ -234,7 +262,12 @@ func apply_setup() -> void:
 	main.equipment.auto_exposure = s.auto
 	main.equipment.focus_mode = s.focus
 	main.equipment.ev_comp_index = 6
+	if s.has("mode"): main.equipment.set_exposure_mode(s.mode)
+	else: main.equipment.priority = ""
+	main.equipment.metering = "puntual"
 	main.apply_equipment()
+	if s.has("iso"): main.iso_index = Photo.ISOS.find(int(s.iso))
+	page_applied = ""
 	main.focal = s.focal
 	main.angle = s.angle
 	main.pitch = s.pitch
@@ -360,6 +393,8 @@ func theory_highlight() -> String:
 		1: return ["exposimetro","diafragma","velocidad","iso",""][page]
 		2: return ["nitidez","diafragma","zoom","nitidez"][page]
 		3: return ["velocidad","","velocidad","diafragma","velocidad"][page]
+		7: return ["zoom","zoom","diafragma","velocidad"][page]
+		10: return ["","","diafragma","velocidad","exposimetro"][page]
 	return ""
 
 func update_panel() -> void:
@@ -380,7 +415,12 @@ func update_panel() -> void:
 			body_label.text = lesson_text("t%d_texto" % (page+1))
 			body_label.size.y = 150
 			diagram.kind = SETUP[lesson].pages[page]
-			diagram.visible = true
+			diagram.visible = diagram.kind != ""
+			# What this page puts in the player's hands (a body, a lens, a mode), once per page.
+			var page_key = "%d:%d" % [lesson,page]
+			if SETUP[lesson].has("page_do") and page_applied != page_key:
+				page_applied = page_key
+				do_action(SETUP[lesson].page_do[page],true)
 			next_button.text = text("academia_siguiente") if page < total-1 else text("academia_ir_demo")
 			highlight = theory_highlight()
 		"demo":
@@ -390,7 +430,7 @@ func update_panel() -> void:
 			body_label.size.y = 60
 			thumbs.visible = not demo_photos.is_empty()
 			diagram.kind = SETUP[lesson].practice_diagram
-			diagram.visible = demo_photos.is_empty()
+			diagram.visible = demo_photos.is_empty() and diagram.kind != ""
 			subtitle_panel.visible = subtitle != ""
 			subtitle_label.text = subtitle
 			next_button.text = text("academia_ir_practica")
@@ -420,7 +460,7 @@ func update_panel() -> void:
 			elif exam_attempts == 0: hint_label.text = text("academia_examen_intro")
 			else: hint_label.text = text("academia_examen_intentos") % exam_attempts
 			next_button.text = text("academia_siguiente") if lesson < LESSONS and done(lesson,"examen") else text("academia_volver_menu")
-	for b in extra_buttons: b.visible = phase in ["practica","examen"] and lesson == 5
+	for b in extra_buttons: b.visible = phase in ["practica","examen"]
 
 func clear_thumbs() -> void:
 	demo_photos.clear()
@@ -449,6 +489,7 @@ func stage_subject() -> void:
 		3: runner = stage_runner()
 		4: subject = walk_person(1,SETUP[4].angle+16.0,-1.0)
 		5: subject = stand_person(0,SETUP[5].angle,2.3)
+		6, 7, 8, 9, 10: subject = stand_person(1,SETUP[lesson].angle,4.0)
 		_: subject = null
 
 # like: someone of about the same height as that person (the two of the exam of lesson 2 have to
@@ -547,6 +588,41 @@ func start_demo() -> void:
 			[11.0,4,"shoot:135 mm"],
 			[14.5,5,""],
 			[19.0,-1,"end"]]
+		6: demo_steps = [
+			[0.3,1,"body:0"],
+			[4.0,2,"body:1"],
+			[8.0,3,"body:2"],
+			[12.0,4,"body:3"],
+			[16.0,5,""],[16.5,-1,"shoot:TLR 6×6"],
+			[20.5,-1,"end"]]
+		7: demo_steps = [
+			[0.3,1,"lens:0:50"],[0.9,-1,"n:min"],
+			[4.5,2,""],[5.0,-1,"shoot:Zoom · f/4"],
+			[9.0,3,"lens:2:50"],[9.6,-1,"n:min"],
+			[13.0,4,""],[13.5,-1,"shoot:Fijo · f/1,8"],
+			[17.5,5,""],
+			[20.5,-1,"end"]]
+		8: demo_steps = [
+			[0.3,1,"look_subject"],[2.0,-1,"af"],
+			[4.0,2,"lock"],
+			[6.0,3,"frame:0.3:0.42"],
+			[9.5,4,""],[10.0,-1,"shoot_now:Reencuadrada"],
+			[14.0,5,""],
+			[17.0,-1,"end"]]
+		9: demo_steps = [
+			[0.3,1,"look_subject"],[0.6,-1,"meter:matricial"],
+			[4.0,2,"meter:ponderada"],
+			[7.5,3,"meter:puntual"],
+			[11.0,4,"comp:+3"],
+			[14.0,5,"comp:-3"],[15.0,-1,"shoot:Puntual"],
+			[19.0,-1,"end"]]
+		10: demo_steps = [
+			[0.3,1,"look_subject"],[0.5,-1,"mode:P"],
+			[4.0,2,"mode:A"],[4.8,-1,"n:-1"],[5.4,-1,"n:-1"],
+			[8.0,3,"mode:S"],[8.8,-1,"t:+1"],[9.4,-1,"t:+1"],
+			[12.0,4,"mode:M"],
+			[15.5,5,"expose_m"],[16.5,-1,"shoot:Modo M"],
+			[20.5,-1,"end"]]
 	update_panel()
 
 func run_demo(dt: float) -> void:
@@ -582,7 +658,7 @@ func run_demo(dt: float) -> void:
 			update_panel()
 		do_action(str(step[2]))
 
-func do_action(action: String) -> void:
+func do_action(action: String, _from_page = false) -> void:
 	if action == "": return
 	var parts = action.split(":")
 	match parts[0]:
@@ -596,6 +672,30 @@ func do_action(action: String) -> void:
 			step_parameter("n",int(parts[1]))
 			step_parameter("t",int(parts[1]))
 		"af": main.autofocus()
+		"body": set_body(int(parts[1]),phase != "practica" and phase != "examen")
+		"lens":
+			set_lens(int(parts[1]),float(parts[2]))
+			if lesson == 7 and phase != "practica" and phase != "examen":
+				# Wide open at ISO 100: the shutter speed tells the story of the lens.
+				main.iso_index = Photo.ISOS.find(100)
+				main.n_index = 0
+				expose_with_shutter()
+		"mode":
+			main.equipment.set_exposure_mode(parts[1])
+			main.release_lock()
+			main.update_meter()
+			if main.equipment.auto_exposure: main.auto_expose()
+		"meter":
+			main.equipment.metering = parts[1]
+			main.release_lock()
+			main.update_meter()
+			if main.equipment.auto_exposure: main.auto_expose()
+		"comp":
+			for i in absi(int(parts[1])): main.change_parameter("ev_comp",signi(int(parts[1])))
+		"lock":
+			if not main.focus_locked: main.toggle_lock()
+		"expose_m": expose_correctly()
+		"shoot_now": demo_shoot(parts[1] if parts.size() > 1 else "")
 		"look_subject":
 			if subject: frame_goal = {"who":subject,"x":.5,"y":.45}
 		"thirds": main.finder.thirds = true
@@ -723,13 +823,15 @@ func start_practice() -> void:
 	hint = ""
 	stage_subject()
 	main.finder.thirds = false
-	for b in extra_buttons: b.queue_free()
-	extra_buttons = []
+	add_choices()
+	locked_person = null
 	if lesson == 5:
 		# Someone far for the telephoto: a person standing on the outer path (11.5 m) in view.
 		stand_person(3,SETUP[5].angle-10.0,11.5)
-		extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "28 mm",Rect2(12,314,168,32),func(): set_lens(3,28.0)))
-		extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "135 mm",Rect2(186,314,167,32),func(): set_lens(5,135.0)))
+	if lesson == 9:
+		main.equipment.metering = "matricial"
+		main.update_meter()
+		main.auto_expose()
 	# The scene holds still while practising (the pause button resumes it), except in the lesson
 	# on movement, where the runner has to run.
 	set_scene_pause(lesson != 3)
@@ -765,8 +867,14 @@ func start_exam() -> void:
 			second = stand_person(1,SETUP[2].angle+5.0,EXAM_SECOND_RADIUS,subject)
 		5:
 			stand_person(3,SETUP[5].angle-10.0,11.5)
-			extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "28 mm",Rect2(12,314,168,32),func(): set_lens(3,28.0)))
-			extra_buttons.append(make_button(panel,text("academia_cambiar_objetivo") % "135 mm",Rect2(186,314,167,32),func(): set_lens(5,135.0)))
+		9:
+			main.equipment.metering = "matricial"
+			main.update_meter()
+			main.auto_expose()
+		10:
+			main.equipment.set_exposure_mode("M")
+			main.apply_equipment()
+	add_choices()
 	set_scene_pause(lesson != 3)
 	main.refresh()
 	update_panel()
@@ -782,6 +890,17 @@ const EXAM_SECOND_RADIUS = 4.4
 func exam_context(result: Dictionary) -> Dictionary:
 	var e: Dictionary = result.evidence
 	var x = {"delta":result.delta,"coc":result.coc,"drag":result.get("drag",0.0),"thirds":main.academy_last_thirds,"fill":person_fill(e) if e.get("person",true) else 0.0}
+	x["body"] = main.equipment.body
+	x["metering"] = main.equipment.metering
+	x["mode"] = main.equipment.exposure_mode()
+	x["person"] = e.get("person",true)
+	if lesson == 8 and is_instance_valid(subject):
+		var where = head_screen(subject)
+		var zone = Photo.dof(e.f,e.n,e.s)
+		var far_d = main.camera.global_position.distance_to(subject.control_points()[1])
+		x["sub_in"] = Photo.inside(where)
+		x["sub_x"] = where.x
+		x["sub_sharp"] = zone.x <= far_d and zone.y >= far_d
 	if lesson == 5 and not e.get("person",true):
 		var far = extra_at_focus()
 		if far > 0.0:
@@ -809,7 +928,7 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 	var lines = []
 	var delta: float = x.get("delta",0.0)
 	var denominator = roundi(1.0/e.t)
-	var exposure_limit = .5 if n == 1 else 1.0
+	var exposure_limit = .5 if n in [1,7,9,10] else 1.0
 	lines.append([absf(delta) <= exposure_limit,Texts.get_text("academia_ex_expo_ok" if absf(delta) <= exposure_limit else "academia_ex_expo_mal") % ("%+.1f" % -delta)])   # as the needle reads: negative is underexposed
 	# Hand-held rule: no slower than 1/focal.
 	var steady = e.t*e.f <= 1.0+.0001
@@ -845,7 +964,26 @@ static func exam_report(n: int, e: Dictionary, x: Dictionary) -> Dictionary:
 			var fill: float = x.get("fill",0.0)
 			var framed = distance > 9.0 and fill >= .45 and fill <= 1.3
 			lines.append([framed,Texts.get_text("academia_ex_lejos_ok") % ("%.1f" % distance) if framed else Texts.get_text("academia_ex_lejos_mal") % [roundi(fill*100),"%.1f" % distance]])
-	if n in [3,4,5]:
+	match n:
+		6:
+			var rangefinder = int(x.get("body",1)) == 1
+			lines.append([rangefinder,Texts.get_text("academia_ex_cuerpo_ok" if rangefinder else "academia_ex_cuerpo_mal")])
+		7:
+			var low = int(e.iso) <= 100
+			lines.append([low,Texts.get_text("academia_ex_iso_ok" if low else "academia_ex_iso_mal") % int(e.iso)])
+		8:
+			var aside = x.get("sub_in",false) and absf(float(x.get("sub_x",.5))-.5) >= .12
+			lines.append([aside,Texts.get_text("academia_ex_lado_ok" if aside else "academia_ex_lado_mal")])
+			var crisp: bool = x.get("sub_sharp",false)
+			lines.append([crisp,Texts.get_text("academia_ex_sujeto_ok" if crisp else "academia_ex_sujeto_mal")])
+		9:
+			var spot = str(x.get("metering","puntual")) == "puntual"
+			lines.append([spot,Texts.get_text("academia_ex_medicion_ok" if spot else "academia_ex_medicion_mal")])
+		10:
+			var manual = str(x.get("mode","M")) == "M"
+			lines.append([manual,Texts.get_text("academia_ex_modo_ok" if manual else "academia_ex_modo_mal")])
+	if n in [6,7,9,10] and not x.get("person",true): lines.append([false,Texts.get_text("academia_ex_sin_persona")])
+	if n in [3,4,5,6,7,9,10]:
 		var sharp = x.get("coc",0.0) <= Photo.C+.0005
 		lines.append([sharp,Texts.get_text("academia_ex_nitido_ok") if sharp else Texts.get_text("academia_ex_nitido_mal") % x.get("coc",0.0)])
 	var right = lines.filter(func(l): return l[0]).size()
@@ -860,6 +998,32 @@ func exams_done() -> int:
 
 func graduated() -> bool:
 	return exams_done() == LESSONS
+
+# Another body in the player's hands (lesson 6). Exposure stays automatic: the lesson is about how
+# each camera looks and focuses. With prefocus the tutor leaves the manual ones focused on the subject.
+func set_body(k: int, prefocus: bool) -> void:
+	main.equipment.preset(k)
+	main.equipment.auto_exposure = true
+	main.apply_equipment()
+	main.focal = clampf(40.0,main.equipment.lens().min,main.equipment.lens().max)
+	main.update_camera()
+	if prefocus and main.equipment.focus_mode == "MF" and is_instance_valid(subject):
+		main.set_manual_focus(main.camera.global_position.distance_to(subject.control_points()[1]))
+	main.update_meter()
+	main.auto_expose()
+	main.refresh()
+
+func add_choices() -> void:
+	for b in extra_buttons: b.queue_free()
+	extra_buttons = []
+	if not CHOICES.has(lesson): return
+	var list: Array = CHOICES[lesson]
+	var w = (341.0-6.0*(list.size()-1))/list.size()
+	for k in list.size():
+		var action: String = list[k][1]
+		var b = make_button(panel,list[k][0],Rect2(12+k*(w+6),314,w,32),func(): do_action(action))
+		if list.size() > 3: b.add_theme_font_size_override("font_size",12)
+		extra_buttons.append(b)
 
 func set_lens(index: int, f: float) -> void:
 	main.equipment.lens_index = index
@@ -903,6 +1067,36 @@ func check_practice(dt: float) -> void:
 		5:
 			if not tasks[0]: new_hint = lesson_text("pista_angular")
 			elif not tasks[1]: new_hint = lesson_text("pista_tele")
+		6:
+			new_hint = lesson_text(["pista_telemetrica","pista_tlr","pista_reflex"][tasks.find(false)]) if tasks.has(false) else ""
+		7:
+			var needle = exam_needle()
+			var at_100 = Photo.ISOS[main.iso_index] == 100
+			if main.equipment.lens_index == 0 and at_100 and absf(needle) <= .34: tasks[0] = true
+			if tasks[0] and main.equipment.lens_index == 2 and n <= 1.81 and at_100 and absf(needle) <= .34: tasks[1] = true
+			if not tasks[0]: new_hint = lesson_text("pista_zoom") % Photo.DENOMINATORS[main.t_index]
+			elif not tasks[1]: new_hint = lesson_text("pista_fijo")
+			elif not tasks[2]: new_hint = lesson_text("pista_dispara") % Photo.DENOMINATORS[main.t_index]
+		8:
+			if main.finder.active != 4: tasks[0] = true
+			if main.focus_locked and is_instance_valid(main.af_person):
+				tasks[1] = true
+				locked_person = main.af_person
+			if not tasks[0]: new_hint = lesson_text("pista_punto")
+			elif not tasks[1]: new_hint = lesson_text("pista_bloquea")
+			elif not tasks[2]: new_hint = lesson_text("pista_reencuadra")
+		9:
+			if main.equipment.metering == "puntual": tasks[0] = true
+			if tasks[0] and main.equipment.exposure_compensation() >= .99: tasks[1] = true
+			if not tasks[0]: new_hint = lesson_text("pista_puntual")
+			elif not tasks[1]: new_hint = lesson_text("pista_compensa")
+			elif not tasks[2]: new_hint = lesson_text("pista_cero")
+		10:
+			var m: String = main.equipment.exposure_mode()
+			if not tasks[0]: new_hint = lesson_text("pista_a")
+			elif not tasks[1]: new_hint = lesson_text("pista_s")
+			elif not tasks[2]: new_hint = lesson_text("pista_m") % ("%+.1f" % exam_needle())
+			if m == "P" and tasks.has(false): new_hint = lesson_text("pista_p")
 	hint = new_hint
 	highlight = practice_highlight()
 	if tasks != before or hint_label.text != hint: update_panel()
@@ -916,6 +1110,8 @@ func practice_highlight() -> String:
 		1: return ["diafragma","velocidad","disparar"][next]
 		2: return ["nitidez","diafragma","diafragma"][next]
 		3: return "velocidad"
+		7: return "velocidad"
+		10: return ["diafragma","velocidad","exposimetro"][next]
 	return ""
 
 func complete_if_done() -> void:
@@ -992,6 +1188,31 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 			elif e.f >= 120.0 and e.d <= 9.0: notes.append(lesson_text("pista_lejos"))
 			if (e.f <= 35.0 or e.f >= 120.0) and (fill < .45 or fill > 1.3) and e.d < 40.0: notes.append(lesson_text("pista_tamano"))
 			if tasks[0] and tasks[1]: tasks[2] = true
+		6:
+			var sharp = result.coc <= Photo.C+.0005 and e.get("person",true)
+			var which = {1:0, 3:1, 2:2}.get(main.equipment.body,-1)
+			if which >= 0 and sharp: tasks[which] = true
+			elif which >= 0: notes.append(lesson_text("pista_borrosa"))
+		7:
+			var steady = e.t*e.f <= 1.0+.0001
+			if tasks[1] and main.equipment.lens_index == 2 and steady and absf(result.delta) <= .7: tasks[2] = true
+			elif not steady: notes.append(lesson_text("pista_trepidada") % roundi(1.0/e.t))
+		8:
+			if tasks[1] and is_instance_valid(locked_person):
+				var where = head_screen(locked_person)
+				var zone = Photo.dof(e.f,e.n,e.s)
+				var far_d = main.camera.global_position.distance_to(locked_person.control_points()[1])
+				if Photo.inside(where) and absf(where.x-.5) >= .12 and zone.x <= far_d and zone.y >= far_d: tasks[2] = true
+				else: notes.append(lesson_text("pista_foto_no"))
+		9:
+			if tasks[1] and is_zero_approx(main.equipment.exposure_compensation()) and absf(result.delta) <= .5: tasks[2] = true
+			elif tasks[1]: notes.append(lesson_text("pista_foto_no"))
+		10:
+			var mode_now: String = main.equipment.exposure_mode()
+			if mode_now == "A" and e.n <= 2.8+.01: tasks[0] = true
+			if mode_now == "S" and e.t <= 1.0/500+.0001: tasks[1] = true
+			if mode_now == "M" and absf(result.delta) <= .5: tasks[2] = true
+			elif mode_now == "M": notes.append(lesson_text("pista_foto_no") % ("%+.1f" % result.delta))
 	complete_if_done()
 	update_panel()
 	return notes
