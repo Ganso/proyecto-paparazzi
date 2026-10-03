@@ -627,7 +627,7 @@ func build_ui() -> void:
 		entry[0].gui_input.connect(func(event): parameter_input(event,entry[1]))
 	equipment_label = button(ui,"Equipo",Rect2(950,18,135,38),show_equipment)
 	var job_panel = panel(ui,Rect2(25,96,1230,68),Color(.075,.115,.085,.91))
-	sandbox_button = button(job_panel,"Sandbox · escena",Rect2(16,4,200,26),show_sandbox_controls)
+	sandbox_button = button(job_panel,Texts.get_text("sandbox_boton_escena"),Rect2(16,4,200,26),show_sandbox_controls)
 	# (The graphics are changed from the main menu's options, not during a phase.)
 	counter_label = label(job_panel,Texts.get_text("encargo_01_05"),Rect2(16,9,185,20),12,Color("b8d78c"))
 	briefing = label(job_panel,"",Rect2(16,30,1170,30),20)
@@ -853,7 +853,7 @@ func refresh() -> void:
 	aperture_button.text = Texts.get_text("1f") % apertures()[n_index]
 	shutter_button.text = Texts.get_text("1_d") % Photo.DENOMINATORS[t_index]
 	iso_button.text = ("▣ " if equipment.film else "")+Texts.get_text("iso_d") % Photo.ISOS[iso_index]
-	focal_label.text = ("ZOOM " if equipment.zoom() else "FIJO ")+"%.0f mm" % focal
+	focal_label.text = (Texts.get_text("estado_zoom") if equipment.zoom() else Texts.get_text("estado_fijo"))+" %.0f mm" % focal
 	focus_label.text = Texts.get_text("foco")+(Texts.get_text("infinito") if is_inf(focus_distance) else Texts.get_text("2f_m") % focus_distance)
 	update_lens_effects()
 	var depth = Photo.dof(focal,apertures()[n_index],focus_distance)
@@ -865,8 +865,8 @@ func refresh() -> void:
 	counter_label.text = Texts.get_text("arcade_nivel_d") % (arcade_level+1) if arcade_level >= 0 else "ENCARGO %02d" % (assignment+1)
 	counter_label.visible = not sandbox
 	sandbox_button.visible = sandbox and not (academy and academy.active) and not (tutorial and tutorial.active)
-	var tod_tag = "NOCHE" if night else ("HORA DORADA" if time_of_day == "golden" else ("HORA AZUL" if time_of_day == "blue" else ("NUBES" if park.cloud_cover > .4 else "SOL")))
-	var frames_text = "sin límite" if sandbox else "%d disparos" % shots
+	var tod_tag = Texts.get_text("estado_noche") if night else (Texts.get_text("estado_dorada") if time_of_day == "golden" else (Texts.get_text("estado_azul") if time_of_day == "blue" else (Texts.get_text("estado_nubes") if park.cloud_cover > .4 else Texts.get_text("estado_sol"))))
+	var frames_text = Texts.get_text("estado_sin_limite") if sandbox else Texts.get_text("estado_disparos_d") % shots
 	if sandbox and equipment.tlr(): frames_text = "%d / 12" % tlr_frames
 	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + frames_text + (" · "+clock_text() if arcade_level >= 0 and level_limit() > 0 and not sandbox else "")
 
@@ -1050,7 +1050,7 @@ func start_session(time_mode = "day", free_play = false) -> void:
 		target = null
 		shots = 3
 		best = {}
-		briefing.text = "Prueba tu equipo. Clic: punto de medida / AF. Dispara y revisa el resultado."
+		briefing.text = Texts.get_text("sandbox_encargo")
 		resume_search()
 	else: new_assignment()
 
@@ -3706,32 +3706,32 @@ func show_equipment() -> void:
 	if mode != "EQUIPMENT": equipment_return = mode
 	mode = "EQUIPMENT"
 	var root = create_modal()
-	label(root,"Elige tu equipo",Rect2(75,25,1100,60),38)
+	label(root,Texts.get_text("equipo_titulo"),Rect2(75,25,1100,60),38)
 	if arcade_level >= 0 and not sandbox:
 		# The arcade level fixes the camera: only the interface and the graphics can change.
 		label(root,Texts.get_text("arcade_equipo_fijo"),Rect2(75,100,1100,30),18,Color("b8d78c"))
 		label(root,Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],Rect2(75,150,1100,30),20)
-		if equipment_return == "INTRO": button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
-		button(root,"Volver",Rect2(880,630,320,55),restore_equipment_screen,true)
+		if equipment_return == "INTRO": button(root,Texts.get_text("equipo_graficos_s") % graphics_preset,Rect2(75,630,340,55),show_graphics_settings)
+		button(root,Texts.get_text("equipo_volver"),Rect2(880,630,320,55),restore_equipment_screen,true)
 		return
 	for i in 4:
-		button(root,["Fácil · todo automático","Calle · telemétrica manual","Acción · réflex AF puntual","Clásica · TLR 6×6"][i],Rect2(75+i*285,95,270,52),func(): equipment.preset(i); apply_equipment(); show_equipment())
-	label(root,"Selección manual de equipo",Rect2(75,166,1100,35),24)
-	label(root,"Cámara",Rect2(75,225,200,35),20)
+		button(root,Texts.get_text("equipo_preajuste_%d" % (i+1)),Rect2(75+i*285,95,270,52),func(): equipment.preset(i); apply_equipment(); show_equipment())
+	label(root,Texts.get_text("equipo_manual"),Rect2(75,166,1100,35),24)
+	label(root,Texts.get_text("equipo_camara"),Rect2(75,225,200,35),20)
 	option(root,equipment.CAMERAS,equipment.body,Rect2(330,220,700,45),func(i): equipment.body = i; equipment.lens_index = 0; equipment.film = equipment.film or i == 3; apply_equipment(); show_equipment())
-	label(root,"Objetivo (equiv. 35 mm)",Rect2(75,285,250,35),20)
+	label(root,Texts.get_text("equipo_objetivo"),Rect2(75,285,250,35),20)
 	option(root,equipment.LENSES[equipment.body].map(func(l): return l.name),equipment.lens_index,Rect2(330,280,700,45),func(i): equipment.lens_index = i; apply_equipment(); show_equipment())
-	label(root,"Enfoque",Rect2(75,345,200,35),20)
+	label(root,Texts.get_text("equipo_enfoque"),Rect2(75,345,200,35),20)
 	option(root,equipment.focus_modes(),equipment.focus_modes().find(equipment.focus_mode),Rect2(330,340,700,45),func(i): equipment.focus_mode = equipment.focus_modes()[i]; apply_equipment(); show_equipment())
-	label(root,"Exposición / medición",Rect2(75,405,250,35),20)
-	option(root,["Manual · lectura del exposímetro","Automática · ajuste de exposición","Prioridad a la apertura (A) · tú eliges el diafragma","Prioridad a la velocidad (S) · tú eliges el tiempo"],["M","P","A","S"].find(equipment.exposure_mode()),Rect2(330,400,700,45),func(i): equipment.set_exposure_mode(["M","P","A","S"][i]); apply_equipment(); show_equipment())
-	label(root,"Soporte",Rect2(75,465,200,35),20)
-	option(root,["Digital · ISO variable","Carrete · ISO fijo"],1 if equipment.film else 0,Rect2(330,460,700,45),func(i): equipment.film = i == 1; apply_equipment(); show_equipment())
+	label(root,Texts.get_text("equipo_exposicion"),Rect2(75,405,250,35),20)
+	option(root,["M","P","A","S"].map(func(m): return Texts.get_text("equipo_modo_"+m.to_lower())),["M","P","A","S"].find(equipment.exposure_mode()),Rect2(330,400,700,45),func(i): equipment.set_exposure_mode(["M","P","A","S"][i]); apply_equipment(); show_equipment())
+	label(root,Texts.get_text("equipo_soporte"),Rect2(75,465,200,35),20)
+	option(root,[Texts.get_text("equipo_digital"),Texts.get_text("equipo_carrete")],1 if equipment.film else 0,Rect2(330,460,700,45),func(i): equipment.film = i == 1; apply_equipment(); show_equipment())
 	if equipment.film:
-		label(root,"Cargar película",Rect2(75,525,250,35),20)
+		label(root,Texts.get_text("equipo_pelicula"),Rect2(75,525,250,35),20)
 		option(root,Photo.ISOS.map(func(iso): return "ISO %d" % iso),equipment.film_iso_index,Rect2(330,520,700,45),func(i): equipment.film_iso_index = i; apply_equipment(); show_equipment())
-	if equipment_return == "INTRO": button(root,"Ajustes gráficos (" + graphics_preset + ")",Rect2(75,630,340,55),show_graphics_settings)
-	button(root,"Usar este equipo",Rect2(880,630,320,55),restore_equipment_screen,true)
+	if equipment_return == "INTRO": button(root,Texts.get_text("equipo_graficos_s") % graphics_preset,Rect2(75,630,340,55),show_graphics_settings)
+	button(root,Texts.get_text("equipo_usar"),Rect2(880,630,320,55),restore_equipment_screen,true)
 
 
 # Same realistic mannequins in every profile; the procedural wood and cloth patterns (a few
@@ -3827,7 +3827,7 @@ func apply_graphics_preset(preset: String) -> void:
 	apply_mannequin_graphics_preset(preset)
 	pass
 	if is_instance_valid(graphics_button_intro):
-		graphics_button_intro.text = "Gráficos · " + graphics_preset
+		graphics_button_intro.text = Texts.get_text("menu_graficos_s") % graphics_preset
 
 func gfx_label(value: String) -> String:
 	return Texts.get_text(value.trim_prefix("@")) if value.begins_with("@") else value
@@ -4249,11 +4249,11 @@ func settle_population() -> void:
 func show_assignment() -> void:
 	mode = "BRIEFING"
 	var root = create_modal()
-	label(root,"Éste es tu encargo",Rect2(65,40,1120,65),42)
+	label(root,Texts.get_text("encargo_titulo"),Rect2(65,40,1120,65),42)
 	if arcade_level >= 0:
 		label(root,Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level),Rect2(65,115,1100,30),16,Color("b8d78c"))
 	else:
-		label(root,"ENCARGO %02d" % (assignment+1),Rect2(65,115,1100,30),16,Color("b8d78c"))
+		label(root,Texts.get_text("encargo_numero_d") % (assignment+1),Rect2(65,115,1100,30),16,Color("b8d78c"))
 	var container = SubViewportContainer.new()
 	container.position = Vector2(65,170)
 	container.size = Vector2(450,465)
@@ -4294,11 +4294,11 @@ func show_assignment() -> void:
 	if arcade_level >= 0:
 		show_level_briefing(root)
 		return
-	var description = label(root,"Busca a esta persona en el parque.\n\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,190,640,285),24)
+	var description = label(root,Texts.get_text("encargo_busca")+"\n\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,190,640,285),24)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label(root,"Corre con ropa deportiva: cuida la velocidad de obturación." if target.runner else "Recuerda su ropa, peinado y accesorios.",Rect2(565,505,635,65),18,Color("b8d78c")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label(root,Texts.get_text("encargo_corredor") if target.runner else Texts.get_text("encargo_recuerda"),Rect2(565,505,635,65),18,Color("b8d78c")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,Texts.get_text("entrar_fase"),Rect2(750,625,455,60),begin_assignment,true)
-	button(root,"Menú",Rect2(565,625,165,60),intro)
+	button(root,Texts.get_text("encargo_menu"),Rect2(565,625,165,60),intro)
 
 # Arcade briefing: who, then the level's rules (camera, shots, time, pass mark, conditions).
 func show_level_briefing(root: Control) -> void:
@@ -4373,7 +4373,7 @@ func show_academy_result() -> void:
 	else:
 		photo_preview(root,current_photo,current_result,Rect2(25,100,825,464))
 	var e: Dictionary = current_result.evidence
-	var info = "%.0f mm · f/%s\n1/%d s · ISO %d\n\nLuz medida: EV %.1f\nError de exposición: %+.2f EV\nDistancia: %.2f m\nDesenfoque: %.3f mm\nMovimiento: %.3f mm" % [e.f,str(e.n),roundi(1/e.t),e.iso,e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
+	var info = Texts.get_text("ficha_foto") % [e.f,str(e.n),roundi(1/e.t),e.iso,e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
 	academy.make_label(root,Rect2(885,100,360,260),18,Color("e6e8dd"),true).text = info
 	var task_text = ""
 	if academy.phase == "examen":
@@ -4394,22 +4394,22 @@ func show_sandbox_controls() -> void:
 	if not sandbox: return
 	mode = "SANDBOX_SETTINGS"
 	var root = create_modal()
-	label(root,"Sandbox · prepara la escena",Rect2(75,65,1100,60),38)
-	label(root,"Sin encargos, sin puntuación y sin límite de disparos.",Rect2(75,145,1100,40),23)
-	label(root,"Iluminación",Rect2(75,250,250,40),22)
-	option(root,["Día","Hora dorada","Hora azul","Noche"],["day","golden","blue","night"].find(time_of_day),Rect2(350,245,650,48),func(i):
+	label(root,Texts.get_text("sandbox_titulo"),Rect2(75,65,1100,60),38)
+	label(root,Texts.get_text("sandbox_subtitulo"),Rect2(75,145,1100,40),23)
+	label(root,Texts.get_text("sandbox_iluminacion"),Rect2(75,250,250,40),22)
+	option(root,[Texts.get_text("intro_dia"),Texts.get_text("intro_dorada"),Texts.get_text("intro_azul"),Texts.get_text("intro_noche")],["day","golden","blue","night"].find(time_of_day),Rect2(350,245,650,48),func(i):
 		time_of_day = ["day","golden","blue","night"][i]
 		night = (time_of_day == "night")
 		park.set_time_of_day(time_of_day)
 		update_meter()
 		refresh()
 	)
-	label(root,"Nubes",Rect2(75,335,250,40),22)
-	option(root,["Cielo despejado","Nubes en movimiento"],1 if park.clouds_enabled else 0,Rect2(350,330,650,48),func(i): park.clouds_enabled = i == 1; park.update_weather(0))
-	label(root,"Personajes",Rect2(75,420,250,40),22)
-	option(root,["En movimiento","Quietos para practicar"],1 if sandbox_paused else 0,Rect2(350,415,650,48),func(i): set_sandbox_pause(i == 1))
-	button(root,"Volver al menú",Rect2(75,620,260,60),intro)
-	button(root,"Probar la cámara",Rect2(820,620,380,60),resume_search,true)
+	label(root,Texts.get_text("sandbox_nubes"),Rect2(75,335,250,40),22)
+	option(root,[Texts.get_text("sandbox_despejado"),Texts.get_text("sandbox_nubes_movimiento")],1 if park.clouds_enabled else 0,Rect2(350,330,650,48),func(i): park.clouds_enabled = i == 1; park.update_weather(0))
+	label(root,Texts.get_text("sandbox_personajes"),Rect2(75,420,250,40),22)
+	option(root,[Texts.get_text("sandbox_en_movimiento"),Texts.get_text("sandbox_quietos")],1 if sandbox_paused else 0,Rect2(350,415,650,48),func(i): set_sandbox_pause(i == 1))
+	button(root,Texts.get_text("sandbox_volver"),Rect2(75,620,260,60),intro)
+	button(root,Texts.get_text("sandbox_probar"),Rect2(820,620,380,60),resume_search,true)
 
 func set_sandbox_pause(paused: bool) -> void:
 	sandbox_paused = paused
@@ -4439,10 +4439,10 @@ func capture_sandbox_evidence() -> Dictionary:
 
 func show_sandbox_result() -> void:
 	var root = create_modal()
-	label(root,"Sandbox · fotografía %d" % shot_serial,Rect2(25,30,1170,60),36)
+	label(root,Texts.get_text("sandbox_foto_d") % shot_serial,Rect2(25,30,1170,60),36)
 	photo_preview(root,current_photo,current_result,Rect2(25,120,825,464))
 	var e: Dictionary = current_result.evidence
-	var info = "Tu cámara\n\n%.0f mm · f/%.1f\n1/%d s · ISO %d\n%s\n\nLuz medida: EV %.1f\nError de exposición: %+.2f EV\nDistancia: %.2f m\nDesenfoque: %.3f mm\nMovimiento: %.3f mm" % [e.f,e.n,roundi(1/e.t),e.iso,"Carrete · ISO fijo" if e.film else "Digital",e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
+	var info = Texts.get_text("ficha_sandbox") % [e.f,e.n,roundi(1/e.t),e.iso,Texts.get_text("equipo_carrete") if e.film else Texts.get_text("ficha_digital"),e.scene_ev,current_result.delta,e.d,current_result.coc,current_result.drag]
 	label(root,info,Rect2(885,120,360,420),20).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if tutorial and tutorial.active:
 		label(root,current_result.get("tutorial_note",""),Rect2(25,590,825,60),17,UiStyle.SKY_DEEP).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

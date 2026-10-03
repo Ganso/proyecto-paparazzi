@@ -47,11 +47,11 @@ const SETUP = {
 const THEORY_PAGES = {1:5, 2:4, 3:5, 4:4, 5:4, 6:5, 7:4, 8:4, 9:4, 10:5}
 # Lessons whose practice and exam put choices on the panel (lenses, bodies, metering, modes).
 const CHOICES = {
-	5: [["28 mm","lens:3:28"],["135 mm","lens:5:135"]],
-	6: [["Compacta","body:0"],["Telemétr.","body:1"],["Réflex","body:2"],["TLR","body:3"]],
-	7: [["Zoom · f/4","lens:0:50"],["Fijo 50 · f/1,8","lens:2:50"]],
-	9: [["Matricial","meter:matricial"],["Centro","meter:ponderada"],["Puntual","meter:puntual"]],
-	10: [["P","mode:P"],["A","mode:A"],["S","mode:S"],["M","mode:M"]],
+	5: [["academia_op_28","lens:3:28"],["academia_op_135","lens:5:135"]],
+	6: [["academia_op_compacta","body:0"],["academia_op_telemetrica","body:1"],["academia_op_reflex","body:2"],["academia_op_tlr","body:3"]],
+	7: [["academia_op_zoom","lens:0:50"],["academia_op_fijo","lens:2:50"]],
+	9: [["academia_op_matricial","meter:matricial"],["academia_op_centro","meter:ponderada"],["academia_op_puntual","meter:puntual"]],
+	10: [["academia_op_p","mode:P"],["academia_op_a","mode:A"],["academia_op_s","mode:S"],["academia_op_m","mode:M"]],
 }
 var locked_person = null    # lesson 8: who the focus was locked on
 var page_applied = ""
@@ -1021,7 +1021,7 @@ func add_choices() -> void:
 	var w = (341.0-6.0*(list.size()-1))/list.size()
 	for k in list.size():
 		var action: String = list[k][1]
-		var b = make_button(panel,list[k][0],Rect2(12+k*(w+6),314,w,32),func(): do_action(action))
+		var b = make_button(panel,text(list[k][0]),Rect2(12+k*(w+6),314,w,32),func(): do_action(action))
 		if list.size() > 3: b.add_theme_font_size_override("font_size",12)
 		extra_buttons.append(b)
 

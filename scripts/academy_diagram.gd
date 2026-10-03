@@ -7,6 +7,7 @@ extends Control
 #   movimiento the trail a runner leaves in the photo at the current shutter speed
 #   tercios    frame with the thirds, crossings and lead room
 #   compresion side view: what a 28 mm near and a 135 mm far see behind the subject
+const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
 var academy
 var kind = "triangulo"
@@ -57,9 +58,9 @@ func draw_triangle() -> void:
 
 func draw_scales(stress: String) -> void:
 	var m = academy.main
-	var rows = [["n","Diafragma",m.apertures().map(func(n): return "f/%s" % str(n)),m.n_index,"más luz ◀"],
-		["t","Velocidad",Array(Photo.DENOMINATORS).map(func(d): return "1/%d" % d),m.t_index,"menos luz ◀"],
-		["iso","ISO",Array(Photo.ISOS).map(func(i): return str(i)),m.iso_index,"menos luz ◀"]]
+	var rows = [["n",Texts.get_text("esquema_diafragma"),m.apertures().map(func(n): return "f/%s" % str(n)),m.n_index,Texts.get_text("esquema_mas_luz")],
+		["t",Texts.get_text("esquema_velocidad"),Array(Photo.DENOMINATORS).map(func(d): return "1/%d" % d),m.t_index,Texts.get_text("esquema_menos_luz")],
+		["iso","ISO",Array(Photo.ISOS).map(func(i): return str(i)),m.iso_index,Texts.get_text("esquema_menos_luz")]]
 	for r in rows.size():
 		var row: Array = rows[r]
 		var y = 20+r*36
@@ -76,7 +77,7 @@ func draw_scales(stress: String) -> void:
 			if current or items.size() <= 7 or i%2 == 0:
 				txt(Vector2(x-14,y+15),items[i],10 if not current else 11,(green if current else dim) if strong else dim)
 	var delta = m.finder.delta_ev
-	txt(Vector2(6,size.y-6),"Aguja: %+.1f EV · cada punto es un paso (el doble o la mitad de luz)" % delta,10,needle_color(delta))
+	txt(Vector2(6,size.y-6),Texts.get_text("esquema_pasos_f") % delta,10,needle_color(delta))
 
 func draw_dof() -> void:
 	var m = academy.main
@@ -108,7 +109,7 @@ func draw_dof() -> void:
 	for d in [0,4,8,12,16]:
 		txt(Vector2(to_x.call(d)-4,size.y-6),str(d),9,dim)
 	var depth = (range.y-range.x) if not is_inf(range.y) else INF
-	txt(Vector2(8,16),"f/%s · %.0f mm · zona nítida: %s" % [str(n),m.focal,"hasta el infinito" if is_inf(depth) else "%.2f m" % depth],11,ink)
+	txt(Vector2(8,16),Texts.get_text("esquema_dof") % [str(n),m.focal,Texts.get_text("esquema_infinito") if is_inf(depth) else "%.2f m" % depth],11,ink)
 
 func draw_motion() -> void:
 	var m = academy.main
@@ -118,7 +119,7 @@ func draw_motion() -> void:
 	var trail_mm = v*t*m.focal/d
 	var limit = Photo.C
 	var y = size.y*.55
-	txt(Vector2(8,16),"Corredor a %.1f m/s, a %.0f m · 1/%d s" % [v,d,Photo.DENOMINATORS[m.t_index]],11,ink)
+	txt(Vector2(8,16),Texts.get_text("esquema_corredor") % [v,d,Photo.DENOMINATORS[m.t_index]],11,ink)
 	# The runner moving during the exposure: ghosts spread over the trail.
 	var trail_px = clampf(trail_mm/0.6*60.0,2,size.x-60)
 	var x0 = 40.0
@@ -131,8 +132,8 @@ func draw_motion() -> void:
 		draw_line(Vector2(x,y+4),Vector2(x-7,y+20),Color(ink.r,ink.g,ink.b,a),3)
 		draw_line(Vector2(x,y+4),Vector2(x+7,y+20),Color(ink.r,ink.g,ink.b,a),3)
 	var frozen = trail_mm <= limit*4
-	txt(Vector2(8,size.y-22),"Rastro en la foto: %.3f mm" % trail_mm,12,green if frozen else amber)
-	txt(Vector2(8,size.y-7),"Congelado si no pasa de ~0,1 mm · regla del pulso: 1/%d o más rápida" % roundi(maxf(m.focal,1)),10,dim)
+	txt(Vector2(8,size.y-22),Texts.get_text("esquema_rastro") % trail_mm,12,green if frozen else amber)
+	txt(Vector2(8,size.y-7),Texts.get_text("esquema_congelado") % roundi(maxf(m.focal,1)),10,dim)
 
 func draw_thirds() -> void:
 	var m = academy.main
@@ -156,10 +157,10 @@ func draw_thirds() -> void:
 	draw_line(head+Vector2(0,36),head+Vector2(8,56),green,3)
 	draw_line(head+Vector2(-14,22),head+Vector2(-60,22),amber,2)
 	draw_colored_polygon(PackedVector2Array([head+Vector2(-66,22),head+Vector2(-58,17),head+Vector2(-58,27)]),amber)
-	txt(head+Vector2(-70,12),"aire delante",11,amber)
+	txt(head+Vector2(-70,12),Texts.get_text("esquema_aire"),11,amber)
 	if academy.phase == "practica" and academy.lesson == 4:
 		var state = m.academy_last_thirds
-		txt(Vector2(8,size.y-4),{"":"Nadie cerca en el encuadre","cruce":"Cabeza fuera de los cruces","aire":"Cruce correcto, pero sin aire delante","listo":"¡Perfecto!"}.get(state,""),11,green if state == "listo" else ink)
+		txt(Vector2(8,size.y-4),Texts.get_text("esquema_tercios_"+(state if state != "" else "nadie")),11,green if state == "listo" else ink)
 
 func draw_compression() -> void:
 	var m = academy.main
@@ -182,5 +183,5 @@ func draw_compression() -> void:
 	draw_line(Vector2(subj_x,y-31),Vector2(subj_x,y-10),green,3)
 	var d_subject = (subj_x-cam_x)/20.0
 	var d_tree = (tree_x-cam_x)/20.0
-	txt(Vector2(8,14),"%.0f mm · el árbol se ve %.1f veces la altura de la persona" % [m.focal,(4.0/d_tree)/(1.7/d_subject) if d_tree > 0 else 0.0],10,ink)
-	txt(Vector2(8,28),"Tele de lejos: fondo grande y pegado" if tele else "Angular de cerca: fondo pequeño y lejano",11,green)
+	txt(Vector2(8,14),Texts.get_text("esquema_arbol") % [m.focal,(4.0/d_tree)/(1.7/d_subject) if d_tree > 0 else 0.0],10,ink)
+	txt(Vector2(8,28),Texts.get_text("esquema_tele") if tele else Texts.get_text("esquema_angular"),11,green)

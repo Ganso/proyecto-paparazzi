@@ -153,7 +153,7 @@ func _draw() -> void:
 		draw_string(font,Vector2(pos.x+150,y+15),row[1],HORIZONTAL_ALIGNMENT_LEFT,104,13,color)
 		draw_string(font,Vector2(pos.x+258,y+15),row[2],HORIZONTAL_ALIGNMENT_LEFT,66,13,color)
 		if kind in ["manual","auto"]:
-			draw_string(font,Vector2(pos.x+w-46,y+15),"MAN" if kind == "manual" else "AUTO",HORIZONTAL_ALIGNMENT_RIGHT,36,9,color)
+			draw_string(font,Vector2(pos.x+w-46,y+15),Texts.get_text("ayuda_man") if kind == "manual" else Texts.get_text("ayuda_auto"),HORIZONTAL_ALIGNMENT_RIGHT,36,9,color)
 		y += line
 	# Classic interface: the key on top of each HUD control too.
 	if classic and main.hud_top[0].visible and not Glyphs.pad():

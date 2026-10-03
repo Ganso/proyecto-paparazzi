@@ -42,7 +42,7 @@ func descriptors(t: Dictionary) -> PackedStringArray:
 		garment(catalog.piezas.torso[t.upper],t.upper_color,catalog.tonos_ropa),
 		garment(catalog.piezas.piernas[t.lower],t.lower_color,catalog.tonos_ropa),
 		Texts.get_text("cabeza_calva") if head.style == "bald" else garment(head,t.lower_color if head.style in ["cap","hat","beanie"] else t.hair_color,catalog.tonos_ropa if head.style in ["cap","hat","beanie"] else catalog.tonos_pelo),
-		profile_description(t)+accessory_description(t)+( " · corriendo" if t.get("runner",false) else "")
+		profile_description(t)+accessory_description(t)+(Texts.get_text("rasgo_corriendo") if t.get("runner",false) else "")
 	])
 
 func predicates_for(target: Dictionary, all_traits: Array) -> PackedStringArray:
@@ -70,4 +70,4 @@ func profile_description(t: Dictionary) -> String:
 func accessory_description(t: Dictionary) -> String:
 	var index: int = t.get("accessory",0)
 	if index == 0: return ""
-	return " · con "+garment(catalog.piezas.accesorio[index],t.get("accessory_color","rojo"),catalog.tonos_ropa)
+	return Texts.get_text("rasgo_con")+garment(catalog.piezas.accesorio[index],t.get("accessory_color","rojo"),catalog.tonos_ropa)
