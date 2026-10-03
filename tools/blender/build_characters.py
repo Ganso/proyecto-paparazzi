@@ -274,6 +274,25 @@ def slab(piece, outline, normal_offset, thickness):
         piece.face([bottom[i], bottom[j], top[j], top[i]])
 
 
+def patch(piece, rings, rows, lift, thickness=.004, n=4):
+    """Placa con grosor que sigue la superficie delantera de la prenda: rows = [(y, x0, x1), ...]."""
+    top, bottom = [], []
+    for (y, x0, x1) in rows:
+        pts = [front_of(rings, y, x0 + (x1 - x0) * i / n, lift) for i in range(n + 1)]
+        bottom.append(piece.verts(pts))
+        top.append(piece.verts([(x, py, z - thickness) for (x, py, z) in pts]))
+    last = len(rows) - 1
+    for r in range(last):
+        for i in range(n):
+            piece.face([top[r][i], top[r][i + 1], top[r + 1][i + 1], top[r + 1][i]])
+            piece.face([bottom[r + 1][i], bottom[r + 1][i + 1], bottom[r][i + 1], bottom[r][i]])
+        for i in (0, n):
+            piece.face([bottom[r][i], bottom[r + 1][i], top[r + 1][i], top[r][i]])
+    for r in (0, last):
+        for i in range(n):
+            piece.face([bottom[r][i], bottom[r][i + 1], top[r][i + 1], top[r][i]])
+
+
 # ---------------------------------------------------------------- maniquí de madera
 
 JOINT_DARKEN = .22
@@ -518,27 +537,52 @@ def build_torso(b, piece_def):
         py = nz * .86
         slab(pocket, [front_of(rings, py - .05, .045 * W), front_of(rings, py - .05, .105 * W), front_of(rings, py + .01, .105 * W), front_of(rings, py + .01, .045 * W)], (0, 0, -1), .003)
     elif style == "lapel":
-        # Americana: solapas con grosor, camisa blanca en el escote en V, botones y carteras.
+        # Americana: abierta en V hasta el botón, con la camisa blanca a la vista, solapas de muesca
+        # más oscuras que el paño, el canto del delantero, dos botones grandes, pañuelo en el
+        # bolsillo del pecho y carteras. Todo en placas que siguen la curva del pecho (patch), no en
+        # triángulos planos que se hundían en él: de lejos se leía como un jersey.
+        cy = nz * .958
+        v_bottom = nz * .715
+        steps = 8
         shirt = Piece("acento", candidates=TOP_BONES, subdivide=0)
         parts.append(shirt)
-        cy = nz * .958
-        v_bottom = nz * .80
-        slab(shirt, [front_of(rings, cy - .01, -.05 * S, .003), front_of(rings, cy - .01, .05 * S, .003), front_of(rings, v_bottom, 0, .003)], (0, 0, -1), .002)
-        lapels = cloth(lighten=.12)
+        rows = []
+        for k in range(steps + 1):
+            t = k / steps
+            half = max(.004, (.064 * S) * (1 - t) + .004 * t)
+            rows.append((cy - .004 + (v_bottom - cy + .004) * t, -half, half))
+        patch(shirt, rings, rows, .005, .002, 6)
+        # Cuello de la camisa: dos puntas blancas sobre la solapa.
+        for sign in (-1, 1):
+            patch(shirt, rings, [(cy + .006, sign * .012, sign * .05 * S), (cy - .03, sign * .02, sign * .04 * S)], .012, .003, 2)
+        lapels = cloth(darken=.2)
         parts.append(lapels)
         for sign in (-1, 1):
-            slab(lapels, [front_of(rings, v_bottom - .005, sign * .012, .006), front_of(rings, nz * .9, sign * .1 * W, .006),
-                          front_of(rings, nz * .945, sign * .09 * W, .006), front_of(rings, cy, sign * .045 * S, .006)], (0, 0, -1), .005)
+            rows = []
+            for k in range(steps + 1):
+                t = k / steps
+                inner = max(.004, (.064 * S) * (1 - t) + .004 * t)
+                # Cuello hasta la muesca (t = 0,3) y de ahí la solapa, que se estrecha hacia el botón.
+                width = (.03 + .03 * t / .3) * W if t < .3 else max(.006, .078 * W * (1 - (t - .3) / .7))
+                rows.append((cy + .004 + (v_bottom - .006 - cy) * t, sign * inner, sign * (inner + width)))
+            patch(lapels, rings, rows, .008, .005, 3)
+        # Canto del delantero, del botón al bajo.
+        edge = cloth(darken=.28, subdivide=0)
+        parts.append(edge)
+        patch(edge, rings, [(v_bottom, .002, .012), ((v_bottom + hem_y) * .5, .002, .012), (hem_y + .004, .002, .012)], .004, .004, 1)
         buttons = Piece("calzado", candidates=TOP_BONES, subdivide=0)
         parts.append(buttons)
-        for k in range(2):
-            y = v_bottom - .04 - k * .09
-            ball(buttons, (.012, y, front_z(y) - .006), .007, 1, (1, 1, .4))
-        flaps = cloth(darken=.08, subdivide=0)
+        for y in (nz * .695, nz * .64):
+            ball(buttons, (-.012, y, front_z(y) - .009), .013, 1, (1, 1, .45))
+        # Pañuelo en el bolsillo del pecho.
+        hanky = Piece("acento", candidates=TOP_BONES, subdivide=0)
+        parts.append(hanky)
+        patch(hanky, rings, [(nz * .862, .075 * W, .125 * W), (nz * .845, .07 * W, .13 * W)], .006, .004, 2)
+        flaps = cloth(darken=.16, subdivide=0)
         parts.append(flaps)
         for sign in (-1, 1):
             py = nz * .6
-            slab(flaps, [front_of(rings, py, sign * .06 * W), front_of(rings, py, sign * .14 * W), front_of(rings, py - .03, sign * .14 * W), front_of(rings, py - .03, sign * .06 * W)], (0, 0, -1), .004)
+            patch(flaps, rings, [(py, sign * .06 * W, sign * .14 * W), (py - .03, sign * .06 * W, sign * .14 * W)], .004, .005, 2)
     elif style == "hood":
         # Sudadera: capucha real caída sobre la espalda, cordones, bolsillo canguro y puños elásticos.
         hood = cloth(darken=.05)

@@ -1497,7 +1497,8 @@
         "recurso": "procedural:upper",
         "zonas": [
           "tela_a"
-        ]
+        ],
+        "solo_adultos": true
       },
       {
         "id": "sudadera",
@@ -1555,7 +1556,8 @@
         "recurso": "procedural:lower",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "solo_adultos": true
       },
       {
         "id": "bermudas",
@@ -1703,7 +1705,8 @@
         "zona_color": "tela_b",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "solo_adultos": true
       },
       {
         "id": "gorro",

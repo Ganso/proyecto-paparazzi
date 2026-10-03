@@ -10,7 +10,9 @@ const Glyphs = preload("res://scripts/input_glyphs.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 
 var main
+const UiStyle_SKY = preload("res://scripts/ui_style.gd").SKY
 var enabled = true
+var panel_rect = Rect2()   # where the list was last drawn (the control strip keeps clear of it)
 var font: Font
 var bold: Font
 var toggle: Button
@@ -93,19 +95,19 @@ func rows() -> Array:
 	var m: String = e.exposure_mode()
 	var out = []
 	out.append([Glyphs.k("mirar"),Texts.get_text("ayuda_mirar"),"","info"])
-	if e.zoom(): out.append([Glyphs.k("zoom"),Texts.get_text("ayuda_zoom"),"%d mm" % roundi(main.focal),"manual"])
+	if e.zoom(): out.append([Glyphs.k("zoom"),Texts.get_text("ayuda_zoom"),"%d mm" % roundi(main.focal),"manual","zoom"])
 	else: out.append(["—",Texts.get_text("ayuda_zoom"),Texts.get_text("ayuda_objetivo_fijo") % roundi(main.focal),"fixed"])
 	var dist = Texts.get_text("infinito") if is_inf(main.focus_distance) else "%.1f m" % main.focus_distance
 	if e.focus_mode == "MF":
-		out.append([Glyphs.k("enfoque_mf_zoom") if e.zoom() else Glyphs.k("enfoque_mf"),Texts.get_text("ayuda_enfoque"),dist,"manual"])
+		out.append([Glyphs.k("enfoque_mf_zoom") if e.zoom() else Glyphs.k("enfoque_mf"),Texts.get_text("ayuda_enfoque"),dist,"manual","foco"])
 	else:
 		out.append([Glyphs.k("af"),Texts.get_text("ayuda_enfoque")+" AF",dist,"auto"])
 	var n = main.apertures()[main.n_index]
-	out.append([pad_key("diafragma","n"),Texts.get_text("ayuda_diafragma"),"f/%s" % (("%.1f" % n) if n < 10 else str(int(n))),"manual" if m in ["M","A"] else "auto"])
-	out.append([pad_key("velocidad","t"),Texts.get_text("ayuda_velocidad"),"1/%d s" % Photo.DENOMINATORS[main.t_index],"manual" if m in ["M","S"] else "auto"])
+	out.append([pad_key("diafragma","n"),Texts.get_text("ayuda_diafragma"),"f/%s" % (("%.1f" % n) if n < 10 else str(int(n))),"manual" if m in ["M","A"] else "auto","n"])
+	out.append([pad_key("velocidad","t"),Texts.get_text("ayuda_velocidad"),"1/%d s" % Photo.DENOMINATORS[main.t_index],"manual" if m in ["M","S"] else "auto","t"])
 	if e.film: out.append(["—","ISO",Texts.get_text("ayuda_carrete") % Photo.ISOS[main.iso_index],"fixed"])
-	else: out.append([pad_key("iso","iso"),"ISO",str(Photo.ISOS[main.iso_index]),"manual" if m == "M" else "auto"])
-	if m != "M": out.append([pad_key("compensacion","ev_comp"),Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual"])
+	else: out.append([pad_key("iso","iso"),"ISO",str(Photo.ISOS[main.iso_index]),"manual" if m == "M" else "auto","iso"])
+	if m != "M": out.append([pad_key("compensacion","ev_comp"),Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual","ev_comp"])
 	else: out.append(["",Texts.get_text("ayuda_exposimetro"),"%+.1f EV" % main.finder.delta_ev,"meter"])
 	out.append([Glyphs.k("fotometria"),Texts.get_text("ayuda_fotometria"),Texts.get_text("fotometria_"+e.metering),"manual"])
 	out.append([Glyphs.k("bloqueo"),Texts.get_text("ayuda_bloqueo"),Texts.get_text("bloqueo_activo") if main.exposure_locked or main.focus_locked else "","manual" if main.exposure_locked or main.focus_locked else "info"])
@@ -119,10 +121,11 @@ func rows() -> Array:
 # With a gamepad the D-pad changes the selected exposure setting: mark which one.
 func pad_key(control: String, param: String) -> String:
 	if not Glyphs.pad(): return Glyphs.k(control)
-	return "▶ Cruceta ↑↓" if main.PAD_PARAMS[main.pad_param] == param else "Cruceta ←→"
+	return "▶ Cruceta ↑↓" if main.current_control() == param else "Cruceta ←→"
 
 func _draw() -> void:
 	# In the recorded videos (Godot's Movie Maker) the list would cover half of every scene.
+	panel_rect = Rect2()
 	if OS.has_feature("movie"): return
 	if not enabled or main.mode != "SEARCH" or not main.eye_ready(): return
 	var r: Rect2 = main.view_rect
@@ -134,6 +137,7 @@ func _draw() -> void:
 	var pos = Vector2(r.position.x+10,main.hud_clear_top())
 	if is_instance_valid(main.portrait) and main.portrait.visible: pos.y = main.portrait.position.y+main.portrait.size.y+10   # under the subject
 	draw_style_box(box(Color(.03,.05,.08,.62)),Rect2(pos,Vector2(w,h)))
+	panel_rect = Rect2(pos,Vector2(w,h))
 	draw_string(bold,pos+Vector2(12,21),Texts.get_text("ayuda_titulo") % main.equipment.CAMERAS[main.equipment.body],HORIZONTAL_ALIGNMENT_LEFT,w-24,13,Color(1,1,1,.92))
 	var y = pos.y+30
 	for row in list:
@@ -142,6 +146,8 @@ func _draw() -> void:
 		if kind == "meter":
 			var off = absf(main.finder.delta_ev) > .5
 			color = Color(1,.72,.4) if off else Color(.55,1,.6)
+		# The control in hand (the one the wheel or the D-pad ↑↓ changes) is marked.
+		if row.size() > 4 and row[4] == main.current_control(): draw_style_box(box(Color(UiStyle_SKY.r,UiStyle_SKY.g,UiStyle_SKY.b,.45),5),Rect2(pos.x+4,y-1,w-8,line))
 		if row[0] != "":
 			GlyphLabel.draw_rich(self,font,Vector2(pos.x+10,y+1),row[0],12,Color(1,1,1,.9))
 		draw_string(font,Vector2(pos.x+150,y+15),row[1],HORIZONTAL_ALIGNMENT_LEFT,104,13,color)

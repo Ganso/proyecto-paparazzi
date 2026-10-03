@@ -71,10 +71,16 @@ func enter_step() -> void:
 		"diafragma":
 			main.equipment.set_exposure_mode("A")
 			main.apply_equipment()
+			main.selected_control = "zoom"   # the step teaches to choose the aperture on the strip
 		"mf":
 			main.equipment.set_exposure_mode("P")
 			main.equipment.focus_mode = "MF"
 			main.apply_equipment()
+	if id == "fin":
+		# The end is a screen of its own, with where to go next (main.gd::show_tutorial_end()).
+		visible = false
+		main.show_tutorial_end()
+		return
 	update_panel()
 
 func id() -> String:
@@ -104,10 +110,6 @@ func update_panel() -> void:
 	buttons = []
 	if id() == "bienvenida":
 		add_button(Texts.get_text("tutorial_empezar"),Rect2(470,118,190,36),next,true)
-		status.text = ""
-	elif id() == "fin":
-		add_button(Texts.get_text("tutorial_ir_arcade"),Rect2(270,118,190,36),func(): stop(); main.show_arcade(),true)
-		add_button(Texts.get_text("tutorial_menu"),Rect2(470,118,190,36),func(): stop(); main.intro())
 		status.text = ""
 	else:
 		add_button(Texts.get_text("tutorial_saltar"),Rect2(470,118,90,36),next)

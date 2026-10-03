@@ -139,7 +139,9 @@ func run() -> void:
 		await process_frame
 		if game.tutorial.id() == "fin": break
 	check(await wait_step("fin",3.0),"Matching the split image completes «mf»")
-	check(game.tutorial.buttons.size() == 2,"The end offers the Arcade and the menu")
+	await frames(3)
+	check(game.mode == "TUTORIAL_END" and not game.tutorial.visible,"The end is a screen of its own")
+	check(game.modal.find_children("*","Button",true,false).size() == 3,"…that offers the Arcade, the Academy and the menu")
 	game.tutorial.stop()
 	game.intro()
 	print("TUTORIAL TESTS: %d checks, %d failures" % [checks,failures])

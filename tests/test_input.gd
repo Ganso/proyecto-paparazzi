@@ -55,12 +55,48 @@ func run() -> void:
 	game.finder.active = 4
 	game._unhandled_input(pad(JOY_BUTTON_RIGHT_SHOULDER))
 	check(game.finder.active == 5,"RB moves to the next focus point")
-	game.pad_param = 1
+	# The control in hand (docs/futuro/22 §5): D-pad ←→ chooses, ↑↓ changes; the wheel changes it too.
+	check(game.selectable_controls() == ["n","ev_comp"],"In A with a fixed lens the player drives the aperture and the compensation (%s)" % str(game.selectable_controls()))
+	game.selected_control = "n"
 	var n0 = game.n_index
 	game._unhandled_input(pad(JOY_BUTTON_DPAD_UP))
-	check(game.n_index == mini(n0+1,game.apertures().size()-1),"D-pad up changes the selected setting (aperture in A)")
+	check(game.n_index == mini(n0+1,game.apertures().size()-1),"D-pad up changes the control in hand (aperture in A)")
 	game._unhandled_input(pad(JOY_BUTTON_DPAD_RIGHT))
-	check(game.pad_param == 2,"D-pad right selects the next setting")
+	check(game.current_control() == "ev_comp","D-pad right takes the next control in hand")
+	game._unhandled_input(pad(JOY_BUTTON_DPAD_RIGHT))
+	check(game.current_control() == "n","…and round to the first again")
+	var wheel = InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	wheel.pressed = true
+	var n1 = game.n_index
+	game._unhandled_input(wheel)
+	check(game.n_index == maxi(n1-1,0),"The mouse wheel changes the control in hand")
+	var middle = InputEventMouseButton.new()
+	middle.button_index = MOUSE_BUTTON_MIDDLE
+	middle.pressed = true
+	game._unhandled_input(middle)
+	check(game.current_control() == "ev_comp","The wheel's button takes the next control")
+	await process_frame
+	await process_frame
+	check(game.control_strip.visible and game.control_strip.chips.size() == 2,"The strip over the finder shows the two controls")
+	game.control_strip.chips[0].pressed.emit()
+	check(game.current_control() == "n","A click on a chip takes that control in hand")
+	game.equipment.set_exposure_mode("M")
+	check(game.selectable_controls() == ["n","t","iso"],"In M: aperture, shutter and ISO")
+	game.equipment.set_exposure_mode("A")
+	# Half a minute through the finder without the subject in the frame: the hint to lower the camera.
+	var saved_pitch = game.pitch
+	game.pitch = 65.0
+	game.update_camera()
+	game.toast_time = 0.0
+	game.hunt_next = 30.0
+	game.hunt_time = 29.6
+	var hint_start = Time.get_ticks_msec()
+	while Time.get_ticks_msec()-hint_start < 900: await process_frame
+	check(game.toast.text == Texts.get_text("pista_bajar_camara") and game.toast_time > 0.0,"Searching for a while at the eye brings the hint to lower the camera («%s»)" % game.toast.text)
+	check(game.hunt_next > 60.0,"…and it does not nag: the next one takes longer")
+	game.pitch = saved_pitch
+	game.update_camera()
 	game._unhandled_input(pad(JOY_BUTTON_Y))
 	check(not game.camera_raised,"Y lowers the camera")
 	game._unhandled_input(pad(JOY_BUTTON_Y))

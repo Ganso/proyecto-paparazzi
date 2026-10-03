@@ -291,6 +291,7 @@ func run() -> void:
 				game.tutorial.enter_step()
 				game.tutorial.update_panel()
 				await check(d+"tutorial_%02d" % (k+1))
+			await check(d+"tutorial_fin_pantalla")
 			game.tutorial.stop()
 		if only == "" or only == "academia":
 			game.intro()

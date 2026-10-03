@@ -21,6 +21,8 @@ func generate(runner = false) -> Dictionary:
 			t.lower = catalog.piezas.piernas.find(sports[rng.randi_range(0,sports.size()-1)])
 			t.hair = rng.randi_range(0,5)
 		t["gender"] = "f" if catalog.piezas.piernas[t.lower].id == "falda" or rng.randf() < .5 else "m"
+		# Children wear children's clothes: no blazer, dress trousers or brimmed hat (solo_adultos).
+		if catalog.perfiles[t.profile].id == "nino" and (catalog.piezas.torso[t.upper].get("solo_adultos",false) or catalog.piezas.piernas[t.lower].get("solo_adultos",false) or catalog.piezas.cabeza[t.hair].get("solo_adultos",false)): continue
 		if catalog.piezas.cabeza[t.hair].style == "bald" and (catalog.perfiles[t.profile].id == "nino" or t.gender == "f"): continue
 		var signature = "|".join(descriptors(t))
 		if not used.has(signature):

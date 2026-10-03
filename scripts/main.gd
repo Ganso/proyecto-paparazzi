@@ -132,8 +132,12 @@ var portrait_view: SubViewport
 var portrait_person
 var portrait_of = null
 # ---- Gamepad (docs/futuro/14) ----
-const PAD_PARAMS = ["t","n","iso","ev_comp"]
-var pad_param = 1                   # which exposure setting the D-pad ↑/↓ changes (←/→ chooses)
+# The control in hand (scripts/control_strip.gd, docs/futuro/22 §5): the one setting the wheel, the
+# D-pad ↑↓ or Page Up/Down change. "" until chosen: then the first the camera lets the player drive.
+var selected_control = ""
+var control_strip: Control
+var hunt_time = 0.0                 # seconds searching with the camera at the eye (hint: lower it)
+var hunt_next = 30.0
 var pad_precision = false           # L3: sticks three times finer
 var pad_run = false                 # L3 while walking: run until the left stick is released
 var trigger_stage = 0               # RT: 0 rest, 1 half (AF), 2 fired
@@ -680,6 +684,8 @@ func build_ui() -> void:
 	walk_hint.visible = false
 	control_help = preload("res://scripts/control_help.gd").new(self)
 	ui.add_child(control_help)
+	control_strip = preload("res://scripts/control_strip.gd").new(self)
+	ui.add_child(control_strip)
 	tutorial = preload("res://scripts/tutorial.gd").new(self)
 	ui.add_child(tutorial)
 	raise_flash = ColorRect.new()
@@ -698,7 +704,7 @@ func build_ui() -> void:
 	ui.add_child(meter_bar)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
-		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,tutorial]: continue
+		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,control_strip,tutorial]: continue
 		if child is Control:
 			if child.position.y < 300: hud_top.append(child)
 			else: hud_bottom.append(child)
@@ -775,6 +781,40 @@ func change_parameter(parameter: String, direction: int) -> void:
 			if not equipment.film: iso_index = clampi(iso_index+direction,0,Photo.ISOS.size()-1)
 	if equipment.auto_exposure: auto_expose()
 	refresh()
+
+# The settings the player drives on this camera, in the order of the strip.
+func selectable_controls() -> Array:
+	var m: String = equipment.exposure_mode()
+	var out = []
+	if equipment.zoom(): out.append("zoom")
+	if equipment.focus_mode == "MF": out.append("foco")
+	if m in ["M","A"]: out.append("n")
+	if m in ["M","S"]: out.append("t")
+	if m == "M" and not equipment.film: out.append("iso")
+	if m != "M": out.append("ev_comp")
+	return out
+
+func current_control() -> String:
+	var list = selectable_controls()
+	if list.is_empty(): return ""
+	if not selected_control in list: selected_control = list[0]
+	return selected_control
+
+func select_control(step: int) -> void:
+	var list = selectable_controls()
+	if list.is_empty() or mode != "SEARCH": return
+	selected_control = list[posmod(list.find(current_control())+step,list.size())]
+	play_tone(1500,.02)
+
+func change_control(step: int, coarse = 1.0) -> void:
+	if mode != "SEARCH": return
+	match current_control():
+		"": pass
+		"zoom":
+			focal += step*3
+			update_camera()
+		"foco": adjust_focus_delta(-step*.0035*coarse)
+		_: change_parameter(current_control(),step)
 
 func refresh() -> void:
 	if not is_instance_valid(aperture_button): return
@@ -1285,6 +1325,7 @@ func _process(dt: float) -> void:
 		if academy: academy.update(dt)
 		if tutorial and tutorial.active: tutorial.update(dt)
 		update_hud_visibility(dt)
+		update_hunt_hint(dt)
 		meter_timer -= dt
 		if meter_timer <= 0:
 			meter_timer = .1
@@ -2769,13 +2810,13 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 			else: return false
 		JOY_BUTTON_LEFT_SHOULDER: finder.active = posmod(finder.active-1,9)
 		JOY_BUTTON_RIGHT_SHOULDER: finder.active = posmod(finder.active+1,9)
-		JOY_BUTTON_DPAD_LEFT: pad_param = posmod(pad_param-1,PAD_PARAMS.size())
-		JOY_BUTTON_DPAD_RIGHT: pad_param = posmod(pad_param+1,PAD_PARAMS.size())
+		JOY_BUTTON_DPAD_LEFT: select_control(-1)
+		JOY_BUTTON_DPAD_RIGHT: select_control(1)
 		JOY_BUTTON_DPAD_UP:
-			change_parameter(PAD_PARAMS[pad_param],1)
+			change_control(1)
 			pad_repeat = .35
 		JOY_BUTTON_DPAD_DOWN:
-			change_parameter(PAD_PARAMS[pad_param],-1)
+			change_control(-1)
 			pad_repeat = .35
 		JOY_BUTTON_RIGHT_STICK:
 			if finder.golden: finder.golden = false
@@ -2852,7 +2893,7 @@ func update_pad(dt: float) -> void:
 		if Input.is_joy_button_pressed(0,dir[0]):
 			pad_repeat -= dt
 			if pad_repeat <= 0.0:
-				change_parameter(PAD_PARAMS[pad_param],dir[1])
+				change_control(dir[1])
 				pad_repeat = .125
 
 func play_tone(frequency: float, duration: float) -> void:
@@ -3261,6 +3302,39 @@ func end_level() -> void:
 		button(root,Texts.get_text("arcade_siguiente"),Rect2(1012,520,203,56),func(): start_level(n+1),true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(805,592,410,52),show_arcade,not passed)
 
+# The tutorial is over: a screen of its own says so and offers where to go next (the last panel
+# over the finder left the player in the park without knowing what to do).
+func show_tutorial_end() -> void:
+	mode = "TUTORIAL_END"
+	var root = create_modal()
+	label(root,Texts.get_text("tutorial_fin_titulo"),Rect2(65,50,1150,60),42,Color("b8d78c"))
+	glyph_label(root,Texts.get_rich("tutorial_fin"),Rect2(65,130,900,90),20,UiStyle.INK)
+	var options = [["tutorial_ir_arcade","tutorial_ir_arcade_texto",func(): tutorial.stop(); show_arcade()],
+		["tutorial_ir_academia","tutorial_ir_academia_texto",func(): tutorial.stop(); open_academy()],
+		["tutorial_menu","tutorial_menu_texto",func(): tutorial.stop(); intro()]]
+	for k in options.size():
+		button(root,Texts.get_text(options[k][0]),Rect2(65,250+k*92,330,68),options[k][2],k == 0)
+		label(root,Texts.get_text(options[k][1]),Rect2(425,250+k*92,760,68),18,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+# Someone who has been looking for the subject through the finder for a while is told that the
+# camera can be lowered to search with the naked eye (with the key or button in use).
+func update_hunt_hint(dt: float) -> void:
+	var hunting = mode == "SEARCH" and not sandbox and is_instance_valid(target) and not (academy and academy.active) and not (tutorial and tutorial.active) and demo.is_empty() and photo_walk.is_empty() and walk_demo < 0
+	if not hunting or not eye_ready():
+		hunt_time = 0.0
+		if mode != "SEARCH": hunt_next = 30.0
+		return
+	# With the subject in the frame there is nothing to search for.
+	if camera.is_position_in_frustum(target.global_position+Vector3.UP*target.height*.7):
+		hunt_time = 0.0
+		return
+	hunt_time += dt
+	if hunt_time >= hunt_next:
+		hunt_time = 0.0
+		hunt_next = 75.0
+		notify_player(Texts.get_text("pista_bajar_camara"))
+		toast_time = 8.0
+
 # Pause (Esc, the on-screen button or Menu/Start): carry on, the help, or leave the phase for the
 # main menu after a confirmation (docs/futuro/22 §4).
 func show_pause(confirm = false) -> void:
@@ -3349,6 +3423,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif mode == "PAUSE": resume_search()
 			elif mode == "EQUIPMENT": restore_equipment_screen()
 			elif mode in ["ARCADE","OPTIONS"]: intro()
+			elif mode == "TUTORIAL_END":
+				tutorial.stop()
+				intro()
 			elif mode == "BRIEFING": show_arcade() if arcade_level >= 0 else intro()
 			elif mode == "LEVEL_END": show_arcade()
 			elif mode == "RESULT" and not (academy and academy.active): resume_search() if shots > 0 and not level_over else finish_assignment()
@@ -3359,7 +3436,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif mode == "SEARCH" and tutorial and tutorial.handle_accept(): pass
 			return
 		if mode != "SEARCH": return
+		# The control in hand: , . choose it, Page Up/Down change it (the wheel and the D-pad too).
+		if event.unicode == 44: select_control(-1)
+		elif event.unicode == 46: select_control(1)
 		match event.physical_keycode:
+			KEY_PAGEUP: change_control(1)
+			KEY_PAGEDOWN: change_control(-1)
 			KEY_SPACE: take_photo()
 			KEY_F: autofocus()
 			KEY_Q: change_parameter("n",-1)
@@ -3389,10 +3471,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 			var step = 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
-			if event.shift_pressed or not equipment.zoom():
-				var delta = step * (0.0012 if event.shift_pressed else (0.012 if (event.ctrl_pressed or event.alt_pressed) else 0.0035))
-				adjust_focus_delta(-delta)
-			else: focal += step*3; update_camera()
+			# The wheel changes the control in hand; with Shift it is the fine focus ring (shortcut).
+			if event.shift_pressed and equipment.focus_mode == "MF": adjust_focus_delta(-step*.0012)
+			else: change_control(step,3.4 if (event.ctrl_pressed or event.alt_pressed) else 1.0)
+		if event.pressed and event.button_index == MOUSE_BUTTON_MIDDLE: select_control(1)
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				dragging = true

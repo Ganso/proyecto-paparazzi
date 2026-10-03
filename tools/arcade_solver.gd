@@ -60,7 +60,10 @@ func solve(n: int) -> String:
 	if level.cond.has("grande"): want_h = maxf(want_h,float(level.cond.grande)+.12)
 	if level.cond.has("aislado"): want_h = .85
 	if level.cond.has("fondo"): want_h = maxf(want_h,.8)
-	var sweep = [.75,.55,.4,.3,.22,.6,.45] if level.cond.has("acompanado") else [want_h]
+	# Without a passing combination at the first framing, a looser one is tried (a child running
+	# fills the frame at a focal length that no shutter speed freezes), never below what «grande» asks.
+	var floor_h = float(level.cond.grande)+.06 if level.cond.has("grande") else .3
+	var sweep = [.75,.55,.4,.3,.22,.6,.45] if level.cond.has("acompanado") else [want_h,maxf(floor_h,want_h*.8),maxf(floor_h,want_h*.62)]
 	var aim_offset = 0.0
 	var budget = float(level.limit) if level.limit > 0 else 90.0
 	var elapsed = 0.0
@@ -103,7 +106,7 @@ func solve(n: int) -> String:
 			e["camera_omega"] = e.v*side/e.d
 		var best = best_settings(e,level)
 		if best.is_empty():
-			if OS.has_environment("SOLVER_DEBUG") and tries % 40 == 1:
+			if OS.has_environment("SOLVER_DEBUG") and (tries % 40 == 1 or tries < 12):
 				var r = Photo.evaluate(e)
 				Conditions.apply(r,e,level.cond)
 				print("  try %d: d %.1f f %.0f h %.2f reason %s score %d" % [tries,e.d,e.f,absf(e.feet.y-e.head.y),r.reason,r.score])
@@ -132,7 +135,20 @@ func solve(n: int) -> String:
 		else:
 			# Aiming moved the camera; a real photographer holds still before a frozen shot.
 			game.camera_omega = 0.0
+		# The shot autofocuses on the active AF point: take the one nearest to the chest, as a
+		# player does when the subject is off-centre (golden section, lead room).
+		if game.equipment.focus_mode != "MF":
+			var face = game.view_rect.position+Vector2(e.chest.x,e.chest.y)*game.view_rect.size
+			var points: Array = game.finder.points()
+			var nearest = 4
+			for i in points.size():
+				if points[i].distance_to(face) < points[nearest].distance_to(face): nearest = i
+			game.finder.active = nearest
+		if OS.has_environment("SOLVER_DEBUG"): print("  before: locks %s %s · point %d · t 1/%d n %s iso %d · meter %s" % [str(game.exposure_locked),str(game.focus_locked),game.finder.active,Photo.DENOMINATORS[game.t_index],str(game.apertures()[game.n_index]),Photo.ISOS[game.iso_index],str(game.measured_ev)])
 		await game.take_photo()
+		if OS.has_environment("SOLVER_DEBUG"):
+			var cr: Dictionary = game.current_result
+			print("  shot: expected %d, got %d · %s · %s" % [best.score,cr.score,cr.get("reason",""),"foco %s expo %s mov %s ocl %s enc %s delta %s" % [str(cr.focus),str(cr.exposure),str(cr.movement),str(cr.occlusion),str(cr.framing),str(cr.delta)]])
 	if game.mode == "RESULT": game.end_level()
 	elif game.mode == "SEARCH": game.end_level()
 	var passed = not game.best.is_empty() and not game.best.rejected and game.best.score >= level.min

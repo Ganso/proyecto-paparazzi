@@ -35,7 +35,13 @@ var heading = 0.0
 var heading_ready = false
 # What the person is doing while stopped or seated ("", "mirar", "movil", "foto", "leer",
 # "charla", "palomas"…) and who they talk to.
-var activity = ""
+var activity = "":
+	set(value):
+		# Children do not read the paper, drink coffee or carry a camera: they look around instead.
+		activity = CHILD_ACTIVITY.get(value,value) if is_child() else value
+const CHILD_ACTIVITY = {"leer":"", "cafe":"", "foto":"mirar"}
+func is_child() -> bool:
+	return str(profile.get("id","")) == "nino"
 var partner = null
 # Pose blends driven by gait.gd: 0 standing … 1 seated, and the activity layer weight.
 var seat = 0.0

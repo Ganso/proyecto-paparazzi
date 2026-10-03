@@ -172,4 +172,23 @@ func garment_checks(casting) -> void:
 		check(shade >= .6 - .0001 and shade <= 1.0,"Occlusion stays within 40 %")
 	check(probe.occlusion(Vector3(.1,.05,0),Vector3.DOWN) < probe.occlusion(Vector3(.1,1.2,0),Vector3.DOWN),"Lower parts read darker than upper ones")
 	probe.free()
+	# Children wear children's clothes and do children's things (no blazer, dress trousers, brimmed
+	# hat, newspaper, coffee or camera).
+	var cast = Casting.new(4242)
+	var children = 0
+	var dressed_up = 0
+	for i in 600:
+		var t = cast.generate(i%7 == 0)
+		if cast.catalog.perfiles[t.profile].id != "nino": continue
+		children += 1
+		if cast.catalog.piezas.torso[t.upper].get("solo_adultos",false) or cast.catalog.piezas.piernas[t.lower].get("solo_adultos",false) or cast.catalog.piezas.cabeza[t.hair].get("solo_adultos",false): dressed_up += 1
+	check(children > 60 and dressed_up == 0,"No child wears adults-only pieces (%d of %d)" % [dressed_up,children])
+	var kid = Person.new()
+	var kid_traits = cast.generate()
+	kid_traits.profile = 3
+	kid.setup(kid_traits,cast.catalog,5)
+	for pair in [["leer",""],["cafe",""],["foto","mirar"],["movil","movil"],["palomas","palomas"]]:
+		kid.activity = pair[0]
+		check(kid.activity == pair[1],"A child asked to «%s» does «%s»" % [pair[0],pair[1]])
+	kid.free()
 	print("GARMENT CHECKS: %d checks, %d failures" % [garment_count,garment_failed])

@@ -557,7 +557,8 @@ func run_demo(dt: float) -> void:
 		if runner: off = rad_to_deg(angle_difference(deg_to_rad(main.angle),deg_to_rad(runner.theta)))
 		# Shoot the moment one of the central AF points actually lands on the runner (AF puntual on
 		# that point), as a photographer pressing at the right instant would.
-		var on_runner = point_on(runner,16.0) if runner and absf(off) < 6.0 else -1
+		# (A child is narrower: the three probes of the AF point must still fit on the body.)
+		var on_runner = point_on(runner,9.0 if runner.is_child() else 16.0) if runner and absf(off) < 6.0 else -1
 		if on_runner >= 0 or waiting_time > 8.0:
 			if on_runner >= 0: main.finder.active = on_runner
 			demo_shoot(waiting_runner)

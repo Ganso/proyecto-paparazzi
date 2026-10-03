@@ -154,6 +154,8 @@ Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una 
 | Arcade · encargo | Texto del nivel (`arcade_nivel_<n>_texto`), sobre los rasgos del objetivo (hasta 5 líneas) | 4 líneas, ~300 | **≤ 220** | 219 |
 | Arcade · encargo y resultado | Cada condición (`cond_*`) | 2 líneas, ~150 | **≤ 100** | 98 |
 | Tutorial | Texto del paso (`tutorial_*`) | 3 líneas, ~240 | **≤ 210** (mejor ≤ 160: dos líneas) | 205 |
+| Tutorial · final | Texto de cada salida (`tutorial_*_texto`) | 2 líneas, ~170 | **≤ 120** | 113 |
+| Búsqueda | Ajuste de la tira de control en mano (nombre y valor) | ~14 por línea | **≤ 12** | 12 |
 | Academia · lista | Resumen de la lección (`academia_l<n>_resumen`) | 1 línea, ~80 | **≤ 60** | 55 |
 | Academia · panel | Título de la página (`…_t<k>_titulo`) | 1 línea, ~34 | **≤ 30** | 31 |
 | Academia · panel | Teoría y enunciado del examen (`…_t<k>_texto`, `…_examen`) | 7 líneas, ~330 | **≤ 240** | 228 |
@@ -161,7 +163,7 @@ Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una 
 | Academia · panel | Pista (`…_pista_*`) | 4 líneas, ~200 | **≤ 130** | 115 |
 | Academia · demostración | Subtítulo (`…_d<k>`) | 2 líneas, ~170 | **≤ 110** | 68 |
 | Insignias | Descripción (`insignia_*_texto`) | 1 línea, ~115 | **≤ 100** | 100 |
-| Búsqueda | Aviso (`notify_player`) | 1 línea, ~85 | **≤ 70** | — |
+| Búsqueda | Aviso (`notify_player`) | 1 línea, ~95 | **≤ 85** | 78 |
 | Botones | Texto de cualquier botón | ancho ÷ 9 | dos tercios de eso | — |
 
 Los que están pegados a su tamaño razonable (título de la Academia de 31, insignia de 100, tutorial de 205) no deben crecer más.
