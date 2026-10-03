@@ -55,6 +55,7 @@ func start() -> void:
 func stop() -> void:
 	active = false
 	visible = false
+	main.place_view()
 
 func enter_step() -> void:
 	done_time = -1.0
@@ -137,6 +138,8 @@ func handle_accept() -> bool:
 func update(dt: float) -> void:
 	if not active: return
 	visible = main.mode == "SEARCH"
+	# The notices of the game (focus confirmed…) go above the panel, not under it.
+	if visible and is_instance_valid(main.toast): main.toast.position.y = minf(main.toast.position.y,panel.position.y-40)
 	if done_time >= 0.0:
 		done_time += dt
 		if done_time > 1.4 and id() != "fin": next()

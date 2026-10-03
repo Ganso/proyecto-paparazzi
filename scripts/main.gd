@@ -562,6 +562,9 @@ func label(parent: Control, text_value: String, rect: Rect2, font_size = 18, col
 	if font_size >= 26: node.add_theme_font_override("font",UiStyle.font("Quicksand-Regular"))
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(node)
+	# A long text widens the label as it enters the tree; callers turn on the wrap afterwards, so
+	# the width asked for is put back once they have (or the text would never wrap).
+	node.set_deferred("size",rect.size)
 	return node
 
 # Text with keys drawn as keycaps and pad buttons as round buttons (scripts/glyph_label.gd).
@@ -3824,8 +3827,11 @@ func update_fps_counter(dt: float) -> void:
 		layer.layer = 50
 		add_child(layer)
 		fps_counter = Label.new()
-		fps_counter.position = Vector2(8,4)
-		fps_counter.add_theme_font_size_override("font_size",14)
+		# Upright along the left edge, half-way up: every corner holds something of some screen
+		# (the HUD's title, its sliders, the chips of the finder).
+		fps_counter.position = Vector2(3,300)
+		fps_counter.rotation = -PI/2
+		fps_counter.add_theme_font_size_override("font_size",12)
 		fps_counter.add_theme_color_override("font_color",Color(.6,1,.6))
 		fps_counter.add_theme_color_override("font_shadow_color",Color(0,0,0,.9))
 		fps_counter.add_theme_constant_override("shadow_offset_x",1)

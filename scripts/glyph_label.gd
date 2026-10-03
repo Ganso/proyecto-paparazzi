@@ -76,6 +76,36 @@ static func draw_chip(ci: CanvasItem, font: Font, pos: Vector2, kind: String, la
 	return w
 
 # Lays the text out from pos, wrapping at width (0: no wrap). Returns the height used.
+# Height the text takes when wrapped to a width (tools/check_text_fit.gd).
+static func measure(font: Font, text_value: String, size: int, width = 0.0) -> Vector2:
+	var line_h = size*1.55
+	var count = 0
+	var widest = 0.0
+	for paragraph in text_value.split("\n"):
+		var x = 0.0
+		var any = false
+		for tok in tokens(paragraph):
+			var pieces = [tok] if tok[0] != "t" else []
+			if tok[0] == "t":
+				var word = ""
+				for ch in tok[1]:
+					word += ch
+					if ch == " ":
+						pieces.append(["t",word])
+						word = ""
+				if word != "": pieces.append(["t",word])
+			for piece in pieces:
+				var w = font.get_string_size(piece[1],HORIZONTAL_ALIGNMENT_LEFT,-1,size).x if piece[0] == "t" else chip_width(font,piece[0],piece[1],size)+3
+				if width > 0 and x+w > width and any:
+					count += 1
+					widest = maxf(widest,x)
+					x = 0.0
+				any = true
+				x += w
+		count += 1
+		widest = maxf(widest,x)
+	return Vector2(widest,count*line_h)
+
 static func draw_rich(ci: CanvasItem, font: Font, pos: Vector2, text_value: String, size: int, color: Color, width = 0.0, shadow = false, center = false) -> float:
 	var line_h = size*1.55
 	var lines = []          # each: [[kind, text, w], ...]

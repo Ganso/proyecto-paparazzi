@@ -64,6 +64,8 @@ func _process(_dt: float) -> void:
 		raise_button.text = Texts.get_text("bajar_camara") if main.camera_raised else Texts.get_text("subir_camara")
 		var vr: Rect2 = main.view_rect
 		var bottom = 617.0 if (not main.hud_bottom.is_empty() and main.hud_bottom[0].visible) else vr.end.y-12   # above the bottom bar when it shows
+		# The tutorial's panel sits over the bottom of the finder: the button goes above it.
+		if main.tutorial and main.tutorial.visible: bottom = minf(bottom,main.tutorial.panel.position.y-8)
 		raise_button.position = Vector2(vr.end.x-raise_button.size.x-10,minf(bottom,vr.end.y-12)-raise_button.size.y)
 	exit_button.visible = main.mode == "SEARCH"
 	if exit_button.visible:
@@ -77,6 +79,12 @@ func _process(_dt: float) -> void:
 		var r: Rect2 = main.view_rect
 		toggle.text = ("✓ " if enabled else "")+Texts.get_text("ayuda_pantalla")+" · "+Glyphs.kp("ayuda_pantalla")
 		toggle.position = Vector2(r.end.x-toggle.size.x-10,main.hud_clear_top())
+	# In a lesson the Academy's panel takes the right side: the two chips move to its left.
+	if main.academy and main.academy.active and main.academy.panel.visible and toggle.visible:
+		var left = main.academy.panel.position.x-10
+		if toggle.position.x+toggle.size.x > left:
+			toggle.position.x = left-toggle.size.x
+			if exit_button.visible: exit_button.position = Vector2(toggle.position.x-exit_button.size.x-10,toggle.position.y)
 	queue_redraw()
 
 # [key, name, value, kind] for every control of the mounted camera; kind is manual, auto or fixed.

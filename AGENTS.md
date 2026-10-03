@@ -98,6 +98,7 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 - **Determinismo**: Una entrada fotográfica idéntica en `photography.gd` produce siempre la misma puntuación numérica.
 - **Oclusión física**: Se evalúan **5 rayos directos** contra la geometría 3D real de personajes y mobiliario.
 - **Textos e Idioma**: Todo texto visible debe resolverse a través de `texts.gd` y estar registrado en `data/textos.es.json`.
+- **Ningún texto desborda**: al añadir o alargar un texto, o tocar una pantalla, pasa `tools/check_text_fit.gd` (recorre todas las pantallas de todos los modos, con teclado y con mando; [docs/TESTS_Y_VERIFICACION.md §4](docs/TESTS_Y_VERIFICACION.md)). Ojo: una etiqueta creada con `main.gd::label()` solo ajusta líneas si se le activa `autowrap_mode`.
 - **Controles en los textos**: ninguna ayuda escribe una tecla a mano: usa `{control}` (tabla de `scripts/input_glyphs.gd`), que muestra la tecla o el botón del mando según el dispositivo en uso, y se dibuja como tecla o botón con `scripts/glyph_label.gd` (`Texts.get_rich()`). Un control nuevo se añade a esa tabla con sus nombres de teclado, Xbox, PlayStation y Nintendo ([docs/futuro/22 §3](docs/futuro/22_MENU_TUTORIAL_MANDO.md)).
 
 ---

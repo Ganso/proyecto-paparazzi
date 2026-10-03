@@ -77,8 +77,11 @@ func _draw() -> void:
 	var ly = y+18
 	var col = 0
 	var gi = 0
+	var column_y = [ly,ly]
 	for g in GROUPS:
-		var pos = Vector2(origin.x+(gi%2)*560,ly+(gi/2)*30)
+		# Each column runs down on its own: a line that wraps pushes the ones below it.
+		var pos = Vector2(origin.x+(gi%2)*560,column_y[gi%2])
 		draw_rect(Rect2(pos+Vector2(0,4),Vector2(16,16)),GROUPS[g][0])
-		GlyphLabel.draw_rich(self,font,pos+Vector2(24,-2),Texts.get_rich("teclado_"+g),14,UiStyle.INK,530)
+		var used = GlyphLabel.draw_rich(self,font,pos+Vector2(24,-2),Texts.get_rich("teclado_"+g),14,UiStyle.INK,505)
+		column_y[gi%2] += maxf(30.0,used+8.0)
 		gi += 1
