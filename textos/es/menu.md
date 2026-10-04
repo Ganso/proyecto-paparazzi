@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.2.0 · EN DESARROLLO
+VERSIÓN ALFA 0.3.0 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks

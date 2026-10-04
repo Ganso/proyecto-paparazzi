@@ -24,3 +24,45 @@ Mientras se construye el parque (unos 4 s) el motor muestra `assets/marca/carga.
 Las cuatro imágenes salen del logotipo modelado en Blender: `GIRO=1 ./tools/build_logo.sh` (modelo y dibujo, `tools/blender/build_logo.py`) y después `bash tools/build_branding.sh` (composición con Pillow y las fuentes del proyecto). Se importan como texturas normales (con `importer="keep"` entraban dos veces en el APK de Android y no se podía firmar). El texto de `carga.png` va dentro de la imagen, porque se muestra antes de que exista `texts.gd` (lo toma de `nombre_juego` y `cargando_parque` al generarla). Ajustes en `project.godot` (`boot_splash/*`, `config/icon`); comprobado en `tests/test_export.gd`.
 
 **Naranja de la marca en los menús** (usuario, 04-10-2026): el nombre y todos los títulos de los menús, que van en Russo One, se escriben en el naranja del logotipo (`UiStyle.BRAND`, `#f07d28`): `main.gd::label()` lo aplica a los títulos de 26 px o más, salvo a los que llevan un color con significado (nota de la foto, nivel superado o no). Dentro del juego (visor, Academia) no se usa. Licencia de las tipografías en el README y en `scripts/ui_style.gd`; el texto de la OFL de Russo One (`assets/fuentes/RussoOne-OFL.txt`) va dentro de los ejecutables.
+
+---
+
+## 3. Identidad Visual y Códigos de Color (HTML / Hex)
+
+La identidad de **PhotoHacks** se articula en torno al naranja cálido de la marca (cámara de bloques y títulos), el azul corporativo de fondo de marca/carga, y los tonos cian/celestes y tintas del sistema de interfaz (`scripts/ui_style.gd`, `shaders/frosted_glass.gdshader` y `assets/marca/`):
+
+### 3.1 Colores Principales de Marca y Logotipo
+
+| Elemento | Código HTML (Hex) | RGB Decimal | Uso en el proyecto |
+|---|:---:|:---:|---|
+| **Naranja Marca** (`UiStyle.BRAND`) | `#F07D28` | `(240, 125, 40)` | Logotipo (objetivo y botones), nombre del juego y títulos principales en Russo One (`main.gd`, `boot_loader.gd`, `assets/marca/`). |
+| **Azul Marca / Carga** | `#296CA5` | `(41, 108, 165)` | Fondo oficial del icono de la aplicación (`assets/marca/icono.png`), pantalla de arranque y carga (`assets/marca/carga.png`, `boot_splash/bg_color`). |
+| **Blanco Logo** | `#D6D4CC` | `(214, 212, 204)` | Carcasa de bloques de la cámara del logotipo en 3D (`tools/blender/build_logo.py`). |
+
+### 3.2 Sistema de Interfaz Claro (Por defecto)
+
+| Token (`UiStyle`) | Código HTML (Hex) | Uso en la interfaz |
+|---|:---:|---|
+| **Cian / Celeste Resalte** (`SKY`) | `#2F9BE8` | Acentos interactivos, bordes activos, aros de selección, enlaces y llamadas de atención. |
+| **Cian Profundo / Acento** (`SKY_DEEP`) | `#155A8C` | Acentos de alto contraste, texto resaltado y estados pulsados sobre fondos claros. |
+| **Cian Suave** (`SKY_SOFT`) | `#D6ECFB` | Fondos de selección tenue, texto de carga secundario («Cargando el parque…»). |
+| **Tinta Principal** (`INK`) | `#0E1924` | Texto principal oscuro sobre cristal esmerilado claro. Máximo contraste y legibilidad. |
+| **Tinta Secundaria** (`SOFT`) | `#26394A` | Subtítulos, descripciones secundarias y etiquetas auxiliares. |
+| **Tinta Tenue** (`FAINT`) | `#3B4F62` | Textos deshabilitados, detalles terciarios y metadatos secundarios. |
+| **Alerta / Advertencia** (`WARN`) | `#A13A1F` | Indicadores de advertencia, errores, «no toques» o elementos desaconsejados. |
+| **Superficie** (`SURFACE`) | `#FFFFFF` | Base de paneles y tarjetas en modo claro. |
+
+### 3.3 Sistema de Interfaz Oscuro (Modo noche / Dark)
+
+| Token (`UiStyle`) | Código HTML (Hex) | Uso en modo oscuro |
+|---|:---:|---|
+| **Cian Resalte Oscuro** (`SKY`) | `#3AA5F0` | Resaltes celestes vivos sobre fondos oscuros. |
+| **Cian Profundo Oscuro** (`SKY_DEEP`) | `#7CC6FF` | Acentos celestes luminosos. |
+| **Cian Oscuro Fondo** (`SKY_SOFT`) | `#1D3B55` | Fondos de elementos seleccionados o contenedores sutiles sobre cristal oscuro. |
+| **Tinta Clara** (`INK`) | `#EEF4FA` | Texto principal blanco azulado sobre fondo oscuro. |
+| **Tinta Suave Oscura** (`SOFT`) | `#C9D6E2` | Subtítulos en modo oscuro. |
+| **Tinta Tenue Oscura** (`FAINT`) | `#9FB1C2` | Metadatos y textos tenues en modo oscuro. |
+| **Alerta Oscuro** (`WARN`) | `#FF9A76` | Alertas cálidas sobre fondo oscuro. |
+| **Superficie Oscura** (`SURFACE`) | `#17212E` | Fondo base de tarjetas y paneles oscuros (`Color(.09, .13, .18)`). |
+| **Cristal Oscuro Fondo** (`GLASS_TINT`) | `#0D131A` | Tinte del cristal esmerilado en modo oscuro (`Color(.05, .075, .10)`). |
+

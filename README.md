@@ -1,6 +1,6 @@
-# PhotoHacks (v0.2.0-alpha)
+# PhotoHacks (v0.3.0-alpha)
 
-> Antes «Proyecto Paparazzi» (nombre de trabajo; sigue en el repositorio, el identificador del paquete y parte de la documentación).
+> Antes «Proyecto Paparazzi» (nombre de trabajo; sigue en el repositorio, el identificador del paquete y parte de la documentación). El nombre definitivo **PhotoHacks** es un homenaje explícito al proyecto **MusicHacks** de Jaime Altozano.
 
 > **Idea fundamental del proyecto: enseñar fotografía como Jaime Altozano enseña la música.** Divulgación que entusiasma, con ejemplos que se ven y se tocan, cercanía y rigor: cada concepto se entiende porque se experimenta haciendo la foto.
 
@@ -147,6 +147,17 @@ Ambos forman parte de [GeeseBumps](https://www.geesebumps.com/).
 PhotoHacks es software libre: se distribuye bajo la **Licencia Pública General de GNU, versión 3** (GPL-3.0). El texto completo está en [LICENSE](LICENSE).
 
 Copyright © 2026 Javi Prieto (GeeseBumps). Música © Haddhar (GeeseBumps).
+
+### Identidad Visual y Colores
+
+- **Naranja Marca** (`#F07D28`): Logotipo y títulos principales (Russo One).
+- **Azul Marca / Carga** (`#296CA5`): Fondo del icono de la aplicación y pantalla de arranque.
+- **Cian / Celeste de Resalte** (`#2F9BE8`): Acentos interactivos, bordes y foco de la interfaz.
+- **Cian Profundo** (`#155A8C`): Acentos de alto contraste en interfaz clara (`#7CC6FF` en modo oscuro).
+- **Cian Suave** (`#D6ECFB`): Fondos sutiles de selección y texto de carga (`#1D3B55` en modo oscuro).
+- **Tinta Principal** (`#0E1924`): Texto oscuro sobre cristal claro (`#EEF4FA` en modo oscuro).
+
+Detalle completo de la paleta en [docs/futuro/20_INTERFAZ_CLARA.md](docs/futuro/20_INTERFAZ_CLARA.md).
 
 ### Tipografías
 

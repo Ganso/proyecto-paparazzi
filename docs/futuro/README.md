@@ -1,6 +1,6 @@
 # Banco de Funcionalidades Futuras — PhotoHacks
 
-Este directorio contiene las especificaciones de diseño, análisis de viabilidad técnica y propuestas arquitectónicas para futuras expansiones de **PhotoHacks**.
+Este directorio contiene las especificaciones de diseño, análisis de viabilidad técnica y propuestas arquitectónicas para futuras expansiones de **PhotoHacks** (nombre definitivo en homenaje al proyecto **MusicHacks** de Jaime Altozano).
 
 > **Idea fundamental del proyecto (usuario, 03-10-2026): enseñar fotografía como Jaime Altozano enseña la música.** Divulgación que entusiasma, con ejemplos que se ven y se tocan, cercanía y rigor: cada concepto se entiende porque se experimenta haciendo la foto.
 

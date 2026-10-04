@@ -1,6 +1,6 @@
 # Arquitectura Global del Sistema — PhotoHacks
 
-Este documento describe la arquitectura modular, el flujo de datos, la máquina de estados y el pipeline de renderizado de **PhotoHacks**.
+Este documento describe la arquitectura modular, el flujo de datos, la máquina de estados y el pipeline de renderizado de **PhotoHacks** (nombre definitivo del proyecto en homenaje a **MusicHacks** de Jaime Altozano).
 
 ---
 

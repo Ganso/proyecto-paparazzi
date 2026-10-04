@@ -135,8 +135,9 @@ func check(name: String) -> void:
 # The scene reloads itself when the scenario changes: follow the new one, and keep its saves away
 # from the player's files.
 func guard() -> void:
-	game.academy.progress_path = out_dir.path_join("guardado/academia.cfg")
-	game.academy.load_progress()
+	if game and game.academy:
+		game.academy.progress_path = out_dir.path_join("guardado/academia.cfg")
+		game.academy.load_progress()
 
 func sync() -> void:
 	await frames(3)
