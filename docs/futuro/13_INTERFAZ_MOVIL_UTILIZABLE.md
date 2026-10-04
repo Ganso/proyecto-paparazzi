@@ -171,3 +171,4 @@ Hecha la versión que permite **jugar a todo con los dedos**; el diseño a dos p
 - **Menú**: deslizar cambia de modo.
 - **Pruebas**: `tests/test_touch.gd` (37 comprobaciones con toques simulados: mirar, pellizcar, tocar para enfocar, tira con − +, cada botón, tutorial, Academia y paseo con palanca) y `tools/test_android.sh` en el emulador.
 - **Pendiente**: tamaños de los botones de las pantallas (menús, resultado, equipo, Academia), que son los del escritorio; aprovechar las bandas laterales de las pantallas 20:9; agacharse; el diseño fino de este documento.
+- **Invertir la mirada** (Opciones: No, Horizontal, Vertical o Ambos; `main.gd::look_invert`, `look_sign()`): vale para el dedo, el ratón y las setas. Por defecto el dedo arrastra la escena en los dos ejes (antes, en vertical iba al revés que en horizontal). Lo que falta para una versión de Android perfecta está en [26](26_ANDROID_PERFECTO.md).

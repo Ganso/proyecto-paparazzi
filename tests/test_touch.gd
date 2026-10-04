@@ -73,6 +73,24 @@ func run() -> void:
 	touch(0,centre+Vector2(-160,60),false)
 	await frames(2)
 	check(absf(angle_difference(deg_to_rad(a0),deg_to_rad(game.angle))) > .02 and absf(game.pitch-p0) > .5,"One finger drags the view (%.1f° → %.1f°)" % [a0,game.angle])
+	# The finger drags the scene: to the left it turns the view right, downwards it looks up.
+	var a1 = game.angle
+	var p1 = game.pitch
+	touch(0,centre,true)
+	await drag(0,centre,centre+Vector2(-100,80))
+	touch(0,centre+Vector2(-100,80),false)
+	var turned = angle_difference(deg_to_rad(a1),deg_to_rad(game.angle))
+	check(turned > 0 and game.pitch > p1,"The finger drags the scene on both axes")
+	game.look_invert = "ambos"
+	a1 = game.angle
+	p1 = game.pitch
+	touch(0,centre,true)
+	await drag(0,centre,centre+Vector2(-100,80))
+	touch(0,centre+Vector2(-100,80),false)
+	check(angle_difference(deg_to_rad(a1),deg_to_rad(game.angle)) < 0 and game.pitch < p1,"«Invertir mirada: Ambos» turns both axes round")
+	game.look_invert = "v"
+	check(game.look_sign() == Vector2(1,-1) and game.INVERT_CHOICES == ["no","h","v","ambos"],"…and it can be only sideways or only up and down")
+	game.look_invert = "no"
 	var f0 = game.focal
 	touch(0,centre+Vector2(-60,0),true)
 	touch(1,centre+Vector2(60,0),true)

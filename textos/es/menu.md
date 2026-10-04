@@ -242,6 +242,21 @@ Ayuda en pantalla: %s
 ### opcion_vibracion
 Vibración del mando: %s
 
+### opcion_invertir
+Invertir mirada: %s
+
+### invertir_no
+No
+
+### invertir_h
+Horizontal
+
+### invertir_v
+Vertical
+
+### invertir_ambos
+Ambos
+
 ### modo_historia
 Modo 2 de 6
 

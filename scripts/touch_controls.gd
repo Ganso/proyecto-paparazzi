@@ -127,8 +127,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var at = get_global_transform().affine_inverse()*event.position
 		if event.index == stick_finger: push_stick(at)
 		elif look_fingers.has(event.index):
-			main.angle = fposmod(main.angle-event.relative.x*.16,360)
-			main.pitch = clampf(main.pitch+event.relative.y*.16,-70,70)
+			main.angle = fposmod(main.angle-event.relative.x*.16*main.look_sign().x,360)
+			main.pitch = clampf(main.pitch+event.relative.y*.16*main.look_sign().y,-70,70)
 			main.update_camera()
 		get_viewport().set_input_as_handled()
 

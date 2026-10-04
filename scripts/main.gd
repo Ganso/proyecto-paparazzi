@@ -2136,8 +2136,8 @@ func update_photographer(dt: float) -> void:
 		if pad.length() > .2 and Engine.get_process_frames()%60 == 0:
 			log_line("paseo · seta izq (%.2f, %.2f) · der (%.2f, %.2f) · vista %.1f° / %.1f°" % [pad.x,pad.y,look.x,look.y,angle,pitch])
 		if look.length() > .2:
-			angle = fposmod(angle+look.x*dt*110,360)
-			pitch = clampf(pitch-look.y*dt*80,-70,70)
+			angle = fposmod(angle+look.x*dt*110*look_sign().x,360)
+			pitch = clampf(pitch-look.y*dt*80*look_sign().y,-70,70)
 		var yaw = deg_to_rad(angle)
 		var forward = Vector3(sin(yaw),0,-cos(yaw))
 		var right = Vector3(cos(yaw),0,sin(yaw))
@@ -2370,8 +2370,8 @@ func photographer_input(event: InputEvent) -> bool:
 	# While walking only looking around, help and Escape reach the rest of the game.
 	if event is InputEventMouseMotion:
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			angle = fposmod(angle+event.relative.x*.11,360)
-			pitch = clampf(pitch-event.relative.y*.11,-70,70)
+			angle = fposmod(angle+event.relative.x*.11*look_sign().x,360)
+			pitch = clampf(pitch-event.relative.y*.11*look_sign().y,-70,70)
 			update_camera()
 		return true
 	if event is InputEventMouseButton: return true
@@ -2518,6 +2518,20 @@ func rumble(weak: float, strong: float, seconds: float) -> void:
 	rumbles += 1
 	for id in Input.get_connected_joypads(): Input.start_joy_vibration(id,weak,strong,seconds)
 
+# Invert the look (Options): "no", "h" (sideways), "v" (up and down) or "ambos". It applies to
+# whatever looks by dragging or pushing — the finger, the mouse and the sticks — not to the keys.
+const INVERT_CHOICES = ["no","h","v","ambos"]
+var look_invert = "no"
+func look_sign() -> Vector2:
+	return Vector2(-1.0 if look_invert in ["h","ambos"] else 1.0,-1.0 if look_invert in ["v","ambos"] else 1.0)
+
+func set_look_invert(value: String) -> void:
+	look_invert = value
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","invertir_mirada",value)
+	config.save("user://interfaz.cfg")
+
 func set_vibration(value: bool) -> void:
 	vibration = value
 	var config = ConfigFile.new()
@@ -2531,6 +2545,8 @@ func load_theme() -> void:
 	var config = ConfigFile.new()
 	var dark = config.load("user://interfaz.cfg") == OK and str(config.get_value("interfaz","tema","claro")) == "oscuro"
 	vibration = bool(config.get_value("interfaz","vibracion",true))
+	look_invert = str(config.get_value("interfaz","invertir_mirada","no"))
+	if not look_invert in INVERT_CHOICES: look_invert = "no"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--ui="): dark = arg == "--ui=oscuro"
 	UiStyle.set_dark(dark)
@@ -2926,8 +2942,8 @@ func update_pad(dt: float) -> void:
 	# it also turned and tilted the view here, so walking forward looked up as well.
 	var walking = crowd != null and not camera_raised
 	if (lx != 0.0 or ly != 0.0) and not walking:
-		angle = fposmod(angle+lx*dt*42*24/view_focal()*slow,360)
-		pitch -= ly*dt*30*24/view_focal()*slow
+		angle = fposmod(angle+lx*dt*42*24/view_focal()*slow*look_sign().x,360)
+		pitch -= ly*dt*30*24/view_focal()*slow*look_sign().y
 	var rx = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X))
 	var ry = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
 	if eye_ready():
@@ -3594,9 +3610,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if dragged:
 				# The view follows the mouse on both axes (it used to drag the scene sideways but
 				# follow the mouse vertically, which felt inverted).
-				var pan_delta = event.relative.x*.065*24/view_focal()
+				var pan_delta = event.relative.x*.065*24/view_focal()*look_sign().x
 				angle = fposmod(angle+pan_delta,360)
-				pitch -= event.relative.y*.065*24/view_focal()
+				pitch -= event.relative.y*.065*24/view_focal()*look_sign().y
 				pan_velocity = clampf(pan_delta*40,-80,80)
 				update_camera()
 	elif event is InputEventScreenTouch:
@@ -3612,9 +3628,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			if touches.is_empty(): had_multitouch = false
 	elif event is InputEventScreenDrag and touches.has(event.index):
 		if touches.size() == 1:
-			var pan_delta = -event.relative.x*.065*24/view_focal()
+			# The finger drags the scene on both axes (vertically it used to go the other way round);
+			# the «invert the look» option turns either axis.
+			var pan_delta = -event.relative.x*.065*24/view_focal()*look_sign().x
 			angle = fposmod(angle+pan_delta,360)
-			pitch -= event.relative.y*.065*24/view_focal()
+			pitch += event.relative.y*.065*24/view_focal()*look_sign().y
 			pan_velocity = clampf(pan_delta*40,-80,80)
 		else:
 			var ids = touches.keys()

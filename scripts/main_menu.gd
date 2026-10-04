@@ -270,6 +270,7 @@ func build_options() -> void:
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
 		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
 		[Texts.get_text("opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
+		[Texts.get_text("opcion_invertir") % Texts.get_text("invertir_"+main.look_invert),func(): main.set_look_invert(main.INVERT_CHOICES[(main.INVERT_CHOICES.find(main.look_invert)+1)%4]); build_card()],
 		[Texts.get_text("menu_insignias"),main.show_badges],
 		[Texts.get_text("menu_album"),func(): main.show_album()],
 	]
