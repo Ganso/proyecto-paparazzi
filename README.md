@@ -128,3 +128,13 @@ godot-4 --path . -- --smoke-test
   - Mecanismo anti-deadlock progresivo (cambio de carril, cesión de paso y cambio de sentido).
   - Verificado deterministamente con la suite [`tests/test_navigation.gd`](tests/test_navigation.gd).
 
+
+---
+
+## Licencia
+
+Proyecto Paparazzi es software libre: se distribuye bajo la **Licencia Pública General de GNU, versión 3** (GPL-3.0). El texto completo está en [LICENSE](LICENSE).
+
+Copyright © 2026 Javier Prieto.
+
+Las tipografías incluidas (Roboto y Quicksand, en `assets/fuentes/`) conservan sus propias licencias libres.
