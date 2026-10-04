@@ -131,10 +131,19 @@ godot-4 --path . -- --smoke-test
 
 ---
 
+## Créditos
+
+- **Código y diseño**: Javi Prieto ([@TheGoOse](https://x.com/TheGoOse)).
+- **Música**: Haddhar ([@haddhar](https://x.com/haddhar)).
+
+Ambos forman parte de [GeeseBumps](https://www.geesebumps.com/).
+
+---
+
 ## Licencia
 
 Proyecto Paparazzi es software libre: se distribuye bajo la **Licencia Pública General de GNU, versión 3** (GPL-3.0). El texto completo está en [LICENSE](LICENSE).
 
-Copyright © 2026 Javier Prieto.
+Copyright © 2026 Javi Prieto (GeeseBumps). Música © Haddhar (GeeseBumps).
 
 Las tipografías incluidas (Roboto y Quicksand, en `assets/fuentes/`) conservan sus propias licencias libres.
