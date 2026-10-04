@@ -166,6 +166,55 @@ Esta ayuda ⟦H⟧ · ayuda en pantalla ⟦F1⟧ · pausa y salir ⟦Esc⟧ · a
 ### ayuda_titulo_teclado
 Controles con teclado y ratón
 
+### ayuda_titulo_tactil
+Controles táctiles
+
+### ayuda_texto_tactil
+Mirar: Arrastra un dedo por la imagen.
+Zoom: Pellizca con dos dedos, o elige Zoom en la tira de abajo y usa − y +.
+Enfocar: Un toque sobre la persona, o el botón «AF».
+Disparar: El botón ●.
+Ajustes de la cámara: Toca uno en la tira de abajo y cámbialo con − y +. Solo aparecen los que puedes cambiar.
+Buscar a simple vista: «Cámara» la baja y la vuelve a subir.
+A la izquierda: Tercios, bloqueo de foco y exposición, y modo de medición.
+Parque grande: La palanca de la izquierda camina (hasta el borde, corre) y arrastrando el dedo se mira.
+
+### tactil_pausa
+Pausa
+
+### tactil_ayuda
+Ayuda
+
+### tactil_af
+AF
+
+### tactil_disparar
+●
+
+### tactil_camara_bajar
+Cámara ↓
+
+### tactil_camara_subir
+Cámara ↑
+
+### tactil_tercios
+Tercios
+
+### tactil_bloqueo
+Bloqueo
+
+### tactil_medicion
+Medición
+
+### tactil_lupa
+Lupa
+
+### tactil_manivela
+Manivela
+
+### tactil_andar
+Andar
+
 ### ayuda_fotometria
 Fotometría
 

@@ -137,6 +137,8 @@ var portrait_of = null
 # The control in hand (scripts/control_strip.gd, docs/futuro/22 §5): the one setting the wheel, the
 # D-pad ↑↓ or Page Up/Down change. "" until chosen: then the first the camera lets the player drive.
 var selected_control = ""
+var touch_controls: Control
+var touch_move = Vector2.ZERO        # the walking stick of the touch interface
 var control_strip: Control
 var hunt_time = 0.0                 # seconds searching with the camera at the eye (hint: lower it)
 var hunt_next = 30.0
@@ -248,6 +250,7 @@ var fps_label: Label
 
 func _ready() -> void:
 	load_theme()
+	if OS.has_feature("mobile"): Glyphs.touch = true
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="): screenshot_path = arg.trim_prefix("--screenshot=")
 		if arg == "--smoke-test": smoke = true
@@ -267,6 +270,10 @@ func _ready() -> void:
 		if arg == "--walk-demo": walk_demo = 0.0
 		if arg == "--photo-walk": photo_walk = {"t":0.0,"phase":"walk","timer":3.0}
 		if arg == "--sandbox": pending_start["sandbox_demo"] = true
+		# The touch interface on the desktop: the mouse plays the finger (how it is tested).
+		if arg == "--touch":
+			Glyphs.touch = true
+			Input.emulate_touch_from_mouse = true
 		if arg == "--tutorial": pending_start["tutorial"] = true
 		if arg.begins_with("--level="): pending_start["level"] = int(arg.trim_prefix("--level="))-1
 		# Cheat code: every arcade level open for this run (the saved progress is not touched).
@@ -288,6 +295,7 @@ func _ready() -> void:
 		if arg.begins_with("--debug-off="): debug_off = arg.trim_prefix("--debug-off=").split(",")
 		for key in ["angle","pitch","focal"]:
 			if arg.begins_with("--%s=" % key): shot_view[key] = float(arg.get_slice("=",1))
+	if Glyphs.touch: Glyphs.device = "tactil"
 	if not Array(OS.get_cmdline_user_args()).any(func(a): return a.begins_with("--profile=")): graphics_preset = startup_profile()
 	# Ultra needs Forward+ and the other profiles run in gl_compatibility (docs/futuro/17 §2.1).
 	# Desktop runs every profile in Forward+ (docs/futuro/17 §2.1). Ultra's effects need it: in the
@@ -695,6 +703,8 @@ func build_ui() -> void:
 	ui.add_child(control_strip)
 	tutorial = preload("res://scripts/tutorial.gd").new(self)
 	ui.add_child(tutorial)
+	touch_controls = preload("res://scripts/touch_controls.gd").new(self)
+	ui.add_child(touch_controls)
 	raise_flash = ColorRect.new()
 	raise_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	raise_flash.color = Color(0,0,0,0)
@@ -711,7 +721,7 @@ func build_ui() -> void:
 	ui.add_child(meter_bar)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
-		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,control_strip,tutorial]: continue
+		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,control_strip,tutorial,touch_controls]: continue
 		if child is Control:
 			if child.position.y < 300: hud_top.append(child)
 			else: hud_bottom.append(child)
@@ -2119,6 +2129,7 @@ func update_photographer(dt: float) -> void:
 		if walk_demo >= 0 or not photo_walk.is_empty(): input = demo_keys.get("move",Vector2.ZERO)
 		var pad = Vector2(Input.get_joy_axis(0,JOY_AXIS_LEFT_X),Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
 		if pad.length() > .2: input += pad
+		input += touch_move
 		var look = Vector2(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X),Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
 		# Walking with the gamepad: once a second, the sticks and the view, in user://dispositivo.log
 		# (to see on the player's machine whether the left stick turns the view).
@@ -2134,7 +2145,7 @@ func update_photographer(dt: float) -> void:
 		# Gamepad: L3 toggles running (off again when the stick is let go), LT held crouches.
 		if pad.length() <= .2: pad_run = false
 		var crouching = Input.is_physical_key_pressed(KEY_CTRL) or Input.get_joy_axis(0,JOY_AXIS_TRIGGER_LEFT) > .5
-		var running = Input.is_physical_key_pressed(KEY_SHIFT) or pad_run
+		var running = Input.is_physical_key_pressed(KEY_SHIFT) or pad_run or touch_move.length() > .92
 		var speed = (RUN_SPEED if running else WALK_SPEED)*(.55 if crouching else 1.0)
 		var target_velocity = wish.limit_length(1.0)*speed
 		var walk_velocity = player.velocity.move_toward(target_velocity,dt*9.0)
@@ -2186,9 +2197,9 @@ func update_photographer(dt: float) -> void:
 	var walking_view = mode == "SEARCH" and not ready
 	if is_instance_valid(walk_label):
 		walk_label.visible = walking_view
-		walk_hint.visible = walking_view and not OS.has_feature("movie")
+		walk_hint.visible = walking_view and not OS.has_feature("movie") and not Glyphs.touch
 		walk_label.text = briefing.text if not sandbox else Texts.get_text("paseo_sandbox")
-	var want = Input.MOUSE_MODE_CAPTURED if walking_view and not camera_raised and get_window().has_focus() else Input.MOUSE_MODE_VISIBLE
+	var want = Input.MOUSE_MODE_CAPTURED if walking_view and not camera_raised and get_window().has_focus() and not Glyphs.touch else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != want and not smoke and screenshot_path == "": Input.mouse_mode = want
 
 # Classic park (docs/futuro/21 §8): the camera can be lowered too (Y or the on-screen button) to
@@ -2207,7 +2218,7 @@ func update_classic_raise(dt: float) -> void:
 	var naked = mode == "SEARCH" and not ready
 	if is_instance_valid(walk_label):
 		walk_label.visible = naked
-		walk_hint.visible = naked and not OS.has_feature("movie")
+		walk_hint.visible = naked and not OS.has_feature("movie") and not Glyphs.touch
 		walk_label.text = briefing.text
 		walk_hint.set_rich(Texts.get_rich("buscar_ayuda"))
 
@@ -2348,6 +2359,9 @@ func aim_at(p, rate: float) -> void:
 	update_camera()
 
 func photographer_input(event: InputEvent) -> bool:
+	# With the fingers: the stick and the look are touch_controls.gd's; the mouse a touch emulates
+	# (or the real one playing the finger) does nothing here.
+	if Glyphs.touch and (event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag): return not camera_raised
 	var toggle = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or event.is_action_pressed("camara_al_ojo") or (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y)
 	if toggle:
 		toggle_raise()
@@ -2537,7 +2551,8 @@ func load_interface() -> void:
 	# The camera interface everywhere on desktop (the classic full-screen HUD added nothing once the
 	# controls unfold with Tab and the on-screen help lists them); phones keep the classic one until
 	# the touch interface exists (docs/futuro/13). --interface= still forces either for tests.
-	interface_mode = "clasica" if OS.has_feature("mobile") else "camara"
+	# One interface on every device: the camera's. Phones add the touch layer (touch_controls.gd).
+	interface_mode = "camara"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--interface="): interface_mode = arg.trim_prefix("--interface=")
 	place_view()
@@ -3427,7 +3442,11 @@ func show_help() -> void:
 	help_return = previous
 	mode = "HELP"
 	var root = create_modal()
-	if Glyphs.pad():
+	if Glyphs.touch and Glyphs.device == "tactil":
+		label(root,Texts.get_text("ayuda_titulo_tactil"),Rect2(65,40,1100,55),36,Color("b8d78c"))
+		var gestures = label(root,Texts.get_text("ayuda_texto_tactil"),Rect2(65,120,1150,480),21)
+		gestures.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	elif Glyphs.pad():
 		# With a gamepad: the pad drawn with what every button does.
 		label(root,Texts.get_text("ayuda_titulo_mando"),Rect2(65,40,1100,55),36,Color("b8d78c"))
 		var diagram = preload("res://scripts/pad_diagram.gd").new()
@@ -3540,6 +3559,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_QUESTION or event.physical_keycode == KEY_H: show_help()
 		if event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9: finder.active = event.physical_keycode-KEY_1
 	if mode != "SEARCH": return
+	# Touch interface: the fingers drive the view (below); the mouse events a touch emulates, or
+	# the desktop mouse playing the finger, would move it twice.
+	if Glyphs.touch and event is InputEventMouse and not (event is InputEventMouseButton and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]): return
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 			var step = 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
@@ -3600,7 +3622,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var old_distance: float = touches[event.index].distance_to(touches[other])
 			var new_distance: float = event.position.distance_to(touches[other])
 			if old_distance > 10: focal = clampf(focal*new_distance/old_distance,equipment.lens().min,equipment.lens().max)
-			set_manual_focus(maxf(.8,(100.0 if is_inf(focus_distance) else focus_distance)*exp(-event.relative.y*.003)))
+			# (Two fingers used to drag the focus too: it moved while zooming. Focus has its − +.)
 		touches[event.index] = event.position
 		update_camera()
 

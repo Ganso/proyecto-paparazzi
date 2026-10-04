@@ -4,7 +4,10 @@ extends RefCounted
 # The interface follows the last device used (main.gd::_input() calls note()): any gamepad event
 # switches to the pad, any key, mouse or touch event back to the keyboard. The pad family (Xbox,
 # PlayStation, Nintendo) comes from Input.get_joy_name().
-static var device = "teclado"           # "teclado" or "mando"
+static var device = "teclado"           # "teclado", "mando" or "tactil"
+# Touch interface on (phones and tablets, or -- --touch): the finger is the device unless a gamepad
+# is picked up; keyboard and mouse never take over.
+static var touch = false
 static var family = "xbox"              # "xbox", "ps" or "nintendo"
 
 # Control → [keyboard and mouse, Xbox, PlayStation, Nintendo]. Xbox names are the generic ones.
@@ -51,6 +54,21 @@ const CONTROLS = {
 	"sacar": ["⟦Y⟧ · clic derecho","⦅Y⦆","⦅△⦆","⦅X⦆"],
 }
 
+# The same controls with the fingers (scripts/touch_controls.gd).
+const TOUCH = {
+	"mirar": "arrastrando un dedo por la imagen", "zoom": "pellizcando con dos dedos", "enfoque_mf": "Enfoque en la tira y − +",
+	"enfoque_mf_zoom": "Enfoque en la tira y − +", "af": "un toque sobre ella o «AF»", "disparar": "●",
+	"diafragma": "tócalo en la tira y usa − +", "velocidad": "tócala en la tira y usa − +", "iso": "tócalo en la tira y usa − +",
+	"compensacion": "tócala en la tira y usa − +", "diafragma_y": "− y +, tras tocarlo en la tira", "velocidad_y": "− y +, tras tocarla en la tira",
+	"iso_y": "− y +, tras tocarlo en la tira", "elegir_tab": "un toque en la tira", "cambiar_pag": "− y +",
+	"elegir_control": "un toque en la tira", "cambiar_control": "− y +", "parametro": "la tira de abajo y − +",
+	"punto_enfoque": "un toque en la imagen", "tercios": "«Tercios»", "fotometria": "el botón de medición", "bloqueo": "«Bloqueo»",
+	"lupa": "«Lupa»", "manivela": "«Manivela»", "bajar": "«Cámara»", "ayuda_pantalla": "—", "controles": "la tira",
+	"ayuda": "«Ayuda»", "pausa": "«Pausa»", "atras": "«Atrás»", "aceptar": "un toque", "elegir_opcion": "un toque",
+	"cambiar_modo": "‹ › o deslizando", "andar": "la palanca de la izquierda", "correr": "llevándola al borde",
+	"agacharse": "—", "mirar_paseo": "arrastrando un dedo", "sacar": "«Cámara»",
+}
+
 const MOUSE_SWITCH = 60.0        # pixels the mouse must travel within 0.4 s to take over
 static var mouse_travel = 0.0
 static var mouse_since = 0
@@ -60,6 +78,8 @@ static func note(event: InputEvent) -> bool:
 		device = "mando"
 		var joy_name = Input.get_joy_name(event.device).to_lower()
 		family = "ps" if ("playstation" in joy_name or "dualshock" in joy_name or "dualsense" in joy_name or "ps4" in joy_name or "ps5" in joy_name) else ("nintendo" if ("nintendo" in joy_name or "switch" in joy_name or "pro controller" in joy_name) else "xbox")
+	elif touch:
+		if event is InputEventScreenTouch or event is InputEventMouseButton: device = "tactil"
 	elif event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch:
 		device = "teclado"
 	elif event is InputEventMouseMotion:
@@ -82,6 +102,7 @@ static func kp(control: String) -> String:
 
 static func k(control: String) -> String:
 	var row: Array = CONTROLS.get(control,[control,control,control,control])
+	if device == "tactil": return TOUCH.get(control,row[0])
 	if device == "teclado": return row[0]
 	return row[{"xbox":1,"ps":2,"nintendo":3}[family]]
 

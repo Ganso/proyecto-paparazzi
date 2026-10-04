@@ -104,6 +104,46 @@ Haz una foto a quien quieras ({disparar}) y después baja la cámara ({sacar}) p
 ### tutorial_resultado_paseo
 Hecha. Ahora baja la cámara para seguir caminando.
 
+### tutorial_bienvenida_tactil
+> máximo 210 caracteres
+Bienvenido a Proyecto Paparazzi. Estás en el centro de un parque con una cámara: Tu trabajo es encontrar a la persona de cada encargo y hacerle una buena foto. Vamos paso a paso. Toca «Empezar».
+
+### tutorial_zoom_tactil
+> máximo 210 caracteres
+Acerca la imagen pellizcando con dos dedos (o con Zoom en la tira de abajo y +) hasta más de 70 mm, y vuelve a abrirla por debajo de 40 mm.
+
+### tutorial_encargo_tactil
+> máximo 210 caracteres
+Un encargo de verdad: Arriba tienes la descripción. Baja la cámara con «Cámara» para encontrar a esa persona y súbela para la foto. Tiene que salir entera, enfocada y sin nadie tapándola.
+
+### tutorial_controles_tactil
+> máximo 210 caracteres
+Los controles manuales están en la tira de abajo. Toca el que quieras cambiar y usa los botones − y +. Solo aparecen los que puedes cambiar en cada momento. El resto de gestos está en «Ayuda».
+
+### tutorial_diafragma_tactil
+> máximo 210 caracteres
+Prioridad a la apertura (A): Tú llevas el diafragma. Tócalo en la tira de abajo y cámbialo dos veces con − y +.
+
+### tutorial_mf_tactil
+> máximo 210 caracteres
+Enfoque manual: Toca Enfoque en la tira y usa − y + (mantenlos pulsados para ir más rápido) hasta que las dos mitades del círculo central encajen sobre alguien.
+
+### tutorial_paseo_tactil
+> máximo 210 caracteres
+Este es el parque grande, y aquí se camina. Con la cámara bajada, anda con la palanca de la izquierda y mira arrastrando un dedo por la pantalla. Da un paseo de unos metros.
+
+### tutorial_sacar_tactil
+> máximo 210 caracteres
+Para hacer fotos hay que sacar la cámara con «Cámara». Con ella al ojo no se puede andar: Se camina y se busca con la cámara bajada, y se saca solo para disparar. Sácala.
+
+### tutorial_foto_paseo_tactil
+> máximo 210 caracteres
+Haz una foto a quien quieras con ● y después baja la cámara con «Cámara» para poder seguir andando.
+
+### tutorial_fin_tactil
+> máximo 210 caracteres
+Ya sabes lo básico: Mirar, enfocar, disparar, cambiar los controles y moverte. Elige cómo seguir. Los gestos se repasan cuando quieras en «Ayuda».
+
 ### tutorial_fin
 > máximo 210 caracteres
 Ya sabes lo básico: Mirar, enfocar, disparar, cambiar los controles y moverte. Elige cómo seguir. Los controles se repasan cuando quieras con {ayuda}.

@@ -155,3 +155,19 @@ Cuando los carriles laterales estén implementados, se añade la captura móvil 
 | 4 | Telémetro táctil, giroscopio y captura móvil en evidencias | S |
 
 **Dependencias**: la migración a `InputMap` ([14 §2](14_SOPORTE_GAMEPAD.md)) es recomendable antes de la fase 3, para no duplicar la lógica de disparo.
+
+## Primera interfaz táctil funcional (04-10-2026)
+
+Hecha la versión que permite **jugar a todo con los dedos**; el diseño a dos pulgares de este documento (rueda de enfoque, zonas, disparador en dos fases, bandas laterales fuera del 16:9) sigue pendiente.
+
+- **Una sola interfaz también en el móvil**: la de la cámara (`load_interface()`), con una capa táctil encima (`scripts/touch_controls.gd`). La interfaz clásica ya no se usa en ningún dispositivo.
+- **Cuándo se activa** (`Glyphs.touch`): en móviles y tabletas, o con `-- --touch` en el escritorio (el ratón hace de dedo, `Input.emulate_touch_from_mouse`), que es como se prueba. Un mando conectado sigue mandando si se usa.
+- **Sobre la imagen**: un dedo arrastra la mirada, un toque elige el punto de enfoque y enfoca, dos dedos pellizcan el zoom (ya no mueven el enfoque).
+- **Columna derecha**: Pausa, Ayuda, AF, el disparador (●, 124 px) y «Cámara ↓/↑». En una lección de la Academia se coloca a la izquierda de su panel, y en teoría y demostración solo queda la pausa.
+- **Columna izquierda**: Tercios, Bloqueo, modo de medición y, con la TLR, Lupa y Manivela.
+- **Tira del control en mano**: fichas más altas (58 px) y botones **− y +** (mantenidos, repiten) para cambiar el ajuste tocado: es como se llevan zoom, enfoque manual, diafragma, velocidad, ISO y compensación.
+- **Parque grande**: una palanca a la izquierda camina (hasta el borde, corre) y cualquier otro dedo mira; «Cámara» la saca y la guarda.
+- **Textos**: los `{controles}` tienen su nombre táctil (`input_glyphs.gd::TOUCH`), el tutorial tiene variantes `tutorial_<paso>_tactil` y salta los dos pasos sobre la lista de teclas, y la ayuda es una lista de gestos (`ayuda_texto_tactil`). No se dibujan la lista de teclas ni los botones de teclado.
+- **Menú**: deslizar cambia de modo.
+- **Pruebas**: `tests/test_touch.gd` (37 comprobaciones con toques simulados: mirar, pellizcar, tocar para enfocar, tira con − +, cada botón, tutorial, Academia y paseo con palanca) y `tools/test_android.sh` en el emulador.
+- **Pendiente**: tamaños de los botones de las pantallas (menús, resultado, equipo, Academia), que son los del escritorio; aprovechar las bandas laterales de las pantallas 20:9; agacharse; el diseño fino de este documento.

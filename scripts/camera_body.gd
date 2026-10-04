@@ -176,7 +176,7 @@ func draw_assignment(r: Rect2) -> void:
 	var hint = Texts.get_rich("visor_tab_controles")
 	draw_string(font,Vector2(r.position.x,y),text_value,HORIZONTAL_ALIGNMENT_LEFT,r.size.x-230,13,Color(.78,.82,.74,.85))
 	# Keys as keycaps, pad buttons round (scripts/glyph_label.gd).
-	preload("res://scripts/glyph_label.gd").draw_rich(self,font,Vector2(r.end.x-200,y-13),hint,12,Color(.7,.74,.68,.85))
+	if not preload("res://scripts/input_glyphs.gd").touch: preload("res://scripts/glyph_label.gd").draw_rich(self,font,Vector2(r.end.x-200,y-13),hint,12,Color(.7,.74,.68,.85))
 
 func meter_delta() -> float:
 	return main.finder.delta_ev

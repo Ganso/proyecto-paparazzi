@@ -90,6 +90,11 @@ func enter_step() -> void:
 		visible = false
 		main.start_tutorial()
 		return
+	# With the fingers there is no list of keys to hide or show: those two steps are skipped.
+	if Glyphs.touch and Glyphs.device == "tactil" and id in ["ayuda","abruma"]:
+		step += 1
+		enter_step()
+		return
 	if id == "fin":
 		# The end is a screen of its own, with where to go next (main.gd::show_tutorial_end()).
 		visible = false
@@ -121,6 +126,7 @@ func update_panel() -> void:
 	# With the gamepad some steps are told another way (no mouse, no keys).
 	var key = "tutorial_"+id()
 	if Glyphs.pad() and Texts.get_text(key+"_mando") != key+"_mando": key += "_mando"
+	elif Glyphs.device == "tactil" and Texts.get_text(key+"_tactil") != key+"_tactil": key += "_tactil"
 	body.set_rich(Texts.get_rich(key))
 	status.add_theme_color_override("font_color",UiStyle.SKY_DEEP if done_time >= 0.0 else UiStyle.SOFT)
 	status.text = Texts.get_text("tutorial_bien") if done_time >= 0.0 else Texts.get_text("tutorial_pendiente")

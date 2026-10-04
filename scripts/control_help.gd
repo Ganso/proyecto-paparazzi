@@ -60,6 +60,13 @@ func set_enabled(value: bool) -> void:
 	queue_redraw()
 
 func _process(_dt: float) -> void:
+	# With the fingers the touch layer has its own buttons, and a list of keys means nothing.
+	if Glyphs.touch and Glyphs.device == "tactil":
+		raise_button.visible = false
+		exit_button.visible = false
+		toggle.visible = false
+		queue_redraw()
+		return
 	var can_lower = main.mode == "SEARCH" and not main.crowd and not (main.academy and main.academy.active)
 	raise_button.visible = can_lower
 	if can_lower:
@@ -126,6 +133,7 @@ func pad_key(control: String, param: String) -> String:
 func _draw() -> void:
 	# In the recorded videos (Godot's Movie Maker) the list would cover half of every scene.
 	panel_rect = Rect2()
+	if Glyphs.touch and Glyphs.device == "tactil": return
 	if OS.has_feature("movie") and not main.demo.has("strip-demo"): return
 	if not enabled or main.mode != "SEARCH" or not main.eye_ready(): return
 	var r: Rect2 = main.view_rect

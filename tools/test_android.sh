@@ -65,7 +65,7 @@ tap 833 802; sleep 6; shot 02_tutorial
 check "$([ -n "$("$ADB" shell pidof $PKG)" ] && echo 1 || echo 0)" "«Entrar» abre el tutorial"
 tap 1536 861; sleep 2
 "$ADB" shell input swipe $((1200*W/2400)) $((500*H/1080)) $((800*W/2400)) $((520*H/1080)) 400; sleep 2
-tap 1930 1008; sleep 6; shot 03_foto
+tap 2052 765; sleep 6; shot 03_foto
 check "$([ -n "$("$ADB" shell pidof $PKG)" ] && echo 1 || echo 0)" "arrastrar para mirar y «Disparar» no lo tumban"
 check "$([ "$(errors)" = 0 ] && echo 1 || echo 0)" "sin errores tras jugar ($(errors))"
 

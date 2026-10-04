@@ -219,6 +219,7 @@ func enter_button(callback: Callable) -> void:
 	enter_callback = callback
 
 var enter_callback: Callable
+var swipe = 0.0
 
 func build_sandbox() -> void:
 	cards = {}
@@ -289,6 +290,11 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			enter_callback.call()
 			return
+	# A swipe across the screen changes the mode too.
+	if event is InputEventScreenTouch:
+		if event.pressed: swipe = 0.0
+		elif absf(swipe) > 140.0: step = -1 if swipe > 0 else 1
+	if event is InputEventScreenDrag: swipe += event.relative.x
 	if event is InputEventJoypadButton and event.pressed:
 		if event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_LEFT_SHOULDER]: step = -1
 		elif event.button_index in [JOY_BUTTON_DPAD_RIGHT,JOY_BUTTON_RIGHT_SHOULDER]: step = 1
