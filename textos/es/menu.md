@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA · EN DESARROLLO
+VERSIÓN ALFA 0.2.0 · EN DESARROLLO
 
 ### menu_lema
 Busca a la persona del encargo y fotografíala. Tú eliges el encuadre, el enfoque y la exposición.

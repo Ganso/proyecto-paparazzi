@@ -3209,8 +3209,10 @@ func show_results() -> void:
 		return
 	if arcade_level >= 0:
 		var more = shots > 0 and not level_over
-		if more: button(root,Texts.get_text("arcade_otra_foto_d") % shots,Rect2(803,642,204,52),resume_search)
-		button(root,Texts.get_text("arcade_terminar") if more else Texts.get_text("arcade_ver_resultado"),Rect2(1020 if more else 803,642,234 if more else 451,52),end_level,true)
+		# A failed photo with shots left: the button in hand is «another photo», not «end the level».
+		var failed = r.rejected or r.score < int(Arcade.LEVELS[arcade_level].min)
+		if more: button(root,Texts.get_text("arcade_otra_foto_d") % shots,Rect2(803,642,204,52),resume_search,failed)
+		button(root,Texts.get_text("arcade_terminar") if more else Texts.get_text("arcade_ver_resultado"),Rect2(1020 if more else 803,642,234 if more else 451,52),end_level,not (more and failed))
 		return
 	if shots > 0: button(root,Texts.get_text("reintentar_d") % shots,Rect2(803,642,204,52),resume_search)
 	button(root,Texts.get_text("siguiente"),Rect2(1020 if shots > 0 else 803,642,234 if shots > 0 else 451,52),finish_assignment,true)

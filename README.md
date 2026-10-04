@@ -1,4 +1,4 @@
-# Proyecto Paparazzi (v0.1.0-alpha)
+# Proyecto Paparazzi (v0.2.0-alpha)
 
 > **Idea fundamental del proyecto: enseñar fotografía como Jaime Altozano enseña la música.** Divulgación que entusiasma, con ejemplos que se ven y se tocan, cercanía y rigor: cada concepto se entiende porque se experimenta haciendo la foto.
 
