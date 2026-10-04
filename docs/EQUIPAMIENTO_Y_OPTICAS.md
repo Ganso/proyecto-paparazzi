@@ -1,4 +1,4 @@
-# Equipamiento, Ópticas e Instrumentación — Proyecto Paparazzi
+# Equipamiento, Ópticas e Instrumentación — PhotoHacks
 
 Este documento detalla los cuerpos de cámara, el catálogo de objetivos, el sistema de película analógica y la instrumentación del visor HUD definidos en [scripts/equipment.gd](../scripts/equipment.gd) y [scripts/viewfinder.gd](../scripts/viewfinder.gd).
 

@@ -1,4 +1,4 @@
-# Escenario Cilíndrico, Clima y Presupuestos de Rendimiento — Proyecto Paparazzi
+# Escenario Cilíndrico, Clima y Presupuestos de Rendimiento — PhotoHacks
 
 Este documento describe la arquitectura geométrica del parque procedural, la iluminación dinámica, el sistema meteorológico de nubes y los presupuestos de rendimiento por perfil documentados en [scripts/park.gd](../scripts/park.gd).
 

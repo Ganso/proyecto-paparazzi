@@ -1,6 +1,6 @@
-# Personajes, Rigging y Cinemática de Marcha — Proyecto Paparazzi
+# Personajes, Rigging y Cinemática de Marcha — PhotoHacks
 
-Este documento describe el modelado procedural de personajes, la jerarquía de huesos, el pesaje rígido, la optimización de superficie única y la cinemática inversa analítica implementada en **Proyecto Paparazzi**.
+Este documento describe el modelado procedural de personajes, la jerarquía de huesos, el pesaje rígido, la optimización de superficie única y la cinemática inversa analítica implementada en **PhotoHacks**.
 
 ---
 

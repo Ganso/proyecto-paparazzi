@@ -237,6 +237,8 @@ func build_ui() -> void:
 	add_child(panel)
 	header = make_label(panel,Rect2(16,10,335,20),12,Color("a7c683"))
 	title_label = make_label(panel,Rect2(16,30,335,30),21,Color("e6ebdb"),true)
+	title_label.add_theme_font_override("font",UiStyle.font("RussoOne-Regular"))
+	title_label.add_theme_font_size_override("font_size",18)
 	body_label = make_label(panel,Rect2(16,64,335,150),15,Color("c9d4bf"),true)
 	body_rich = preload("res://scripts/glyph_label.gd").new()
 	body_rich.position = Vector2(16,64)

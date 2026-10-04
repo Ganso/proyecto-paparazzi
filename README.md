@@ -1,4 +1,6 @@
-# Proyecto Paparazzi (v0.2.0-alpha)
+# PhotoHacks (v0.2.0-alpha)
+
+> Antes «Proyecto Paparazzi» (nombre de trabajo; sigue en el repositorio, el identificador del paquete y parte de la documentación).
 
 > **Idea fundamental del proyecto: enseñar fotografía como Jaime Altozano enseña la música.** Divulgación que entusiasma, con ejemplos que se ven y se tocan, cercanía y rigor: cada concepto se entiende porque se experimenta haciendo la foto.
 
@@ -142,8 +144,8 @@ Ambos forman parte de [GeeseBumps](https://www.geesebumps.com/).
 
 ## Licencia
 
-Proyecto Paparazzi es software libre: se distribuye bajo la **Licencia Pública General de GNU, versión 3** (GPL-3.0). El texto completo está en [LICENSE](LICENSE).
+PhotoHacks es software libre: se distribuye bajo la **Licencia Pública General de GNU, versión 3** (GPL-3.0). El texto completo está en [LICENSE](LICENSE).
 
 Copyright © 2026 Javi Prieto (GeeseBumps). Música © Haddhar (GeeseBumps).
 
-Las tipografías incluidas (Roboto y Quicksand, en `assets/fuentes/`) conservan sus propias licencias libres.
+Las tipografías incluidas (Russo One, Roboto y Quicksand, en `assets/fuentes/`) conservan sus propias licencias libres (la de Russo One, OFL, en `assets/fuentes/RussoOne-OFL.txt`).

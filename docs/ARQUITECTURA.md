@@ -1,12 +1,12 @@
-# Arquitectura Global del Sistema — Proyecto Paparazzi
+# Arquitectura Global del Sistema — PhotoHacks
 
-Este documento describe la arquitectura modular, el flujo de datos, la máquina de estados y el pipeline de renderizado de **Proyecto Paparazzi**.
+Este documento describe la arquitectura modular, el flujo de datos, la máquina de estados y el pipeline de renderizado de **PhotoHacks**.
 
 ---
 
 ## 1. Visión General y Filosofía de Diseño
 
-Proyecto Paparazzi es un simulador fotográfico 3D desarrollado en **Godot 4** que combina mecánicas de búsqueda visual con una simulación fotográfica matemáticamente determinista basada en las leyes reales de la óptica geométrica, fotometría analógica y cinemática de locomoción.
+PhotoHacks es un simulador fotográfico 3D desarrollado en **Godot 4** que combina mecánicas de búsqueda visual con una simulación fotográfica matemáticamente determinista basada en las leyes reales de la óptica geométrica, fotometría analógica y cinemática de locomoción.
 
 ### Principios Fundamentales
 - **Cero texturas**: la multitud y el parque se renderizan con **colores de vértice** (`Mesh.ARRAY_COLOR`): los maniquíes con shaders toon y el parque con un `StandardMaterial3D` de sombreado suave que lee esos colores. Solo el vidrio de las farolas y las bombillas tienen material propio. La memoria de vídeo queda por debajo del límite.

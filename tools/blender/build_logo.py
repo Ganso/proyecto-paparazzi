@@ -15,6 +15,7 @@ def opt(name, default):
 OUT = opt("--out", "build/marca")
 SIZE = int(opt("--size", 1024))
 SAMPLES = int(opt("--samples", 192))
+TURN = int(opt("--turntable", 0))        # fotogramas de una vuelta completa (0: solo el icono)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -28,7 +29,7 @@ def material(name, color, roughness):
     return m
 
 WHITE = material("blanco", (.84, .83, .8), .55)
-ORANGE = material("naranja", (.9, .29, .03), .5)
+ORANGE = material("naranja", (.92, .23, .02), .5)
 
 def finish(obj, mat, bevel):
     obj.data.materials.append(mat)
@@ -63,21 +64,36 @@ def wedge(centre, width, depth, height, mat):
     bpy.context.view_layer.objects.active = obj
     return finish(obj, mat, .04)
 
-# El cuerpo: dos bloques apilados (la junta se ve), la empuñadura y la joroba del visor.
-box((3.4, 1.4, .88), (0, 0, .44), WHITE)
-box((3.4, 1.4, .98), (0, 0, 1.39), WHITE)
-box((.62, .36, 1.5), (-1.39, -.86, 1.13), WHITE)                # empuñadura, hacia delante
-box((1.55, 1.25, .5), (.45, 0, 2.13), WHITE)                  # bloque del visor
-wedge((-.72, 0, 1.88), .9, 1.1, .5, WHITE)                    # pentaprisma inclinado
-box((.8, .55, .11), (.4, -.12, 2.435), ORANGE, .025)          # zapata, naranja
-box((.2, .2, .1), (1.02, .25, 2.43), WHITE, .02)              # taco
-# Mandos naranjas.
-box((.55, .42, .12), (-1.2, .3, 1.94), ORANGE, .03)
-cylinder(.22, .16, (-1.39, -.82, 1.96), ORANGE, .03)   # disparador
-cylinder(.31, .14, (1.28, 0, 1.95), ORANGE, .03)
-cylinder(.29, .14, (1.28, 0, 2.10), ORANGE, .03)
-# El objetivo: un cilindro grande que sale hacia delante.
-cylinder(.95, 1.45, (-.05, -1.35, .98), ORANGE, .06, (math.radians(90), 0, 0))
+# Los bloques, como en el diseño del usuario (segunda referencia, 04-10-2026):
+#   · el cuerpo en dos losas apiladas, con la junta a la vista;
+#   · la columna de la empuñadura a la izquierda, más salida hacia delante y partida por la misma junta;
+#   · encima, el bloque del visor con su rampa (el pentaprisma) cayendo hacia la izquierda;
+#   · zapata, placa, botón redondo y dial de dos discos en naranja, y unos taquitos blancos;
+#   · el objetivo, un cilindro naranja casi tan alto como el cuerpo.
+SEAM = .8
+GRIP = 1.2                                                               # ancho de la columna de la empuñadura
+box((3.4 - GRIP, 1.4, SEAM), (GRIP / 2, 0, SEAM / 2), WHITE)             # losa de abajo
+box((3.4 - GRIP, 1.4, .9), (GRIP / 2, 0, SEAM + .45), WHITE)             # losa de arriba
+box((GRIP, 1.85, SEAM), (-1.7 + GRIP / 2, -.225, SEAM / 2), WHITE)       # empuñadura, abajo
+box((GRIP, 1.85, .9), (-1.7 + GRIP / 2, -.225, SEAM + .45), WHITE)       # empuñadura, arriba
+TOP = SEAM + .9
+box((1.1, 1.15, .5), (.47, .05, TOP + .25), WHITE)                       # bloque del visor
+wedge((-.58, .05, TOP), 1.0, 1.05, .47, WHITE)                           # rampa del pentaprisma
+box((.72, .5, .11), (.47, -.02, TOP + .555), ORANGE, .025)               # zapata
+box((.18, .18, .1), (.92, .3, TOP + .55), WHITE, .02)                    # taco junto a la zapata
+box((.55, .42, .12), (-1.33, .28, TOP + .06), ORANGE, .03)               # placa, detrás del botón
+cylinder(.23, .16, (-1.22, -.72, TOP + .08), ORANGE, .03)                # botón redondo, sobre la empuñadura
+box((.15, .15, .09), (-.86, .5, TOP + .045), WHITE, .02)
+cylinder(.31, .15, (1.33, .08, TOP + .075), ORANGE, .03)                 # dial: dos discos
+cylinder(.29, .15, (1.33, .08, TOP + .225), ORANGE, .03)
+for x, y in ((1.2, -.5), (1.56, -.42), (1.58, .52)):
+    box((.13, .13, .08), (x, y, TOP + .04), WHITE, .02)                  # taquitos
+# El objetivo: algo a la derecha del centro, casi tan alto como el cuerpo.
+cylinder(.93, 1.4, (.6, -1.38, .88), ORANGE, .06, (math.radians(90), 0, 0))
+# La trasera: plana, con una pantalla rectangular naranja y, a su derecha (vista desde atrás), un
+# único círculo plano a modo de cruceta.
+box((1.9, .05, 1.1), (.55, .715, .87), ORANGE, .02)
+cylinder(.33, .05, (-1.05, .715, .87), ORANGE, .02, (math.radians(90), 0, 0))
 
 # Luces: una principal arriba a la izquierda, relleno suave y un mundo claro neutro.
 world = bpy.data.worlds.new("mundo")
@@ -93,16 +109,17 @@ def area(location, energy, size, target=(0, -.3, 1)):
     obj.location = location
     obj.rotation_euler = (Vector(target) - Vector(location)).to_track_quat("-Z", "Y").to_euler()
     scene.collection.objects.link(obj)
-area((-5, -7, 8), 560, 7)
-area((6, -6, 3), 90, 9)
-area((0, 3, 7), 80, 8)
+area((1, -9, 9), 620, 8)
+area((11, -2, 4), 150, 9)
+area((-7, -5, 5), 150, 9)
+area((0, 7, 7), 160, 8)
 
 # Cámara: de frente, un poco desde la izquierda y desde arriba, con focal larga (casi sin fuga).
 cam_data = bpy.data.cameras.new("camara")
-cam_data.lens = 170
+cam_data.lens = 100                     # tres cuartos: unos 40° desde la derecha y 18° desde arriba
 cam = bpy.data.objects.new("camara", cam_data)
-cam.location = (-6.5, -21, 5.2)
-cam.rotation_euler = (Vector((0, -.6, 1.15)) - Vector(cam.location)).to_track_quat("-Z", "Y").to_euler()
+cam.location = (7.83, -10.02, 3.75)        # de frente, algo desde la derecha y desde arriba
+cam.rotation_euler = (Vector((-.05, -.55, .98)) - Vector(cam.location)).to_track_quat("-Z", "Y").to_euler()
 scene.collection.objects.link(cam)
 scene.camera = cam
 
@@ -116,5 +133,19 @@ scene.view_settings.view_transform = "Standard"
 scene.render.image_settings.file_format = "PNG"
 scene.render.image_settings.color_mode = "RGBA"
 scene.render.filepath = bpy.path.abspath("//") + OUT + "/icono.png" if bpy.data.filepath else OUT + "/icono.png"
-bpy.ops.render.render(write_still=True)
-print("ICONO:", scene.render.filepath)
+if TURN > 0:
+    # Vuelta completa: la cámara y las luces quietas, el objeto gira sobre su eje vertical.
+    cam_data.lens = 76       # más abierto: de lado, el objetivo se salía del cuadro
+    pivot = bpy.data.objects.new("giro", None)
+    scene.collection.objects.link(pivot)
+    for obj in list(scene.collection.objects):
+        if obj.type == "MESH": obj.parent = pivot
+    base = OUT + "/giro"
+    for k in range(TURN):
+        pivot.rotation_euler = (0, 0, -math.tau * k / TURN)
+        scene.render.filepath = "%s/giro_%03d.png" % (base, k)
+        bpy.ops.render.render(write_still=True)
+    print("GIRO:", base)
+else:
+    bpy.ops.render.render(write_still=True)
+    print("ICONO:", scene.render.filepath)

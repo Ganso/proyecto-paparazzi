@@ -1,6 +1,6 @@
-# Navegación 2D, Carriles y Prevención de Colisiones — Proyecto Paparazzi
+# Navegación 2D, Carriles y Prevención de Colisiones — PhotoHacks
 
-Este documento detalla el modelo de desplazamiento bidimensional, el trazado de carriles concéntricos, el sistema de dirección anticipatoria (*steering*), la resolución de colisiones y los mecanismos deterministas anti-bloqueo (*anti-deadlock*) implementados en **Proyecto Paparazzi**.
+Este documento detalla el modelo de desplazamiento bidimensional, el trazado de carriles concéntricos, el sistema de dirección anticipatoria (*steering*), la resolución de colisiones y los mecanismos deterministas anti-bloqueo (*anti-deadlock*) implementados en **PhotoHacks**.
 
 ---
 

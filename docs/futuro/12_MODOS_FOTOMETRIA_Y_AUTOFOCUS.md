@@ -1,6 +1,6 @@
 # 12. Modos de Fotometría Avanzada (Exposición Automática) y Sistemas de Autofoco (AF)
 
-Este documento define la especificación técnica, arquitectura matemática e integración jugable para la **diversificación de modos de fotometría automática** y los **sistemas avanzados de enfoque automático (AF)** en Proyecto Paparazzi, construyendo sobre el control interactivo de **compensación de exposición ($\pm\text{EV}$)** ya implementado en el prototipo.
+Este documento define la especificación técnica, arquitectura matemática e integración jugable para la **diversificación de modos de fotometría automática** y los **sistemas avanzados de enfoque automático (AF)** en PhotoHacks, construyendo sobre el control interactivo de **compensación de exposición ($\pm\text{EV}$)** ya implementado en el prototipo.
 
 ---
 

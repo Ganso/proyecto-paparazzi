@@ -9,7 +9,7 @@ Este documento especifica la arquitectura pedagógica y los exámenes interactiv
 
 ## 1. Filosofía Pedagógica
 
-La mayoría de los simuladores fotográficos se limitan a mostrar valores numéricos sin enseñar la relación de causa y efecto. El modo **Academia** convierte **Proyecto Paparazzi** en un curso práctico de fotografía analógica y digital donde cada concepto se explica teóricamente y se valida inmediatamente mediante un ejercicio de disparo en tiempo real.
+La mayoría de los simuladores fotográficos se limitan a mostrar valores numéricos sin enseñar la relación de causa y efecto. El modo **Academia** convierte **PhotoHacks** en un curso práctico de fotografía analógica y digital donde cada concepto se explica teóricamente y se valida inmediatamente mediante un ejercicio de disparo en tiempo real.
 
 ```
 +-------------------------------------------------------------------------------+

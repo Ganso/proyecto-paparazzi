@@ -50,7 +50,7 @@ MUSIC="${MUSIC:-$PROJECT_DIR/assets/audio/musica_videos.mp3}"
 # carga desenfocada. El guion es un tráiler de presentación: capítulos (el parque, su vida, las
 # cámaras, los modos de juego, el parque grande, el progreso) que enseñan todo lo implementado.
 SEQUENCES=(
-	"Proyecto Paparazzi|3|@img:assets/marca/carga.png"
+	"PhotoHacks|3|@img:assets/marca/carga.png"
 	"Un juego para aprender fotografía haciendo fotos|4|"
 	"El parque|2|@card:Un diorama vivo, a cualquier hora"
 	"De día · 21 viandantes, cada uno con su ropa y su paso|4|--time=day --lens=0,0 --angle=100 --pitch=2 --focal=24 --pan=6 --af"
@@ -89,7 +89,7 @@ SEQUENCES=(
 	"Tu progreso|2|@card:Álbum e insignias"
 	"Álbum · tus mejores fotos|3|--screen=album"
 	"Insignias de maestría|3|--screen=insignias"
-	"Proyecto Paparazzi|3|@card:Windows · Linux · macOS · Android"
+	"PhotoHacks|3|@card:Windows · Linux · macOS · Android"
 )
 
 if [ -n "$SEQ_FILE" ]; then mapfile -t SEQUENCES < <(grep -v '^\s*\(#\|$\)' "$SEQ_FILE"); fi

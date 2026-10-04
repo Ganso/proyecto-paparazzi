@@ -70,9 +70,10 @@ func run() -> void:
 	touch_drag.index = 0
 	touch_drag.position = Vector2(550,410)
 	touch_drag.relative = Vector2(0,60)
+	var old_pitch = game.pitch
 	Input.parse_input_event(touch_drag)
 	await frames(1)
-	check(abs(game.angle-old_angle) < .01 and game.pitch < -1,"Vertical drag tilts without horizontal pan")
+	check(abs(game.angle-old_angle) < .01 and game.pitch > old_pitch+1,"Vertical drag tilts without horizontal pan (the finger drags the scene: down looks up)")
 	touch.position = touch_drag.position
 	touch.pressed = false
 	Input.parse_input_event(touch)

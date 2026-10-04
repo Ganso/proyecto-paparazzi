@@ -577,8 +577,8 @@ func label(parent: Control, text_value: String, rect: Rect2, font_size = 18, col
 	node.size = rect.size
 	node.add_theme_font_size_override("font_size",font_size)
 	node.add_theme_color_override("font_color",UiStyle.text_color(color))
-	# Big headings in Quicksand, the rest in Roboto (theme default).
-	if font_size >= 26: node.add_theme_font_override("font",UiStyle.font("Quicksand-Regular"))
+	# Titles in Russo One (the font of the name), the rest in Roboto (theme default).
+	if font_size >= 26: node.add_theme_font_override("font",UiStyle.font("RussoOne-Regular"))
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(node)
 	# A long text widens the label as it enters the tree; callers turn on the wrap afterwards, so

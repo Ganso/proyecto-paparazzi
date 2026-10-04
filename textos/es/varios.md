@@ -3,7 +3,7 @@
 ## Varios
 
 ### afotando
-Paparazzi
+PhotoHacks
 
 ### p_a_p_a_r_a_z_z_i
 versión alfa

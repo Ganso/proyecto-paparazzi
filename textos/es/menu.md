@@ -120,6 +120,9 @@ Hora azul
 ### menu_estudio
 VERSIÓN ALFA 0.2.0 · EN DESARROLLO
 
+### nombre_juego
+PhotoHacks
+
 ### menu_lema
 Busca a la persona del encargo y fotografíala. Tú eliges el encuadre, el enfoque y la exposición.
 

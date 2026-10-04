@@ -1,4 +1,4 @@
-# Proyecto Paparazzi — Especificación funcional del prototipo
+# PhotoHacks — Especificación funcional del prototipo
 
 **Versión:** 1.0 · **Fecha:** 7 de septiembre de 2026
 **Estado:** normativo para el prototipo (*vertical slice*)

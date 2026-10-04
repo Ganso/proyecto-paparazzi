@@ -1,6 +1,6 @@
 # Especificación Futura: Diversidad de Escenarios Temáticos
 
-Este documento describe el diseño de cuatro nuevos entornos temáticos que expanden el universo de **Proyecto Paparazzi** más allá del parque urbano circular actual.
+Este documento describe el diseño de cuatro nuevos entornos temáticos que expanden el universo de **PhotoHacks** más allá del parque urbano circular actual.
 
 ---
 

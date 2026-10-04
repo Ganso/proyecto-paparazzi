@@ -1,6 +1,6 @@
 # Especificación Futura: Captura Automática de Evidencias Gráficas
 
-Este documento especifica el diseño y la arquitectura de un script automatizado para la generación de documentación visual actualizada en cada versión de **Proyecto Paparazzi**.
+Este documento especifica el diseño y la arquitectura de un script automatizado para la generación de documentación visual actualizada en cada versión de **PhotoHacks**.
 
 ---
 

@@ -46,7 +46,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if main.badges_count(): load_mode()
 	scenario = main.scenario
-	title_font = font("Quicksand-Light")
+	title_font = font("RussoOne-Regular")   # the name and every title (user, 04-10-2026)
 	light_font = font("Roboto-Light")
 	body_font = font("Roboto-Regular")
 	body_medium = font("Quicksand-Medium")
@@ -122,7 +122,7 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 func build() -> void:
 	var x = 96.0
 	text(self,Texts.get_text("menu_estudio"),Vector2(x,58),13,UiStyle.SKY_DEEP,body_medium)
-	text(self,"Proyecto Paparazzi",Vector2(x-4,76),58,INK,title_font)
+	text(self,Texts.get_text("nombre_juego"),Vector2(x-2,80),54,INK,title_font)
 	text(self,Texts.get_text("menu_lema"),Vector2(x,150),16,SOFT,light_font,600)
 	# ‹ card › with the dots of the five modes under it.
 	var left = flat_button(self,"‹",Rect2(x-62,330,48,96),func(): change_mode(-1))

@@ -1,4 +1,4 @@
-# Simulación Fotográfica y Evaluación Determinista — Proyecto Paparazzi
+# Simulación Fotográfica y Evaluación Determinista — PhotoHacks
 
 Este documento describe las leyes ópticas, el cálculo fotométrico, los shaders de revelado químico y el algoritmo determinista de calificación implementados en [scripts/photography.gd](../scripts/photography.gd).
 

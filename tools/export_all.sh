@@ -4,9 +4,9 @@
 #   ./tools/export_all.sh [--only windows,linux,macos,android] [--debug]
 #
 # Genera en build/:
-#   windows/ProyectoPaparazzi.exe          un solo ejecutable con el juego dentro (Forward+, Vulkan/D3D12)
-#   linux/ProyectoPaparazzi.x86_64         ídem para Linux x86_64
-#   macos/ProyectoPaparazzi.zip            aplicación universal (Intel y Apple Silicon), firma ad hoc
+#   windows/PhotoHacks.exe          un solo ejecutable con el juego dentro (Forward+, Vulkan/D3D12)
+#   linux/PhotoHacks.x86_64         ídem para Linux x86_64
+#   macos/PhotoHacks.zip            aplicación universal (Intel y Apple Silicon), firma ad hoc
 #   paparazzi-debug.apk                    Android (tools/export_android.sh, gl_compatibility)
 # y en build/dist/ un .zip por plataforma de escritorio, listo para repartir.
 #
@@ -64,7 +64,7 @@ export_desktop() {
 	rm -f "$PROJECT_DIR/$out"
 	echo "==> Exportando $preset → $out"
 	if "$GODOT" --headless --path "$PROJECT_DIR" "$MODE" "$preset" "$out" > "$PROJECT_DIR/build/export_$plat.log" 2>&1 && [ -s "$PROJECT_DIR/$out" ]; then
-		local zip="$PROJECT_DIR/build/dist/ProyectoPaparazzi-$GAME_VERSION-$plat.zip"
+		local zip="$PROJECT_DIR/build/dist/PhotoHacks-$GAME_VERSION-$plat.zip"
 		rm -f "$zip"
 		if [ "$plat" = "macos" ]; then cp "$PROJECT_DIR/$out" "$zip"
 		else (cd "$(dirname "$PROJECT_DIR/$out")" && zip -q -9 -r "$zip" .)
@@ -75,9 +75,9 @@ export_desktop() {
 		tail -5 "$PROJECT_DIR/build/export_$plat.log"
 	fi
 }
-want windows && export_desktop windows "Windows" "build/windows/ProyectoPaparazzi.exe"
-want linux && export_desktop linux "Linux" "build/linux/ProyectoPaparazzi.x86_64"
-want macos && export_desktop macos "macOS" "build/macos/ProyectoPaparazzi.zip"
+want windows && export_desktop windows "Windows" "build/windows/PhotoHacks.exe"
+want linux && export_desktop linux "Linux" "build/linux/PhotoHacks.x86_64"
+want macos && export_desktop macos "macOS" "build/macos/PhotoHacks.zip"
 if want android; then
 	if GODOT_BIN="$GODOT" JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/default-java}" bash "$SCRIPT_DIR/export_android.sh" > "$PROJECT_DIR/build/export_android.log" 2>&1; then ok+=("android: build/paparazzi-debug.apk ($(du -h "$PROJECT_DIR/build/paparazzi-debug.apk" | cut -f1))")
 	else fail+=("android: $(grep -m1 ERROR "$PROJECT_DIR/build/export_android.log" || echo 'ver build/export_android.log')"); fi

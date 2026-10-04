@@ -27,7 +27,7 @@ Jugar al Arcade
 Menú principal
 
 ### tutorial_bienvenida
-Bienvenido a Proyecto Paparazzi. Estás en el centro de un parque con una cámara: Tu trabajo es encontrar a la persona de cada encargo y hacerle una buena foto. Vamos paso a paso. Pulsa {aceptar} o «Empezar».
+Bienvenido a PhotoHacks. Estás en el centro de un parque con una cámara: Tu trabajo es encontrar a la persona de cada encargo y hacerle una buena foto. Vamos paso a paso. Pulsa {aceptar} o «Empezar».
 
 ### tutorial_mirar
 > máximo 210 caracteres
@@ -106,7 +106,7 @@ Hecha. Ahora baja la cámara para seguir caminando.
 
 ### tutorial_bienvenida_tactil
 > máximo 210 caracteres
-Bienvenido a Proyecto Paparazzi. Estás en el centro de un parque con una cámara: Tu trabajo es encontrar a la persona de cada encargo y hacerle una buena foto. Vamos paso a paso. Toca «Empezar».
+Bienvenido a PhotoHacks. Estás en el centro de un parque con una cámara: Tu trabajo es encontrar a la persona de cada encargo y hacerle una buena foto. Vamos paso a paso. Toca «Empezar».
 
 ### tutorial_zoom_tactil
 > máximo 210 caracteres

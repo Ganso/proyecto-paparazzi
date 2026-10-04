@@ -67,7 +67,7 @@ def create_grid(image_items, grid_cols, cell_w, cell_h, title, subtitle, output_
 
     # Footer
     draw.line([(padding, total_h - footer_h + 8), (total_w - padding, total_h - footer_h + 8)], fill=(45, 55, 65), width=1)
-    footer_text = f"Proyecto Paparazzi · Estudio 3D Autónomo SubViewport · Total: {len(image_items)} ítems"
+    footer_text = f"PhotoHacks · Estudio 3D Autónomo SubViewport · Total: {len(image_items)} ítems"
     draw.text((padding, total_h - footer_h + 16), footer_text, font=sub_font, fill=(130, 145, 160))
 
     canvas.save(output_path, "PNG")

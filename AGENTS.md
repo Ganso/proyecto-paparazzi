@@ -1,6 +1,6 @@
 # AGENTS.md — Enrutador Central y Guía Operativa de IA
 
-Bienvenido a **Proyecto Paparazzi**. Este documento es el **punto de entrada principal y enrutador maestro** para cualquier agente de IA o desarrollador automatizado.
+Bienvenido a **PhotoHacks**. Este documento es el **punto de entrada principal y enrutador maestro** para cualquier agente de IA o desarrollador automatizado.
 
 > [!IMPORTANT]
 > **Idea fundamental del proyecto: ENSEÑAR FOTOGRAFÍA COMO JAIME ALTOZANO ENSEÑA LA MÚSICA.**

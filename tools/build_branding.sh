@@ -29,7 +29,7 @@ aperture 220 "$TMP/a220.png"
 aperture 176 "$TMP/a176.png"
 convert -size 1280x720 gradient:'#155a8c'-'#2f9be8' \
 	"$TMP/a220.png" -geometry +120+170 -composite \
-	-font assets/fuentes/Quicksand-Light.ttf -pointsize 86 -fill white -annotate +390+300 'Proyecto Paparazzi' \
+	-font assets/fuentes/RussoOne-Regular.ttf -pointsize 80 -fill white -annotate +390+300 'PhotoHacks' \
 	-font assets/fuentes/Roboto-Light.ttf -pointsize 28 -fill '#d6ecfb' -annotate +394+356 'Cargando el parque…' \
 	-strip "$OUT/carga.png"
 convert -size 256x256 xc:none -fill '#2f9be8' -draw "roundrectangle 8,8 247,247 52,52" \

@@ -44,7 +44,7 @@ Un dedo tiene una superficie de contacto de 7–10 mm y un temblor de ~1 mm, as�
 4. **Bandas desaprovechadas**: el formato 16:9 deja unos 12,6 mm libres a cada lado en un 19,5:9, justo donde descansan los pulgares.
 5. **Perfil gráfico**: el juego arranca en `Ultra` en cualquier dispositivo (`park.gd::current_graphics_preset`).
 6. **Sin tacto**: el APK declara el permiso `VIBRATE`, pero el código no llama a `Input.vibrate_handheld()`.
-7. **Título cortado**: la etiqueta del título (150 px de ancho y cuerpo 20) desborda bajo el botón de tiempo (`Rect2(205,13,…)`), que tapa el final de «Proyecto Paparazzi» (visible en [04_parque_dia.png](../evidencias/estados/04_parque_dia.png)). También ocurre en escritorio.
+7. **Título cortado**: la etiqueta del título (150 px de ancho y cuerpo 20) desborda bajo el botón de tiempo (`Rect2(205,13,…)`), que tapa el final de «PhotoHacks» (visible en [04_parque_dia.png](../evidencias/estados/04_parque_dia.png)). También ocurre en escritorio.
 
 ---
 

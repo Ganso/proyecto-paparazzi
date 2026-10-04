@@ -1,6 +1,6 @@
 # Especificación Futura: Estilo Visual Canónico (Toon) y Modo Diorama Físico (PBR Realista + Render Avanzado Godot 4)
 
-Este documento establece la **dirección artística y técnica integral** para la evolución gráfica de **Proyecto Paparazzi**, articulando dos vertientes visuales coherentes sobre la misma base lúdica y ética:
+Este documento establece la **dirección artística y técnica integral** para la evolución gráfica de **PhotoHacks**, articulando dos vertientes visuales coherentes sobre la misma base lúdica y ética:
 1. **Estilo Canónico Toon / Ilustración (Base y WebGL)**: Guiado por la imagen conceptual [referencia.jpg](referencia.jpg), con estética de dibujo/animación, sombreado cell-shading en bandas, contornos de tinta (*inverted hull*), arquitectura de **profundidad multi-plano de 7+ capas** y la **biblioteca universal de animaciones CC0 (Quaternius UAL 1 & 2)** retargeteada al rig universal de 20 huesos.
 2. **Modo Diorama Físico de Estudio (Alta Fidelidad / Next-Gen)**: Evolución fotorrealista donde la escena se percibe inequívocamente como una **maqueta física artesanal de escala 1:12 o 1:18** montada en un set fotográfico o taller de modelismo. Los personajes son **maniquíes de madera noble torneada y barnizada** vestidos con **ropa textil real** (tramas de hilo, microfibras y costuras a escala macro), en un parque rico con mobiliario de forja y madera, pavimentos de adoquín detallados y el despliegue del arsenal moderno de **Godot 4 Forward+** (iluminación global SDFGI/VoxelGI/LightmapGI, sombras suaves PCSS, oclusión SSAO, niebla volumétrica y postprocesado óptico de diafragma macro/tilt-shift).
 
@@ -241,9 +241,9 @@ La integración se fundamenta en dos proyectos complementarios:
 
 ---
 
-### 4.2 Taxonomía de Animaciones Seleccionadas para Proyecto Paparazzi
+### 4.2 Taxonomía de Animaciones Seleccionadas para PhotoHacks
 
-Del repertorio de más de 250 animaciones disponibles, se selecciona un paquete temático específico para el parque urbano de Proyecto Paparazzi, estructurado en 4 familias funcionales:
+Del repertorio de más de 250 animaciones disponibles, se selecciona un paquete temático específico para el parque urbano de PhotoHacks, estructurado en 4 familias funcionales:
 
 ```
 +-------------------------------------------------------------------------------+
@@ -293,7 +293,7 @@ Del repertorio de más de 250 animaciones disponibles, se selecciona un paquete 
 Las animaciones de Quaternius siguen la convención estándar **Humanoid**. Para integrarlas de forma limpia con el rig universal del juego, se utiliza el sistema de **`BoneMap` / `SkeletonProfileHumanoid`** de Godot 4:
 
 #### Tabla de Correspondencia Ósea 1:1
-| Hueso Estándar Quaternius (Humanoid) | Hueso Proyecto Paparazzi | Índice en `Skeleton3D` | Tipo de Articulación en Maniquí |
+| Hueso Estándar Quaternius (Humanoid) | Hueso PhotoHacks | Índice en `Skeleton3D` | Tipo de Articulación en Maniquí |
 |---|---|:---:|---|
 | `Hips` / `Pelvis` | `caderas` | **1** | Rótula esférica de pelvis |
 | `Spine` | `lumbar` | **2** | Esfera de rotación de cintura |
@@ -329,7 +329,7 @@ Las animaciones de Quaternius siguen la convención estándar **Humanoid**. Para
 
 Uno de los mayores desafíos al utilizar animaciones basadas en clips en juegos de cámara fija o teleobjetivo es el **deslizamiento de pie (*foot sliding*)**, el cual delata artificialidad y rompe el realismo óptico.
 
-Para resolver esto sin perder la riqueza gestual de Quaternius, Proyecto Paparazzi adopta una **Arquitectura de Animación Híbrida por Capas**:
+Para resolver esto sin perder la riqueza gestual de Quaternius, PhotoHacks adopta una **Arquitectura de Animación Híbrida por Capas**:
 
 ```mermaid
 graph TD
@@ -617,7 +617,7 @@ Para evitar el riesgo habitual de invertir semanas en tareas pesadas de modelado
 #### 👑 HITO 7: Vida Orgánica y Actitudes Urbanas (Quaternius UAL & Tier 2 en Bancos)
 - **Clasificación**: `Medio-Alto Coste (M-L) / Alto Impacto Visual y Jugable` | **Duración estimada**: 5 a 6 días.
 - **Intervención**:
-  - Crear la herramienta `tools/import_quaternius_anims.py` para mapear las animaciones CC0 Humanoid de Quaternius UAL 1 & 2 a los 20 huesos del rig universal de Proyecto Paparazzi.
+  - Crear la herramienta `tools/import_quaternius_anims.py` para mapear las animaciones CC0 Humanoid de Quaternius UAL 1 & 2 a los 20 huesos del rig universal de PhotoHacks.
   - Implementar la cinemática híbrida en `person.gd`: tren inferior gobernado por `gait.gd` analítico (garantía de cero deslizamiento de pie $drift = 0$) y tren superior modulado por clips de Quaternius (andares variados, paradas, miradas al entorno).
   - Instanciar multitud ambiental desacoplada (Tier 2) en los bancos y cenador: personajes sentados charlando, leyendo el periódico o consultando el móvil.
 - **🎉 Resultado Parcial Llamativo**:

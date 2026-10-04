@@ -1,6 +1,6 @@
 # Especificación Futura: Exportación Automatizada a Android (.apk) para Pruebas en Móviles
 
-Este documento detalla la arquitectura, el toolchain y los scripts necesarios para la compilación, empaquetado y despliegue automatizado de archivos APK de prueba en terminales Android para **Proyecto Paparazzi**.
+Este documento detalla la arquitectura, el toolchain y los scripts necesarios para la compilación, empaquetado y despliegue automatizado de archivos APK de prueba en terminales Android para **PhotoHacks**.
 
 > [!NOTE]
 > **Estado: 🟡 Fases 1 y 2 implementadas.** El preset real está en [`export_presets.cfg`](../../export_presets.cfg), el script en [`tools/export_android.sh`](../../tools/export_android.sh) y la prueba en [`tests/test_export.gd`](../../tests/test_export.gd). Comandos, requisitos y cifras: [docs/TESTS_Y_VERIFICACION.md §4.2](../TESTS_Y_VERIFICACION.md). Diferencias respecto a la propuesta original:
@@ -69,7 +69,7 @@ custom_template/debug=""
 custom_template/release=""
 binary_format/embed_pck=false
 package/unique_name="org.ganso.proyectopaparazzi"
-package/name="Proyecto Paparazzi"
+package/name="PhotoHacks"
 package/signed=true
 package/architecture/arm64_v8a=true
 package/architecture/armeabi_v7a=false
@@ -155,7 +155,7 @@ fi
 
 Las decisiones arquitectónicas del proyecto benefician directamente la ejecución móvil:
 
-| Factor de Rendimiento | Parámetro en Proyecto Paparazzi | Impacto en Dispositivo Móvil |
+| Factor de Rendimiento | Parámetro en PhotoHacks | Impacto en Dispositivo Móvil |
 |---|---|---|
 | **Carga de Geometría** | Triángulos en escena por debajo del límite de 100.000 (cifra medida en [TESTS §5](../TESTS_Y_VERIFICACION.md)) | **Holgada**: cualquier SoC moderno (Snapdragon 7/8, Dimensity, Tensor) dibuja más de 1.000.000 polígonos por fotograma. |
 | **Draw Calls** | Día: 119 en el visor tras el paso 1 ([16](16_PARQUE_ILUSTRADO_QUICK_WIN.md); antes ~1.800). Noche: 185 en Medio, sin sombras de farola | **Asumible en móvil** con el perfil `Medio`, que debe ser el inicial en Android ([13 §5](13_INTERFAZ_MOVIL_UTILIZABLE.md)). |
