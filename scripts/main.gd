@@ -1060,8 +1060,19 @@ func start_session(time_mode = "day", free_play = false) -> void:
 func new_assignment() -> void:
 	if is_instance_valid(target): target.protected_target = false
 	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
+	# Levels that ask for the subject alone get a quieter park: three out of five people stay away
+	# (hidden, and out of the way of the photo). With the full park it could not be done.
+	for p in people:
+		if p.has_meta("away"):
+			p.remove_meta("away")
+			p.set_hidden(false)
+	if level.get("cond",{}).has("aislado"):
+		for i in people.size():
+			if i%5 >= 2:
+				people[i].set_meta("away",true)
+				people[i].set_hidden(true)
 	# The subject never runs, except in the levels about freezing a runner.
-	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO" and not p.runner)
+	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO" and not p.runner and p.visible)
 	if level.get("target","") == "runner":
 		# Never the runner passing right in front (lane 0): one further away, to follow.
 		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO" and p.lane >= 1)
@@ -1422,7 +1433,7 @@ func update_person(p: Pedestrian, dt: float) -> void:
 			# Respawn only behind the playable FOV, then walk continuously into view.
 			p.theta = 296 if p.direction < 0 else 304
 			p.state = "CAMINANDO"
-			p.visible = true
+			p.visible = not p.has_meta("away")   # (a quieter level keeps its absentees away)
 	elif p.state == "CAMINANDO":
 		if p.destination_lane >= 0:
 			var target_r = home_radius(p.destination_lane,p.direction,p.runner)

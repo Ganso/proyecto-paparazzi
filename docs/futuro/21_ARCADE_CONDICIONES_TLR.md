@@ -101,3 +101,5 @@ El arcade tiene ahora **25 niveles en 5 bloques**. El quinto, «Maestría · la 
 - Pruebas: `tests/test_arcade.gd` (25 niveles, textos, la condición con sus cuatro motivos), `tests/test_photography.gd` (tolerancia) y `tests/test_input.gd` (la tecla sigue al corredor en su sentido y nunca en contra).
 - **Código de trampa** (02-10-2026): lanzar el juego con `-- --cheat=niveles` abre los 25 niveles en esa partida (`Arcade.all_open`), sin tocar el progreso guardado.
 - **El corredor de un nivel corre** (02-10-2026): en los niveles con `target: runner` se elige al del tercer camino (7 m; desde el 03-10-2026 los corredores van por los dos caminos exteriores con el centro libre, [NAVEGACION §3.2](../NAVEGACION_Y_COLISIONES.md)) y, mientras es el sujeto del nivel, no se para a estirar (`main.gd::runner_on_duty()`).
+
+- **04-10-2026 (usuario)**: en los niveles que piden al sujeto solo (`aislado`: 3, 12 y 15) el parque se queda más tranquilo: tres de cada cinco personas no aparecen (`main.gd::new_assignment()`, meta `away`: ocultas y sin colisionador para la foto). Con el parque lleno, el 15 no había manera de hacerlo. El 14 pasó a «Todo manual» con el sujeto grande.
