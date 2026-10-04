@@ -31,11 +31,7 @@ Bienvenido a Proyecto Paparazzi. Estás en el centro de un parque con una cámar
 
 ### tutorial_mirar
 > máximo 210 caracteres
-Mira a tu alrededor: {mirar}. Gira un poco a un lado y a otro.
-
-### tutorial_inclinar
-> máximo 210 caracteres
-Ahora mira arriba y abajo con el mismo control.
+Mira a tu alrededor con {mirar}: A los lados, y también arriba y abajo.
 
 ### tutorial_zoom
 > máximo 210 caracteres
@@ -43,7 +39,7 @@ Acerca la imagen con el zoom ({zoom}) hasta más de 70 mm y vuelve a abrirla por
 
 ### tutorial_bajar
 > máximo 210 caracteres
-Con un tele cuesta encontrar a alguien. Baja la cámara para buscar a simple vista ({bajar}) y vuelve a subirla. Una pista: Tras la verja solo hay figurantes; a quien busques siempre estará más cerca.
+Con un tele cuesta encontrar a alguien. Baja la cámara para buscar a simple vista ({bajar}) y vuelve a subirla. Una pista: Tras la verja solo hay figurantes. A quien busques siempre estará más cerca.
 
 ### tutorial_af
 > máximo 210 caracteres
@@ -59,11 +55,11 @@ Haz una foto a quien quieras: {disparar}. Después verás el revelado con su not
 
 ### tutorial_encargo
 > máximo 210 caracteres
-Un encargo de verdad: Arriba tienes la descripción. Consejo: Baja la cámara ({bajar}) para encontrar a esa persona y súbela para la foto. Hacen falta 50 puntos: Entera, enfocada y sin nadie tapándola.
+Un encargo de verdad: Arriba tienes la descripción. Baja la cámara ({bajar}) para encontrar a esa persona y súbela para la foto. Si hay demasiada información en pantalla, pulsa {ayuda_pantalla} para quitarla.
 
 ### tutorial_controles
 > máximo 210 caracteres
-Los controles manuales se manejan de tres maneras: Eligiendo uno con {elegir_tab} y cambiándolo con {cambiar_pag}; con un clic sobre él y la rueda del ratón; o con su atajo directo. Los atajos se consultan con {ayuda}.
+Los controles manuales se manejan de tres maneras. Eligiendo uno con {elegir_tab} y cambiándolo con {cambiar_pag}. Con un clic sobre él y la rueda del ratón. O con su atajo directo. Los atajos se consultan con {ayuda}.
 
 ### tutorial_diafragma
 > máximo 210 caracteres
@@ -71,15 +67,46 @@ Prioridad a la apertura (A): Tú llevas el diafragma. Cámbialo dos veces: Elíg
 
 ### tutorial_abruma
 > máximo 210 caracteres
-¿Demasiada información? Quita la ayuda en pantalla con {ayuda_pantalla} y quédate con la tira de abajo: Clic en lo que quieras cambiar, y la rueda. En la tira solo aparecen los controles que puedes cambiar en cada momento.
+Te recuerdo que, si ves demasiada información, puedes quitar y poner la ayuda con {ayuda_pantalla}. Queda la tira de abajo: Clic en lo que quieras cambiar, y la rueda. Solo muestra lo que puedes cambiar en cada momento.
 
 ### tutorial_mf
 > máximo 210 caracteres
 Enfoque manual: Elige Enfoque en la tira y gira la rueda, o usa su atajo ({enfoque_mf_zoom}), hasta que las dos mitades del círculo central encajen sobre alguien.
 
+### tutorial_controles_mando
+> máximo 210 caracteres
+Los controles manuales están en la tira de abajo. Se elige uno con {elegir_control} y se cambia con {cambiar_control}. El zoom y el enfoque manual van además en el stick derecho. Todos los botones se consultan con {ayuda}.
+
+### tutorial_diafragma_mando
+> máximo 210 caracteres
+Prioridad a la apertura (A): Tú llevas el diafragma. Cámbialo dos veces: Elígelo en la tira de abajo con {elegir_control} y cámbialo con {cambiar_control}.
+
+### tutorial_abruma_mando
+> máximo 210 caracteres
+Te recuerdo que, si ves demasiada información, puedes quitar y poner la ayuda en pantalla con {ayuda_pantalla}. Queda la tira de abajo, donde solo aparecen los controles que puedes cambiar en cada momento.
+
+### tutorial_mf_mando
+> máximo 210 caracteres
+Enfoque manual: Gira el anillo con {enfoque_mf_zoom} hasta que las dos mitades del círculo central encajen sobre alguien.
+
+### tutorial_paseo
+> máximo 210 caracteres
+Este es el parque grande, y aquí se camina. Con la cámara bajada, anda con {andar} y mira con {mirar_paseo}. Da un paseo de unos metros.
+
+### tutorial_sacar
+> máximo 210 caracteres
+Para hacer fotos hay que sacar la cámara: {sacar}. Con ella al ojo no se puede andar: Se camina y se busca con la cámara bajada, y se saca solo para disparar. Sácala.
+
+### tutorial_foto_paseo
+> máximo 210 caracteres
+Haz una foto a quien quieras ({disparar}) y después baja la cámara ({sacar}) para poder seguir andando.
+
+### tutorial_resultado_paseo
+Hecha. Ahora baja la cámara para seguir caminando.
+
 ### tutorial_fin
 > máximo 210 caracteres
-Ya sabes lo básico: Mirar, enfocar, disparar y cambiar los controles. Elige cómo seguir; los controles se repasan cuando quieras con {ayuda}.
+Ya sabes lo básico: Mirar, enfocar, disparar, cambiar los controles y moverte. Elige cómo seguir. Los controles se repasan cuando quieras con {ayuda}.
 
 ### tutorial_fin_titulo
 Tutorial completado

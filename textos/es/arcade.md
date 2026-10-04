@@ -75,7 +75,7 @@ Se acabó el tiempo.
 Ninguna foto válida.
 
 ### arcade_nota_insuficiente_d_d
-La mejor foto saca %d; hacían falta %d.
+La mejor foto saca %d. Hacían falta %d.
 
 ### arcade_mejor_foto_d
 Mejor foto: %d / 100
@@ -109,11 +109,11 @@ Cara nítida · desenfoque en la cara %.3f mm (nítido hasta 0,030)
 
 ### cond_aislado
 > máximo 100 caracteres
-Sin nadie más · %d persona(s) más en el encuadre
+Sin nadie más · %d persona(s) más (cuentan las que ocupan un décimo de la altura)
 
 ### cond_acompanado
 > máximo 100 caracteres
-Acompañado de %d · %d persona(s) más en el encuadre
+Acompañado de %d · %d persona(s) más (cuentan las que ocupan un décimo de la altura)
 
 ### cond_grande
 > máximo 100 caracteres
@@ -125,7 +125,7 @@ Focal · al menos %.0f mm (%.0f mm)
 
 ### cond_aurea
 > máximo 100 caracteres
-Proporción áurea · el pecho sobre una de las guías (38 o 62 %%; está en %d %%)
+Proporción áurea · el pecho sobre una de las guías (38 o 62 %%, está en %d %%)
 
 ### cond_fondo
 > máximo 100 caracteres
@@ -177,7 +177,7 @@ a %d mm, 1/%d s congela a esta persona
 
 ### cond_congelado_lento
 > máximo 100 caracteres
-a %d mm hace falta 1/%d s o más rápido; usaste 1/%d s
+a %d mm hace falta 1/%d s o más rápido. Usaste 1/%d s
 
 ### cond_congelado_imposible
 > máximo 100 caracteres
@@ -345,11 +345,11 @@ Poca luz: Prioridad a la apertura. Diafragma abierto y enfoque manual a la cara.
 
 ### arcade_nivel_14_titulo · título
 > máximo 22 caracteres
-Tres en el encuadre
+Todo manual
 
 ### arcade_nivel_14_texto · encargo
 > máximo 220 caracteres
-Todo manual por primera vez: La exposición empieza bien medida; ajústala con el exposímetro. El sujeto y exactamente dos personas más.
+Todo manual por primera vez: La exposición empieza bien medida. Ajústala con el exposímetro. Y acércate: El sujeto debe llenar al menos media foto.
 
 ## Nivel 15 · Noche en el quiosco
 
@@ -419,7 +419,7 @@ El barrido
 
 ### arcade_nivel_21_texto · encargo
 > máximo 220 caracteres
-Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: Él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro; con ratón o mando, el pulso es tuyo.
+Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: Él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro. Con ratón o mando, el pulso es tuyo.
 
 ## Nivel 22 · Retrato de autor
 
@@ -459,4 +459,4 @@ Nocturno
 
 ### arcade_nivel_25_texto · encargo
 > máximo 220 caracteres
-Dos disparos, de noche y todo manual: Pon el punto de enfoque en la cara; que salga grande y sin nadie más.
+Dos disparos, de noche y todo manual: Pon el punto de enfoque en la cara. Que salga grande y sin nadie más.

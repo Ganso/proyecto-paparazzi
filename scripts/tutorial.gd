@@ -8,7 +8,11 @@ const Texts = preload("res://scripts/texts.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 
-const STEPS = ["bienvenida","mirar","inclinar","zoom","bajar","af","ayuda","disparar","encargo","controles","diafragma","abruma","mf","fin"]
+const STEPS = ["bienvenida","mirar","zoom","bajar","af","ayuda","disparar","encargo","controles","diafragma","abruma","mf","paseo","sacar","foto_paseo","fin"]
+# The last steps are in the big park, on foot: the scene reloads there and the tutorial resumes.
+const WALKING = ["paseo","sacar","foto_paseo"]
+static var resume_step = -1
+const Glyphs = preload("res://scripts/input_glyphs.gd")
 # Steps that only explain: «Continuar» is there from the start.
 const INFO = ["controles","abruma"]
 
@@ -48,10 +52,10 @@ func _ready() -> void:
 	status.add_theme_font_size_override("font_size",14)
 	panel.add_child(status)
 
-func start() -> void:
+func start(from = 0) -> void:
 	active = true
 	visible = true
-	step = 0
+	step = from
 	enter_step()
 
 func stop() -> void:
@@ -61,11 +65,11 @@ func stop() -> void:
 
 func enter_step() -> void:
 	done_time = -1.0
-	track = {"angle":main.angle,"pitch":main.pitch,"turn":0.0,"tilt":0.0,"max_f":main.focal,"min_f":main.focal,"lowered":false,"helps":0,"apertures":0,"n":main.n_index,"mf_time":0.0,"help_state":main.control_help.enabled}
+	track = {"walked":0.0,"spot":main.player.position if main.player else Vector3.ZERO,"photo":false,"angle":main.angle,"pitch":main.pitch,"turn":0.0,"tilt":0.0,"max_f":main.focal,"min_f":main.focal,"lowered":false,"helps":0,"apertures":0,"n":main.n_index,"mf_time":0.0,"help_state":main.control_help.enabled}
 	var id: String = STEPS[step]
 	# What each step needs from the camera.
 	match id:
-		"bienvenida","mirar","inclinar","zoom","bajar","af","ayuda","disparar":
+		"bienvenida","mirar","zoom","bajar","af","ayuda","disparar":
 			main.equipment.preset(0)
 			main.apply_equipment()
 		"encargo":
@@ -78,6 +82,14 @@ func enter_step() -> void:
 			main.equipment.set_exposure_mode("P")
 			main.equipment.focus_mode = "MF"
 			main.apply_equipment()
+	# These steps talk about the on-screen help: it has to be there.
+	if id in ["ayuda","encargo","diafragma"] and not main.control_help.enabled: main.control_help.set_enabled(true)
+	if id in WALKING and main.scenario != "grande":
+		resume_step = step
+		active = false
+		visible = false
+		main.start_tutorial()
+		return
 	if id == "fin":
 		# The end is a screen of its own, with where to go next (main.gd::show_tutorial_end()).
 		visible = false
@@ -106,7 +118,10 @@ func update_panel() -> void:
 	counter.text = Texts.get_text("tutorial_paso") % [step+1,STEPS.size()]
 	counter.add_theme_color_override("font_color",UiStyle.SKY_DEEP)
 	body.color = UiStyle.INK
-	body.set_rich(Texts.get_rich("tutorial_"+id()))
+	# With the gamepad some steps are told another way (no mouse, no keys).
+	var key = "tutorial_"+id()
+	if Glyphs.pad() and Texts.get_text(key+"_mando") != key+"_mando": key += "_mando"
+	body.set_rich(Texts.get_rich(key))
 	status.add_theme_color_override("font_color",UiStyle.SKY_DEEP if done_time >= 0.0 else UiStyle.SOFT)
 	status.text = Texts.get_text("tutorial_bien") if done_time >= 0.0 else Texts.get_text("tutorial_pendiente")
 	if id() in INFO: status.text = ""
@@ -154,13 +169,20 @@ func update(dt: float) -> void:
 		return   # done: the «Continuar» button moves on, when the player is ready
 	match id():
 		"mirar":
+			# To the sides and up and down, in one step.
 			track.turn += absf(angle_difference(deg_to_rad(track.angle),deg_to_rad(main.angle)))
 			track.angle = main.angle
-			if rad_to_deg(track.turn) >= 60.0: complete()
-		"inclinar":
 			track.tilt += absf(main.pitch-track.pitch)
 			track.pitch = main.pitch
-			if track.tilt >= 15.0: complete()
+			if rad_to_deg(track.turn) >= 60.0 and track.tilt >= 15.0: complete()
+		"paseo":
+			track.walked += main.player.position.distance_to(track.spot)
+			track.spot = main.player.position
+			if track.walked >= 8.0: complete()
+		"sacar":
+			if main.eye_ready(): complete()
+		"foto_paseo":
+			if track.photo and not main.camera_raised: complete()
 		"zoom":
 			track.max_f = maxf(track.max_f,main.focal)
 			track.min_f = minf(track.min_f,main.focal)
@@ -191,6 +213,9 @@ func on_photo(result: Dictionary) -> String:
 		"disparar":
 			complete()
 			return Texts.get_text("tutorial_resultado_disparar")
+		"foto_paseo":
+			track.photo = true
+			return Texts.get_text("tutorial_resultado_paseo")
 		"encargo":
 			if not result.rejected and result.score >= 50:
 				complete()

@@ -31,7 +31,7 @@ func run() -> void:
 	check(Glyphs.note(pad(JOY_BUTTON_A)) and Glyphs.pad(),"A gamepad button switches the help to the pad")
 	check(Texts.get_text("control_hint_mf").contains("RT") and not Texts.get_text("control_hint_mf").contains("Espacio"),"Gamepad: help texts name the buttons")
 	Glyphs.family = "ps"
-	check(Glyphs.kp("disparar") == "R2" and Glyphs.kp("af") == "✕","PlayStation names")
+	check(Glyphs.kp("disparar") == "R2" and Glyphs.kp("aceptar") == "✕","PlayStation names")
 	Glyphs.family = "xbox"
 	# Every control has its keyboard and its three pad names; keys and buttons are marked.
 	for control in Glyphs.CONTROLS:
@@ -209,6 +209,51 @@ func run() -> void:
 		root.push_input(accept_up)
 		await process_frame
 		check(pressed_card or game.mode == "BRIEFING","A presses the focused button of a screen: a level card starts the level (focus %s, now %s)" % [focus_text,game.mode])
+	# The gamepad in the tutorial and the Academy (user, 04-10-2026): A only accepts.
+	Glyphs.device = "mando"
+	game.intro()
+	game.start_tutorial()
+	await process_frame
+	check(game.tutorial.active and game.tutorial.id() == "bienvenida","The tutorial starts on its welcome")
+	game._unhandled_input(pad(JOY_BUTTON_A))
+	check(game.tutorial.id() == "mirar","A moves on from the tutorial's welcome")
+	var focus_before = game.focus_distance
+	game.set_manual_focus(33.0) if game.equipment.focus_mode == "MF" else null
+	game.focus_distance = 33.0
+	game._unhandled_input(pad(JOY_BUTTON_A))
+	check(is_equal_approx(game.focus_distance,33.0),"A no longer focuses: half the trigger does")
+	check(Glyphs.CONTROLS.af[1].contains("RT") and Texts.get_text("tutorial_controles_mando") != "tutorial_controles_mando","With the gamepad the help names the trigger for focusing and the tutorial has its own words")
+	game.tutorial.stop()
+	game.intro()
+	game.academy.progress_path = "user://academia_input_test.cfg"
+	game.academy.reset_progress()
+	game.academy.begin(game.academy.ORDER.find("exposicion")+1,"teoria")
+	await process_frame
+	game._unhandled_input(pad(JOY_BUTTON_A))
+	check(game.academy.page == 1,"Theory: A is «next»")
+	game.academy.set_phase("practica")
+	await process_frame
+	game._unhandled_input(pad(JOY_BUTTON_A))
+	check(game.academy.phase == "practica","Practice: A does not jump to the exam (it skipped the tutor's verdict)")
+	game._unhandled_input(pad(JOY_BUTTON_START))
+	await process_frame
+	check(game.mode == "PAUSE" and game.modal.find_children("*","Button",true,false).any(func(b): return b.text == Texts.get_text("academia_salir")),"Menu opens the lesson's own pause, with pause, back, next and leave")
+	game.resume_search()
+	game.academy.exit_lesson()
+	await process_frame
+	# The Academy's list with the D-pad: the focus walks down the rows and the list follows.
+	var list: ScrollContainer = game.modal.find_children("*","ScrollContainer",true,false)[0]
+	var down = pad(JOY_BUTTON_DPAD_DOWN)
+	for i in 14:
+		root.push_input(down)
+		var up_event = InputEventJoypadButton.new()
+		up_event.button_index = JOY_BUTTON_DPAD_DOWN
+		root.push_input(up_event)
+		await process_frame
+	check(list.scroll_vertical > 100,"D-pad down walks the lessons and the list scrolls (%d px)" % list.scroll_vertical)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://academia_input_test.cfg"))
+	game.intro()
+	Glyphs.device = "teclado"
 	# Equipment screen with the D-pad: ← → change a list in place and the list keeps the focus.
 	game.intro()
 	game.arcade_level = -1

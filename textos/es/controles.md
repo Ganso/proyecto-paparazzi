@@ -102,10 +102,10 @@ bajar o subir la cámara
 controles · atrás
 
 ### pad_x
-ayuda en pantalla
+ayuda en pantalla · manivela (TLR)
 
 ### pad_a
-enfocar (AF) · manivela (TLR) · aceptar
+aceptar · continuar
 
 ### pad_stick_der
 Stick derecho: ↕ zoom · ↔ enfoque manual · pulsado: Tercios
@@ -119,10 +119,10 @@ Controles con mando
 ### ayuda_texto_teclado
 Mirar: Arrastra con el ratón (la vista va hacia donde lo mueves) o ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧ · ⟦A⟧⟦D⟧: Giro continuo.
 Zoom: Rueda o ⟦W⟧⟦S⟧, solo con objetivo zoom.
-AF: Clic, ⟦F⟧ o ENFOCAR. El matricial elige la superficie más cercana entre nueve puntos; ⟦1⟧–⟦9⟧ elige el punto.
+AF: Clic, ⟦F⟧ o ENFOCAR. El matricial elige la superficie más cercana entre nueve puntos. ⟦1⟧–⟦9⟧ elige el punto.
 MF: ⟦Mayús⟧ + rueda, ⟦R⟧⟦T⟧ o el deslizador. Con objetivo fijo también sirve la rueda sola.
 Réflex: Alinea las dos mitades del círculo. Telemétrica: Superpón la doble imagen.
-Exposición manual: ⟦Q⟧⟦E⟧ diafragma, ⟦Z⟧⟦X⟧ velocidad, ⟦C⟧⟦V⟧ ISO. Modo A: Tú eliges el diafragma; modo S, el tiempo.
+Exposición manual: ⟦Q⟧⟦E⟧ diafragma, ⟦Z⟧⟦X⟧ velocidad, ⟦C⟧⟦V⟧ ISO. Modo A: Tú eliges el diafragma. Modo S, el tiempo.
 Automática con compensación: ⟦[⟧⟦]⟧ o la rueda sobre el botón AUTO.
 ⟦Espacio⟧ disparar · ⟦G⟧ tercios · ⟦Tab⟧ controles sobre el visor · ⟦F1⟧ ayuda en pantalla.
 ⟦Y⟧ baja la cámara para buscar y la vuelve a llevar al ojo (parque clásico).

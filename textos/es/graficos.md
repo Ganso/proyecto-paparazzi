@@ -174,7 +174,7 @@ Bilineal
 Mismo aspecto con el mínimo coste: Resolución al 50 % (FSR 2), sin iluminación global ni oclusión ambiental y con poca hierba.
 
 ### gfx_desc_Medio
-Resolución al 70 %, iluminación global con 3 cascadas, oclusión ambiental y sombras de 2048; sin niebla volumétrica.
+Resolución al 70 %, iluminación global con 3 cascadas, oclusión ambiental y sombras de 2048. Sin niebla volumétrica.
 
 ### gfx_desc_Alto
 Resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra física y profundidad de campo en el visor.
@@ -183,7 +183,7 @@ Resolución al 85 %, iluminación global completa, niebla volumétrica, penumbra
 Resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba completa y sombras en todas las farolas.
 
 ### gfx_integrada
-Gráfica integrada: En los perfiles la iluminación global se desactiva (da una imagen lavada); en Personalizado puedes forzarla.
+Gráfica integrada: En los perfiles la iluminación global se desactiva (da una imagen lavada). En Personalizado puedes forzarla.
 
 ### gfx_fps
 FPS

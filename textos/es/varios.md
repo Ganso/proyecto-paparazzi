@@ -170,7 +170,7 @@ Un dedo: Paneo con inercia · Pellizco: Zoom · Dos dedos verticales: Enfoque ma
 Un toque: Punto AF y enfoque · Arrastra un ajuste para modificarlo.
 
 LEE LA LUZ
-Aguja a 0: Exposición correcta. ΔEV positivo: Foto oscura; negativo: Demasiado clara.
+Aguja a 0: Exposición correcta. ΔEV positivo: Foto oscura. Negativo: Demasiado clara.
 A focal larga, usa tiempos más cortos. Para ganar nitidez, enfoca y cierra el diafragma.
 La cámara permanece a 1,60 m: A 24 mm caben los adultos del carril de 4 m.
 

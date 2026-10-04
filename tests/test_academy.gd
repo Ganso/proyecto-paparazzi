@@ -357,7 +357,7 @@ func run() -> void:
 	await process_frame
 	exam_buttons = game.modal.find_children("*","Button",true,false).filter(func(b): return b.text == Texts.get_text("academia_examen_boton"))
 	check(exam_buttons.filter(func(b): return not b.disabled).size() == 1,"…and it opens once the theory has been read")
-	check(game.modal.find_children("*","Label",true,false).filter(func(l): return l.text == Texts.get_text("academia_proximamente")).size() == 5 and not game.modal.find_children("*","ScrollContainer",true,false).is_empty(),"Five lessons to come close the list, which scrolls")
+	check(game.modal.find_children("*","Button",true,false).filter(func(l): return l.text == Texts.get_text("academia_proximamente")).size() == 5 and not game.modal.find_children("*","ScrollContainer",true,false).is_empty(),"Five lessons to come close the list, which scrolls")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_PROGRESS))
 	print("ACADEMY TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

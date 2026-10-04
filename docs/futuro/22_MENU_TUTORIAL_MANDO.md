@@ -99,3 +99,12 @@ En escritorio la interfaz es **siempre la de la cámara**: el visor de cada cuer
 - La nota del tutorial en el resultado de la foto va junto al título (abajo se montaba sobre la línea de la mejor foto).
 - La pantalla final ofrece también **repetir el tutorial**.
 - **El menú recuerda el último modo** entre sesiones (`main_menu.gd::load_mode()`, `remember_mode()`, `user://interfaz.cfg`).
+
+## Tutorial hasta el parque grande y mando con A solo para aceptar (04-10-2026, usuario)
+
+- **Tutorial**: «mirar» e «inclinar» son un solo paso (a los lados y arriba y abajo). Los pasos que hablan de la ayuda en pantalla la activan. Sin punto y coma en ningún texto. Con mando, los pasos de controles, diafragma, ayuda y enfoque manual tienen su propio texto (`tutorial_<paso>_mando`), sin ratón ni teclas. **Termina en el parque grande** (`WALKING`: «paseo», «sacar», «foto_paseo»): la escena se recarga allí (`Tutorial.resume_step`, `main.gd::start_tutorial()`) y enseña a andar con la cámara bajada, sacarla para disparar y bajarla para seguir.
+- **Mando**: **A solo acepta** (continuar en el tutorial, «siguiente» en teoría y demostración de la Academia, pulsar el botón enfocado en las pantallas). Enfocar es el gatillo a medias y disparar, a fondo. La manivela de la TLR pasa a X cuando hace falta. En la práctica y el examen de la Academia A ya no salta de fase.
+- **Menú de la lección** (`main.gd::show_lesson_menu()`: Esc, el botón ✕ o Menu en el mando): seguir, siguiente, atrás, pausar la escena y salir de la lección, todo al alcance del mando. Sobre el panel se dibuja qué hace el mando en cada fase.
+- **Listas con desplazamiento** (Academia, gráficos): la seta derecha (o la izquierda) las mueve como una rueda (`scroll_with_stick()`), y la cruceta recorre también las filas «Próximamente».
+- **Nivel 14 del arcade**: ya no pide «exactamente dos personas más» (no quedaba claro quién contaba): ahora es «Todo manual», con el sujeto llenando al menos media foto. Las condiciones de compañía explican quién cuenta (quien ocupa un décimo de la altura).
+- **Parque grande**: la ayuda de enfoque manual ya no parpadea al andar con la cámara bajada.

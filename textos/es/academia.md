@@ -74,8 +74,17 @@ Mira: Ahora conduzco yo. Cuando acabe te toca a ti.
 ### academia_tutor_conduce
 El tutor maneja la cámara: Mira
 
+### academia_menu_titulo
+Lección %d · %s
+
+### academia_mando_teoria
+{aceptar} siguiente · {atras} atrás · {pausa} opciones
+
+### academia_mando_practica
+{disparar} foto · {pausa} siguiente, atrás, salir
+
 ### academia_practica_intro
-Te toca. Cumple las tareas; si te atascas, te soplo una pista.
+Te toca. Cumple las tareas. Si te atascas, te soplo una pista.
 
 ### academia_practica_superada
 ¡Práctica superada! Sigue jugando con ello o vuelve al menú.
@@ -399,7 +408,7 @@ La persona ocupa el %d %% del alto, a %s m. Busca a alguien lejano (más de 9 m)
 Sujeto nítido.
 
 ### academia_ex_nitido_mal
-Sujeto desenfocado (%.3f mm; lo nítido llega hasta 0,030 mm).
+Sujeto desenfocado (%.3f mm, lo nítido llega hasta 0,030 mm).
 
 ## Lección 1 · La composición
 
@@ -529,7 +538,7 @@ Nueve puntos
 
 ### academia_enfoque_t2_texto · teoría 2 · texto
 > máximo 240 caracteres
-En esta cámara no hay un punto de enfoque: Hay nueve. Si el protagonista está a un lado, se elige el punto de ese lado ({punto_enfoque}) en vez de volver a centrarlo. El encuadre manda; el punto obedece.
+En esta cámara no hay un punto de enfoque: Hay nueve. Si el protagonista está a un lado, se elige el punto de ese lado ({punto_enfoque}) en vez de volver a centrarlo. El encuadre manda. El punto obedece.
 
 ### academia_enfoque_t3_titulo · teoría 3 · título
 > máximo 30 caracteres
@@ -638,7 +647,7 @@ El secreto: La distancia
 
 ### academia_focal_t4_texto · teoría 4 · texto
 > máximo 240 caracteres
-Y el giro final: La focal no cambia la perspectiva. La cambia DÓNDE nos ponemos; la focal solo decide cuánto se recorta. El tele «aplasta» porque obliga a irse lejos, y el angular «estira» porque obliga a arrimarse.
+Y el giro final: La focal no cambia la perspectiva. La cambia DÓNDE nos ponemos. La focal solo decide cuánto se recorta. El tele «aplasta» porque obliga a irse lejos, y el angular «estira» porque obliga a arrimarse.
 
 ### academia_focal_d1 · demostración · subtítulo 1
 > máximo 110 caracteres
@@ -719,7 +728,7 @@ El diafragma: El agujero
 
 ### academia_exposicion_t2_texto · teoría 2 · texto
 > máximo 240 caracteres
-Es el agujero por donde entra la luz. El número va al revés: Número pequeño (f/2), agujero GRANDE; número grande (f/16), agujero pequeño. Cada paso (f/2,8 → f/4 → f/5,6…) deja pasar justo la mitad de luz. Se cambia con {diafragma_y}.
+Es el agujero por donde entra la luz. El número va al revés: Número pequeño (f/2), agujero GRANDE. Número grande (f/16), agujero pequeño. Cada paso (f/2,8 → f/4 → f/5,6…) deja pasar justo la mitad de luz. Se cambia con {diafragma_y}.
 
 ### academia_exposicion_t3_titulo · teoría 3 · título
 > máximo 30 caracteres
@@ -836,7 +845,7 @@ Enfocar es elegir un sitio
 
 ### academia_dof_t1_texto · teoría 1 · texto
 > máximo 240 caracteres
-¿Has visto esos retratos con el fondo suave? No es magia. El objetivo solo enfoca de verdad a UNA distancia; un poco antes y un poco después todavía va bien. Esa franja es la profundidad de campo. Está dibujada en el esquema.
+¿Has visto esos retratos con el fondo suave? No es magia. El objetivo solo enfoca de verdad a UNA distancia. Un poco antes y un poco después todavía va bien. Esa franja es la profundidad de campo. Está dibujada en el esquema.
 
 ### academia_dof_t2_titulo · teoría 2 · título
 > máximo 30 caracteres
@@ -852,7 +861,7 @@ Focal y distancia
 
 ### academia_dof_t3_texto · teoría 3 · texto
 > máximo 240 caracteres
-Tiene dos cómplices: La focal y la distancia. Un teleobjetivo a 4 m aísla a una persona como si se recortara el mundo a su alrededor; un angular lo deja casi todo nítido aunque no se quiera.
+Tiene dos cómplices: La focal y la distancia. Un teleobjetivo a 4 m aísla a una persona como si se recortara el mundo a su alrededor. Un angular lo deja casi todo nítido aunque no se quiera.
 
 ### academia_dof_t4_titulo · teoría 4 · título
 > máximo 30 caracteres
@@ -1001,7 +1010,7 @@ Compara las dos fotos
 
 ### academia_movimiento_intro · práctica · presentación
 > máximo 110 caracteres
-Te toca. Tú pones la velocidad; la cámara enfoca al corredor y ajusta la luz.
+Te toca. Tú pones la velocidad. La cámara enfoca al corredor y ajusta la luz.
 
 ### academia_movimiento_pista_espera · pista · espera
 > máximo 130 caracteres
@@ -1244,7 +1253,7 @@ La focal: Cuánto ves
 
 ### academia_objetivos_t1_texto · teoría 1 · texto
 > máximo 240 caracteres
-El número del objetivo (24, 50, 105 mm) dice cuánto mundo cabe: Pequeño, mucho; grande, poco y de cerca. Ahora hay montado un 24: Cabe medio parque. Un 50 ve más o menos como nosotros. Hasta aquí, fácil.
+El número del objetivo (24, 50, 105 mm) dice cuánto mundo cabe: Pequeño, mucho. Grande, poco y de cerca. Ahora hay montado un 24: Cabe medio parque. Un 50 ve más o menos como nosotros. Hasta aquí, fácil.
 
 ### academia_objetivos_t2_titulo · teoría 2 · título
 > máximo 30 caracteres

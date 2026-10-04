@@ -9,6 +9,8 @@ const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
 const Diagram = preload("res://scripts/academy_diagram.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
+const Glyphs = preload("res://scripts/input_glyphs.gd")
+const GlyphLabel = preload("res://scripts/glyph_label.gd")
 var progress_path = OS.get_environment("PAPARAZZI_ACADEMY_CFG") if OS.has_environment("PAPARAZZI_ACADEMY_CFG") else "user://academia.cfg"   # tests and capture tools point it elsewhere
 # The lessons in the order they are taught. Each has an id: the code, the texts
 # (academia_<id>_…) and the progress file go by id, so the order can change without touching them.
@@ -1512,6 +1514,9 @@ func _draw() -> void:
 		draw_style_box(UiStyle.box(Color(.72,.1,.1,.92),14,Color.WHITE,1),Rect2(at,Vector2(w,30)))
 		if fmod(pulse,1.0) < .6: draw_circle(at+Vector2(17,15),6,Color.WHITE)
 		draw_string(font,at+Vector2(32,20),sign_text,HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color.WHITE)
+	if Glyphs.pad() and main.mode == "SEARCH":
+		# What the gamepad does in a lesson, above its panel.
+		GlyphLabel.draw_rich(self,UiStyle.font("Roboto-Regular"),panel.position+Vector2(4,-24),Texts.get_rich("academia_mando_teoria" if locks_input() else "academia_mando_practica"),12,Color.WHITE,panel.size.x,true)
 	if phase == "demo" and demo_done:
 		# The demonstration is over: the eye goes to «Ir a la práctica».
 		var a = .55+.45*sin(pulse*5.0)
@@ -1527,6 +1532,15 @@ func _draw() -> void:
 
 func handle_key(event: InputEvent) -> bool:
 	if not active: return false
+	if event is InputEventJoypadButton:
+		# Menu: the lesson's own pause (carry on, next, back, pause the scene, leave).
+		if event.button_index == JOY_BUTTON_START:
+			main.show_lesson_menu()
+			return true
+		# A and B walk the lesson only while the camera is not the player's (theory, demonstration).
+		# In the practice and the exam A is just «accept» on the screens: pressing it to shoot used
+		# to jump to the next phase and skip the tutor's verdict.
+		if not locks_input(): return false
 	if event.is_action_pressed("academia_siguiente"):
 		go_next()
 		return true

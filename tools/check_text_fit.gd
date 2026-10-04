@@ -293,7 +293,11 @@ func run() -> void:
 			for k in game.tutorial.STEPS.size():
 				game.tutorial.step = k
 				game.tutorial.enter_step()
-				game.tutorial.update_panel()
+				await sync()   # the walking steps reload the scene in the big park
+				if game.tutorial.step != k:
+					game.tutorial.step = k
+					game.tutorial.enter_step()
+				if game.tutorial.id() != "fin": game.tutorial.update_panel()
 				await check(d+"tutorial_%02d" % (k+1))
 			await check(d+"tutorial_fin_pantalla")
 			game.tutorial.stop()

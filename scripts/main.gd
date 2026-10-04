@@ -851,7 +851,7 @@ func refresh() -> void:
 	if is_instance_valid(camera_body) and camera_body.body != equipment.body:
 		place_view()
 		update_dof_pass()
-	focus_aid.visible = equipment.focus_mode == "MF" and mode == "SEARCH" and not tlr_loupe
+	focus_aid.visible = equipment.focus_mode == "MF" and mode == "SEARCH" and not tlr_loupe and eye_ready()   # (walking with the camera down it blinked: refresh() showed it, update_focus_aid() hid it)
 	focus_aid.material.set_shader_parameter("body",equipment.body)
 	aperture_button.text = Texts.get_text("1f") % apertures()[n_index]
 	shutter_button.text = Texts.get_text("1_d") % Photo.DENOMINATORS[t_index]
@@ -1284,6 +1284,7 @@ func _process(dt: float) -> void:
 	if not shooting: track_camera_turn(dt)
 	update_continuous_af(dt)
 	update_fps_counter(dt)
+	scroll_with_stick(dt)
 	boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
@@ -2807,6 +2808,7 @@ func log_line(text: String) -> void:
 func refresh_device() -> void:
 	if is_instance_valid(walk_hint): walk_hint.set_rich(Texts.get_rich("buscar_ayuda" if not crowd else "paseo_ayuda"))
 	refresh()
+	if tutorial and tutorial.active: tutorial.update_panel()
 	if mode == "HELP": show_help()
 
 # Buttons while searching. Returns true when the event was used.
@@ -2814,11 +2816,13 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 	if not event.pressed or mode != "SEARCH": return false
 	match event.button_index:
 		JOY_BUTTON_A:
-			if equipment.tlr() and sandbox and (not tlr_wound or tlr_frames <= 0): wind_film()
-			elif eye_ready(): autofocus()
+			# A only accepts (user, 04-10-2026: it did too many things). Half the trigger focuses.
+			if not (tutorial and tutorial.handle_accept()): return false
 		JOY_BUTTON_B: show_help()
 		JOY_BUTTON_START: show_pause()
-		JOY_BUTTON_X: control_help.set_enabled(not control_help.enabled)
+		JOY_BUTTON_X:
+			if equipment.tlr() and sandbox and eye_ready() and (not tlr_wound or tlr_frames <= 0) and not (academy and academy.active): wind_film()
+			else: control_help.set_enabled(not control_help.enabled)
 		JOY_BUTTON_Y:
 			if not crowd and not (academy and academy.active): toggle_raise()
 			else: return false
@@ -2878,6 +2882,14 @@ var trigger_lock = false         # the lock in force was set by the trigger's ha
 
 # Sticks, triggers and D-pad repeat, every frame while searching.
 var pad_polling = true           # tests switch it off: a gamepad left plugged in must not drive them
+# On a screen with a list that scrolls (Academy, graphics), the right stick moves it like a wheel.
+func scroll_with_stick(dt: float) -> void:
+	if mode == "SEARCH" or not is_instance_valid(modal) or Input.get_connected_joypads().is_empty() or not pad_polling: return
+	var push = Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y)
+	if absf(push) < .25: push = Input.get_joy_axis(0,JOY_AXIS_LEFT_Y)
+	if absf(push) < .25: return
+	for list in modal.find_children("*","ScrollContainer",true,false): list.scroll_vertical += roundi(push*dt*900.0)
+
 func update_pad(dt: float) -> void:
 	if Input.get_connected_joypads().is_empty() or not pad_polling: return
 	if academy and academy.locks_input(): return
@@ -3270,14 +3282,19 @@ func start_level(n: int) -> void:
 
 # ---- Tutorial (docs/futuro/22 §2) ----
 func start_tutorial() -> void:
-	if scenario != "clasico":
-		reload_with("clasico",{"tutorial":true})
+	# It starts in the classic park and ends walking in the big one (the scene reloads in between).
+	var Tutorial = preload("res://scripts/tutorial.gd")
+	var from: int = Tutorial.resume_step
+	var where = "grande" if from >= 0 else "clasico"
+	if scenario != where:
+		reload_with(where,{"tutorial":true})
 		return
+	Tutorial.resume_step = -1
 	arcade_level = -1
 	equipment.preset(0)
 	start_session("day",true)
 	briefing.text = Texts.get_text("modo_tutorial_titulo")
-	tutorial.start()
+	tutorial.start(maxi(0,from))
 
 # The tutorial's assignment: a real subject and its description, without the briefing screen.
 func tutorial_assignment() -> void:
@@ -3355,6 +3372,9 @@ func update_hunt_hint(dt: float) -> void:
 # Pause (Esc, the on-screen button or Menu/Start): carry on, the help, or leave the phase for the
 # main menu after a confirmation (docs/futuro/22 §4).
 func show_pause(confirm = false) -> void:
+	if academy and academy.active and not confirm:
+		show_lesson_menu()
+		return
 	mode = "PAUSE"
 	var root = create_modal()
 	label(root,Texts.get_text("pausa_titulo"),Rect2(440,190,400,60),40)
@@ -3367,6 +3387,21 @@ func show_pause(confirm = false) -> void:
 		warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button(root,Texts.get_text("pausa_no"),Rect2(440,340,400,56),resume_search,true)
 		button(root,Texts.get_text("pausa_si"),Rect2(440,410,400,56),leave_phase)
+
+# Pause of a lesson of the Academy (Esc, the ✕ button, Menu on the gamepad): everything the panel
+# offers, within reach of the gamepad too — carry on, next, back, pause the scene, leave.
+func show_lesson_menu() -> void:
+	mode = "PAUSE"
+	var root = create_modal()
+	label(root,Texts.get_text("academia_menu_titulo") % [academy.lesson,Texts.get_text(academy.lesson_key(academy.lesson,"titulo"))],Rect2(340,120,600,50),30)
+	var entries = [[Texts.get_text("pausa_seguir"),resume_search],
+		[academy.next_button.text,func(): resume_search(); academy.go_next()],
+		[Texts.get_text("academia_atras"),func(): resume_search(); academy.go_back()],
+		[Texts.get_text("academia_reanudar") if academy.paused else Texts.get_text("academia_pausar"),func(): resume_search(); academy.toggle_pause()],
+		[Texts.get_text("academia_salir"),func(): academy.exit_lesson()]]
+	for k in entries.size():
+		var b = button(root,entries[k][0],Rect2(440,200+k*66,400,54),entries[k][1],k == 0)
+		if k == 2 and academy.back_button.disabled: b.disabled = true
 
 func leave_phase() -> void:
 	if academy and academy.active: academy.stop()
@@ -3404,6 +3439,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if academy and academy.locks_input() and mode == "SEARCH":
 		if (event is InputEventKey or event is InputEventJoypadButton) and event.is_pressed() and academy.handle_key(event): return
 		if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE: show_pause()
+		if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_START: show_pause()
 		return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
@@ -4397,7 +4433,10 @@ func show_academy() -> void:
 		panel(rows,Rect2(0,y,1130,45),Color(.075,.115,.085,.55))
 		label(rows,"%d" % (academy.LESSONS+k+1),Rect2(13,y+6,44,34),24,Color("8f9f86")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label(rows,Texts.get_text("academia_prox_%d" % (k+1)),Rect2(65,y+10,640,26),18,Color("a9b8a0"))
-		label(rows,Texts.get_text("academia_proximamente"),Rect2(865,y+12,255,22),13,Color("efaf83"))
+		# A button that does nothing, so the D-pad and the arrows reach the row and the list follows.
+		var later = button(rows,Texts.get_text("academia_proximamente"),Rect2(865,y+6,255,33),func(): pass)
+		later.add_theme_font_size_override("font_size",13)
+		later.add_theme_color_override("font_color",Color("efaf83"))
 	label(rows,Texts.get_text("academia_mucho_mas"),Rect2(65,(academy.LESSONS+soon)*49+8,640,26),18,Color("a9b8a0"))
 	rows.custom_minimum_size = Vector2(1130,(academy.LESSONS+soon)*49+46)
 	label(root,Texts.get_text("academia_progreso") % [academy.practices_done(),academy.LESSONS]+" · "+(Texts.get_text("academia_graduado") if academy.graduated() else Texts.get_text("academia_examenes_progreso") % [academy.exams_done(),academy.LESSONS]),Rect2(620,650,585,28),15,Color("a7c683"))

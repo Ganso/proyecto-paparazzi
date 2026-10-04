@@ -1,4 +1,6 @@
 extends SceneTree
+const MainScript = preload("res://scripts/main.gd")
+const Texts = preload("res://scripts/texts.gd")
 # Tutorial mode and the main menu of five modes (docs/futuro/22): walks the whole tutorial doing
 # what each step asks. Needs a display.
 #   ~/bin/godot-4-fp --path . --disable-vsync --script tests/test_tutorial.gd
@@ -81,10 +83,11 @@ func run() -> void:
 	check(game.tutorial.id() == "mirar","Enter moves on from the welcome")
 	game.angle += 70.0
 	game.update_camera()
-	check(await wait_step("inclinar"),"Looking around completes «mirar»")
+	await frames(6)
+	check(game.tutorial.done_time < 0.0,"Looking to the sides alone does not complete «mirar»")
 	game.pitch += 20.0
 	game.update_camera()
-	check(await wait_step("zoom"),"Tilting completes «inclinar»")
+	check(await wait_step("zoom"),"Looking to the sides and up and down completes «mirar»")
 	game.focal = 90.0
 	game.update_camera()
 	await frames(3)
@@ -102,7 +105,9 @@ func run() -> void:
 	game.finder.active = 4
 	await frames(2)
 	game.autofocus()
+	game.control_help.set_enabled(false)
 	check(await wait_step("ayuda"),"Focusing on someone completes «af»")
+	check(game.control_help.enabled,"The step about the on-screen help turns it on")
 	game.control_help.set_enabled(not game.control_help.enabled)
 	await frames(4)
 	game.control_help.set_enabled(not game.control_help.enabled)
@@ -147,8 +152,32 @@ func run() -> void:
 		game.aim_at(p,1.0)
 		game.set_manual_focus(game.camera.global_position.distance_to(p.control_points()[1]))
 		await process_frame
-		if game.tutorial.id() == "fin": break
-	check(await wait_step("fin",3.0),"Matching the split image completes «mf»")
+		if game.tutorial.done_time >= 0.0: break
+	check(await wait_step("paseo",3.0),"Matching the split image completes «mf»")
+	# The last steps are in the big park: the scene reloads there (here, a second game).
+	var Tutorial = preload("res://scripts/tutorial.gd")
+	check(Tutorial.resume_step == Tutorial.STEPS.find("paseo"),"The tutorial asks to go on in the big park")
+	game.queue_free()
+	await frames(3)
+	MainScript.scenario = "grande"
+	MainScript.pending_start = {"tutorial":true}
+	game = preload("res://main.tscn").instantiate()
+	root.add_child(game)
+	await frames(40)
+	check(game.crowd != null and game.tutorial.active and game.tutorial.id() == "paseo" and not game.camera_raised,"…and resumes there on foot, camera down")
+	game.player.position += Vector3(4.5,0,0)
+	await frames(3)
+	game.player.position += Vector3(4.5,0,0)
+	check(await wait_step("sacar"),"Walking a few metres completes «paseo»")
+	game.toggle_raise()
+	check(await wait_step("foto_paseo",4.0),"Bringing the camera to the eye completes «sacar»")
+	await game.take_photo()
+	check(game.current_result.get("tutorial_note","") == Texts.get_text("tutorial_resultado_paseo"),"The photo on foot shows its note")
+	game.resume_search()
+	await frames(5)
+	check(game.tutorial.done_time < 0.0,"…but the step waits until the camera is lowered again")
+	game.toggle_raise()
+	check(await wait_step("fin",4.0),"Lowering the camera completes «foto_paseo»")
 	await frames(3)
 	check(game.mode == "TUTORIAL_END" and not game.tutorial.visible,"The end is a screen of its own")
 	check(stayed,"A finished step waits for «Continuar» instead of moving on by itself")

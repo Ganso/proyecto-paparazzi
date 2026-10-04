@@ -30,7 +30,7 @@ const LEVELS = [
 	{"scenario":"clasico","time":"day","body":1,"lens":0,"auto":true,"pace":.6,"shots":3,"limit":0,"min":65,"cond":{}},
 	{"scenario":"grande","time":"golden","body":1,"lens":1,"auto":true,"pace":.7,"shots":3,"limit":150,"min":65,"cond":{"aislado":true}},
 	{"scenario":"clasico","time":"blue","body":1,"lens":1,"auto":"A","pace":.6,"shots":3,"limit":120,"min":65,"cond":{"ojos":true}},
-	{"scenario":"grande","time":"day","body":1,"lens":0,"auto":false,"pace":.6,"shots":3,"limit":150,"min":65,"cond":{"acompanado":2}},
+	{"scenario":"grande","time":"day","body":1,"lens":0,"auto":false,"pace":.6,"shots":3,"limit":150,"min":65,"cond":{"grande":.5}},
 	{"scenario":"clasico","time":"night","body":1,"lens":1,"auto":false,"pace":.6,"shots":2,"limit":120,"min":70,"cond":{"aislado":true,"ojos":true}},
 	# Block 4 · the TLR: waist level, mirrored ground glass, square frame, film, all manual.
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":1,"pace":.5,"shots":3,"limit":0,"min":70,"cond":{}},

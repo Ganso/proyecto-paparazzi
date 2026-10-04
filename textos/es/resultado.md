@@ -4,7 +4,7 @@
 
 ### enfoque_d_coc_3f_mm_nitido_0_030_foco_a_s_sujeto_a_2f_m_s
 Enfoque · %d %%
-CoC %.3f mm (nítido ≤ 0,030). Foco a %s; sujeto a %.2f m. %s
+CoC %.3f mm (nítido ≤ 0,030). Foco a %s. Sujeto a %.2f m. %s
 
 ### exposicion_d_ev_2f_s_s
 Exposición · %d %%
@@ -32,7 +32,7 @@ Tu pulso tiembla a 1/%d s con %d mm: Usa 1/%d s o más rápido (regla práctica:
 La persona se mueve demasiado para 1/%d s: A %d mm hace falta 1/%d s o más rápido.
 
 ### mov_barrido
-Barrido: Seguiste a la persona con la cámara a 1/%d s; sale nítida y el fondo, arrastrado %.1f mm.
+Barrido: Seguiste a la persona con la cámara a 1/%d s. Sale nítida y el fondo, arrastrado %.1f mm.
 
 ### mov_camara
 Moviste la cámara durante el disparo a 1/%d s: Quieta, o sigue a alguien que se mueva.
