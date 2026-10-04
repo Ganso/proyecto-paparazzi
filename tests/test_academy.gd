@@ -65,7 +65,7 @@ func run() -> void:
 	check(academy.page == academy.THEORY_PAGES["exposicion"]-1 and academy.done(L.call("exposicion"),"teoria"),"Reaching the last page marks the theory as seen")
 
 	# --- Demonstrations: they run to the end and take the photos they narrate ---
-	Engine.time_scale = 2.5
+	Engine.time_scale = 2.0
 	var expected_photos = {"exposicion":1, "dof":2, "movimiento":2, "composicion":1, "focal":2, "objetivos":2, "camaras":1, "enfoque":1, "medicion":1, "modos":1}
 	for n in range(1,academy.LESSONS+1):
 		print("· demo %d" % n)
@@ -186,13 +186,18 @@ func run() -> void:
 	check(academy.tasks[2] and game.equipment.exposure_mode() == "M","Lesson 10: a well exposed photo in M completes it")
 	var ok_e = {"f":50.0,"n":2.0,"t":1.0/125,"iso":100,"s":4.0,"d":4.0,"v":0.0,"person":true}
 	var AcademyScript = academy.get_script()
-	check(AcademyScript.exam_report("camaras",ok_e,{"delta":0.0,"coc":0.0,"body":1,"person":true}).passed and not AcademyScript.exam_report("camaras",ok_e,{"delta":0.0,"coc":0.0,"body":2,"person":true}).passed,"Exam 7 asks for the rangefinder")
+	check(AcademyScript.exam_report("camaras",ok_e,{"delta":0.0,"coc":0.0,"body":3,"person":true}).passed and not AcademyScript.exam_report("camaras",ok_e,{"delta":0.0,"coc":0.0,"body":2,"person":true}).passed,"The exam of the cameras asks for the TLR")
+	var exam8 = ok_e.duplicate()
+	exam8.n = 8.0
 	var grainy = ok_e.duplicate()
 	grainy.iso = 800
-	check(AcademyScript.exam_report("objetivos",ok_e,{"delta":0.2,"coc":0.0,"person":true}).passed and not AcademyScript.exam_report("objetivos",grainy,{"delta":0.2,"coc":0.0,"person":true}).passed,"Exam 6 asks for ISO 100")
-	check(AcademyScript.exam_report("enfoque",ok_e,{"delta":0.0,"sub_in":true,"sub_x":.3,"sub_sharp":true}).passed and not AcademyScript.exam_report("enfoque",ok_e,{"delta":0.0,"sub_in":true,"sub_x":.5,"sub_sharp":true}).passed and not AcademyScript.exam_report("enfoque",ok_e,{"delta":0.0,"sub_in":true,"sub_x":.3,"sub_sharp":false}).passed,"Exam 8 asks for the subject sharp and off-centre")
-	check(AcademyScript.exam_report("medicion",ok_e,{"delta":0.3,"coc":0.0,"metering":"puntual","person":true}).passed and not AcademyScript.exam_report("medicion",ok_e,{"delta":0.3,"coc":0.0,"metering":"matricial","person":true}).passed,"Exam 9 asks for spot metering")
-	check(AcademyScript.exam_report("modos",ok_e,{"delta":0.3,"coc":0.0,"mode":"M","person":true}).passed and not AcademyScript.exam_report("modos",ok_e,{"delta":0.3,"coc":0.0,"mode":"A","person":true}).passed and not AcademyScript.exam_report("modos",ok_e,{"delta":0.8,"coc":0.0,"mode":"M","person":true}).passed,"Exam 10 asks for M and half a stop")
+	var wide_e = ok_e.duplicate()
+	wide_e.f = 24.0
+	wide_e.t = 1.0/30
+	check(AcademyScript.exam_report("objetivos",wide_e,{"delta":0.6}).passed and not AcademyScript.exam_report("objetivos",ok_e,{"delta":0.2}).passed,"The exam of the lenses asks for the 24 mm end of the zoom")
+	check(AcademyScript.exam_report("enfoque",ok_e,{"manual_focus":true,"sub_in":true,"sub_sharp":true}).passed and not AcademyScript.exam_report("enfoque",ok_e,{"manual_focus":false,"sub_in":true,"sub_sharp":true}).passed and not AcademyScript.exam_report("enfoque",ok_e,{"manual_focus":true,"sub_in":true,"sub_sharp":false}).passed,"The exam of the focus asks for the subject sharp by hand")
+	check(AcademyScript.exam_report("medicion",ok_e,{"coc":0.0,"metering":"puntual","comp":1.0,"person":true}).passed and not AcademyScript.exam_report("medicion",ok_e,{"coc":0.0,"metering":"matricial","comp":1.0,"person":true}).passed and not AcademyScript.exam_report("medicion",ok_e,{"coc":0.0,"metering":"puntual","comp":0.0,"person":true}).passed,"The exam of the metering asks for spot metering and +1 EV")
+	check(AcademyScript.exam_report("modos",ok_e,{"delta":0.9,"coc":0.0,"mode":"A","person":true}).passed and not AcademyScript.exam_report("modos",exam8,{"delta":0.3,"coc":0.0,"mode":"A","person":true}).passed and not AcademyScript.exam_report("modos",ok_e,{"delta":1.2,"coc":0.0,"mode":"M","person":true}).passed,"The exam of the modes asks for a wide aperture, in any mode, within a stop")
 
 	print("· real practice")
 	# --- Lesson 4 for real: the tutor sees a head on a crossing with lead room ---
@@ -274,7 +279,7 @@ func run() -> void:
 	check(not Academy.exam_report("dof",exam_two,{"delta":0.0,"d_near":4.0,"d_far":4.4,"both":false}).passed,"Exam 2: both have to be in the photo")
 	var exam_zone = Photo.dof(105.0,11.0,4.0)
 	check(exam_zone.x <= 4.0 and exam_zone.y >= 4.4 and exam_zone.y < 4.7,"Exam 2 agrees with Photography.dof() (%.2f to %.2f m)" % [exam_zone.x,exam_zone.y])
-	var exam_run = {"f":50.0,"n":4.0,"t":1.0/1000,"iso":400,"s":7.0,"d":7.0,"v":2.8}
+	var exam_run = {"f":70.0,"n":4.0,"t":1.0/1000,"iso":400,"s":7.0,"d":7.0,"v":2.8}
 	check(Academy.exam_report("movimiento",exam_run,{"delta":0.0,"coc":.01}).passed,"Exam 3: the runner frozen at 1/1000 s passes")
 	var exam_dragged = exam_run.duplicate()
 	exam_dragged.t = 1.0/60
@@ -311,7 +316,7 @@ func run() -> void:
 	# Exam 2 stages two people at different distances.
 	academy.begin(L.call("dof"),"examen")
 	for i in 5: await process_frame
-	check(is_instance_valid(academy.subject) and is_instance_valid(academy.second) and absf(academy.second.radius-academy.subject.radius-.4) < .01,"Exam 2 stages two people 40 cm apart in depth")
+	check(is_instance_valid(academy.subject) and is_instance_valid(academy.second) and absf(academy.second.radius-academy.subject.radius-1.0) < .01,"The depth of field exam stages two people a metre apart in depth")
 	var exam_ctx = academy.exam_context({"evidence":exam_two,"delta":0.0,"coc":0.0})
 	check(exam_ctx.has("d_near") and exam_ctx.d_far > exam_ctx.d_near,"…and measures both distances for the report")
 	check(not academy.graduated() and academy.exams_done() == 1,"One exam passed: not a graduate yet")
@@ -321,6 +326,18 @@ func run() -> void:
 	await process_frame
 	check(game.modal.find_children("*","Label",true,false).any(func(l): return l.text.contains(Texts.get_text("academia_graduado"))),"The Academy menu shows the diploma")
 
+	# The player's hands are free only from the practice on.
+	academy.begin(L.call("exposicion"),"teoria")
+	check(academy.locks_input() and not academy.tutor_drives(),"Theory: the controls are locked (no red frame: the tutor is not driving)")
+	check(game.finder.active == 4,"Every lesson starts on the centre focus point")
+	academy.set_phase("demo")
+	check(academy.locks_input() and academy.tutor_drives(),"Demonstration: locked, and the tutor drives")
+	academy.set_phase("practica")
+	check(not academy.locks_input(),"Practice: the camera is the player's")
+	check(absf(academy.exam_needle()) > .9,"…and it is handed over with the exposure out of place (%.1f EV)" % academy.exam_needle())
+	check(academy.body_rich.visible == false and academy.body_label.visible,"The practice text is plain; theory and exam draw their keys")
+	academy.exit_lesson()
+
 	# --- Progress persists ---
 	var saved = ConfigFile.new()
 	check(saved.load(TEST_PROGRESS) == OK and saved.get_value("leccion_exposicion","practica",false) and saved.get_value("leccion_exposicion","examen",false),"Progress is saved to disk, by lesson id and with the exams")
@@ -329,6 +346,18 @@ func run() -> void:
 	academy.exit_lesson()
 	check(not academy.active and game.mode == "ACADEMY","Leaving a lesson goes back to the Academy menu")
 	check(game.people.all(func(p): return p.visible and not p.has_meta("staged")),"Leaving restores everyone in the park")
+	# The Academy menu: no exam before the theory, and the lessons to come at the end of the list.
+	academy.reset_progress()
+	game.show_academy()
+	await process_frame
+	var exam_buttons = game.modal.find_children("*","Button",true,false).filter(func(b): return b.text == Texts.get_text("academia_examen_boton"))
+	check(exam_buttons.size() == academy.LESSONS and exam_buttons.all(func(b): return b.disabled),"No exam can be taken before its theory")
+	academy.mark(1,"teoria")
+	game.show_academy()
+	await process_frame
+	exam_buttons = game.modal.find_children("*","Button",true,false).filter(func(b): return b.text == Texts.get_text("academia_examen_boton"))
+	check(exam_buttons.filter(func(b): return not b.disabled).size() == 1,"…and it opens once the theory has been read")
+	check(game.modal.find_children("*","Label",true,false).filter(func(l): return l.text == Texts.get_text("academia_proximamente")).size() == 5 and not game.modal.find_children("*","ScrollContainer",true,false).is_empty(),"Five lessons to come close the list, which scrolls")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_PROGRESS))
 	print("ACADEMY TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

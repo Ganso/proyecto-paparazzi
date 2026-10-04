@@ -55,7 +55,9 @@ func text_rect(c: Control) -> Rect2:
 func clipped(c: Control, r: Rect2) -> Rect2:
 	var p = c.get_parent()
 	while p != null and p != root:
-		if p is ScrollContainer: r = r.intersection(Rect2(p.get_global_transform().origin,p.size*p.get_global_transform().get_scale()))
+		if p is ScrollContainer:
+			var window = Rect2(p.get_global_transform().origin,p.size*p.get_global_transform().get_scale())
+			r = r.intersection(window) if r.intersects(window) else Rect2()
 		p = p.get_parent()
 	return r
 

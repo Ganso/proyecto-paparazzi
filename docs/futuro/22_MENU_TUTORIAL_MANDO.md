@@ -91,3 +91,11 @@ En escritorio la interfaz es **siempre la de la cámara**: el visor de cada cuer
 - Tras una pantalla (encargo, resultado, pausa) ya no asoman los LED de la cámara, y los botones de continuar nombran el control del dispositivo (`entrar_fase`, `seguir_probando`, `academia_seguir`).
 - **Equipo y gráficos con cruceta**: ←→ cambia una lista sin abrirla, la lista conserva el foco al reconstruirse la pantalla y la lista de gráficos se desplaza con el foco (`main.gd::option()`).
 - Ayudas de captura: `--strip-demo` (el control en mano trabajando), `--device=teclado|mando`, `--screen=ayuda`; guion en `tools/videos/control_en_mano.txt`.
+
+## Tutorial: «Continuar», tres maneras de manejar los controles y vuelta al menú (04-10-2026, usuario)
+
+- Al lograr un paso ya no se pasa solo al siguiente: aparece el botón **«Continuar»** (Intro / A también) y el jugador decide cuándo seguir. Catorce pasos: se añaden dos que solo explican (`INFO`): **«controles»** (las tres maneras: Tab y Re/Av Pág, clic y rueda, o el atajo directo; los atajos se consultan con la ayuda) y **«abruma»** (quitar la ayuda en pantalla y quedarse con la tira, donde solo salen los controles que se pueden cambiar). Los pasos del diafragma y del enfoque manual dicen su atajo.
+- El paso de bajar la cámara avisa de que **tras la verja solo hay figurantes**; el del encargo recuerda bajar la cámara para buscar y subirla para la foto.
+- La nota del tutorial en el resultado de la foto va junto al título (abajo se montaba sobre la línea de la mejor foto).
+- La pantalla final ofrece también **repetir el tutorial**.
+- **El menú recuerda el último modo** entre sesiones (`main_menu.gd::load_mode()`, `remember_mode()`, `user://interfaz.cfg`).

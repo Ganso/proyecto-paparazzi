@@ -62,8 +62,8 @@ func _draw() -> void:
 	var pts = points()
 	for i in pts.size():
 		if af_mode == "MF": continue
-		if af_mode in ["AF puntual","AF continuo","AF automático"] and i != active: continue
-		var color = green if i == active else Color(.12,.18,.15,.7)
+		# The nine points always show; the one in use stands out.
+		var color = green if i == active else Color(1,1,1,.45)
 		if i == active and flash > 0: color = Color.WHITE if success else Color("ed8465")
 		var rect = Rect2(pts[i]-Vector2(12,12),Vector2(24,24))
 		draw_rect(rect.grow(1.5),Color(1,1,1,.22),false,1)

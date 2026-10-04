@@ -3179,7 +3179,8 @@ func show_results() -> void:
 		text_label.add_theme_font_size_override("font_size",16)
 		column.add_child(text_label)
 	if tutorial_on:
-		var note = label(root,current_result.get("tutorial_note",""),Rect2(25,646,745,40),15,UiStyle.SKY_DEEP)
+		# Beside the title: at the bottom it ran over the line of the best photo.
+		var note = label(root,current_result.get("tutorial_note",""),Rect2(370,30,885,52),16,UiStyle.SKY_DEEP)
 		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button(root,Texts.get_text("tutorial_continuar"),Rect2(803,642,451,52),resume_search,true)
 		return
@@ -3326,10 +3327,11 @@ func show_tutorial_end() -> void:
 	glyph_label(root,Texts.get_rich("tutorial_fin"),Rect2(65,130,900,90),20,UiStyle.INK)
 	var options = [["tutorial_ir_arcade","tutorial_ir_arcade_texto",func(): tutorial.stop(); show_arcade()],
 		["tutorial_ir_academia","tutorial_ir_academia_texto",func(): tutorial.stop(); open_academy()],
+		["tutorial_repetir","tutorial_repetir_texto",func(): tutorial.stop(); start_tutorial()],
 		["tutorial_menu","tutorial_menu_texto",func(): tutorial.stop(); intro()]]
 	for k in options.size():
-		button(root,Texts.get_text(options[k][0]),Rect2(65,250+k*92,330,68),options[k][2],k == 0)
-		label(root,Texts.get_text(options[k][1]),Rect2(425,250+k*92,760,68),18,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button(root,Texts.get_text(options[k][0]),Rect2(65,240+k*84,330,64),options[k][2],k == 0)
+		label(root,Texts.get_text(options[k][1]),Rect2(425,240+k*84,760,64),18,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 # Someone who has been looking for the subject through the finder for a while is told that the
 # camera can be lowered to search with the naked eye (with the key or button in use).
@@ -4360,24 +4362,44 @@ func show_academy() -> void:
 	label(root,Texts.get_text("academia_titulo"),Rect2(75,30,1100,52),36,Color("e6ebdb"))
 	var sub = label(root,Texts.get_text("academia_subtitulo"),Rect2(75,86,1100,50),18,Color("b7c5ad"))
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Ten lessons: one compact row each (title and summary, the four marks, exam and start).
+	# One compact row per lesson, in a list that scrolls: the ten there are and the ones to come.
+	var scroll = ScrollContainer.new()
+	scroll.position = Vector2(75,128)
+	scroll.size = Vector2(1146,498)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	root.add_child(scroll)
+	var rows = Control.new()
+	scroll.add_child(rows)
+	var soon = 5
 	for n in range(1,academy.LESSONS+1):
-		var y = 132+(n-1)*49
-		panel(root,Rect2(75,y,1130,45),Color(.075,.115,.085,.95))
-		label(root,"%d" % n,Rect2(88,y+6,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label(root,Texts.get_text(academy.lesson_key(n,"titulo")),Rect2(140,y+2,440,24),18,Color("e6ebdb"))
-		label(root,Texts.get_text(academy.lesson_key(n,"resumen")),Rect2(140,y+25,440,18),12,Color("a9b8a0"))
-		var columns = [590,662,774,856]
+		var y = (n-1)*49
+		panel(rows,Rect2(0,y,1130,45),Color(.075,.115,.085,.95))
+		label(rows,"%d" % n,Rect2(13,y+6,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(rows,Texts.get_text(academy.lesson_key(n,"titulo")),Rect2(65,y+2,440,24),18,Color("e6ebdb"))
+		label(rows,Texts.get_text(academy.lesson_key(n,"resumen")),Rect2(65,y+25,440,18),12,Color("a9b8a0"))
+		var columns = [515,587,699,781]
 		var marks: Array = academy.PHASES+["examen"]
 		for k in marks.size():
 			var ph: String = marks[k]
 			var ok = academy.done(n,ph)
-			label(root,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+12,112,22),13,Color("b8d78c") if ok else Color("8f9f86"))
-		var exam_button = button(root,Texts.get_text("academia_examen_boton"),Rect2(940,y+6,112,33),func(): close_modal(); academy.begin(n,"examen"))
-		exam_button.add_theme_font_size_override("font_size",13)
+			label(rows,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+12,112,22),13,Color("b8d78c") if ok else Color("8f9f86"))
+		# First the lesson, then its exam — and no exam before the theory has been read.
 		var started = academy.done(n,"teoria")
 		var first = n == 1 if academy.practices_done() == 0 and not academy.done(1,"teoria") else (not started and (n == 1 or academy.done(n-1,"teoria")))
-		button(root,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(1062,y+6,133,33),func(): close_modal(); academy.begin(n),first).add_theme_font_size_override("font_size",14)
+		button(rows,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(865,y+6,118,33),func(): close_modal(); academy.begin(n),first).add_theme_font_size_override("font_size",14)
+		var exam_button = button(rows,Texts.get_text("academia_examen_boton"),Rect2(993,y+6,127,33),func(): close_modal(); academy.begin(n,"examen"))
+		exam_button.add_theme_font_size_override("font_size",13)
+		exam_button.disabled = not started
+		if not started: exam_button.focus_mode = Control.FOCUS_NONE
+	for k in soon:
+		var y = (academy.LESSONS+k)*49
+		panel(rows,Rect2(0,y,1130,45),Color(.075,.115,.085,.55))
+		label(rows,"%d" % (academy.LESSONS+k+1),Rect2(13,y+6,44,34),24,Color("8f9f86")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(rows,Texts.get_text("academia_prox_%d" % (k+1)),Rect2(65,y+10,640,26),18,Color("a9b8a0"))
+		label(rows,Texts.get_text("academia_proximamente"),Rect2(865,y+12,255,22),13,Color("efaf83"))
+	label(rows,Texts.get_text("academia_mucho_mas"),Rect2(65,(academy.LESSONS+soon)*49+8,640,26),18,Color("a9b8a0"))
+	rows.custom_minimum_size = Vector2(1130,(academy.LESSONS+soon)*49+46)
 	label(root,Texts.get_text("academia_progreso") % [academy.practices_done(),academy.LESSONS]+" · "+(Texts.get_text("academia_graduado") if academy.graduated() else Texts.get_text("academia_examenes_progreso") % [academy.exams_done(),academy.LESSONS]),Rect2(620,650,585,28),15,Color("a7c683"))
 	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,636,260,50),intro)
 	button(root,Texts.get_text("academia_reiniciar"),Rect2(350,636,240,50),func(): academy.reset_progress(); show_academy())
@@ -4417,7 +4439,17 @@ func show_academy_result() -> void:
 		for k in academy.TASKS:
 			task_text += "%s  %s\n" % [Texts.get_text("academia_hecho") if academy.tasks[k] else Texts.get_text("academia_pendiente"),Texts.get_text(academy.lesson_key(academy.lesson,"p%d" % (k+1)))]
 		for note in notes: task_text += "\n"+note
-	academy.make_label(root,Rect2(885,370,360,240),15,Color("c9d4bf"),true).text = task_text
+	if academy.phase == "examen":
+		# The tutor's report is what to read here: white on a sky-blue frame.
+		var frame = Panel.new()
+		frame.position = Vector2(873,360)
+		frame.size = Vector2(384,258)
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame.add_theme_stylebox_override("panel",UiStyle.box(Color(UiStyle.SKY.r,UiStyle.SKY.g,UiStyle.SKY.b,.92).darkened(.12),10,Color.WHITE,2))   # filled: white reads on it in both themes
+		root.add_child(frame)
+	var report_label = academy.make_label(root,Rect2(885,370,360,240),15,Color("c9d4bf"),true)
+	report_label.text = task_text
+	if academy.phase == "examen": report_label.add_theme_color_override("font_color",Color.WHITE)
 	button(root,Texts.get_text("academia_volver_menu"),Rect2(25,630,260,55),show_academy)
 	button(root,Texts.get_text("academia_seguir"),Rect2(885,620,360,70),resume_search,true)
 

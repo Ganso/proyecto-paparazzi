@@ -43,7 +43,7 @@ Acerca la imagen con el zoom ({zoom}) hasta más de 70 mm y vuelve a abrirla por
 
 ### tutorial_bajar
 > máximo 210 caracteres
-Con un tele cuesta encontrar a alguien. Baja la cámara para buscar con la vista ({bajar}) y vuelve a llevártela al ojo con el mismo control.
+Con un tele cuesta encontrar a alguien. Baja la cámara para buscar a simple vista ({bajar}) y vuelve a subirla. Una pista: Tras la verja solo hay figurantes; a quien busques siempre estará más cerca.
 
 ### tutorial_af
 > máximo 210 caracteres
@@ -59,15 +59,23 @@ Haz una foto a quien quieras: {disparar}. Después verás el revelado con su not
 
 ### tutorial_encargo
 > máximo 210 caracteres
-Ahora un encargo de verdad: Arriba tienes la descripción. Encuentra a esa persona y hazle una foto con al menos 50 puntos: Entera, enfocada y sin nadie tapándola.
+Un encargo de verdad: Arriba tienes la descripción. Consejo: Baja la cámara ({bajar}) para encontrar a esa persona y súbela para la foto. Hacen falta 50 puntos: Entera, enfocada y sin nadie tapándola.
+
+### tutorial_controles
+> máximo 210 caracteres
+Los controles manuales se manejan de tres maneras: Eligiendo uno con {elegir_tab} y cambiándolo con {cambiar_pag}; con un clic sobre él y la rueda del ratón; o con su atajo directo. Los atajos se consultan con {ayuda}.
 
 ### tutorial_diafragma
 > máximo 210 caracteres
-Prioridad a la apertura (A): Tú llevas el diafragma. Abajo están tus controles: Elige Diafragma ({elegir_control}) y cámbialo dos veces ({cambiar_control}).
+Prioridad a la apertura (A): Tú llevas el diafragma. Cámbialo dos veces: Elígelo en la tira de abajo y gira la rueda, o usa su atajo, {diafragma_y}.
+
+### tutorial_abruma
+> máximo 210 caracteres
+¿Demasiada información? Quita la ayuda en pantalla con {ayuda_pantalla} y quédate con la tira de abajo: Clic en lo que quieras cambiar, y la rueda. En la tira solo aparecen los controles que puedes cambiar en cada momento.
 
 ### tutorial_mf
 > máximo 210 caracteres
-Enfoque manual: Gira el anillo con {enfoque_mf_zoom} hasta que las dos mitades del círculo central encajen sobre alguien.
+Enfoque manual: Elige Enfoque en la tira y gira la rueda, o usa su atajo ({enfoque_mf_zoom}), hasta que las dos mitades del círculo central encajen sobre alguien.
 
 ### tutorial_fin
 > máximo 210 caracteres
@@ -86,6 +94,13 @@ Ir a la Academia
 ### tutorial_ir_academia_texto
 > máximo 120 caracteres
 Diez lecciones para entender la fotografía que hay detrás: Luz, enfoque, composición, cámaras y objetivos.
+
+### tutorial_repetir
+Repetir el tutorial
+
+### tutorial_repetir_texto
+> máximo 120 caracteres
+Volver a empezar desde el primer paso.
 
 ### tutorial_menu_texto
 > máximo 120 caracteres

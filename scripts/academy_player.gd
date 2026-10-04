@@ -197,6 +197,8 @@ func practice() -> void:
 			await shoot()
 		"objetivos":
 			await aim(s,.5,.3)
+			while Photo.ISOS[main.iso_index] > 100: await step("iso",-1)
+			await aperture_to(4.0)
 			await centre_meter()
 			await wait(1.0)
 			academy.do_action("lens:2:50")
@@ -219,13 +221,12 @@ func exam() -> void:
 	var s = academy.subject
 	match academy.kind:
 		"composicion":
+			# The model walks: follow it with its head on a crossing and air in front.
 			academy.frame_goal = {"who":s,"x":academy.lead_x(s),"y":1.0/3.0,"lead":true}
-			await wait(3.0)
+			await wait(3.5)
 		"enfoque":
 			await aim(s,.5,.3)
 			await focus_on(s)
-			main.toggle_lock()
-			await aim(s,.28,.3,2.2)
 		"focal":
 			academy.do_action("lens:5:135")
 			academy.frame_goal = {"who":academy.second,"x":.5,"y":.08,"snap":true}
@@ -235,7 +236,7 @@ func exam() -> void:
 			await centre_meter()
 		"dof":
 			await aim(s,.36,.3,2.2)
-			await aperture_to(11.0)
+			await aperture_to(22.0)
 			await focus_on(s)
 		"movimiento":
 			await speed_to(1000)
@@ -245,19 +246,22 @@ func exam() -> void:
 		"medicion":
 			academy.do_action("meter:puntual")
 			await aim(s,.5,.3)
+			await step("ev_comp",1,3)
 			await focus_on(s)
 		"modos":
 			await aim(s,.5,.3)
-			await centre_meter(60)
+			academy.do_action("mode:A")
+			await wait(.6)
+			await aperture_to(2.8)
 			await focus_on(s)
 		"objetivos":
-			academy.do_action("lens:2:50")
-			await aim(s,.5,.3)
-			await aperture_to(1.8)
-			await centre_meter(60)
-			await focus_on(s)
+			academy.do_action("lens:0:24")
+			await wait(.8)
+			await aim(s,.5,.4)
+			await speed_to(30)
+			await centre_meter(30)
 		"camaras":
-			academy.do_action("body:1")
+			academy.do_action("body:3")
 			await aim(s,.5,.3)
 			await focus_on(s)
 	await shoot(4.5)

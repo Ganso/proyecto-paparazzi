@@ -44,6 +44,7 @@ static func font(name: String) -> FontFile:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if main.badges_count(): load_mode()
 	scenario = main.scenario
 	title_font = font("Quicksand-Light")
 	light_font = font("Roboto-Light")
@@ -144,8 +145,24 @@ func build() -> void:
 	add_child(hint)
 	build_card()
 
+# The mode on show is kept between sessions (user://interfaz.cfg): the game opens where it was left.
+static var mode_loaded = false
+static func load_mode() -> void:
+	if mode_loaded: return
+	mode_loaded = true
+	var config = ConfigFile.new()
+	if config.load("user://interfaz.cfg") == OK: current = maxi(0,MODES.find(str(config.get_value("interfaz","modo_menu",MODES[0]))))
+
+func remember_mode() -> void:
+	if not main.badges_count(): return   # tests and capture tools do not touch the player's file
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","modo_menu",MODES[current])
+	config.save("user://interfaz.cfg")
+
 func change_mode(step: int) -> void:
 	current = posmod(current+step,MODES.size())
+	remember_mode()
 	build_card()
 
 func build_card() -> void:

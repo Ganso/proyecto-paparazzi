@@ -17,9 +17,19 @@ func frames(n: int) -> void:
 
 func wait_step(name: String, timeout = 3.0) -> bool:
 	var t0 = Time.get_ticks_msec()
+	# A finished step waits for the player: «Continuar» (here, the same as pressing it).
+	var waited_done = false
 	while game.tutorial.id() != name and Time.get_ticks_msec()-t0 < timeout*1000:
+		if game.tutorial.done_time >= 0.0 and game.mode == "SEARCH":
+			if not waited_done:
+				waited_done = true
+				for i in 30: await process_frame
+				stayed = stayed and game.tutorial.id() != name
+			if game.tutorial.buttons.size() == 1: game.tutorial.buttons[0].pressed.emit()
 		await process_frame
 	return game.tutorial.id() == name
+
+var stayed = true   # no step moved on by itself
 
 func nearest_person():
 	var best = null
@@ -141,7 +151,8 @@ func run() -> void:
 	check(await wait_step("fin",3.0),"Matching the split image completes «mf»")
 	await frames(3)
 	check(game.mode == "TUTORIAL_END" and not game.tutorial.visible,"The end is a screen of its own")
-	check(game.modal.find_children("*","Button",true,false).size() == 3,"…that offers the Arcade, the Academy and the menu")
+	check(stayed,"A finished step waits for «Continuar» instead of moving on by itself")
+	check(game.modal.find_children("*","Button",true,false).size() == 4,"…that offers the Arcade, the Academy, the tutorial again and the menu")
 	game.tutorial.stop()
 	game.intro()
 	print("TUTORIAL TESTS: %d checks, %d failures" % [checks,failures])

@@ -212,7 +212,7 @@ func draw_slr(r: Rect2) -> void:
 	var blink = fmod(Time.get_ticks_msec()/1000.0,.5) < .25
 	var plus_on = d > .34 and (d < 2.0 or blink)
 	var minus_on = d < -.34 and (d > -2.0 or blink)
-	var centre_on = absf(d) <= .7
+	var centre_on = absf(d) < 1.0   # whole stops: under one stop off is right, and the dot says so
 	draw_string(font,Vector2(x,y+26),"+",HORIZONTAL_ALIGNMENT_LEFT,-1,30,led_red if plus_on else led_dim)
 	draw_circle(Vector2(x+42,y+15),7,led_red if centre_on else led_dim)
 	if centre_on: draw_circle(Vector2(x+42,y+15),12,Color(led_red.r,led_red.g,led_red.b,.25))

@@ -8,7 +8,9 @@ const Texts = preload("res://scripts/texts.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 
-const STEPS = ["bienvenida","mirar","inclinar","zoom","bajar","af","ayuda","disparar","encargo","diafragma","mf","fin"]
+const STEPS = ["bienvenida","mirar","inclinar","zoom","bajar","af","ayuda","disparar","encargo","controles","diafragma","abruma","mf","fin"]
+# Steps that only explain: «Continuar» is there from the start.
+const INFO = ["controles","abruma"]
 
 var main
 var active = false
@@ -68,7 +70,7 @@ func enter_step() -> void:
 			main.apply_equipment()
 		"encargo":
 			main.tutorial_assignment()
-		"diafragma":
+		"controles", "diafragma", "abruma":
 			main.equipment.set_exposure_mode("A")
 			main.apply_equipment()
 			main.selected_control = "zoom"   # the step teaches to choose the aperture on the strip
@@ -81,6 +83,7 @@ func enter_step() -> void:
 		visible = false
 		main.show_tutorial_end()
 		return
+	if id in INFO: done_time = 0.0
 	update_panel()
 
 func id() -> String:
@@ -106,11 +109,15 @@ func update_panel() -> void:
 	body.set_rich(Texts.get_rich("tutorial_"+id()))
 	status.add_theme_color_override("font_color",UiStyle.SKY_DEEP if done_time >= 0.0 else UiStyle.SOFT)
 	status.text = Texts.get_text("tutorial_bien") if done_time >= 0.0 else Texts.get_text("tutorial_pendiente")
+	if id() in INFO: status.text = ""
 	for b in buttons: b.queue_free()
 	buttons = []
 	if id() == "bienvenida":
 		add_button(Texts.get_text("tutorial_empezar"),Rect2(470,118,190,36),next,true)
 		status.text = ""
+	elif done_time >= 0.0:
+		# Done: nothing moves until the player says so.
+		add_button(Texts.get_text("tutorial_continuar"),Rect2(470,118,190,36),next,true)
 	else:
 		add_button(Texts.get_text("tutorial_saltar"),Rect2(470,118,90,36),next)
 		add_button(Texts.get_text("tutorial_salir"),Rect2(570,118,90,36),func(): stop(); main.intro())
@@ -131,7 +138,7 @@ func add_button(label_text: String, rect: Rect2, callback: Callable, primary = f
 # Enter / A moves on from the welcome and the end; elsewhere the game's own controls are taught.
 func handle_accept() -> bool:
 	if not active: return false
-	if id() == "bienvenida":
+	if id() == "bienvenida" or done_time >= 0.0:
 		next()
 		return true
 	return false
@@ -144,8 +151,7 @@ func update(dt: float) -> void:
 	if visible and is_instance_valid(main.toast): main.toast.position.y = minf(main.toast.position.y,panel.position.y-40)
 	if done_time >= 0.0:
 		done_time += dt
-		if done_time > 1.4 and id() != "fin": next()
-		return
+		return   # done: the «Continuar» button moves on, when the player is ready
 	match id():
 		"mirar":
 			track.turn += absf(angle_difference(deg_to_rad(track.angle),deg_to_rad(main.angle)))
