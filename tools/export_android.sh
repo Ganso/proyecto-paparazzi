@@ -81,6 +81,23 @@ export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="$(native_path "$KEYSTORE_PATH")"
 export GODOT_ANDROID_KEYSTORE_DEBUG_USER="androiddebugkey"
 export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD="android"
 
+# Para el emulador (x86_64): EMULATOR=1 exporta build/paparazzi-emulador.apk con esa arquitectura,
+# sin tocar el APK que se reparte (arm64). El de ARM, traducido en un emulador x86, revienta en el
+# hilo de audio del traductor: no sirve para probar. El preajuste se restaura al terminar.
+if [ "${EMULATOR:-0}" = 1 ]; then
+	APK_REL="build/paparazzi-emulador.apk"
+	APK="$PROJECT_DIR/$APK_REL"
+	cp "$PROJECT_DIR/export_presets.cfg" "$PROJECT_DIR/export_presets.cfg.bak"
+	trap 'mv -f "$PROJECT_DIR/export_presets.cfg.bak" "$PROJECT_DIR/export_presets.cfg"' EXIT
+	sed -i 's|^architectures/arm64-v8a=true|architectures/arm64-v8a=false|; s|^architectures/x86_64=false|architectures/x86_64=true|' "$PROJECT_DIR/export_presets.cfg"
+	# ANDROID_ARGS="-- --smoke-test": argumentos de arranque dentro del APK de pruebas.
+	if [ -n "${ANDROID_ARGS:-}" ]; then
+		APK_REL="build/paparazzi-emulador-prueba.apk"
+		APK="$PROJECT_DIR/$APK_REL"
+		sed -i "s|^architectures/x86_64=true|architectures/x86_64=true\ncommand_line/extra_args=\"$ANDROID_ARGS\"|" "$PROJECT_DIR/export_presets.cfg"
+	fi
+fi
+
 # 4. Exportación headless.
 mkdir -p "$PROJECT_DIR/build"
 rm -f "$APK"
@@ -97,7 +114,7 @@ if [ "${INSTALL:-0}" = 1 ]; then
 	if "$ADB" devices | grep -q "device$"; then
 		echo "==> Dispositivo Android detectado. Instalando y ejecutando..."
 		"$ADB" install -r "$(native_path "$APK")"
-		"$ADB" shell am start -n "$PACKAGE/com.godot.game.GodotApp"
+		"$ADB" shell am start -n "$PACKAGE/com.godot.game.GodotAppLauncher"
 	else
 		echo "==> No hay ningún dispositivo conectado por ADB."
 	fi

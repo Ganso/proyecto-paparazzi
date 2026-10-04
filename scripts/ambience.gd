@@ -35,7 +35,9 @@ func stream(name: String, loop: bool) -> AudioStreamWAV:
 	if loop:
 		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		wav.loop_begin = 0
-		wav.loop_end = wav.data.size()/2
+		# The last frame, by the stream's own length: «bytes / 2» pointed one past the end (and was
+		# wrong for anything but 16-bit mono), and the Android mixer read beyond the buffer and crashed.
+		wav.loop_end = maxi(1,int(wav.get_length()*wav.mix_rate)-1)
 	streams[name] = wav
 	return wav
 

@@ -172,6 +172,20 @@ Regla (usuario, 03-10-2026): **cada texto nuevo o alargado se comprueba con una 
 
 Los que están pegados a su tamaño razonable (título de la Academia de 30, teoría de 240, insignia de 100, tutorial de 205) no deben crecer más.
 
+### 4.4 Android en el emulador
+
+`./tools/test_android.sh` (unos 5 min) es la batería de Android. Usa el SDK de `~/Android/Sdk` y el AVD **`paparazzi`** (Pixel 6, Android 16, x86_64, GPU del equipo; se crea con `avdmanager create avd -n paparazzi -k "system-images;android-36;google_apis;x86_64" -d pixel_6`), y arranca el emulador sin ventana si no hay ninguno. Comprueba, en 19 pasos:
+
+1. En el PC, con el renderizador de Android: `test_export.gd`, `test_art.gd` y la prueba de humo en `gl_compatibility`.
+2. **La prueba de humo dentro del dispositivo**: un APK que arranca con `-- --smoke-test` (21 viandantes, 20 huesos, escena `lo`, ≤ 100.000 triángulos).
+3. **Arranque**: el juego sigue vivo a los 30 s y al minuto, en `gl_compatibility`, sin errores en el registro y con menos de 1,5 GB de memoria (mide unos 230 MB).
+4. **Tacto**: «Entrar» abre el tutorial, se arrastra para mirar y «Disparar» hace una foto.
+5. **Segundo plano**: se manda al inicio y vuelve.
+
+Capturas y registro en `build/android/`. Los APK de prueba son **x86_64** (`EMULATOR=1 tools/export_android.sh` → `build/paparazzi-emulador.apk`; con `ANDROID_ARGS="-- --smoke-test"`, `…-prueba.apk`): el de ARM que se reparte, traducido en un emulador x86, no sirve para probar. **No comprueba** que la interfaz sea cómoda en un móvil: sigue siendo la clásica con ayudas de teclado ([13](futuro/13_INTERFAZ_MOVIL_UTILIZABLE.md), pendiente), ni el rendimiento en un teléfono real.
+
+**04-10-2026 — el APK se cerraba a los 8 s**: `ambience.gd` ponía el final del bucle de los sonidos de ambiente en «bytes / 2», una muestra más allá del final, y el mezclador de Android leía fuera del búfer (en el escritorio no se notaba). Ahora es el último fotograma, por la duración del propio sonido.
+
 ## 5. Cifras de Referencia (Fuente Única)
 
 Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en GPU Radeon RX 6700 XT) y actualizadas el **2026-09-30** con el salto gráfico ([futuro/17](futuro/17_SALTO_GRAFICO_ULTRA.md)). Cada cifra es la que imprime la suite indicada; si cambia el código, vuelve a ejecutar la suite y actualiza esta tabla.
