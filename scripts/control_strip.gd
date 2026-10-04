@@ -97,6 +97,7 @@ func _process(_dt: float) -> void:
 		b.position = Vector2(left+k*(w+6),y)
 		b.size = Vector2(w,CHIP_H)
 		b.text = name_of(ids[k])+"\n"+value_of(ids[k])
+		b.disabled = main.academy != null and main.academy.locks_input()   # the tutor drives
 		if styled == current: continue
 		b.add_theme_color_override("font_color",Color.WHITE if on else Color(1,1,1,.82))
 		b.add_theme_color_override("font_hover_color",Color.WHITE)

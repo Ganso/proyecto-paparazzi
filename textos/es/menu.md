@@ -215,7 +215,7 @@ Academia
 Diez lecciones de fotografía, cada una con teoría, demostración, práctica y examen: De la exposición y la composición a las cámaras, los objetivos y los modos.
 
 ### modo_academia_progreso
-%d de 5 prácticas completadas
+%d de 10 prácticas completadas
 
 ### modo_opciones_titulo
 Opciones

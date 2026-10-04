@@ -25,15 +25,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 BASE = "es"
 # Tamaño razonable de cada hueco (docs/TESTS_Y_VERIFICACION.md §4.3), en caracteres.
 LIMITS = [
-    (r"academia_l\d+_t\d+_texto|academia_l\d+_examen", 240), (r"academia_l\d+_t\d+_titulo", 30),
-    (r"academia_l\d+_d\d+", 110), (r"academia_l\d+_resumen", 60), (r"academia_l\d+_p\d+", 75),
-    (r"academia_l\d+_pista_.*", 130), (r"arcade_nivel_\d+_titulo", 22), (r"arcade_nivel_\d+_texto", 220),
-    (r"cond_.*", 100), (r"tutorial_(?!resultado|paso|fin_titulo|ir_|menu|bien|pendiente|empezar|saltar|salir|continuar).*", 210),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_t\d+_texto|academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_examen", 240), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_t\d+_titulo", 30),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_d\d+", 110), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_resumen", 60), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_p\d+", 75),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_pista_.*", 130), (r"arcade_nivel_\d+_titulo", 22), (r"arcade_nivel_\d+_texto", 220),
+    (r"academia_[a-z]+_intro", 110), (r"esquema_.*", 62), (r"cond_.*", 100), (r"tutorial_(?!resultado|paso|fin_titulo|ir_|menu|bien|pendiente|empezar|saltar|salir|continuar).*", 210),
     (r"tutorial_.*_texto", 120), (r"modo_.*_texto", 180), (r"insignia_.*_texto", 100), (r"pista_bajar_camara", 85),
 ]
 # Dónde va cada clave al exportar: (patrón, fichero, bloque). El primero que casa manda.
 PLACES = [
-    (r"academia_l(\d+)_.*", "academia", "Lección {0}"), (r"academia_ex_.*|academia_examen.*|academia_graduado", "academia", "Exámenes: informe del tutor"),
+    (r"academia_(composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_.*", "academia", "Lección · {0}"), (r"academia_ex_.*|academia_examen.*|academia_graduado", "academia", "Exámenes: informe del tutor"),
     (r"academia_op_.*", "academia", "Botones de elección del panel"), (r"esquema_.*", "academia", "Esquemas"), (r"academia.*", "academia", "General"),
     (r"arcade_nivel_(\d+)_.*", "arcade", "Nivel {0}"), (r"cond_.*", "arcade", "Condiciones"), (r"arcade.*", "arcade", "General"),
     (r"tutorial_.*", "tutorial", "Tutorial"),
@@ -48,10 +48,10 @@ PLACES = [
     (r".*", "varios", "Varios"),
 ]
 LABELS = [
-    (r"academia_l\d+_titulo", "título de la lección"), (r"academia_l\d+_resumen", "resumen (menú de la Academia)"),
-    (r"academia_l\d+_t(\d+)_titulo", "teoría {0} · título"), (r"academia_l\d+_t(\d+)_texto", "teoría {0} · texto"),
-    (r"academia_l\d+_d(\d+)", "demostración · subtítulo {0}"), (r"academia_l\d+_p(\d+)", "práctica · tarea {0}"),
-    (r"academia_l\d+_pista_(.*)", "pista · {0}"), (r"academia_l\d+_examen", "examen · enunciado"),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_titulo", "título de la lección"), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_resumen", "resumen (menú de la Academia)"),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_t(\d+)_titulo", "teoría {0} · título"), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_t(\d+)_texto", "teoría {0} · texto"),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_d(\d+)", "demostración · subtítulo {0}"), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_p(\d+)", "práctica · tarea {0}"),
+    (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_pista_(.*)", "pista · {0}"), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_examen", "examen · enunciado"),
     (r"arcade_nivel_\d+_titulo", "título"), (r"arcade_nivel_\d+_texto", "encargo"),
 ]
 SPEC = re.compile(r"%(?:[-+0 ]*\d*(?:\.\d+)?[sdf]|%)")
@@ -156,9 +156,9 @@ def write_markdown(texts, folder, note_from=None):
         natural = lambda b: [int(x) if x.isdigit() else x for x in re.split(r"(\d+)", b)]
         for block in sorted(blocks, key=lambda b: (not b.startswith("General"), natural(b))):
             heading = block
-            lesson = re.fullmatch(r"Lección (\d+)", block)
-            if lesson and ("academia_l%s_titulo" % lesson.group(1)) in texts:
-                heading += " · " + texts["academia_l%s_titulo" % lesson.group(1)]
+            lesson = re.fullmatch(r"Lección · (\w+)", block)
+            if lesson and ("academia_%s_titulo" % lesson.group(1)) in texts:
+                heading = "Lección · " + texts["academia_%s_titulo" % lesson.group(1)]
             level = re.fullmatch(r"Nivel (\d+)", block)
             if level and ("arcade_nivel_%s_titulo" % level.group(1)) in texts:
                 heading += " · " + texts["arcade_nivel_%s_titulo" % level.group(1)]

@@ -50,6 +50,9 @@ Distancia: %.2f m
 Desenfoque: %.3f mm
 Movimiento: %.3f mm
 
+### ficha_comparacion · pie de cada foto de una comparación
+%.0f mm · f/%s · 1/%d s · a %.1f m
+
 ### ficha_sandbox
 Tu cámara
 

@@ -55,8 +55,10 @@ func _draw() -> void:
 		for k in [1,2]:
 			var gx = frame.position.x+frame.size.x*k/3
 			var gy = frame.position.y+frame.size.y*k/3
-			draw_line(Vector2(gx,frame.position.y),Vector2(gx,frame.end.y),Color(1,1,1,.22),1)
-			draw_line(Vector2(frame.position.x,gy),Vector2(frame.end.x,gy),Color(1,1,1,.22),1)
+			# Thick enough to be seen over any background: white on a dark edge.
+			for pass_line in [[Color(0,0,0,.35),5.0],[Color(1,1,1,.8),2.5]]:
+				draw_line(Vector2(gx,frame.position.y),Vector2(gx,frame.end.y),pass_line[0],pass_line[1])
+				draw_line(Vector2(frame.position.x,gy),Vector2(frame.end.x,gy),pass_line[0],pass_line[1])
 	var pts = points()
 	for i in pts.size():
 		if af_mode == "MF": continue

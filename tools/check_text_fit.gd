@@ -160,6 +160,8 @@ func run() -> void:
 	preload("res://scripts/arcade.gd").SAVE = scratch.path_join("arcade.cfg")
 	preload("res://scripts/badges.gd").SAVE = scratch.path_join("insignias.cfg")
 	preload("res://scripts/album.gd").DIR = scratch.path_join("album")
+	# Not the player's display settings either (vsync on a hidden window crawls at 2 fps).
+	preload("res://scripts/graphics.gd").SAVE = scratch.path_join("graficos.cfg")
 	var ui_file = FileAccess.get_file_as_bytes("user://interfaz.cfg")
 	game = Main.instantiate()
 	root.add_child(game)
@@ -299,7 +301,7 @@ func run() -> void:
 			await sync()
 			await check(d+"academia")
 			for n in range(1,game.academy.LESSONS+1):
-				for k in game.academy.THEORY_PAGES[n]:
+				for k in game.academy.THEORY_PAGES[game.academy.ORDER[n-1]]:
 					game.intro()
 					game.academy.begin(n,"teoria")
 					game.academy.page = k
@@ -308,7 +310,7 @@ func run() -> void:
 				for ph in ["demo","practica","examen"]:
 					game.intro()
 					game.academy.begin(n,ph)
-					await frames(30)
+					await frames(90 if ph == "demo" else 30)   # the demo: with its first caption on
 					await check(d+"academia_l%d_%s" % [n,ph])
 					if ph != "demo":
 						await game.take_photo()

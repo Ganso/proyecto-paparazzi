@@ -22,6 +22,10 @@ func _ready() -> void:
 	font = ThemeDB.fallback_font
 
 func txt(pos: Vector2, s: String, size = 12, color = Color("15222e"), align = HORIZONTAL_ALIGNMENT_LEFT, width = -1.0) -> void:
+	# A caption never runs out of the box: a long one is drawn smaller.
+	var room = self.size.x-pos.x-6.0
+	var wide = font.get_string_size(s,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x
+	if align == HORIZONTAL_ALIGNMENT_LEFT and wide > room and room > 20: size = maxi(8,floori(size*room/wide))
 	draw_string(font,pos,s,align,width,size,color)
 
 func _draw() -> void:

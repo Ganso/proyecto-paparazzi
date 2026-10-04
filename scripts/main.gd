@@ -114,6 +114,8 @@ var stage = ""
 # --academy=<lección>:<teoria|demo|practica>[:página]: open a lesson directly (evidence captures).
 var academy_start = ""
 var academy_tour = ""
+var academy_play = ""             # --academy-play=<seconds per page>[:<first>-<last>]: the Academy plays itself (video)
+var academy_player
 # ---- Arcade (docs/futuro/21) ----
 var arcade_level = -1               # level being played (-1: sandbox, Academy or a scripted session)
 var walk_pace = 1.0                 # walkers' pace in this level (runners keep theirs)
@@ -259,6 +261,7 @@ func _ready() -> void:
 		if arg.begins_with("--stage="): stage = arg.trim_prefix("--stage=")
 		if arg.begins_with("--academy="): academy_start = arg.trim_prefix("--academy=")
 		if arg.begins_with("--academy-tour="): academy_tour = arg.trim_prefix("--academy-tour=")
+		if arg.begins_with("--academy-play="): academy_play = arg.trim_prefix("--academy-play=")
 		if arg.begins_with("--scenario="): scenario = arg.trim_prefix("--scenario=")
 		if arg == "--raised": pending_start["raised"] = true
 		if arg == "--walk-demo": walk_demo = 0.0
@@ -1295,7 +1298,9 @@ func _process(dt: float) -> void:
 			level_over = true
 			end_level()
 	if mode == "SEARCH" and not shooting:
-		if eye_ready() or not crowd:
+		# (While a demonstration of the Academy runs, the tutor drives: the held keys do nothing.)
+		var hands_off = academy != null and academy.locks_input()
+		if (eye_ready() or not crowd) and not hands_off:
 			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
 			angle = fposmod(angle+key_turn(axis)*dt+pan_velocity*dt,360)
 			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/view_focal()
@@ -1312,7 +1317,7 @@ func _process(dt: float) -> void:
 		update_pad(dt)
 		update_camera()
 		update_focus_aid(dt)
-		if equipment.focus_mode == "MF":
+		if equipment.focus_mode == "MF" and not hands_off:
 			var key_dir = float(Input.is_physical_key_pressed(KEY_T)) - float(Input.is_physical_key_pressed(KEY_R))
 			if key_dir != 0.0:
 				var rate = 0.22 if not Input.is_physical_key_pressed(KEY_SHIFT) else 0.07
@@ -1349,6 +1354,7 @@ func _process(dt: float) -> void:
 			if dog: dog.update(1.0/30)
 			if extras: extras.update(1.0/30)
 			if ducks: ducks.update(1.0/30)
+	if boot_frames == 12 and academy_play != "": play_academy()
 	if boot_frames == 12 and academy_start != "":
 		var parts = academy_start.split(":")
 		if parts[0] == "menu":
@@ -2874,6 +2880,7 @@ var trigger_lock = false         # the lock in force was set by the trigger's ha
 var pad_polling = true           # tests switch it off: a gamepad left plugged in must not drive them
 func update_pad(dt: float) -> void:
 	if Input.get_connected_joypads().is_empty() or not pad_polling: return
+	if academy and academy.locks_input(): return
 	var slow = 1.0/3.0 if pad_precision else 1.0
 	var lx = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_X))
 	var ly = stick(Input.get_joy_axis(0,JOY_AXIS_LEFT_Y))
@@ -2987,7 +2994,7 @@ func take_photo() -> void:
 			notify_player(Texts.get_text("tlr_manivela"))
 			return
 	# (In a scripted capture with --mf-rack the script has already put the focus on the subject.)
-	if equipment.focus_mode != "MF" and not focus_locked and not demo.has("mf-rack"): autofocus()
+	if equipment.focus_mode != "MF" and not focus_locked and not demo.has("mf-rack") and not (academy and academy.active and academy.auto_subject() != null): autofocus()
 	update_meter()
 	if equipment.auto_exposure and not exposure_locked: auto_expose()
 	release_lock()
@@ -3390,6 +3397,12 @@ var help_return = "SEARCH"
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
 	if crowd and mode == "SEARCH" and photographer_input(event): return
+	# A demonstration of the Academy is running: the tutor drives. Only the lesson's own keys
+	# (next, back, pause the scene) and the pause menu answer.
+	if academy and academy.locks_input() and mode == "SEARCH":
+		if (event is InputEventKey or event is InputEventJoypadButton) and event.is_pressed() and academy.handle_key(event): return
+		if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE: show_pause()
+		return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and academy and academy.handle_key(event): return
 	if event is InputEventJoypadButton and event.pressed and mode == "SEARCH" and event.is_action_pressed("camara_controles"):
 		select_control(1)   # Tab / View: the next control in hand
@@ -4329,6 +4342,17 @@ func restore_equipment_screen() -> void:
 	refresh()
 
 # ---- Academia de fotografía (docs/futuro/06) ----
+# The Academy plays itself from the first lesson to the last (or <first>-<last>) and the game
+# closes: what the video of the whole Academy records.
+func play_academy() -> void:
+	academy_player = preload("res://scripts/academy_player.gd").new(academy)
+	academy_player.page_seconds = float(academy_play.get_slice(":",0))
+	var span = academy_play.get_slice(":",1) if ":" in academy_play else ""
+	var first = int(span.get_slice("-",0)) if span != "" else 1
+	var last = int(span.get_slice("-",1)) if "-" in span else (first if span != "" else academy.LESSONS)
+	await academy_player.run(first,last)
+	get_tree().quit()
+
 func show_academy() -> void:
 	if academy.active: academy.stop()
 	mode = "ACADEMY"
@@ -4341,8 +4365,8 @@ func show_academy() -> void:
 		var y = 132+(n-1)*49
 		panel(root,Rect2(75,y,1130,45),Color(.075,.115,.085,.95))
 		label(root,"%d" % n,Rect2(88,y+6,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label(root,Texts.get_text("academia_l%d_titulo" % n),Rect2(140,y+2,440,24),18,Color("e6ebdb"))
-		label(root,Texts.get_text("academia_l%d_resumen" % n),Rect2(140,y+25,440,18),12,Color("a9b8a0"))
+		label(root,Texts.get_text(academy.lesson_key(n,"titulo")),Rect2(140,y+2,440,24),18,Color("e6ebdb"))
+		label(root,Texts.get_text(academy.lesson_key(n,"resumen")),Rect2(140,y+25,440,18),12,Color("a9b8a0"))
 		var columns = [590,662,774,856]
 		var marks: Array = academy.PHASES+["examen"]
 		for k in marks.size():
@@ -4367,8 +4391,15 @@ func show_academy_result() -> void:
 		for i in 2:
 			var shot: Dictionary = pair[i]
 			photo_preview(root,shot.texture,shot.result,Rect2(25+i*418,100,408,230))
+			# The two photos to compare, framed in sky blue: that is where to look.
+			var ring = Panel.new()
+			ring.position = Vector2(25+i*418,100)
+			ring.size = Vector2(408,230)
+			ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			ring.add_theme_stylebox_override("panel",UiStyle.box(Color.TRANSPARENT,4,UiStyle.SKY,3))
+			root.add_child(ring)
 			var e2: Dictionary = shot.result.evidence
-			label(root,"%.0f mm · f/%s · 1/%d s · a %.1f m" % [e2.f,str(e2.n),roundi(1/e2.t),e2.d],Rect2(25+i*418,334,408,24),15,Color("b8d78c"))
+			label(root,Texts.get_text("ficha_comparacion") % [e2.f,str(e2.n),roundi(1/e2.t),e2.d],Rect2(25+i*418,334,408,24),15,Color.WHITE)
 		photo_preview(root,current_photo,current_result,Rect2(25,370,370,208))
 	else:
 		photo_preview(root,current_photo,current_result,Rect2(25,100,825,464))
@@ -4384,7 +4415,7 @@ func show_academy_result() -> void:
 		if report.passed and academy.graduated(): task_text += "\n\n"+Texts.get_text("academia_graduado")
 	else:
 		for k in academy.TASKS:
-			task_text += "%s  %s\n" % [Texts.get_text("academia_hecho") if academy.tasks[k] else Texts.get_text("academia_pendiente"),Texts.get_text("academia_l%d_p%d" % [academy.lesson,k+1])]
+			task_text += "%s  %s\n" % [Texts.get_text("academia_hecho") if academy.tasks[k] else Texts.get_text("academia_pendiente"),Texts.get_text(academy.lesson_key(academy.lesson,"p%d" % (k+1)))]
 		for note in notes: task_text += "\n"+note
 	academy.make_label(root,Rect2(885,370,360,240),15,Color("c9d4bf"),true).text = task_text
 	button(root,Texts.get_text("academia_volver_menu"),Rect2(25,630,260,55),show_academy)
@@ -4424,6 +4455,18 @@ func capture_sandbox_evidence() -> Dictionary:
 	if not hit.is_empty() and hit.collider.has_meta("person"):
 		person = hit.collider.get_meta("person")
 		velocity = person.actual_velocity
+	# A lesson where the camera looks after the subject by itself (the runner of the lesson on
+	# movement): the photo is of that person wherever it is in the frame, and in focus.
+	var kept = academy.auto_subject() if academy and academy.active else null
+	if kept != null:
+		var kept_chest = kept.control_points()[1]
+		var kept_at = camera.unproject_position(kept_chest)/Vector2(viewport.size)
+		if not camera.is_position_behind(kept_chest) and kept_at.x > .04 and kept_at.x < .96 and kept_at.y > .0 and kept_at.y < 1.0:
+			person = kept
+			velocity = kept.actual_velocity
+			distance = camera.global_position.distance_to(kept_chest)
+			focus_distance = distance
+	if person != null: pass
 	elif is_instance_valid(af_person) and af_person.visible:
 		# A fast subject slipped off the point between focusing and the shutter: the photo is still
 		# of the person the AF locked on (in-frame), as it would be for a photographer.

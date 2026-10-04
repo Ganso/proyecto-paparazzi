@@ -29,6 +29,6 @@ func _initialize() -> void:
 		for m in regex.search_all(FileAccess.get_file_as_string("res://scripts/"+file)):
 			if not entries.has(m.get_string(1)) and not m.get_string(1) in missing: missing.append(m.get_string(1))
 	check(missing.is_empty(),"Every text asked for by name exists (missing: %s)" % ", ".join(missing))
-	check(Texts.get_text("academia_l1_titulo") != "academia_l1_titulo" and not Texts.get_text("entrar_fase").contains("{"),"Texts resolve, with their controls filled in")
+	check(Texts.get_text("academia_exposicion_titulo") != "academia_exposicion_titulo" and not Texts.get_text("entrar_fase").contains("{"),"Texts resolve, with their controls filled in")
 	print("TEXT TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

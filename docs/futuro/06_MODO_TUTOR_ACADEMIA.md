@@ -181,3 +181,30 @@ Las cinco lecciones se reescribieron para **enseñar fotografía como Jaime Alto
 - Pruebas: `tests/test_academy.gd` (293 comprobaciones: las diez demostraciones, criterios de práctica y de examen de las lecciones nuevas); textos dentro de los tamaños de [TESTS_Y_VERIFICACION §4.3](../TESTS_Y_VERIFICACION.md).
 
 - **04-10-2026 (usuario)**: los objetivos (6) van antes que las cámaras (7). La nota del examen solo descuenta el error de exposición que pasa de medio paso: los diales van de paso en paso y medio paso de error puede ser lo mejor que permite la luz (antes no se podía sacar un 100). En los textos, **mayúscula tras punto y tras dos puntos**.
+
+## Academia replanteada (04-10-2026, tras probarla el usuario)
+
+**Regla del orden**: ninguna lección habla de algo, lo pide en la práctica o lo examina si una lección anterior no lo ha enseñado. Las lecciones van por **identificador** (`academy.gd::ORDER`); el código, los textos (`academia_<id>_…`) y el fichero de progreso (`leccion_<id>`, con lectura de los ficheros antiguos por número) no dependen del orden, así que reordenar es cambiar esa lista.
+
+| Nº | Id | Lección | Luz | La cámara | Práctica | El examen mira |
+|---|---|---|---|---|---|---|
+| 1 | `composicion` | La composición | Día | Todo automático | Cuadrícula, cabeza en un cruce, aire delante | Solo los tercios y el aire |
+| 2 | `enfoque` | El enfoque | Día | Exposición automática | Otro punto, bloquear, reencuadrar | Persona a un lado y nítida |
+| 3 | `focal` | La focal y la perspectiva | Día | Automático; 28 y 135 mm en el panel | Angular de cerca, tele de lejos, comparar | Tele, lejos, nitidez |
+| 4 | `exposicion` | La exposición | Hora dorada | Manual | Cerrar a f/11, compensar, foto bien expuesta | Solo la exposición |
+| 5 | `dof` | La profundidad de campo | Día nublado | **Prioridad a la apertura** | Enfocar a 3–6 m, foto abierta, foto cerrada | Las dos personas en la zona nítida |
+| 6 | `movimiento` | El movimiento | Día nublado | **Prioridad a la velocidad; la cámara enfoca sola al corredor** | Foto lenta, foto rápida, comparar | Corredor congelado y pulso |
+| 7 | `medicion` | Medir la luz | Día | Prioridad a la apertura (f/8) | Puntual, compensar +1, volver a 0 | Puntual, exposición, nitidez |
+| 8 | `modos` | P, A, S y M | Día nublado | Cada página su modo | Una foto en A, una en S, una en M | Modo M, exposición, pulso, nitidez |
+| 9 | `objetivos` | Los objetivos | Hora azul | Manual, ISO 100 | Centrar con el zoom, con el fijo, disparar sin trepidar | ISO 100, exposición, pulso, nitidez |
+| 10 | `camaras` | Las cámaras | Día | Cada página su cuerpo | Telemétrica, TLR, réflex | Telemétrica y nitidez |
+
+- **Qué mira cada examen**: `EXAM_ASKS` (exposición, pulso, nitidez, que haya una persona) más lo propio de la lección. El pulso no se pide hasta el movimiento; la exposición, hasta su lección. La nota solo descuenta el error de exposición que pasa de medio paso, y solo donde se examina.
+- **Medio paso** (`HALF_STOP`): los diales van de paso en paso, así que «centrar el exposímetro» es quedar a medio paso o menos. Antes se pedía un tercio y había prácticas imposibles (la de exposición y la de objetivos).
+- **Movimiento**: `auto_subject()` devuelve al corredor; la cámara lo mantiene enfocado y la foto es suya si está en el encuadre, esté donde esté el punto de enfoque (`main.gd::capture_sandbox_evidence()`). Antes había que acertarle con el punto y no se podía pasar.
+- **Composición**: el aire va delante de hacia donde camina o, si está quieto, de hacia donde mira (`facing_side()`); antes una persona parada pasaba el examen sin aire.
+- **Teoría que se ve**: en la profundidad de campo el diafragma se abre y se cierra solo cada 2,6 s; en la focal, las páginas del tele cambian de verdad al 135 mm sobre alguien lejano (`lens_wide`, `lens_tele`), a 86°, libre de bancos y farolas.
+- **Demostraciones**: van a mitad de ritmo (`DEMO_PACE`: cada rótulo dura el doble); los rótulos son blancos sobre celeste y las fotos de ejemplo llevan borde celeste. **Mientras conduce el tutor**, un marco rojo rodea el visor, un cartel parpadea («El tutor maneja la cámara: Mira») y los controles del jugador no responden (`locks_input()`); al acabar, el marco desaparece y «Ir a la práctica» se enciende con un aro blanco y celeste.
+- **Lenguaje visual** (usuario): **texto blanco y borde celeste llevan el ojo a lo que importa** en cada pantalla (rótulos, fotos de ejemplo, resaltes de controles, el siguiente botón); el rojo queda para «no toques».
+- Otros arreglos: la pista de la práctica se construye de cero en cada pasada (se repetía hasta salirse del panel), los rótulos de los esquemas encogen si no caben, la cuadrícula de tercios es más gruesa (blanca sobre borde oscuro), los objetivos se nombran como en su barril («24–105 f/4», «50 mm f/1,8», y qué significan dos aperturas).
+- **Comprobación real**: `scripts/academy_player.gd` juega la Academia como un alumno aplicado (cada tarea con los controles y las fotos del juego, y cada examen). `tests/test_academy_play.gd` exige que las diez prácticas y los diez exámenes se superen así; `tools/capture_academy.sh` graba el pase completo (`-- --academy-play=<segundos por página>[:<primera>-<última>]`).
