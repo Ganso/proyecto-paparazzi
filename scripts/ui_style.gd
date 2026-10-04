@@ -16,6 +16,8 @@ static var LINE = Color(.55,.72,.88,.6)
 static var SURFACE = Color(1,1,1)   # base of buttons, cards and panels
 static var GLASS_TINT = Color(.965,.98,1.0)
 
+## The orange of the logo: the name and the titles of the menus (never the viewfinder).
+const BRAND = Color("f07d28")
 const LIGHT_PALETTE = {"INK":Color("0e1924"),"SOFT":Color("26394a"),"FAINT":Color("3b4f62"),"SKY":Color("2f9be8"),
 	"SKY_DEEP":Color("155a8c"),"SKY_SOFT":Color("d6ecfb"),"WARN":Color("a13a1f"),"GLASS":Color(1,1,1,.74),
 	"LINE":Color(.55,.72,.88,.6),"SURFACE":Color(1,1,1),"GLASS_TINT":Color(.965,.98,1.0)}
@@ -35,6 +37,10 @@ static func surf(a: float) -> Color:
 	return Color(SURFACE.r,SURFACE.g,SURFACE.b,a)
 
 static var fonts = {}
+# Typefaces (assets/fuentes/), each under its own free licence:
+#   · Russo One — titles and the name. Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with
+#     Reserved Font Name "Russo". SIL Open Font License 1.1 (assets/fuentes/RussoOne-OFL.txt).
+#   · Roboto (Apache License 2.0, Google) and Quicksand (SIL OFL 1.1, The Quicksand Project Authors).
 static func font(name: String) -> FontFile:
 	if not fonts.has(name):
 		var f = FontFile.new()

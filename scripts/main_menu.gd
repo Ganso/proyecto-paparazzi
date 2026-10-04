@@ -121,8 +121,16 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 
 func build() -> void:
 	var x = 96.0
-	text(self,Texts.get_text("menu_estudio"),Vector2(x,58),13,UiStyle.SKY_DEEP,body_medium)
-	text(self,Texts.get_text("nombre_juego"),Vector2(x-2,80),54,INK,title_font)
+	# The block camera of the logo, the name in its orange.
+	var logo = TextureRect.new()
+	logo.texture = preload("res://assets/marca/camara.png")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.position = Vector2(x-14,40)
+	logo.size = Vector2(108,108)
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(logo)
+	text(self,Texts.get_text("menu_estudio"),Vector2(x+104,58),13,UiStyle.SKY_DEEP,body_medium)
+	text(self,Texts.get_text("nombre_juego"),Vector2(x+102,78),54,UiStyle.BRAND,title_font)
 	text(self,Texts.get_text("menu_lema"),Vector2(x,150),16,SOFT,light_font,600)
 	# ‹ card › with the dots of the five modes under it.
 	var left = flat_button(self,"‹",Rect2(x-62,330,48,96),func(): change_mode(-1))
@@ -175,7 +183,7 @@ func build_card() -> void:
 	add_child(card)
 	var mode: String = MODES[current]
 	text(card,Texts.get_text("modo_"+mode).to_upper(),Vector2(32,26),13,UiStyle.SKY_DEEP,body_medium)
-	text(card,Texts.get_text("modo_"+mode+"_titulo"),Vector2(30,44),44,INK,title_font)
+	text(card,Texts.get_text("modo_"+mode+"_titulo"),Vector2(30,44),44,UiStyle.BRAND,title_font)
 	text(card,Texts.get_text("modo_"+mode+"_texto"),Vector2(32,108),16,SOFT,light_font,536)
 	match mode:
 		"arcade":

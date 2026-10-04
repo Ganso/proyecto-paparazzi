@@ -123,6 +123,10 @@ VERSIÓN ALFA 0.2.0 · EN DESARROLLO
 ### nombre_juego
 PhotoHacks
 
+### cargando_parque · Pantalla de carga (también va dibujado en assets/marca/carga.png: tools/build_branding.sh)
+> máximo 30 caracteres
+Cargando el parque…
+
 ### menu_lema
 Busca a la persona del encargo y fotografíala. Tú eliges el encuadre, el enfoque y la exposición.
 

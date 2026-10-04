@@ -302,7 +302,13 @@ func _ready() -> void:
 	# gl_compatibility fallback (Android, no Vulkan) the top profile is Alto.
 	if not ParkScene.forward_plus() and graphics_preset == "Ultra" and not smoke and screenshot_path == "" and not run_metrics: graphics_preset = "Alto"
 	var t_start = Time.get_ticks_msec()
-	build_world()
+	# The real game shows the camera turning while the park is built (scripts/boot_loader.gd) and
+	# lets a frame through between stages; tests and capture tools build in one go, as before.
+	if get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty():
+		boot_loader = preload("res://scripts/boot_loader.gd").new()
+		add_child(boot_loader)
+		await boot_step()
+	await build_world()
 	var t_world = Time.get_ticks_msec()
 	build_ui()
 	var t_ui = Time.get_ticks_msec()
@@ -325,7 +331,8 @@ func _ready() -> void:
 		y_button.button_index = JOY_BUTTON_Y
 		InputMap.action_add_event("camara_al_ojo",y_button)
 	var t_people = Time.get_ticks_msec()
-	populate()
+	await boot_step()
+	await populate()
 	# -- --timing: where the start-up time goes (the park by stage, the people, the interface).
 	if "--timing" in OS.get_cmdline_user_args():
 		print("TIMING total=%d ms · mundo=%d (%s; parque: %s) · interfaz=%d · gente=%d" % [Time.get_ticks_msec()-t_start,t_world-t_start,str(world_times),str(park.build_times),t_ui-t_world,Time.get_ticks_msec()-t_people])
@@ -350,6 +357,7 @@ func _ready() -> void:
 		equipment.ev_comp_index = equipment_state.ev
 		apply_equipment()
 	intro()
+	if is_instance_valid(boot_loader): boot_loader.finish()
 	if pending_start.has("level"):
 		start_level(int(pending_start.level))
 	elif pending_start.has("time"):
@@ -391,6 +399,11 @@ func warm_up_view() -> void:
 	camera.rotation = saved
 
 var world_times = {}
+var boot_loader
+# One frame for the loading screen, when there is one.
+func boot_step() -> void:
+	if is_instance_valid(boot_loader): await get_tree().process_frame
+
 func build_world() -> void:
 	var container = SubViewportContainer.new()
 	viewport_container = container
@@ -413,6 +426,7 @@ func build_world() -> void:
 	var t_park = Time.get_ticks_msec()
 	park.build()
 	world_times["parque"] = Time.get_ticks_msec()-t_park
+	await boot_step()
 	var t_stage = Time.get_ticks_msec()
 	pigeons = preload("res://scripts/pigeons.gd").new()
 	if scenario == "grande":
@@ -425,6 +439,7 @@ func build_world() -> void:
 	else: pigeons.fence = park.fence_perches
 	if "--pigeons=verja" in OS.get_cmdline_user_args() and not pigeons.fence.is_empty(): pigeons.settle_fence()
 	world_times["palomas"] = Time.get_ticks_msec()-t_stage
+	await boot_step()
 	t_stage = Time.get_ticks_msec()
 	extras = preload("res://scripts/extras.gd").new()
 	viewport.add_child(extras)
@@ -438,6 +453,7 @@ func build_world() -> void:
 		var pond_pos = park.polar(park.POND.x,park.POND.y)
 		ducks.build(pond_pos,park.facing_center(pond_pos)+PI*.5)
 	world_times["figurantes"] = Time.get_ticks_msec()-t_stage
+	await boot_step()
 	t_stage = Time.get_ticks_msec()
 	ambience = preload("res://scripts/ambience.gd").new()
 	if scenario == "grande":
@@ -498,6 +514,7 @@ func populate() -> void:
 			p.place()
 			p.animate(0)
 			people.append(p)
+			await boot_step()
 	# One pedestrian of the bench path walks a dog (docs/futuro/19 §3).
 	for p in people:
 		if p.lane == 1 and not p.runner and p.traits.profile != 3:
@@ -578,7 +595,11 @@ func label(parent: Control, text_value: String, rect: Rect2, font_size = 18, col
 	node.add_theme_font_size_override("font_size",font_size)
 	node.add_theme_color_override("font_color",UiStyle.text_color(color))
 	# Titles in Russo One (the font of the name), the rest in Roboto (theme default).
-	if font_size >= 26: node.add_theme_font_override("font",UiStyle.font("RussoOne-Regular"))
+	# Menu titles take the orange of the logo unless the caller gives a colour with a meaning
+	# (a score, passed or failed); nothing drawn over the viewfinder is this big.
+	if font_size >= 26:
+		node.add_theme_font_override("font",UiStyle.font("RussoOne-Regular"))
+		if color == Color("e6e8dd") or color == Color("b8d78c"): node.add_theme_color_override("font_color",UiStyle.BRAND)
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(node)
 	# A long text widens the label as it enters the tree; callers turn on the wrap afterwards, so
@@ -1307,6 +1328,7 @@ func _process(dt: float) -> void:
 	update_fps_counter(dt)
 	scroll_with_stick(dt)
 	boot_frames += 1
+	if toast == null: return   # the world is still being built behind the loading screen
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)

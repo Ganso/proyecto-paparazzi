@@ -148,4 +148,10 @@ PhotoHacks es software libre: se distribuye bajo la **Licencia Pública General 
 
 Copyright © 2026 Javi Prieto (GeeseBumps). Música © Haddhar (GeeseBumps).
 
-Las tipografías incluidas (Russo One, Roboto y Quicksand, en `assets/fuentes/`) conservan sus propias licencias libres (la de Russo One, OFL, en `assets/fuentes/RussoOne-OFL.txt`).
+### Tipografías
+
+Las tipografías de `assets/fuentes/` no están bajo la GPL: conservan sus propias licencias libres.
+
+- **Russo One** (títulos y nombre del juego): Copyright © 2011-2012, Jovanny Lemonad (jovanny.ru), con el nombre reservado «Russo». Licencia [SIL Open Font License 1.1](assets/fuentes/RussoOne-OFL.txt), incluida con el juego. Se usa sin modificar.
+- **Roboto**: Google, Apache License 2.0.
+- **Quicksand**: The Quicksand Project Authors, SIL Open Font License 1.1.
