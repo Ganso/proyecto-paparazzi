@@ -113,8 +113,10 @@ func check(name: String) -> void:
 			var a = items[i]
 			var b = items[j]
 			if related(a[0],b[0]): continue
-			if frame_of(a[0]).position.x == -INF and frame_of(b[0]).position.x == -INF: pass
-			var x = a[1].grow(-1.5).intersection(b[1].grow(-1.5))
+			var ra = a[1].abs().grow(-1.5)
+			var rb = b[1].abs().grow(-1.5)
+			if ra.size.x <= 0 or ra.size.y <= 0 or rb.size.x <= 0 or rb.size.y <= 0: continue
+			var x = ra.intersection(rb)
 			if x.size.x > 2 and x.size.y > 2:
 				found.append("  SE PISAN %.0f×%.0f px: %s y %s  [%s | %s]" % [x.size.x,x.size.y,label_of(a[0]),label_of(b[0]),a[0].get_path(),b[0].get_path()])
 				bad.append(a[1])
