@@ -3297,7 +3297,7 @@ func level_limit() -> float:
 
 func clock_text() -> String:
 	var t = ceili(level_time)
-	return "⏱ %d:%02d" % [t/60,t%60]
+	return ("" if OS.has_feature("web") else "⏱ ")+"%d:%02d" % [t/60,t%60]   # (no font in the browser has the stopwatch)
 
 func show_arcade() -> void:
 	mode = "ARCADE"
@@ -3329,7 +3329,7 @@ func show_arcade() -> void:
 			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,5,190,16),11,Color("b8d78c"))
 			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,20,196,26),18)
 			var stars = int(progress[n].stars) if progress.has(n) else 0
-			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else "🔒",Rect2(14,46,196,24),16,Color("c9d790"))
+			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else ("—" if OS.has_feature("web") else "🔒"),Rect2(14,46,196,24),16,Color("c9d790"))
 	button(root,Texts.get_text("arcade_menu"),Rect2(1035,640,180,52),intro)
 
 # A level fixes scenario, light and equipment; another scenario reloads the scene first.

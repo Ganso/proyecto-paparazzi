@@ -1,11 +1,12 @@
 # 27. Versión web (HTML5, en el navegador)
 
-> **Estado**: 🚧 **En curso (Fase 1 completada, Fase 2 en depuración)**.
-> - **Logrado**: Preajuste Web sin hilos configurado en `export_presets.cfg`, integrado en `tools/export_all.sh`, arranque forzado en perfil «Bajo» en web, shell HTML ligera con botón inicial interactivo antes de cargar WASM, modal de bienvenida centrado sin desbordamiento, y fuentes Quicksand y Roboto reimportadas como `FontFile` dinámico.
-> - **Puntos pendientes inmediatos para la próxima sesión**:
->   1. Glifos de teclas y flechas (ej. `⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧` en `mirar` y tutorial) que aparecen como rectángulos de tofu/código en web: la fuente actual no incluye estos símbolos unicode en webgl o no tiene el fallback configurado en FontFile.
->   2. Re-exportar Web con el fix sintáctico de `func draw_art()` en `scripts/boot_loader.gd` para eliminar los errores del log.
->   3. Opciones de gráficos en web: pantalla de opciones adaptada (sin cambio de ventana para no desconfigurar el canvas del navegador).
+> **Estado**: 🟡 **Primera versión publicable lista (05-10-2026)**: `./tools/export_all.sh --only web` deja `build/web/` y `build/dist/PhotoHacks-<versión>-web.zip` (16 MB), listo para subir a itch.io como juego HTML5. Jugada en el navegador (Chromium): carga con la cámara girando, aviso de versión web, menú, tutorial, foto con su informe y pantalla de gráficos, sin errores en la consola.
+>
+> **Hecho**: preajuste «Web» sin hilos (A1) y paquete propio sin piezas ni texturas `hd` (A2: el `.pck` baja de 70 a 13,5 MB); renderizador `gl_compatibility` en web (`project.godot`); arranque en el perfil Bajo y aviso que recomienda la versión nativa (`main_menu.gd::show_web_notice()`); fuentes importadas como recursos; **DejaVu Sans como fuente de reserva de todas las demás** (`UiStyle.font()`): en el navegador no hay fuentes del sistema y las flechas de las teclas, las estrellas y los vistos salían como rectángulos; el candado y el cronómetro, que ninguna fuente incluida tiene, se sustituyen en web; la pantalla de gráficos no ofrece modo de ventana, tamaño ni sincronía vertical.
+>
+> **Sin probar todavía**: sonido, guardado entre visitas, mando, Firefox, Safari y móviles (bloques B y C). La pantalla de gráficos sigue enseñando los parámetros del escritorio, que en el navegador no cambian nada (B6).
+>
+> **Ficha de itch.io**: tipo «HTML», subir el zip y marcar «This file will be played in the browser»; tamaño del marco 1280 × 720; activar el botón de pantalla completa; «SharedArrayBuffer support» desactivado (la exportación es sin hilos); itch ya sirve los ficheros comprimidos.
 
 ## 1. Valoración
 
@@ -67,7 +68,7 @@ No se probó: sonido, guardado entre sesiones, mando, pantalla completa, el parq
 | A2 | **Paquete propio del navegador**: sin `data/piezas_hd/`, sin texturas de suelo ni modelos `hd`, sin la música de los vídeos | ✅ Excluidos en el preset Web de exportación | S |
 | A3 | Compresión en el servidor (gzip o Brotli) y comprobar que el alojamiento la aplica; alternativa: fragmentar el paquete | De 108 MB a unos 46, y menos tras A2 | S |
 | A4 | **Página propia**: pantalla de carga con la marca y barra de progreso, mensaje si el navegador no tiene WebGL 2, botón de pantalla completa | La página por defecto de Godot es un lienzo negro con un logotipo | M |
-| A5 | **Publicar en itch.io** como juego HTML5 (tamaño del marco, pantalla completa, móvil) y, si se quiere, en GitHub Pages | Distribución inmediata | S |
+| A5 | **Publicar en itch.io** como juego HTML5 (tamaño del marco, pantalla completa, móvil) y, si se quiere, en GitHub Pages | Zip listo; ajustes de la ficha arriba. Falta subirlo | S |
 | A6 | Decidir **con hilos o sin hilos**: con hilos va más fluido, pero el servidor tiene que enviar cabeceras de aislamiento (itch.io lo ofrece como opción; GitHub Pages no) | La prueba fue sin hilos | S |
 | A7 | Aplicación web instalable (PWA) con funcionamiento sin conexión | Opcional: icono en el escritorio o en el móvil | M |
 

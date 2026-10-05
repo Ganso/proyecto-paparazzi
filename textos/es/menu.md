@@ -298,12 +298,6 @@ Arrancado en perfil Bajo para mayor fluidez. Puedes cambiarlo en Opciones. Recom
 ### menu_aviso_web_entendido
 Entendido
 
-### menu_web_lanzar
-Empezar a jugar
-
-### menu_web_subtitulo
-Haz clic para iniciar el juego y activar el sonido
-
 ## Pausa
 
 ### pausa_titulo

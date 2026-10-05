@@ -37,25 +37,21 @@ static func surf(a: float) -> Color:
 	return Color(SURFACE.r,SURFACE.g,SURFACE.b,a)
 
 static var fonts = {}
+const SYMBOLS = "DejaVuSans"
 # Typefaces (assets/fuentes/), each under its own free licence:
 #   · Russo One — titles and the name. Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with
 #     Reserved Font Name "Russo". SIL Open Font License 1.1 (assets/fuentes/RussoOne-OFL.txt).
 #   · Roboto (Apache License 2.0, Google) and Quicksand (SIL OFL 1.1, The Quicksand Project Authors).
+#   · DejaVu Sans — only the symbols the others lack (arrows, stars, ticks). Free licence of
+#     Bitstream Vera and DejaVu (assets/fuentes/DejaVuSans-LICENSE.txt).
+# In a browser there are no system fonts to fall back on, so every font carries DejaVu Sans as
+# its fallback: without it the arrows of the keys and the stars are drawn as empty boxes.
 static func font(name: String) -> Font:
 	if not fonts.has(name):
 		var path = "res://assets/fuentes/%s.ttf" % name
-		if ResourceLoader.exists(path):
-			fonts[name] = load(path)
-		elif FileAccess.file_exists(path):
-			var bytes = FileAccess.get_file_as_bytes(path)
-			if not bytes.is_empty():
-				var f = FontFile.new()
-				if f.load_dynamic_font_from_buffer(bytes) == OK:
-					fonts[name] = f
-					return f
-				fonts[name] = ThemeDB.fallback_font
-		else:
-			fonts[name] = ThemeDB.fallback_font
+		var f: Font = load(path) if ResourceLoader.exists(path) else ThemeDB.fallback_font
+		if name != SYMBOLS and f is FontFile: f.fallbacks = [font(SYMBOLS)]
+		fonts[name] = f
 	return fonts[name]
 
 static func box(color: Color, radius = 12, border = Color.TRANSPARENT, border_w = 1, shadow = 0) -> StyleBoxFlat:

@@ -13,10 +13,6 @@ const TURN_SECONDS = 3.0
 var art: Control
 var started = 0
 var fading = -1.0
-var launched = false
-var static_logo: Texture2D
-var launch_button: Button
-signal user_launched
 
 func _ready() -> void:
 	layer = 120
@@ -26,7 +22,6 @@ func _ready() -> void:
 	art.mouse_filter = Control.MOUSE_FILTER_STOP
 	art.draw.connect(draw_art)
 	add_child(art)
-	launched = true
 
 func draw_art() -> void:
 	art.draw_rect(Rect2(0,0,1280,720),Color("296ca5"))
