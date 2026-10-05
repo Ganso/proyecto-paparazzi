@@ -293,7 +293,7 @@ Gráficos · %s
 Versión web
 
 ### menu_aviso_web_cuerpo
-Arrancado en perfil Bajo para mayor fluidez. Puedes cambiarlo en Opciones. Recomendamos descargar gratis la versión nativa (Windows, Mac o Linux) en esta página.
+Esta es la versión para el navegador, con gráficos simplificados. La versión descargable (Windows, Mac, Linux y Android), gratis en esta misma página, tiene mejores gráficos y se maneja mejor.
 
 ### menu_aviso_web_entendido
 Entendido
