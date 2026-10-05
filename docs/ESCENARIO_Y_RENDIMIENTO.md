@@ -181,3 +181,23 @@ Los valores medidos actuales (triángulos, VRAM, etc.) están en la tabla única
 ## 6. Verificación Automatizada
 
 `--smoke-test`, `tests/test_game.gd`, `tests/test_expansion.gd` y `tests/test_park_life.gd` (requieren display). Comandos y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
+
+## Misma imagen en Vulkan y en OpenGL (05-10-2026)
+
+Forward+ (Vulkan en Windows y Linux, Metal en macOS) y `gl_compatibility` (OpenGL: Android, web y respaldo) no dibujan la misma escena —la de OpenGL es la ligera, sin iluminación global ni oclusión ambiental—, pero **el brillo y el contraste deben parecerse**. `./tools/compare_renderers.sh` saca el mismo plano en los dos, a las cuatro luces, y da una tabla con brillo medio, contraste, sombras (p5), luces (p95) y saturación.
+
+OpenGL salía entre un 14 % (noche) y un 45 % (hora dorada) más brillante, y más duro. Ahora `park.gd::LO_EXPOSURE` va por luz (era una sola cifra, 0,72) y `LO_AMBIENT` sube la luz ambiente para que el lado en sombra de personas y árboles no quede negro:
+
+| Luz | Brillo OpenGL / Forward+ antes | ahora |
+|---|---:|---:|
+| Día | 1,18–1,23 | 1,04–1,09 |
+| Hora dorada | 1,45–1,46 | 1,11–1,14 |
+| Hora azul | 1,27–1,30 | 1,01–1,03 |
+| Noche | 1,16–1,20 | 1,06–1,08 |
+
+Lo que sigue distinto, y no es cuestión de exposición: el suelo de OpenGL es liso y más claro (sin textura), no hay hierba ni figurantes, y de noche el suelo junto a las farolas queda más claro (p95 de 120 frente a 80). La nota de la foto no depende de nada de esto.
+
+## Portátiles sin gráfica dedicada y pantallas de alta densidad (05-10-2026)
+
+Tras el aviso de un MacBook Air que no llegaba a 60 FPS (allí Forward+ va sobre Metal): sin gráfica dedicada el juego arranca en **Medio** (era Alto), y los perfiles ligeros no siguen a la pantalla más allá de `main.gd::RENDER_LINES` (Bajo y Medio 1080 líneas, Alto 1440; la escala del perfil se aplica encima): una ventana de 1440 × 810 en una pantalla Retina son 2880 × 1620 píxeles reales. Ultra y Personalizado dibujan todos los píxeles, así que quien quiera más lo tiene a un clic. Si aun así el juego va a menos de 42 FPS durante 12 s, avisa una vez sobre el visor (`watch_speed()`, texto `aviso_rendimiento`).
+

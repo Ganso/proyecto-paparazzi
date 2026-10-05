@@ -1141,7 +1141,12 @@ func apply_preset_values(preset: String) -> void:
 	env.ambient_light_energy = base_ambient*(NO_GI_AMBIENT.get(time_of_day,1.0) if no_gi else 1.0)
 	# gl_compatibility renders the same scene noticeably brighter than Forward+ (and without SSAO or
 	# SDFGI shadowing), so its exposure is scaled to match Ultra's image (measured on the same shot).
-	if not forward_plus(): env.tonemap_exposure *= LO_EXPOSURE
+	# Per time of day since 05-10-2026 (it was one figure): golden hour and blue hour came out far
+	# brighter than in Forward+. The flat ambient is raised too, so that the shaded side of people
+	# and trees is not left black, which is what made the image harsher (tools/compare_renderers.sh).
+	if not forward_plus():
+		env.tonemap_exposure *= float(LO_EXPOSURE.get(time_of_day,.6))
+		env.ambient_light_energy *= float(LO_AMBIENT.get(time_of_day,1.0))
 
 # What the engine's procedural sky lacked: moon and stars (night), cirrus and the afterglow.
 func sky_extras(sky_mat: ShaderMaterial, moon: float, stars: float, cirrus: float, cirrus_color: Color, glow: float, glow_color: Color) -> void:
@@ -1491,7 +1496,8 @@ var is_night = false
 var time_of_day: String = "day"
 # Ambient energy of the time of day; the profile scales it (apply_preset_values()).
 var base_ambient = .22
-const LO_EXPOSURE = 0.72
+const LO_EXPOSURE = {"day": .44, "golden": .29, "blue": .42, "night": .50}
+const LO_AMBIENT = {"day": 1.6, "golden": 1.6, "blue": 1.0, "night": 1.2}
 const NO_GI_AMBIENT = {"day": .55, "golden": .1, "blue": .3, "night": .3}
 
 func build_clouds() -> void:

@@ -189,6 +189,10 @@ Ver FPS
 > máximo 14 caracteres
 Límite de FPS
 
+### aviso_rendimiento · Aviso sobre el visor cuando el juego va a menos de 42 FPS (700 px a 16 px: una línea, unos 85 caracteres)
+> máximo 90 caracteres
+El juego va lento en este equipo: Prueba un perfil más bajo en Opciones → Gráficos.
+
 ### gfx_resolucion_imagen
 Resolución de la imagen
 

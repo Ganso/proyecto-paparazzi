@@ -666,6 +666,7 @@
   "gfx_integrada": "Gráfica integrada: En los perfiles la iluminación global se desactiva (da una imagen lavada). En Personalizado puedes forzarla.",
   "gfx_fps": "Ver FPS",
   "gfx_limite": "Límite de FPS",
+  "aviso_rendimiento": "El juego va lento en este equipo: Prueba un perfil más bajo en Opciones → Gráficos.",
   "gfx_resolucion_imagen": "Resolución de la imagen",
   "gfx_nativa": "Nativa de la pantalla",
   "encargo_01_05": "ENCARGO 01 / 05",

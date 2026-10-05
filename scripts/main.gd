@@ -1426,9 +1426,30 @@ func check_long_press() -> void:
 	toggle_lock()
 	rumble(.3,.6,.12)
 
+# The game is going slowly (under SLOW_FPS over SLOW_SECONDS of play, in the real game and with a
+# profile that can still go down): say so once, with the way out. Nobody looks for a graphics
+# screen on their own when a laptop's fans start.
+const SLOW_FPS = 42.0
+const SLOW_SECONDS = 12.0
+var slow_time = 0.0
+var slow_frames = 0
+var slow_told = false
+func watch_speed(dt: float) -> void:
+	if slow_told or not fps_limited or mode != "SEARCH" or not ParkScene.forward_plus() or graphics_preset == "Bajo": return
+	slow_time += dt
+	slow_frames += 1
+	if slow_time < SLOW_SECONDS: return
+	if slow_frames/slow_time < SLOW_FPS:
+		slow_told = true
+		notify_player(Texts.get_text("aviso_rendimiento"))
+		toast_time = 9.0
+	slow_time = 0.0
+	slow_frames = 0
+
 var band_key = ""
 func _process(dt: float) -> void:
 	total_time += dt
+	watch_speed(dt)
 	check_long_press()
 	if frame_offset != Vector2.ZERO and not is_instance_valid(boot_loader) and band_key != mode+interface_mode:
 		band_key = mode+interface_mode
@@ -4043,8 +4064,10 @@ func startup_profile() -> String:
 	if ProjectSettings.has_setting(PROFILE_SETTING): return str(ProjectSettings.get_setting(PROFILE_SETTING))
 	if OS.has_feature("web"): return "Bajo"
 	if OS.has_feature("mobile"): return "Medio"
-	# First launch on desktop: Ultra on a dedicated GPU, Alto otherwise (02 §10.3.5).
-	return "Ultra" if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else "Alto"
+	# First launch on desktop: Ultra on a dedicated GPU, Medio otherwise (it was Alto until a
+	# MacBook Air could not hold 60 FPS with it: a laptop without a dedicated GPU, and often
+	# without a fan, starts light and the player raises it if the machine can take it).
+	return "Ultra" if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else "Medio"
 
 func save_profile(preset: String) -> void:
 	if OS.has_feature("mobile") or OS.has_feature("web"): return
@@ -4065,6 +4088,7 @@ func select_graphics_profile(preset: String) -> void:
 # the lower profiles render internally at a fraction of it, upscaled with FSR 2 (RENDER_SCALE).
 # gl_compatibility keeps 1280 × 720. Everything downstream normalises by viewport.size.
 var render_factor = 1.0
+const RENDER_LINES = {"Bajo":1080,"Medio":1080,"Alto":1440}
 
 func update_render_resolution() -> void:
 	var factor = 1.0
@@ -4075,6 +4099,11 @@ func update_render_resolution() -> void:
 		# to fill the screen (place_view() already scales the container to the view).
 		var limit = Graphics.fullscreen_height()
 		if limit > 0: factor = clampf(limit/720.0,1.0,factor)
+		# A high-density screen (a Retina laptop, a 4K panel) has three or four times the pixels
+		# of the same window elsewhere: the lighter profiles do not follow it beyond RENDER_LINES
+		# (the profile's own scale applies on top). Ultra and Personalizado draw every pixel.
+		var lines = int(RENDER_LINES.get(graphics_preset,0))
+		if lines > 0: factor = minf(factor,maxf(1.0,lines/720.0))
 	viewport.size = Vector2i(roundi(1280*factor),roundi(720*factor))
 	viewport_container.stretch = false
 	viewport_container.size = Vector2(viewport.size)
