@@ -16,7 +16,15 @@ void fragment() {
 	// Thin pieces seen edge-on (hat brims) can interpolate a zero normal: normalising it gave NaN
 	// lighting, one pixel that the glow blew up into a white flash. Fall back to facing the camera.
 	NORMAL = dot(NORMAL, NORMAL) > 1e-8 ? normalize(NORMAL) : VIEW;
+	// The pieces carry their colours in sRGB. Forward+ hands them over as they are and they are
+	// linearised here; gl_compatibility has already done it, and doing it twice left every mannequin
+	// on Android and in the browser far too dark (a green jacket, black): found comparing both
+	// renderers on the same shot (tools/compare_renderers.sh, 05-10-2026).
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	ALBEDO = COLOR.rgb;
+#else
 	ALBEDO = pow(COLOR.rgb, vec3(2.2));
+#endif
 	if (textured) ALBEDO = textured_albedo(ALBEDO, texture_strength);
 	if (zone < 0.5) {
 		// Varnished wood.

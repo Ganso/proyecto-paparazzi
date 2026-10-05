@@ -186,16 +186,20 @@ Los valores medidos actuales (triángulos, VRAM, etc.) están en la tabla única
 
 Forward+ (Vulkan en Windows y Linux, Metal en macOS) y `gl_compatibility` (OpenGL: Android, web y respaldo) no dibujan la misma escena —la de OpenGL es la ligera, sin iluminación global ni oclusión ambiental—, pero **el brillo y el contraste deben parecerse**. `./tools/compare_renderers.sh` saca el mismo plano en los dos, a las cuatro luces, y da una tabla con brillo medio, contraste, sombras (p5), luces (p95) y saturación.
 
-OpenGL salía entre un 14 % (noche) y un 45 % (hora dorada) más brillante, y más duro. Ahora `park.gd::LO_EXPOSURE` va por luz (era una sola cifra, 0,72) y `LO_AMBIENT` sube la luz ambiente para que el lado en sombra de personas y árboles no quede negro:
+Lo que encontró, de más a menos grave:
+
+1. **Los maniquíes de OpenGL salían mucho más oscuros de lo debido** (una chaqueta verde, casi negra; las caras, sin color). `shaders/mannequin_pbr.gdshader` pasaba a lineal el color de vértice, que `gl_compatibility` ya entrega convertido: se hacía dos veces. Ahora el sombreador distingue el renderizador (`CURRENT_RENDERER`). Afectaba a todo Android y a toda la web.
+2. **De día, quien estaba a contraluz quedaba negro**: Forward+ toma la luz ambiente del cielo y `gl_compatibility` casi no recibe nada de él. En OpenGL el día usa una luz ambiente de color fijo (`LO_DAY_AMBIENT`).
+3. **OpenGL era entre un 14 % (noche) y un 45 % (hora dorada) más brillante.** `park.gd::LO_EXPOSURE` va ahora por luz (era una sola cifra, 0,72) y `LO_AMBIENT` ajusta la luz ambiente.
 
 | Luz | Brillo OpenGL / Forward+ antes | ahora |
 |---|---:|---:|
-| Día | 1,18–1,23 | 1,04–1,09 |
-| Hora dorada | 1,45–1,46 | 1,11–1,14 |
-| Hora azul | 1,27–1,30 | 1,01–1,03 |
-| Noche | 1,16–1,20 | 1,06–1,08 |
+| Día | 1,18–1,23 | 1,09–1,12 |
+| Hora dorada | 1,45–1,46 | 1,10 |
+| Hora azul | 1,27–1,30 | 1,01–1,07 |
+| Noche | 1,16–1,20 | 1,05–1,12 |
 
-Lo que sigue distinto, y no es cuestión de exposición: el suelo de OpenGL es liso y más claro (sin textura), no hay hierba ni figurantes, y de noche el suelo junto a las farolas queda más claro (p95 de 120 frente a 80). La nota de la foto no depende de nada de esto.
+El contraste (desviación del brillo) queda también parejo de día (55 frente a 56) y algo más bajo en OpenGL a la hora dorada y azul. Lo que sigue distinto, y no es cuestión de exposición: el suelo de OpenGL es liso y más claro (sin textura), no hay hierba ni figurantes, los edificios no encienden ventanas, y de noche el suelo junto a las farolas queda más claro (p95 de 115 frente a 80). La nota de la foto no depende de nada de esto.
 
 ## Portátiles sin gráfica dedicada y pantallas de alta densidad (05-10-2026)
 

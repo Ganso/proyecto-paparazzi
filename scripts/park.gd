@@ -1147,6 +1147,11 @@ func apply_preset_values(preset: String) -> void:
 	if not forward_plus():
 		env.tonemap_exposure *= float(LO_EXPOSURE.get(time_of_day,.6))
 		env.ambient_light_energy *= float(LO_AMBIENT.get(time_of_day,1.0))
+		# By day Forward+ takes its ambient light from the sky; gl_compatibility gets next to
+		# nothing from it, and whoever stood against the sun was a black cut-out: a flat colour.
+		if time_of_day == "day":
+			env.ambient_light_sky_contribution = 0.0
+			env.ambient_light_energy = LO_DAY_AMBIENT
 
 # What the engine's procedural sky lacked: moon and stars (night), cirrus and the afterglow.
 func sky_extras(sky_mat: ShaderMaterial, moon: float, stars: float, cirrus: float, cirrus_color: Color, glow: float, glow_color: Color) -> void:
@@ -1496,8 +1501,9 @@ var is_night = false
 var time_of_day: String = "day"
 # Ambient energy of the time of day; the profile scales it (apply_preset_values()).
 var base_ambient = .22
-const LO_EXPOSURE = {"day": .44, "golden": .29, "blue": .42, "night": .50}
-const LO_AMBIENT = {"day": 1.6, "golden": 1.6, "blue": 1.0, "night": 1.2}
+const LO_EXPOSURE = {"day": .37, "golden": .255, "blue": .40, "night": .46}
+const LO_AMBIENT = {"day": 1.0, "golden": 1.6, "blue": 1.0, "night": 1.2}
+const LO_DAY_AMBIENT = .7
 const NO_GI_AMBIENT = {"day": .55, "golden": .1, "blue": .3, "night": .3}
 
 func build_clouds() -> void:
