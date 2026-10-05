@@ -85,7 +85,9 @@ if want web; then
 		if "$GODOT" --headless --path "$PROJECT_DIR" "$MODE" "Web" "$PROJECT_DIR/build/web/index.html" > "$PROJECT_DIR/build/export_web.log" 2>&1 && [ -s "$PROJECT_DIR/build/web/index.html" ]; then
 			local_zip="$PROJECT_DIR/build/dist/PhotoHacks-$GAME_VERSION-web.zip"
 			rm -f "$local_zip"
-			(cd "$PROJECT_DIR/build/web" && zip -q -9 -r "$local_zip" .)
+			# (Godot importa los PNG de build/web al abrir el proyecto: sus .import no van al zip)
+			rm -f "$PROJECT_DIR"/build/web/*.import
+			(cd "$PROJECT_DIR/build/web" && zip -q -9 -r "$local_zip" . -x '*.import')
 			ok+=("web: build/web/index.html · $(basename "$local_zip") ($(du -h "$local_zip" | cut -f1))")
 		else
 			fail+=("web: falló la exportación (build/export_web.log)")
