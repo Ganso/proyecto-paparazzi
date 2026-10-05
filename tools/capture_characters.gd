@@ -10,20 +10,20 @@ const Cast = preload("res://scripts/casting.gd")
 const VIEWS = [["frente", 0.0], ["3/4", 40.0], ["perfil", 90.0], ["espalda", 180.0]]
 const CELL = Vector2i(400, 500)
 # Framing: [centre height (m), orthographic height (m)].
-const FRAMES = {"cuerpo": [0.9, 2.0], "torso": [1.3, 1.05], "piernas": [0.52, 1.15], "cabeza": [1.62, 0.5], "nino": [0.62, 1.45], "abrigo": [1.05, 1.5], "paraguas": [0.62, 1.35], "mano": [0.5, 1.15]}
+const FRAMES = {"cuerpo": [0.9, 2.0], "torso": [1.3, 1.05], "piernas": [0.52, 1.15], "cabeza": [1.62, 0.5], "nino": [0.62, 1.45], "abrigo": [1.05, 1.5], "paraguas": [0.62, 1.35], "mano": [0.5, 1.15], "cabeza_ancha": [1.63, 0.66]}
 
 # The pieces of 05-10-2026: [name, traits, framing]. Indices are those of data/catalogo.json.
 const NEW_PIECES = [
 	["gabardina", {"upper": 5, "upper_color": "beige", "lower": 1, "lower_color": "gris"}, "abrigo"],
 	["camiseta de tirantes", {"upper": 6, "upper_color": "rojo"}, "torso"],
-	["moño", {"hair": 8, "upper_color": "gris"}, "cabeza"],
-	["pelo rizado", {"hair": 9, "upper_color": "gris", "hair_color": "moreno"}, "cabeza"],
-	["boina", {"hair": 10, "upper_color": "gris", "lower_color": "burdeos"}, "cabeza"],
-	["gorra hacia atrás", {"hair": 11, "upper_color": "gris", "lower_color": "rojo"}, "cabeza"],
+	["moño", {"hair": 8, "upper_color": "gris"}, "cabeza_ancha"],
+	["pelo rizado", {"hair": 9, "upper_color": "gris", "hair_color": "moreno"}, "cabeza_ancha"],
+	["boina", {"hair": 10, "upper_color": "gris", "lower_color": "burdeos"}, "cabeza_ancha"],
+	["gorra hacia atrás", {"hair": 11, "upper_color": "gris", "lower_color": "rojo"}, "cabeza_ancha"],
 	["mochila", {"accessory": 3, "upper_color": "gris", "accessory_color": "verde"}, "torso"],
 	["paraguas", {"accessory": 4, "upper_color": "gris", "accessory_color": "rojo"}, "mano"],
-	["gafas", {"glasses": 1, "upper_color": "gris"}, "cabeza"],
-	["gafas de sol", {"glasses": 2, "upper_color": "gris"}, "cabeza"],
+	["gafas", {"glasses": 1, "upper_color": "gris"}, "cabeza_ancha"],
+	["gafas de sol", {"glasses": 2, "upper_color": "gris"}, "cabeza_ancha"],
 ]
 var cast = Cast.new()
 var world: Node3D
@@ -137,14 +137,27 @@ func settle() -> void:
 
 func shot(text: String, still = true) -> Image:
 	caption.text = text
+	# (Inside the 4:5 middle that grab() keeps.)
+	var view = root.get_visible_rect().size
+	caption.position.x = maxf(8.0, (view.x - view.y * CELL.x / CELL.y) * .5 + 8.0)
 	if still:
 		settle()
 		for k in 45: await process_frame
 	for k in 3: await process_frame
 	await RenderingServer.frame_post_draw
+	var image = grab()
+	image.resize(CELL.x, CELL.y, Image.INTERPOLATE_LANCZOS)
+	return image
+
+# The window's picture cut to the 4:5 of a cell, whatever shape the window really got (the desktop
+# does not always honour --resolution: stretched to the cell, the mannequins came out twice as
+# tall as they are). The camera is orthographic by height, so the middle is what matters.
+func grab() -> Image:
 	var image = root.get_texture().get_image()
 	image.convert(Image.FORMAT_RGB8)
-	image.resize(CELL.x, CELL.y, Image.INTERPOLATE_LANCZOS)
+	var wanted = int(image.get_height() * float(CELL.x) / CELL.y)
+	if wanted < image.get_width():
+		image = image.get_region(Rect2i((image.get_width() - wanted) / 2, 0, wanted, image.get_height()))
 	return image
 
 func save_sheet(name: String, cells: Array, columns: int) -> void:
@@ -214,6 +227,29 @@ func run() -> void:
 				p.rotation.y = deg_to_rad(view[1])
 				cells.append(await shot("%s · %s" % [item[0], view[0]]))
 		save_sheet("09_piezas_nuevas", cells, VIEWS.size())
+	if only.has("giros"):
+		# A full turn of each new piece, framed on the part of the body it changes: frames for
+		# tools/capture_wardrobe_video.sh (giros/<nn>_<fff>.png). Only on request (--only=giros).
+		var folder = ProjectSettings.globalize_path(out_dir.path_join("giros"))
+		DirAccess.make_dir_recursive_absolute(folder)
+		var steps = 120
+		for n in NEW_PIECES.size():
+			var item: Array = NEW_PIECES[n]
+			clear_people()
+			var t = base_traits()
+			t.merge(item[1], true)
+			var p = spawn(t)
+			pose(p, "reposo")
+			frame(item[2])
+			caption.text = item[0]
+			settle()
+			for k in 30: await process_frame
+			for k in steps:
+				p.rotation.y = TAU * k / steps
+				await process_frame
+				await RenderingServer.frame_post_draw
+				grab().save_png(folder.path_join("%02d_%03d.png" % [n, k]))
+		print("GIROS: " + folder)
 	if wants("nuevas_marcha"):
 		# The new pieces that move with the body, walking: backpack, umbrella, tank top; and the
 		# glasses under each kind of hat and hair that could touch them.

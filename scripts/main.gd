@@ -359,7 +359,13 @@ func _ready() -> void:
 		if Graphics.load_display(): Graphics.apply_display(get_window())
 		Graphics.apply_fps_limit()
 		fps_limited = true
-		check_version()
+		for arg in OS.get_cmdline_user_args():
+			if arg.begins_with("--version-as="): version_override = arg.trim_prefix("--version-as=")
+		# (Not under a tool or a test, which run the game from their own script: the news would
+		# cover the screens they look at, and they have no business on the network.)
+		if not ("--script" in OS.get_cmdline_args() or "-s" in OS.get_cmdline_args()):
+			check_version()
+			check_update()
 	if not equipment_state.is_empty():
 		equipment.body = equipment_state.body
 		equipment.lens_index = equipment_state.lens
@@ -4124,8 +4130,38 @@ func override_path() -> String:
 const VERSION_NOTES = [["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
+static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice
 static func version() -> String:
-	return str(ProjectSettings.get_setting("application/config/version","0"))
+	return version_override if version_override != "" else str(ProjectSettings.get_setting("application/config/version","0"))
+
+# ---- Is there a newer version on itch.io? ----
+# Asked once per launch, in the real game, to itch's public «latest version of a channel» address
+# (the one its own updater uses: no key, no account, nothing about the player is sent). If the
+# channel of this platform has a later version than this one, the menu says so with a button
+# that opens the game's page. No answer, no network or an odd reply: nothing happens. Not in the
+# browser, where the page always serves the latest (and the browser would block the request).
+const ITCH_TARGET = "geese-bumps/photohacks"
+const ITCH_PAGE = "https://geese-bumps.itch.io/photohacks"
+# (Not on Android: the APK asks for no permissions at all, internet included — tests/test_export.gd
+# keeps it so — and adding one is the user's decision.)
+const ITCH_CHANNELS = {"Windows":"windows","Linux":"linux","macOS":"mac"}
+var newer_version = ""
+signal newer_version_found
+func check_update() -> void:
+	var channel = str(ITCH_CHANNELS.get(OS.get_name(),""))
+	if channel == "": return
+	var request = HTTPRequest.new()
+	request.timeout = 8.0
+	add_child(request)
+	request.request_completed.connect(func(result, code, _headers, body):
+		request.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or code != 200: return
+		var data = JSON.parse_string(body.get_string_from_utf8())
+		if not (data is Dictionary) or not data.has("latest"): return
+		if version_number(str(data.latest)) > version_number(version()):
+			newer_version = str(data.latest)
+			newer_version_found.emit())
+	if request.request("https://itch.io/api/1/x/wharf/latest?target=%s&channel_name=%s" % [ITCH_TARGET,channel]) != OK: request.queue_free()
 
 static func version_number(v: String) -> int:
 	var parts = v.split("-")[0].split(".")
@@ -4145,6 +4181,7 @@ func check_version() -> void:
 
 func mark_version_seen() -> void:
 	news = []
+	if version_override != "": return
 	var config = ConfigFile.new()
 	config.load("user://interfaz.cfg")
 	config.set_value("interfaz","version_vista",version())
@@ -4534,6 +4571,13 @@ func ev_under(point: Vector2) -> float:
 # the centre of the frame (the centre and a ring round it) and 25 % for the periphery. Matrix: 5 × 5
 # zones, the zone of the active point counts 2.5 times and zones far brighter than the rest (the
 # sky) count a quarter. With the exposure locked (AE-L) the reading stays as it was.
+# How much the zone of the active focus point counts in the matrix (the other 24 count 1 each).
+# It was 2.5; since matrix metering is the norm it is tied to the focus point, as the evaluative
+# metering of a real camera is: three fifths of the reading are the subject. With 2.5, an
+# automatic camera left a subject in the sun a whole stop too bright, and the Academy's exposure
+# exam could not be passed by centring the needle. Spot is still the exact one, and the lesson
+# on metering still shows the difference.
+const MATRIX_SUBJECT = 36.0
 func update_meter() -> void:
 	if exposure_locked: return
 	var active: Vector2 = finder.points()[finder.active]
@@ -4552,7 +4596,7 @@ func update_meter() -> void:
 					var at = view_point(Vector2((col+.5)/5.0,(row+.5)/5.0))
 					readings.append(ev_under(at))
 					var cell = Rect2(finder.view.position+finder.view.size*Vector2(col/5.0,row/5.0),finder.view.size/5.0)
-					weights.append(2.5 if cell.has_point(active) else 1.0)
+					weights.append(MATRIX_SUBJECT if cell.has_point(active) else 1.0)
 					mean += readings[-1]/25.0
 			var total = 0.0
 			var weight_sum = 0.0

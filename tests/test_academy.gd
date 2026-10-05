@@ -81,7 +81,7 @@ func run() -> void:
 		match academy.kind:
 			"exposicion":
 				check(absf(game.finder.delta_ev) < .5,"Demo 1 ends with the needle back at 0 (%.2f)" % game.finder.delta_ev)
-				if not academy.demo_photos.is_empty(): check(absf(academy.demo_photos[0].result.delta) < .6,"Demo 1 photo is well exposed")
+				if not academy.demo_photos.is_empty(): check(absf(academy.demo_photos[0].result.delta) < .6,"Demo 1 photo is well exposed (%.2f EV)" % academy.demo_photos[0].result.delta)
 			"dof":
 				if shots.size() == 2:
 					check(shots[0].n <= 1.81 and shots[1].n >= 10.9,"Demo 2 compares f/1.8 with f/11 (%s, %s)" % [shots[0].n,shots[1].n])

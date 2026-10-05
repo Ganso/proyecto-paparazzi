@@ -227,3 +227,28 @@ Suites `tests/test_art.gd` y `tests/test_gait.gd` (headless; incluye la postura 
 
 > **Estilo de paso (02-10-2026)**: cada viandante bracea, lleva los codos, balancea los hombros e inclina el torso a su manera (`person.gd::style`, [futuro/15 P4](futuro/15_VARIEDAD_PROCEDURAL.md)). No afecta a piernas ni a pies apoyados.
 > **Cadera sin rebote (02-10-2026)**: la altura de la pelvis al andar es una onda suave (`gait.gd::walk_hip()`), no los arcos con pico de un compás; pasos más cortos y cadencia propia por persona. Detalle en [futuro/15 P4](futuro/15_VARIEDAD_PROCEDURAL.md).
+
+## 7. Vestuario ampliado (05-10-2026)
+
+Encargo del usuario: dos prendas nuevas, dos peinados, un tocado nuevo y los tres accesorios pendientes, más la gorra hacia atrás y las gafas en ranura propia. Cada pieza existe en las dos versiones (ligera en `tools/build_catalog.py`, de Blender en `tools/blender/build_characters.py`) y para los cuatro cuerpos.
+
+| Ranura | Pieza (`style`) | Cómo es | Reglas |
+|---|---|---|---|
+| Torso | **Gabardina** (`coat`) | Cuerpo de americana con cinturón, hebilla, charreteras y faldones hasta medio muslo, abiertos por delante en A para que las piernas pasen por el hueco | Solo adultos; nunca con falda ni con bandolera; quien la lleva no se sienta en los bancos; los brazos cuelgan algo más abiertos |
+| Torso | **Camiseta de tirantes** (`tank`) | El paño acaba bajo los brazos; hombros, brazos y lo alto del pecho son madera a la vista, con un tirante por hombro | — |
+| Cabeza | **Moño** (`bun`) | Pelo tirante hacia atrás, recogido en una bola alta con su goma | — |
+| Cabeza | **Pelo rizado** (`curly`) | Casquete con volumen y una capa de rizos por anillos: el único peinado más ancho que la cabeza | — |
+| Cabeza | **Boina** (`beret`) | Banda ceñida, plato ancho y plano algo ladeado y rabillo | Toma el color de la prenda de abajo, como los demás tocados |
+| Cabeza | **Gorra hacia atrás** (`cap_back`) | La gorra con la visera sobre la nuca | Se describe «gorra roja hacia atrás» (`etiqueta_color`) |
+| Accesorio | **Mochila** (`backpack`) | Saco a la espalda con bolsillo, asa y un tirante por hombro que vuelve por la axila | Quien la lleva no se sienta |
+| Accesorio | **Paraguas** (`umbrella`) | Cerrado, llevado por el mango en la mano izquierda con la punta hacia abajo | Mano ocupada: no usa móvil, café, periódico ni cámara; sin colisionador; es el accesorio más raro (peso 1) |
+| **Gafas** (ranura nueva) | **Gafas** (`glasses`) y **gafas de sol** (`sunglasses`) | Montura redonda oscura, puente y patillas; las de sol llevan además el cristal oscuro, las otras dejan ver la madera (cristal transparente) | Se combinan con cualquier accesorio, peinado o tocado; una de cada tres personas lleva unas u otras |
+
+- **Ranura `gafas`**: quinta ranura del catálogo (`catalogo.json::piezas.gafas`), rasgo `glasses` del reparto y zonas de color propias `montura` y `cristal` (`tonos_gafas`; iguales para todos, sin color en la descripción). La descripción del encargo une gafas y accesorio: «· con gafas de sol y mochila roja» (`casting.gd::accessory_description()`, texto `rasgo_y`).
+- **Reparto por pesos** (`casting.gd::weighted()`, campo `peso`): accesorios y gafas ya no salen a partes iguales. Los figurantes de la pradera, que se sientan y usan las dos manos, se sortean hasta que pueden (`free_to_sit()`).
+- **Banderas del catálogo** que lee el juego: `solo_adultos`, `sin_falda`, `sin_accesorios`, `no_se_sienta` (`Person.never_sits`), `mano_ocupada` (`Person.hand_busy`, `BUSY_ACTIVITY`).
+- **Presupuesto**: la combinación más cargada del nivel ligero pasa de 1.690 a 1.980 triángulos, y el tope sube de 1.900 a **2.000** (un 5 %; el usuario admitía hasta un 10 %). Lo que lo llena son los faldones de la gabardina, que necesitan lados suficientes para que la cadera no asome por sus caras planas. En escritorio el máximo por viandante sigue lejos de los 60.000.
+- **Nada atraviesa la gabardina**: `tools/capture_characters.gd -- --only=gabardina` la saca en los tres cuerpos adultos, en cuatro momentos del paso y desde cuatro lados, en las dos versiones (añadir `--lo` para la ligera). Los faldones ligeros son más anchos que el asiento del pantalón a cualquier altura y solo su banda inferior tiene dos caras.
+- **Evidencias**: `-- --only=nuevas` (hoja `09_piezas_nuevas`), `--only=nuevas_marcha` (mochila, paraguas y tirantes andando; gafas bajo cada tocado), `--only=gafas`, y el vídeo de giros `./tools/capture_wardrobe_video.sh` (cada pieza da una vuelta de 360°, escritorio a la izquierda y versión ligera a la derecha).
+- **La herramienta de capturas recorta, no estira**: el escritorio no siempre respeta `--resolution 800x1000`, y al estirar la ventana real a la celda de 4:5 los maniquíes salían el doble de altos de lo que son. `grab()` recorta el centro.
+- Los 25 niveles del arcade se siguen superando con el reparto nuevo (`tools/arcade_solver.gd`: 25 de 25) y la Academia jugada pasa entera.

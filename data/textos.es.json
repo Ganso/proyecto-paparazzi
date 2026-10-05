@@ -768,6 +768,7 @@
   "novedades_graficos": "Esta versión cambia los valores gráficos por defecto: Se aconseja restablecer las opciones gráficas con el botón de abajo.",
   "novedades_restablecer": "Restablecer gráficos",
   "novedades_restablecido": "Gráficos restablecidos",
+  "menu_version_nueva": "Versión %s disponible · Descargar",
   "novedades_0_3_2_1": "Android: Interfaz táctil a toda pantalla, con botones y menús más grandes. Es una versión experimental.",
   "novedades_0_3_2_2": "Más fluido en móviles y navegadores, y los personajes ya no salen oscuros en ellos.",
   "novedades_0_3_2_3": "Las nubes solo oscurecen el parque en los niveles del arcade con exposición manual, y el encargo lo avisa.",

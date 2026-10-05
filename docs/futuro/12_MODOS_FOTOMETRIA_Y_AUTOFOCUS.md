@@ -162,3 +162,23 @@ El sistema de autofoco se diversifica en cuatro modos especializados que complem
 2. Con el objetivo en sombra y el fondo al sol, la exposición automática depende solo del modo de medición y del punto de enfoque, no de `target`.
 3. La medición puntual lee exactamente `park.illumination_ev()` en el punto del punto de enfoque activo, y la matricial es la media ponderada del §3.1, ambas deterministas.
 4. El bloqueo AF-L/AE-L mantiene foco y exposición mientras dura la fase 1 del disparador.
+
+## 8. La medición matricial es la norma (05-10-2026)
+
+Decisión del usuario: en el juego se mide en **matricial** salvo que se pida otra cosa. Antes la cámara arrancaba en puntual.
+
+- `equipment.gd::DEFAULT_METERING = "matricial"`: valor inicial, y el que deja `preset()` (cada preajuste de equipo, cada nivel del arcade, el tutorial y cada lección de la Academia).
+- **La matricial va ligada al punto de enfoque**, como la evaluativa de una cámara real: la zona del punto activo pesa 36 frente a 1 de cada una de las otras 24 (`main.gd::MATRIX_SUBJECT`; era 2,5), tres quintos de la lectura. Con 2,5 una cámara automática dejaba a una persona al sol un paso entero pasada de luz. Las zonas mucho más brillantes que el resto (el cielo) siguen contando una cuarta parte. La puntual sigue siendo la exacta.
+
+**Dónde se usa otra medición** (lista completa):
+
+| Caso | Medición | Por qué |
+|---|---|---|
+| El jugador la cambia: tecla M, o el botón «Medición» de la interfaz táctil | La que elija (puntual → ponderada → matricial) | Es su decisión. Dura hasta que cambia de equipo, de nivel o de lección |
+| Academia, lección 4 «La exposición» (teoría, demostración, práctica y examen) | Puntual (`academy.gd::SPOT_LESSONS`) | La lección enseña que «el punto encendido» significa «esta persona está bien expuesta», y aún no se ha explicado qué mira el exposímetro. Con diales de paso entero, el medio paso que la matricial puede desviarse se convertía en un paso entero en la propia foto del tutor |
+| Academia, lección 7 «Medir la luz», demostración | Matricial, luego ponderada, luego puntual | Es el tema: el tutor enseña las tres |
+| Academia, lección 7, práctica y examen | Empiezan en matricial y piden pasar a puntual | Es lo que se evalúa (`academia_medicion_p1`, informe del examen) |
+
+No hay más: ni el arcade, ni el tutorial, ni el sandbox, ni las otras ocho lecciones fijan otra medición. Las herramientas de vídeo y las pruebas que necesitan una lectura exacta la ponen ellas (`tests/test_automatisms.gd`).
+
+De paso se corrigió un fallo que el cambio destapó: cada lección de la Academia heredaba la sensibilidad de la anterior (`apply_setup()` ahora parte de ISO 100 salvo que la lección diga otra), y el modelo de una lección es siempre un adulto (`stand_person()`).

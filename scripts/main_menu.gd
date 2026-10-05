@@ -140,6 +140,9 @@ func build() -> void:
 	# For support and testing: the exact build, small, in a corner.
 	var build_label = text(self,"v%s · %s · %s" % [main.version(),OS.get_name(),"Forward+" if main.ParkScene.forward_plus() else "OpenGL"],Vector2(8,702),10,FAINT,light_font)
 	build_label.modulate.a = .7
+	# A newer version on itch.io (main.gd::check_update()): said here, with the way to get it.
+	if main.newer_version != "": show_update()
+	elif not main.newer_version_found.is_connected(show_update): main.newer_version_found.connect(show_update,CONNECT_ONE_SHOT)
 	text(self,Texts.get_text("nombre_juego"),Vector2(x+102,78),54,UiStyle.BRAND,title_font)
 	# Under a finger (docs/futuro/26 A3) the card is drawn FINGER times bigger, with everything in
 	# it: it takes the place of the tagline, and the arrows at its sides grow with it.
@@ -375,6 +378,11 @@ func refresh() -> void:
 		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),19,Color.TRANSPARENT if on else LINE,1,8 if on else 0))
 		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),19,SKY.lightened(.35),1,8))
 		chip.add_theme_stylebox_override("pressed",box(SKY,19))
+
+func show_update() -> void:
+	var b = flat_button(self,Texts.get_text("menu_version_nueva") % main.newer_version,Rect2(1280-338,670,326,40 if not Glyphs.touch else 46),func(): OS.shell_open(main.ITCH_PAGE))
+	b.add_theme_font_size_override("font_size",15)
+	b.add_theme_color_override("font_color",UiStyle.BRAND)
 
 # ---- What is new (main.gd::check_version()) ----
 # One block per version since the last one this player opened, newest first, in a list that

@@ -28,10 +28,15 @@ var film_iso_index = 2 # ISO 400 loaded film; changed only in equipment selector
 var body = 0
 var lens_index = 0
 var focus_mode = "AF matricial"
-# Metering (docs/futuro/12 §3): "puntual" reads under the active focus point (the behaviour of
-# always), "ponderada" weighs the centre of the frame, "matricial" the whole frame by zones.
+# Metering (docs/futuro/12 §3): "puntual" reads under the active focus point, "ponderada" weighs
+# the centre of the frame, "matricial" the whole frame by zones.
+# Matrix metering is the norm everywhere (user, 05-10-2026), as on a real camera: every preset,
+# level, lesson and session starts with it. Another mode is used only when it is asked for: the
+# player changes it (M, or «Medición» on a touch screen) or the Academy's lesson on metering
+# shows the other two and asks for the spot meter (scripts/academy.gd).
 const METERING = ["puntual","ponderada","matricial"]
-var metering = "puntual"
+const DEFAULT_METERING = "matricial"
+var metering = DEFAULT_METERING
 func next_metering() -> void:
 	metering = METERING[(METERING.find(metering)+1) % METERING.size()]
 var auto_exposure = true
@@ -67,6 +72,7 @@ func preset(index: int) -> void:
 	body = index
 	lens_index = 0
 	ev_comp_index = 6
+	metering = DEFAULT_METERING
 	focus_mode = ["AF matricial","MF","AF puntual","MF"][index]
 	auto_exposure = index == 0
 	priority = ""

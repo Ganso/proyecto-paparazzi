@@ -1,6 +1,7 @@
 extends SceneTree
 const Person = preload("res://scripts/person.gd")
 const Cast = preload("res://scripts/casting.gd")
+const Texts = preload("res://scripts/texts.gd")
 var failed = 0
 func _initialize() -> void:
 	call_deferred("run")
@@ -192,4 +193,56 @@ func garment_checks(casting) -> void:
 		kid.activity = pair[0]
 		check(kid.activity == pair[1],"A child asked to «%s» does «%s»" % [pair[0],pair[1]])
 	kid.free()
+	# The wardrobe of 05-10-2026 (docs/PERSONAJES_Y_CINEMATICA.md §7): glasses in a slot of their
+	# own, the rules of the trench coat, the backpack and the umbrella, and how they are described.
+	var catalog: Dictionary = cast.catalog
+	var styles = func(slot): return catalog.piezas[slot].map(func(p): return p.style)
+	check("coat" in styles.call("torso") and "tank" in styles.call("torso"),"Trench coat and tank top are in the catalogue")
+	for style in ["bun","curly","beret","cap_back"]: check(style in styles.call("cabeza"),"Head piece «%s» is in the catalogue" % style)
+	check("backpack" in styles.call("accesorio") and "umbrella" in styles.call("accesorio"),"Backpack and umbrella are accessories")
+	check(styles.call("gafas") == ["none","glasses","sunglasses"],"Glasses have their own slot: none, clear and dark")
+	for profile in catalog.perfiles:
+		for index in [1,2]:
+			var path = "res://data/piezas/%s_gafas_%d.json" % [profile.id,index]
+			var hd_path = path.replace("/piezas/","/piezas_hd/")
+			check(FileAccess.file_exists(path) and FileAccess.file_exists(hd_path),"Glasses %d exist in both detail levels for «%s»" % [index,profile.id])
+			var zones = JSON.parse_string(FileAccess.get_file_as_string(path)).geometry.map(func(s): return s.color)
+			check(("cristal" in zones) == (index == 2),"Only sunglasses have dark lenses (%s)" % path)
+	var seen = {"glasses_with_accessory":0,"glasses":0,"umbrella":0,"people":0}
+	var wardrobe = Casting.new(777)
+	for i in 900:
+		var t = wardrobe.generate(i%9 == 0)
+		var upper: Dictionary = catalog.piezas.torso[t.upper]
+		var accessory: Dictionary = catalog.piezas.accesorio[t.accessory]
+		seen.people += 1
+		if t.glasses > 0: seen.glasses += 1
+		if t.glasses > 0 and t.accessory > 0: seen.glasses_with_accessory += 1
+		if accessory.style == "umbrella": seen.umbrella += 1
+		if upper.style == "coat":
+			check(catalog.piezas.piernas[t.lower].style != "skirt" and accessory.style != "bag" and catalog.perfiles[t.profile].id != "nino","A trench coat goes without skirt or shoulder bag, on adults")
+		if t.runner: check(t.accessory == 0,"Runners carry no accessory")
+		var text = wardrobe.accessory_description(t)
+		if t.glasses > 0 and t.accessory > 0: check(text.contains(catalog.piezas.gafas[t.glasses].etiqueta+Texts.get_text("rasgo_y")),"Glasses and accessory are joined in the description («%s»)" % text)
+	check(seen.glasses > seen.people/6 and seen.glasses < seen.people/2 and seen.glasses_with_accessory > 20,"About one in three wears glasses, with any accessory (%d of %d, %d with one)" % [seen.glasses,seen.people,seen.glasses_with_accessory])
+	check(seen.umbrella > 0 and seen.umbrella < seen.people/8,"The umbrella is the rarest accessory (%d of %d)" % [seen.umbrella,seen.people])
+	check(wardrobe.garment(catalog.piezas.cabeza[styles.call("cabeza").find("cap_back")],"rojo",catalog.tonos_ropa) == "gorra roja hacia atrás","The backwards cap puts its colour in the middle")
+	for item in [["accesorio","backpack","never_sits"],["accesorio","umbrella","hand_busy"],["torso","coat","never_sits"]]:
+		var who = Person.new()
+		var t = wardrobe.generate()
+		t.profile = 0
+		t.lower = 0
+		t.accessory = 0
+		t[{"accesorio":"accessory","torso":"upper"}[item[0]]] = styles.call(item[0]).find(item[1])
+		who.setup(t,catalog,9)
+		check(who.get(item[2]),"«%s» sets %s" % [item[1],item[2]])
+		if item[1] == "umbrella":
+			who.activity = "movil"
+			check(who.activity == "mirar","A hand holding the umbrella does not take the phone")
+			var bare = Person.new()
+			var plain = t.duplicate()
+			plain.accessory = 0
+			bare.setup(plain,catalog,9)
+			check(who.colliders["mano.I"].get_child_count() == bare.colliders["mano.I"].get_child_count(),"The umbrella adds no collider to the hand (a photo's rays pass it)")
+			bare.free()
+		who.free()
 	print("GARMENT CHECKS: %d checks, %d failures" % [garment_count,garment_failed])

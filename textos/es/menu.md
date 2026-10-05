@@ -312,6 +312,10 @@ Restablecer gráficos
 > máximo 24 caracteres
 Gráficos restablecidos
 
+### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
+> máximo 40 caracteres
+Versión %s disponible · Descargar
+
 ### novedades_0_3_2_1 · Novedades de la versión 0.3.2 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 Android: Interfaz táctil a toda pantalla, con botones y menús más grandes. Es una versión experimental.

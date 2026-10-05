@@ -49,7 +49,7 @@ func run() -> void:
 	# --- Metering modes and AF-L / AE-L (docs/futuro/12 fase 1) ---
 	game.equipment.focus_mode = "AF puntual"
 	game.finder.active = 4
-	check(game.equipment.metering == "puntual","Spot metering is the default (the behaviour of always)")
+	check(game.equipment.metering == "matricial" and game.equipment.DEFAULT_METERING == "matricial","Matrix metering is the norm (user, 05-10-2026)")
 	var modes_tested = 0
 	for view in [60.0,120.0,200.0,300.0]:
 		game.angle = view

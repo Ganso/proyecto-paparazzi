@@ -57,6 +57,7 @@ const SETUP = {
 	"camaras": {"time":"day","body":0,"lens":0,"focal":35.0,"auto":true,"focus":"AF matricial","angle":125.0,"pitch":-3.0,
 		"pages":["","","","","",""],"practice_diagram":"","page_do":["body:0","body:0","body:1","body:2","body:3","body:0"]},
 }
+const SPOT_LESSONS = {"exposicion":"puntual"}
 const THEORY_PAGES = {"composicion":5, "enfoque":4, "focal":4, "exposicion":6, "dof":4, "movimiento":5, "medicion":5, "modos":5, "objetivos":4, "camaras":6}
 # Lessons whose practice and exam put choices on the panel (lenses, bodies, metering, modes).
 const CHOICES = {
@@ -315,9 +316,17 @@ func apply_setup() -> void:
 	main.equipment.ev_comp_index = 6
 	if s.has("mode"): main.equipment.set_exposure_mode(s.mode)
 	else: main.equipment.priority = ""
-	main.equipment.metering = "puntual"
+	# Matrix metering, as everywhere. Two lessons do otherwise: the one on metering, which shows
+	# the three modes and asks for the spot meter, and the one on exposure, which reads the light
+	# with the spot meter from beginning to end. There «the needle at 0» has to mean «this person
+	# is well exposed», exactly, and with whole-stop dials the half stop a matrix reading can be
+	# off by became a whole one in the tutor's own photo. What the meter looks at is lesson 7.
+	main.equipment.metering = SPOT_LESSONS.get(kind,main.equipment.DEFAULT_METERING)
 	main.apply_equipment()
-	if s.has("iso"): main.iso_index = Photo.ISOS.find(int(s.iso))
+	# Every lesson starts from its own sensitivity (ISO 100 unless it says otherwise), not from
+	# whatever the lesson before left: with ISO 200 inherited, the exposure lesson began with the
+	# shutter at its end and a stop too bright, and its demonstration never got back to 0.
+	main.iso_index = Photo.ISOS.find(int(s.iso)) if s.has("iso") else 0
 	page_applied = ""
 	main.finder.active = 4
 	if main.time_of_day != s.time: main.preview_time(s.time)
@@ -556,7 +565,12 @@ func stage_subject() -> void:
 # fit in one frame).
 func stand_person(lane: int, theta: float, radius: float, like = null):
 	var fits = func(q): return like == null or absf(q.height-like.height) < .12
-	var p = main.pick(func(q): return q.lane == lane and not q.runner and fits.call(q))
+	# The model of a lesson is an adult: the lessons aim the focus point at chest height, and over
+	# a child's head it read the background (the spot meter of the exposure lesson came out a
+	# stop off the day the first walker of the path happened to be a child).
+	var adult = func(q): return like != null or not q.is_child()
+	var p = main.pick(func(q): return q.lane == lane and not q.runner and fits.call(q) and adult.call(q))
+	if p == null: p = main.pick(func(q): return not q.runner and fits.call(q) and adult.call(q))
 	if p == null: p = main.pick(func(q): return not q.runner and fits.call(q))
 	if p == null: p = main.pick(func(q): return not q.runner)   # anyone free walking elsewhere
 	if p == null: return null
