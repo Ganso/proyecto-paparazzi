@@ -24,7 +24,7 @@ func _ready() -> void:
 	add_child(art)
 
 func draw_art() -> void:
-	art.draw_rect(Rect2(0,0,1280,720),Color("296ca5"))
+	art.draw_rect(Rect2(-1280,-720,3840,2160),Color("296ca5"))   # (the bands of a wider screen too)
 	var title = UiStyle.font("RussoOne-Regular")
 	var name_text = Texts.get_text("nombre_juego")
 	var light = UiStyle.font("Roboto-Light")

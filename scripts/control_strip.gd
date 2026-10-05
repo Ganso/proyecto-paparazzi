@@ -113,6 +113,9 @@ func _process(_dt: float) -> void:
 	var vr: Rect2 = main.view_rect
 	var bars = not main.hud_bottom.is_empty() and main.hud_bottom[0].visible
 	var bottom = minf(617.0 if bars else vr.end.y-12,vr.end.y-12)
+	# The compact's screen keeps its data on a bar along the bottom: the tall chips of the touch
+	# interface would cover it.
+	if fingers and main.interface_mode == "camara" and main.equipment.body == 0: bottom -= 46
 	if main.tutorial and main.tutorial.visible: bottom = minf(bottom,main.tutorial.panel.position.y-8)
 	if main.academy and main.academy.active and main.academy.subtitle_panel.visible: bottom = minf(bottom,main.academy.subtitle_panel.position.y-8)
 	var chip_h = 58.0 if fingers else CHIP_H
