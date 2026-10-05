@@ -5,7 +5,7 @@
 # ninguno en marcha. Exporta dos APK x86_64 (el normal y otro que arranca con -- --smoke-test) y
 # comprueba: 1) invariantes en el PC con el renderizador de Android, 2) prueba de humo dentro del
 # dispositivo, 3) arranque del juego y un minuto vivo sin errores, 4) el tacto (entrar en el
-# tutorial, empezar y disparar), 5) pausa y vuelta al primer plano. Capturas en build/android/.
+# tutorial, empezar y disparar), 5) pausa y vuelta al primer plano, 6) el botón «atrás». Capturas en build/android/.
 set -uo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_DIR"
@@ -73,6 +73,10 @@ echo "== 5. Pausa y vuelta"
 "$ADB" shell input keyevent KEYCODE_HOME; sleep 4; "$ADB" shell am start -n $ACT >/dev/null; sleep 6; shot 04_vuelta
 check "$([ -n "$("$ADB" shell pidof $PKG)" ] && echo 1 || echo 0)" "vuelve del segundo plano"
 check "$([ "$(errors)" = 0 ] && echo 1 || echo 0)" "sin errores al volver ($(errors))"
+echo "== 6. Botón «atrás»"
+"$ADB" shell input keyevent KEYCODE_BACK; sleep 3; shot 05_atras
+check "$([ -n "$("$ADB" shell pidof $PKG)" ] && echo 1 || echo 0)" "«atrás» durante la partida pausa, no cierra el juego"
+check "$([ "$(errors)" = 0 ] && echo 1 || echo 0)" "sin errores tras «atrás» ($(errors))"
 godot_log > "$OUT/registro.txt"
 echo "ANDROID TESTS: $((pass+fail)) checks, $fail failures (capturas y registro en build/android/)"
 [ "$fail" = 0 ]

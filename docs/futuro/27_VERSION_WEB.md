@@ -82,7 +82,7 @@ No se probó: sonido, guardado entre sesiones, mando, pantalla completa, el parq
 | B4 | **Captura del ratón** en el parque grande: pedirla con un clic y convivir con Escape, que la suelta | En el navegador Escape es del navegador | M |
 | B5 | **Teclas que el navegador se queda**: Tab, F1, Ctrl, Re Pág, Av Pág, espacio (desplaza la página) | Varias son controles del juego | S |
 | B6 | Pantalla completa y cambio de tamaño de la ventana; ocultar en Opciones lo que no aplica (modo de pantalla, tamaño de ventana, perfiles de escritorio) | La pantalla de gráficos es la del escritorio | S |
-| B7 | **Detección de pantalla táctil** en el navegador para activar la interfaz táctil en tabletas y móviles | Hoy solo se activa en Android/iOS nativos o con `--touch` | S |
+| B7 | ✅ **Hecho (05-10-2026)**: en el navegador de un teléfono o tableta (`web_android`, `web_ios`) se activan la interfaz táctil y la pantalla completa de [26](26_ANDROID_PERFECTO.md). **Detección de pantalla táctil** en el navegador para activar la interfaz táctil en tabletas y móviles | Hoy solo se activa en Android/iOS nativos o con `--touch` | S |
 | B8 | Mando en el navegador (API Gamepad) | Debería funcionar; sin probar | S |
 | B9 | Argumentos de arranque por la dirección (`?nivel=3`, `?tactil=1`) para enlazar a un modo o a una lección | Enlaces directos a una lección de la Academia | S |
 
