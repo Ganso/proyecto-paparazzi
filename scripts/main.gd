@@ -512,6 +512,7 @@ func build_world() -> void:
 const RUNNER_PLACES = [12,17,20]
 func populate() -> void:
 	pose_debt.clear()
+	step_debt.clear()
 	if scenario == "grande":
 		populate_grande()
 		return
@@ -1502,7 +1503,7 @@ func _process(dt: float) -> void:
 				adjust_focus_delta(-key_dir * rate * dt)
 		park.update_weather(dt)
 		if not (sandbox and sandbox_paused):
-			for p in people: update_person(p,dt)
+			for p in people: step_person(p,dt)
 			pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			extras.update(dt)
 			if ducks: ducks.update(dt)
@@ -1715,10 +1716,30 @@ func update_person(p: Pedestrian, dt: float) -> void:
 # is posed one frame in POSE_EVERY — with all the time and distance gone by since, so the gait
 # keeps its step — and everyone in the picture, every frame. Where each one walks, the photo and
 # its mark do not change: only how often a body nobody sees is bent.
-const POSE_EVERY = 4
+const POSE_EVERY = 2      # (of its steps: out of the picture those are already one frame in two)
 const POSE_FAR = 22.0      # metres with the naked eye (30 mm); further with a longer lens
 var lean_poses = false
 var pose_debt = {}
+func person_seen(p: Pedestrian) -> bool:
+	var to: Vector3 = p.global_position+Vector3.UP*p.height*.5-camera.global_position
+	# (Half the diagonal of the picture — 36 × 20 mm — plus a margin as wide as a body up close.)
+	var half = atan(20.7/maxf(view_focal(),12.0))+deg_to_rad(12.0)
+	return to.length() < 4.0 or (-camera.global_basis.z).angle_to(to) < half
+
+# The same saving for the steps (docs/futuro/26 C3): out of the picture a pedestrian walks one
+# frame in two, with the time of both — what the whole game does anyway on a slower machine.
+var step_debt = {}
+func step_person(p: Pedestrian, dt: float) -> void:
+	if not lean_poses or shooting:
+		update_person(p,dt)
+		return
+	var debt: float = step_debt.get(p,0.0)+dt
+	if (Engine.get_process_frames()+p.get_index())%2 == 0 and debt < .08 and not person_seen(p):
+		step_debt[p] = debt
+		return
+	step_debt[p] = 0.0
+	update_person(p,debt)
+
 func pose_person(p: Pedestrian, dt: float, distance: float) -> void:
 	if not lean_poses or shooting:
 		p.animate(dt,distance)
@@ -1728,9 +1749,7 @@ func pose_person(p: Pedestrian, dt: float, distance: float) -> void:
 	debt[1] += distance
 	debt[2] += 1
 	var to: Vector3 = p.global_position+Vector3.UP*p.height*.5-camera.global_position
-	# (Half the diagonal of the picture — 36 × 20 mm — plus a margin as wide as a body up close.)
-	var half = atan(20.7/maxf(view_focal(),12.0))+deg_to_rad(12.0)
-	var seen = to.length() < 2.5 or (-camera.global_basis.z).angle_to(to) < half
+	var seen = person_seen(p)
 	# In the picture but far away (a figure a few pixels tall): every other frame is enough.
 	if seen and to.length() > POSE_FAR*view_focal()/30.0 and debt[2] < 2: seen = false
 	if seen or debt[2] >= POSE_EVERY:
