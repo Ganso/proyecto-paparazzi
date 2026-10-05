@@ -4,6 +4,8 @@
 >
 > **Hecho**: preajuste «Web» sin hilos (A1) y paquete propio sin piezas ni texturas `hd` (A2: el `.pck` baja de 70 a 13,5 MB); renderizador `gl_compatibility` en web (`project.godot`); arranque en el perfil Bajo y aviso que recomienda la versión nativa (`main_menu.gd::show_web_notice()`); fuentes importadas como recursos; **DejaVu Sans como fuente de reserva de todas las demás** (`UiStyle.font()`): en el navegador no hay fuentes del sistema y las flechas de las teclas, las estrellas y los vistos salían como rectángulos; el candado y el cronómetro, que ninguna fuente incluida tiene, se sustituyen en web; la pantalla de gráficos no ofrece modo de ventana, tamaño ni sincronía vertical.
 >
+> **05-10-2026, segunda tanda** (compartida con Android): límite de 60 FPS por defecto ([23](23_GRAFICOS_PERSONALIZADOS.md)), maniquíes con su color correcto y exposición de OpenGL igualada a la de escritorio, quien queda fuera de cuadro se anima uno de cada cuatro fotogramas, e interfaz táctil a pantalla completa en el navegador de un móvil. Sin comprobar en un navegador que el límite de FPS actúe (en el escritorio sí).
+>
 > **Sin probar todavía**: sonido, guardado entre visitas, mando, Firefox, Safari y móviles (bloques B y C). La pantalla de gráficos sigue enseñando los parámetros del escritorio, que en el navegador no cambian nada (B6).
 >
 > **Ficha de itch.io**: tipo «HTML», subir el zip y marcar «This file will be played in the browser»; tamaño del marco 1280 × 720; activar el botón de pantalla completa; «SharedArrayBuffer support» desactivado (la exportación es sin hilos); itch ya sirve los ficheros comprimidos.
