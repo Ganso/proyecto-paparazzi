@@ -1,6 +1,11 @@
 # 27. Versión web (HTML5, en el navegador)
 
-> **Estado**: ⏳ futurible. **Viable y comprobado** con una exportación de prueba el 04-10-2026: el juego arrancó y se jugó en el navegador sin tocar una línea de código.
+> **Estado**: 🚧 **En curso (Fase 1 completada, Fase 2 en depuración)**.
+> - **Logrado**: Preajuste Web sin hilos configurado en `export_presets.cfg`, integrado en `tools/export_all.sh`, arranque forzado en perfil «Bajo» en web, shell HTML ligera con botón inicial interactivo antes de cargar WASM, modal de bienvenida centrado sin desbordamiento, y fuentes Quicksand y Roboto reimportadas como `FontFile` dinámico.
+> - **Puntos pendientes inmediatos para la próxima sesión**:
+>   1. Glifos de teclas y flechas (ej. `⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧` en `mirar` y tutorial) que aparecen como rectángulos de tofu/código en web: la fuente actual no incluye estos símbolos unicode en webgl o no tiene el fallback configurado en FontFile.
+>   2. Re-exportar Web con el fix sintáctico de `func draw_art()` en `scripts/boot_loader.gd` para eliminar los errores del log.
+>   3. Opciones de gráficos en web: pantalla de opciones adaptada (sin cambio de ventana para no desconfigurar el canvas del navegador).
 
 ## 1. Valoración
 
@@ -58,8 +63,8 @@ No se probó: sonido, guardado entre sesiones, mando, pantalla completa, el parq
 
 | # | Qué falta | Por qué | Esfuerzo |
 |---|---|---|:---:|
-| A1 | **Preajuste «Web»** en `export_presets.cfg` (sin hilos, sin extensiones) y `web` en `tools/export_all.sh`, con un zip listo para subir | Hoy no existe: la prueba usó uno temporal | S |
-| A2 | **Paquete propio del navegador**: sin `data/piezas_hd/`, sin texturas de suelo ni modelos `hd`, sin la música de los vídeos | El navegador solo usa la escena `lo`; es donde más baja la descarga | S |
+| A1 | **Preajuste «Web»** en `export_presets.cfg` (sin hilos, sin extensiones) y `web` en `tools/export_all.sh`, con un zip listo para subir | ✅ Configurado con paquete optimizado y reglas de exclusión | S |
+| A2 | **Paquete propio del navegador**: sin `data/piezas_hd/`, sin texturas de suelo ni modelos `hd`, sin la música de los vídeos | ✅ Excluidos en el preset Web de exportación | S |
 | A3 | Compresión en el servidor (gzip o Brotli) y comprobar que el alojamiento la aplica; alternativa: fragmentar el paquete | De 108 MB a unos 46, y menos tras A2 | S |
 | A4 | **Página propia**: pantalla de carga con la marca y barra de progreso, mensaje si el navegador no tiene WebGL 2, botón de pantalla completa | La página por defecto de Godot es un lienzo negro con un logotipo | M |
 | A5 | **Publicar en itch.io** como juego HTML5 (tamaño del marco, pantalla completa, móvil) y, si se quiere, en GitHub Pages | Distribución inmediata | S |

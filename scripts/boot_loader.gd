@@ -13,6 +13,10 @@ const TURN_SECONDS = 3.0
 var art: Control
 var started = 0
 var fading = -1.0
+var launched = false
+var static_logo: Texture2D
+var launch_button: Button
+signal user_launched
 
 func _ready() -> void:
 	layer = 120
@@ -22,16 +26,17 @@ func _ready() -> void:
 	art.mouse_filter = Control.MOUSE_FILTER_STOP
 	art.draw.connect(draw_art)
 	add_child(art)
+	launched = true
 
 func draw_art() -> void:
 	art.draw_rect(Rect2(0,0,1280,720),Color("296ca5"))
-	var k = int((Time.get_ticks_msec()-started)/1000.0/TURN_SECONDS*FRAMES)%FRAMES
-	art.draw_texture_rect_region(SHEET,Rect2(420,40,440,440),Rect2((k%COLUMNS)*256,(k/COLUMNS)*256,256,256))
 	var title = UiStyle.font("RussoOne-Regular")
 	var name_text = Texts.get_text("nombre_juego")
-	art.draw_string(title,Vector2(640-title.get_string_size(name_text,HORIZONTAL_ALIGNMENT_LEFT,-1,92).x*.5,470+92*.8),name_text,HORIZONTAL_ALIGNMENT_LEFT,-1,92,UiStyle.BRAND)
 	var light = UiStyle.font("Roboto-Light")
-	var note = Texts.get_text("cargando_parque")   # (also drawn inside the boot image)
+	var k = int((Time.get_ticks_msec()-started)/1000.0/TURN_SECONDS*FRAMES)%FRAMES
+	art.draw_texture_rect_region(SHEET,Rect2(420,40,440,440),Rect2((k%COLUMNS)*256,(k/COLUMNS)*256,256,256))
+	art.draw_string(title,Vector2(640-title.get_string_size(name_text,HORIZONTAL_ALIGNMENT_LEFT,-1,92).x*.5,470+92*.8),name_text,HORIZONTAL_ALIGNMENT_LEFT,-1,92,UiStyle.BRAND)
+	var note = Texts.get_text("cargando_parque")
 	art.draw_string(light,Vector2(640-light.get_string_size(note,HORIZONTAL_ALIGNMENT_LEFT,-1,28).x*.5,600+28*.8),note,HORIZONTAL_ALIGNMENT_LEFT,-1,28,Color("d6ecfb"))
 
 func _process(dt: float) -> void:

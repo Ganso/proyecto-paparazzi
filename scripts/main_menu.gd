@@ -29,18 +29,18 @@ var dots = []
 const Glyphs = preload("res://scripts/input_glyphs.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 var hint: Control
-var title_font: FontFile
-var body_font: FontFile
-var body_medium: FontFile
-var light_font: FontFile
+var title_font: Font
+var body_font: Font
+var body_medium: Font
+var light_font: Font
+static var web_notice_shown = false
+var web_notice_modal: Control
 
 func _init(owner_main) -> void:
 	main = owner_main
 
-static func font(name: String) -> FontFile:
-	var f = FontFile.new()
-	f.load_dynamic_font("res://assets/fuentes/%s.ttf" % name)
-	return f
+static func font(name: String) -> Font:
+	return UiStyle.font(name)
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -59,6 +59,9 @@ func _ready() -> void:
 	glass.material = mat
 	add_child(glass)
 	build()
+	if OS.has_feature("web") and not web_notice_shown:
+		web_notice_shown = true
+		call_deferred("show_web_notice")
 
 func text(parent: Control, value: String, pos: Vector2, size: int, color: Color, f: Font, width = 0.0) -> Label:
 	var l = Label.new()
@@ -291,6 +294,18 @@ func build_options() -> void:
 # button would take the arrows for focus navigation before _unhandled_input ever saw them.
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or main.mode != "INTRO": return
+	if is_instance_valid(web_notice_modal) and web_notice_modal.visible:
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.physical_keycode in [KEY_ENTER,KEY_KP_ENTER,KEY_SPACE,KEY_ESCAPE]:
+				get_viewport().set_input_as_handled()
+				dismiss_web_notice()
+				return
+		elif event is InputEventJoypadButton and event.pressed:
+			if event.button_index in [JOY_BUTTON_A,JOY_BUTTON_B,JOY_BUTTON_START]:
+				get_viewport().set_input_as_handled()
+				dismiss_web_notice()
+				return
+		return
 	var step = 0
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode in [KEY_LEFT,KEY_A]: step = -1
@@ -343,3 +358,41 @@ func refresh() -> void:
 		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),19,Color.TRANSPARENT if on else LINE,1,8 if on else 0))
 		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),19,SKY.lightened(.35),1,8))
 		chip.add_theme_stylebox_override("pressed",box(SKY,19))
+
+func show_web_notice() -> void:
+	if is_instance_valid(web_notice_modal):
+		web_notice_modal.queue_free()
+	var overlay = Control.new()
+	overlay.name = "WebNoticeModal"
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var backdrop = ColorRect.new()
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0, 0, 0, 0.55)
+	overlay.add_child(backdrop)
+
+	var panel = Panel.new()
+	var pw = 740.0
+	var ph = 280.0
+	panel.custom_minimum_size = Vector2(pw, ph)
+	panel.size = Vector2(pw, ph)
+	panel.position = Vector2((1280.0 - pw) * 0.5, (720.0 - ph) * 0.5)
+	panel.add_theme_stylebox_override("panel", box(UiStyle.surf(0.96), 18, UiStyle.SKY, 2, 24))
+	overlay.add_child(panel)
+
+	text(panel, Texts.get_text("menu_aviso_web_titulo"), Vector2(36, 24), 28, UiStyle.BRAND, title_font)
+	text(panel, Texts.get_text("menu_aviso_web_cuerpo"), Vector2(36, 76), 16, SOFT, body_font, pw - 72.0)
+
+	var btn = flat_button(panel, Texts.get_text("menu_aviso_web_entendido"), Rect2((pw - 220.0) * 0.5, 200.0, 220.0, 48.0), dismiss_web_notice, "primary")
+	btn.focus_mode = Control.FOCUS_ALL
+	btn.call_deferred("grab_focus")
+
+	add_child(overlay)
+	web_notice_modal = overlay
+
+func dismiss_web_notice() -> void:
+	if is_instance_valid(web_notice_modal):
+		web_notice_modal.queue_free()
+		web_notice_modal = null
+	# Return focus to mode card button
+	change_mode(0)

@@ -42,6 +42,7 @@ defaults/default_clear_color=Color(0.72, 0.82, 0.83, 1)
 rendering_device/staging_buffer/max_size_mb=8
 renderer/rendering_method="forward_plus"
 renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method.web="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 lights_and_shadows/directional_shadow/size=2048
 lights_and_shadows/directional_shadow/size.mobile=1024

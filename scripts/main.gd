@@ -395,7 +395,10 @@ func warm_up_view() -> void:
 	var saved = camera.rotation
 	for step in 4:
 		camera.rotation = Vector3(0,step*PI*.5,0)
-		await RenderingServer.frame_post_draw
+		if OS.has_feature("web"):
+			await get_tree().process_frame
+		else:
+			await RenderingServer.frame_post_draw
 	camera.rotation = saved
 
 var world_times = {}
@@ -3881,12 +3884,13 @@ func override_path() -> String:
 
 func startup_profile() -> String:
 	if ProjectSettings.has_setting(PROFILE_SETTING): return str(ProjectSettings.get_setting(PROFILE_SETTING))
+	if OS.has_feature("web"): return "Bajo"
 	if OS.has_feature("mobile"): return "Medio"
 	# First launch on desktop: Ultra on a dedicated GPU, Alto otherwise (02 §10.3.5).
 	return "Ultra" if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else "Alto"
 
 func save_profile(preset: String) -> void:
-	if OS.has_feature("mobile"): return
+	if OS.has_feature("mobile") or OS.has_feature("web"): return
 	var config = ConfigFile.new()
 	config.load(override_path())
 	# The renderer is no longer per profile: drop the key older versions wrote.
@@ -3979,16 +3983,20 @@ func show_graphics_settings() -> void:
 	# Display: any profile.
 	label(root,Texts.get_text("gfx_pantalla"),Rect2(60,172,200,18),12,Color("b8d78c"))
 	var d = Graphics.display
-	label(root,Texts.get_text("gfx_modo_ventana"),Rect2(60,194,60,30),14)
-	option(root,Graphics.WINDOW_MODES.map(func(c): return gfx_label(c[0])),maxi(0,Graphics.WINDOW_MODES.map(func(c): return c[1]).find(d.mode)),Rect2(120,190,300,36),func(i): set_display("mode",Graphics.WINDOW_MODES[i][1]))
-	label(root,Texts.get_text("gfx_resolucion" if d.mode == "ventana" else "gfx_resolucion_imagen"),Rect2(440,194,170,30),14)
-	# In a window: its size. In full screen: the resolution of the image (or the screen's own).
-	var size_choices = Graphics.WINDOW_SIZES if d.mode != "ventana" else Graphics.WINDOW_SIZES.slice(1)
-	option(root,size_choices.map(func(c): return gfx_label(c[0])),maxi(0,size_choices.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",size_choices[i][1]))
-	label(root,Texts.get_text("gfx_vsync"),Rect2(815,194,175,30),14)
-	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,76,36),func(i): set_display("vsync",i == 0))
-	label(root,Texts.get_text("gfx_fps"),Rect2(1080,194,60,30),14)
-	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(1144,190,76,36),func(i): set_display("fps",i == 0))
+	if OS.has_feature("web"):
+		label(root,Texts.get_text("gfx_fps"),Rect2(60,194,60,30),14)
+		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(124,190,76,36),func(i): set_display("fps",i == 0))
+	else:
+		label(root,Texts.get_text("gfx_modo_ventana"),Rect2(60,194,60,30),14)
+		option(root,Graphics.WINDOW_MODES.map(func(c): return gfx_label(c[0])),maxi(0,Graphics.WINDOW_MODES.map(func(c): return c[1]).find(d.mode)),Rect2(120,190,300,36),func(i): set_display("mode",Graphics.WINDOW_MODES[i][1]))
+		label(root,Texts.get_text("gfx_resolucion" if d.mode == "ventana" else "gfx_resolucion_imagen"),Rect2(440,194,170,30),14)
+		# In a window: its size. In full screen: the resolution of the image (or the screen's own).
+		var size_choices = Graphics.WINDOW_SIZES if d.mode != "ventana" else Graphics.WINDOW_SIZES.slice(1)
+		option(root,size_choices.map(func(c): return gfx_label(c[0])),maxi(0,size_choices.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",size_choices[i][1]))
+		label(root,Texts.get_text("gfx_vsync"),Rect2(815,194,175,30),14)
+		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,76,36),func(i): set_display("vsync",i == 0))
+		label(root,Texts.get_text("gfx_fps"),Rect2(1080,194,60,30),14)
+		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(1144,190,76,36),func(i): set_display("fps",i == 0))
 	for o in [sub]: o.autowrap_mode = TextServer.AUTOWRAP_OFF
 	var body = panel(root,Rect2(60,240,1160,372),Color(.075,.115,.085,.91))
 	if not Graphics.is_custom(graphics_preset):

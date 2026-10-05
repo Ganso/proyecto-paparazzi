@@ -19,7 +19,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 GODOT="${GODOT_BIN:-${GODOT_FP:-$HOME/bin/godot-4-fp}}"
-ONLY="windows,linux,macos,android"
+ONLY="windows,linux,macos,android,web"
 MODE="--export-release"
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -37,9 +37,9 @@ GAME_VERSION="$(grep -m1 'version/name=' "$PROJECT_DIR/export_presets.cfg" | cut
 echo "==> Godot $VERSION_FULL · plantillas en $TEMPLATES · versión del juego $GAME_VERSION"
 
 # Plantilla necesaria por plataforma (nombres de las plantillas oficiales de Godot 4).
-declare -A NEED=( [windows]="windows_release_x86_64.exe" [linux]="linux_release.x86_64" [macos]="macos.zip" )
+declare -A NEED=( [windows]="windows_release_x86_64.exe" [linux]="linux_release.x86_64" [macos]="macos.zip" [web]="web_nothreads_release.zip" )
 missing=()
-for plat in windows linux macos; do
+for plat in windows linux macos web; do
 	if want "$plat" && [ ! -f "$TEMPLATES/${NEED[$plat]}" ]; then missing+=("$plat (${NEED[$plat]})"); fi
 done
 if [ ${#missing[@]} -gt 0 ]; then
@@ -78,6 +78,21 @@ export_desktop() {
 want windows && export_desktop windows "Windows" "build/windows/PhotoHacks.exe"
 want linux && export_desktop linux "Linux" "build/linux/PhotoHacks.x86_64"
 want macos && export_desktop macos "macOS" "build/macos/PhotoHacks.zip"
+if want web; then
+	if [ ! -f "$TEMPLATES/${NEED[web]}" ]; then fail+=("web: sin plantilla"); else
+		mkdir -p "$PROJECT_DIR/build/web"
+		echo "==> Exportando Web → build/web/index.html"
+		if "$GODOT" --headless --path "$PROJECT_DIR" "$MODE" "Web" "$PROJECT_DIR/build/web/index.html" > "$PROJECT_DIR/build/export_web.log" 2>&1 && [ -s "$PROJECT_DIR/build/web/index.html" ]; then
+			local_zip="$PROJECT_DIR/build/dist/PhotoHacks-$GAME_VERSION-web.zip"
+			rm -f "$local_zip"
+			(cd "$PROJECT_DIR/build/web" && zip -q -9 -r "$local_zip" .)
+			ok+=("web: build/web/index.html · $(basename "$local_zip") ($(du -h "$local_zip" | cut -f1))")
+		else
+			fail+=("web: falló la exportación (build/export_web.log)")
+			tail -5 "$PROJECT_DIR/build/export_web.log"
+		fi
+	fi
+fi
 if want android; then
 	if GODOT_BIN="$GODOT" JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/default-java}" bash "$SCRIPT_DIR/export_android.sh" > "$PROJECT_DIR/build/export_android.log" 2>&1; then ok+=("android: build/paparazzi-debug.apk ($(du -h "$PROJECT_DIR/build/paparazzi-debug.apk" | cut -f1))")
 	else fail+=("android: $(grep -m1 ERROR "$PROJECT_DIR/build/export_android.log" || echo 'ver build/export_android.log')"); fi

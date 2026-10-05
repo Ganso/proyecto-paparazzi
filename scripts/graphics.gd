@@ -132,6 +132,7 @@ static func save_display() -> void:
 # Windowed (with the chosen size, centred on its screen), a borderless window that fills the
 # screen, or exclusive full screen. The 3D view follows the window's pixels by itself.
 static func apply_display(window: Window) -> void:
+	if OS.has_feature("web"): return
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if display.vsync else DisplayServer.VSYNC_DISABLED)
 	match display.mode:
 		"completa": window.mode = Window.MODE_EXCLUSIVE_FULLSCREEN

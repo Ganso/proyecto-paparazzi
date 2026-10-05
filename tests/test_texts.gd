@@ -16,7 +16,8 @@ func check(ok: bool, message: String) -> void:
 
 func _initialize() -> void:
 	var output = []
-	var code = OS.execute("python3",[ProjectSettings.globalize_path("res://tools/textos.py"),"--comprobar"],output,true)
+	var py = "python" if OS.has_feature("windows") else "python3"
+	var code = OS.execute(py,[ProjectSettings.globalize_path("res://tools/textos.py"),"--comprobar"],output,true)
 	check(code == 0,"textos/es/*.md and data/textos.es.json agree and are valid: %s" % "\n".join(output))
 	var entries: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/textos.es.json"))
 	check(entries.size() > 800,"The texts are there (%d)" % entries.size())

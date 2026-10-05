@@ -41,11 +41,21 @@ static var fonts = {}
 #   · Russo One — titles and the name. Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with
 #     Reserved Font Name "Russo". SIL Open Font License 1.1 (assets/fuentes/RussoOne-OFL.txt).
 #   · Roboto (Apache License 2.0, Google) and Quicksand (SIL OFL 1.1, The Quicksand Project Authors).
-static func font(name: String) -> FontFile:
+static func font(name: String) -> Font:
 	if not fonts.has(name):
-		var f = FontFile.new()
-		f.load_dynamic_font("res://assets/fuentes/%s.ttf" % name)
-		fonts[name] = f
+		var path = "res://assets/fuentes/%s.ttf" % name
+		if ResourceLoader.exists(path):
+			fonts[name] = load(path)
+		elif FileAccess.file_exists(path):
+			var bytes = FileAccess.get_file_as_bytes(path)
+			if not bytes.is_empty():
+				var f = FontFile.new()
+				if f.load_dynamic_font_from_buffer(bytes) == OK:
+					fonts[name] = f
+					return f
+				fonts[name] = ThemeDB.fallback_font
+		else:
+			fonts[name] = ThemeDB.fallback_font
 	return fonts[name]
 
 static func box(color: Color, radius = 12, border = Color.TRANSPARENT, border_w = 1, shadow = 0) -> StyleBoxFlat:

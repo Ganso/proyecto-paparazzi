@@ -966,7 +966,7 @@ func finish_build() -> void:
 	build_clouds()
 	build_sky_clouds()
 	set_night(false)
-	apply_graphics_preset("Ultra")
+	apply_graphics_preset("Bajo" if OS.has_feature("web") or not forward_plus() else "Ultra")
 	build_times["nubes_y_luz"] = Time.get_ticks_msec()-t0
 
 

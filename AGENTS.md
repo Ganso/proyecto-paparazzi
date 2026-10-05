@@ -107,6 +107,12 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
   3. Una etiqueta creada con `main.gd::label()` solo ajusta líneas si se le activa `autowrap_mode`.
 - **Controles en los textos**: ninguna ayuda escribe una tecla a mano: usa `{control}` (tabla de `scripts/input_glyphs.gd`), que muestra la tecla o el botón del mando según el dispositivo en uso, y se dibuja como tecla o botón con `scripts/glyph_label.gd` (`Texts.get_rich()`). Un control nuevo se añade a esa tabla con sus nombres de teclado, Xbox, PlayStation y Nintendo ([docs/futuro/22 §3](docs/futuro/22_MENU_TUTORIAL_MANDO.md)).
 
+### 3.6 Prevención de Bucles y Ejecución Eficiente de IA
+- **Prohibición Estricta de Relecturas Idénticas**: Queda **terminantemente prohibido** llamar a herramientas de lectura (`view_file`, `grep_search`, etc.) sobre el mismo fichero con rangos idénticos o solapados más de una vez consecutiva.
+- **Acción Inmediata tras Obtener Contexto**: Si una lectura devuelve la información necesaria, el siguiente paso debe ser **una acción transformadora** (editar código, ejecutar comando o responder al usuario).
+- **Límite de Inspección Pasiva**: No se permiten más de 3 lecturas exploratorias consecutivas sin un progreso tangible o verificación intermedia. Si tras 3 lecturas no se localiza lo buscado, se debe replantear la estrategia o consultar al usuario en vez de iterar en vacío.
+- **Conciencia de Estado Estático**: Un fichero estático (plantillas HTML, bundles compilados) no cambia salvo que se aplique una edición o recompilación; releerlo esperando que su contenido varíe por sí solo es un fallo operativo que debe evitarse.
+
 ---
 
 ## 4. Protocolo y Comandos de Verificación
