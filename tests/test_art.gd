@@ -21,9 +21,10 @@ func run() -> void:
 						traits.lower = lower
 						traits.hair = hair
 						traits.accessory = accessory
+						traits["glasses"] = casting.catalog.piezas.gafas.size()-1   # (sunglasses: the heaviest pair)
 						person.setup(traits,casting.catalog,100)
 						maximum = maxi(maximum,person.triangle_count)
-						if person.triangle_count > 1900 or person.rig.get_bone_count() != 20:
+						if person.triangle_count > 2000 or person.rig.get_bone_count() != 20:
 							failed += 1
 							push_error("Geometry or skeleton budget exceeded")
 						var arrays = person.mesh.surface_get_arrays(0)
@@ -121,7 +122,7 @@ func garment_checks(casting) -> void:
 						if s.bone == "brazo."+side and s.type == "mesh":
 							for v in s.vertices: sleeve = maxf(sleeve,Vector2(v[0],v[2]).length())
 					for s in geometry:
-						if s.bone == "brazo."+side and s.type == "ellipsoid": check(s.size[0]*.5 <= sleeve+.0001,"Shoulder cap no wider than its sleeve: "+piece.recurso)
+						if s.bone == "brazo."+side and s.type == "ellipsoid" and s.color != "piel": check(s.size[0]*.5 <= sleeve+.0001,"Shoulder cap no wider than its sleeve: "+piece.recurso)
 	var colors: Array = casting.catalog.tonos_calzado.keys()
 	for i in 200:
 		var t = casting.generate()

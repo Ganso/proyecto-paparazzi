@@ -70,6 +70,7 @@
           "zonas": [
             "tela_a"
           ],
+          "solo_adultos": true,
           "ranura": "torso",
           "indice": 2
         },
@@ -105,6 +106,42 @@
           "recurso": "res://data/piezas/estandar_torso_4.json"
         },
         {
+          "id": "gabardina",
+          "etiqueta": "gabardina",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "coat",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "solo_adultos": true,
+          "sin_falda": true,
+          "no_se_sienta": true,
+          "sin_accesorios": [
+            "bag"
+          ],
+          "ranura": "torso",
+          "indice": 5,
+          "recurso": "res://data/piezas/estandar_torso_5.json"
+        },
+        {
+          "id": "camiseta de tirantes",
+          "etiqueta": "camiseta de tirantes",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0,
+          "style": "tank",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 6,
+          "recurso": "res://data/piezas/estandar_torso_6.json"
+        },
+        {
           "id": "pantalón",
           "etiqueta": "pantalón",
           "genero": "m",
@@ -135,6 +172,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "piernas",
           "indice": 1
         },
@@ -305,6 +343,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "cabeza",
           "indice": 6,
           "recurso": "res://data/piezas/estandar_cabeza_6.json"
@@ -323,6 +362,64 @@
           "recurso": "res://data/piezas/estandar_cabeza_7.json"
         },
         {
+          "id": "moño",
+          "etiqueta": "moño",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bun",
+          "etiquetas": [],
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 8,
+          "recurso": "res://data/piezas/estandar_cabeza_8.json"
+        },
+        {
+          "id": "pelo rizado",
+          "etiqueta": "pelo rizado",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "curly",
+          "etiquetas": [],
+          "zonas": [
+            "pelo"
+          ],
+          "ranura": "cabeza",
+          "indice": 9,
+          "recurso": "res://data/piezas/estandar_cabeza_9.json"
+        },
+        {
+          "id": "boina",
+          "etiqueta": "boina",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "beret",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 10,
+          "recurso": "res://data/piezas/estandar_cabeza_10.json"
+        },
+        {
+          "id": "gorra hacia atrás",
+          "etiqueta": "gorra hacia atrás",
+          "etiqueta_color": "gorra %s hacia atrás",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap_back",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 11,
+          "recurso": "res://data/piezas/estandar_cabeza_11.json"
+        },
+        {
           "id": "ninguno",
           "etiqueta": "sin accesorios",
           "genero": "f",
@@ -331,6 +428,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 3,
           "ranura": "accesorio",
           "indice": 0,
           "recurso": "res://data/piezas/estandar_accesorio_0.json"
@@ -344,6 +442,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 1,
           "recurso": "res://data/piezas/estandar_accesorio_1.json"
@@ -357,9 +456,83 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 2,
           "recurso": "res://data/piezas/estandar_accesorio_2.json"
+        },
+        {
+          "id": "mochila",
+          "etiqueta": "mochila",
+          "genero": "f",
+          "style": "backpack",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "no_se_sienta": true,
+          "peso": 2,
+          "ranura": "accesorio",
+          "indice": 3,
+          "recurso": "res://data/piezas/estandar_accesorio_3.json"
+        },
+        {
+          "id": "paraguas",
+          "etiqueta": "paraguas",
+          "genero": "m",
+          "style": "umbrella",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "mano_ocupada": true,
+          "peso": 1,
+          "ranura": "accesorio",
+          "indice": 4,
+          "recurso": "res://data/piezas/estandar_accesorio_4.json"
+        },
+        {
+          "id": "sin gafas",
+          "etiqueta": "sin gafas",
+          "genero": "fp",
+          "style": "none",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 14,
+          "ranura": "gafas",
+          "indice": 0,
+          "recurso": "res://data/piezas/estandar_gafas_0.json"
+        },
+        {
+          "id": "gafas",
+          "etiqueta": "gafas",
+          "genero": "fp",
+          "style": "glasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 1,
+          "recurso": "res://data/piezas/estandar_gafas_1.json"
+        },
+        {
+          "id": "gafas de sol",
+          "etiqueta": "gafas de sol",
+          "genero": "fp",
+          "style": "sunglasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura",
+            "cristal"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 2,
+          "recurso": "res://data/piezas/estandar_gafas_2.json"
         }
       ]
     },
@@ -433,6 +606,7 @@
           "zonas": [
             "tela_a"
           ],
+          "solo_adultos": true,
           "ranura": "torso",
           "indice": 2
         },
@@ -468,6 +642,42 @@
           "recurso": "res://data/piezas/delgado_torso_4.json"
         },
         {
+          "id": "gabardina",
+          "etiqueta": "gabardina",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "coat",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "solo_adultos": true,
+          "sin_falda": true,
+          "no_se_sienta": true,
+          "sin_accesorios": [
+            "bag"
+          ],
+          "ranura": "torso",
+          "indice": 5,
+          "recurso": "res://data/piezas/delgado_torso_5.json"
+        },
+        {
+          "id": "camiseta de tirantes",
+          "etiqueta": "camiseta de tirantes",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0,
+          "style": "tank",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 6,
+          "recurso": "res://data/piezas/delgado_torso_6.json"
+        },
+        {
           "id": "pantalón",
           "etiqueta": "pantalón",
           "genero": "m",
@@ -498,6 +708,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "piernas",
           "indice": 1
         },
@@ -668,6 +879,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "cabeza",
           "indice": 6,
           "recurso": "res://data/piezas/delgado_cabeza_6.json"
@@ -686,6 +898,64 @@
           "recurso": "res://data/piezas/delgado_cabeza_7.json"
         },
         {
+          "id": "moño",
+          "etiqueta": "moño",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bun",
+          "etiquetas": [],
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 8,
+          "recurso": "res://data/piezas/delgado_cabeza_8.json"
+        },
+        {
+          "id": "pelo rizado",
+          "etiqueta": "pelo rizado",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "curly",
+          "etiquetas": [],
+          "zonas": [
+            "pelo"
+          ],
+          "ranura": "cabeza",
+          "indice": 9,
+          "recurso": "res://data/piezas/delgado_cabeza_9.json"
+        },
+        {
+          "id": "boina",
+          "etiqueta": "boina",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "beret",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 10,
+          "recurso": "res://data/piezas/delgado_cabeza_10.json"
+        },
+        {
+          "id": "gorra hacia atrás",
+          "etiqueta": "gorra hacia atrás",
+          "etiqueta_color": "gorra %s hacia atrás",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap_back",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 11,
+          "recurso": "res://data/piezas/delgado_cabeza_11.json"
+        },
+        {
           "id": "ninguno",
           "etiqueta": "sin accesorios",
           "genero": "f",
@@ -694,6 +964,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 3,
           "ranura": "accesorio",
           "indice": 0,
           "recurso": "res://data/piezas/delgado_accesorio_0.json"
@@ -707,6 +978,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 1,
           "recurso": "res://data/piezas/delgado_accesorio_1.json"
@@ -720,9 +992,83 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 2,
           "recurso": "res://data/piezas/delgado_accesorio_2.json"
+        },
+        {
+          "id": "mochila",
+          "etiqueta": "mochila",
+          "genero": "f",
+          "style": "backpack",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "no_se_sienta": true,
+          "peso": 2,
+          "ranura": "accesorio",
+          "indice": 3,
+          "recurso": "res://data/piezas/delgado_accesorio_3.json"
+        },
+        {
+          "id": "paraguas",
+          "etiqueta": "paraguas",
+          "genero": "m",
+          "style": "umbrella",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "mano_ocupada": true,
+          "peso": 1,
+          "ranura": "accesorio",
+          "indice": 4,
+          "recurso": "res://data/piezas/delgado_accesorio_4.json"
+        },
+        {
+          "id": "sin gafas",
+          "etiqueta": "sin gafas",
+          "genero": "fp",
+          "style": "none",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 14,
+          "ranura": "gafas",
+          "indice": 0,
+          "recurso": "res://data/piezas/delgado_gafas_0.json"
+        },
+        {
+          "id": "gafas",
+          "etiqueta": "gafas",
+          "genero": "fp",
+          "style": "glasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 1,
+          "recurso": "res://data/piezas/delgado_gafas_1.json"
+        },
+        {
+          "id": "gafas de sol",
+          "etiqueta": "gafas de sol",
+          "genero": "fp",
+          "style": "sunglasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura",
+            "cristal"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 2,
+          "recurso": "res://data/piezas/delgado_gafas_2.json"
         }
       ]
     },
@@ -796,6 +1142,7 @@
           "zonas": [
             "tela_a"
           ],
+          "solo_adultos": true,
           "ranura": "torso",
           "indice": 2
         },
@@ -831,6 +1178,42 @@
           "recurso": "res://data/piezas/robusto_torso_4.json"
         },
         {
+          "id": "gabardina",
+          "etiqueta": "gabardina",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "coat",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "solo_adultos": true,
+          "sin_falda": true,
+          "no_se_sienta": true,
+          "sin_accesorios": [
+            "bag"
+          ],
+          "ranura": "torso",
+          "indice": 5,
+          "recurso": "res://data/piezas/robusto_torso_5.json"
+        },
+        {
+          "id": "camiseta de tirantes",
+          "etiqueta": "camiseta de tirantes",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0,
+          "style": "tank",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 6,
+          "recurso": "res://data/piezas/robusto_torso_6.json"
+        },
+        {
           "id": "pantalón",
           "etiqueta": "pantalón",
           "genero": "m",
@@ -861,6 +1244,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "piernas",
           "indice": 1
         },
@@ -1031,6 +1415,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "cabeza",
           "indice": 6,
           "recurso": "res://data/piezas/robusto_cabeza_6.json"
@@ -1049,6 +1434,64 @@
           "recurso": "res://data/piezas/robusto_cabeza_7.json"
         },
         {
+          "id": "moño",
+          "etiqueta": "moño",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bun",
+          "etiquetas": [],
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 8,
+          "recurso": "res://data/piezas/robusto_cabeza_8.json"
+        },
+        {
+          "id": "pelo rizado",
+          "etiqueta": "pelo rizado",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "curly",
+          "etiquetas": [],
+          "zonas": [
+            "pelo"
+          ],
+          "ranura": "cabeza",
+          "indice": 9,
+          "recurso": "res://data/piezas/robusto_cabeza_9.json"
+        },
+        {
+          "id": "boina",
+          "etiqueta": "boina",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "beret",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 10,
+          "recurso": "res://data/piezas/robusto_cabeza_10.json"
+        },
+        {
+          "id": "gorra hacia atrás",
+          "etiqueta": "gorra hacia atrás",
+          "etiqueta_color": "gorra %s hacia atrás",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap_back",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 11,
+          "recurso": "res://data/piezas/robusto_cabeza_11.json"
+        },
+        {
           "id": "ninguno",
           "etiqueta": "sin accesorios",
           "genero": "f",
@@ -1057,6 +1500,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 3,
           "ranura": "accesorio",
           "indice": 0,
           "recurso": "res://data/piezas/robusto_accesorio_0.json"
@@ -1070,6 +1514,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 1,
           "recurso": "res://data/piezas/robusto_accesorio_1.json"
@@ -1083,9 +1528,83 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 2,
           "recurso": "res://data/piezas/robusto_accesorio_2.json"
+        },
+        {
+          "id": "mochila",
+          "etiqueta": "mochila",
+          "genero": "f",
+          "style": "backpack",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "no_se_sienta": true,
+          "peso": 2,
+          "ranura": "accesorio",
+          "indice": 3,
+          "recurso": "res://data/piezas/robusto_accesorio_3.json"
+        },
+        {
+          "id": "paraguas",
+          "etiqueta": "paraguas",
+          "genero": "m",
+          "style": "umbrella",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "mano_ocupada": true,
+          "peso": 1,
+          "ranura": "accesorio",
+          "indice": 4,
+          "recurso": "res://data/piezas/robusto_accesorio_4.json"
+        },
+        {
+          "id": "sin gafas",
+          "etiqueta": "sin gafas",
+          "genero": "fp",
+          "style": "none",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 14,
+          "ranura": "gafas",
+          "indice": 0,
+          "recurso": "res://data/piezas/robusto_gafas_0.json"
+        },
+        {
+          "id": "gafas",
+          "etiqueta": "gafas",
+          "genero": "fp",
+          "style": "glasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 1,
+          "recurso": "res://data/piezas/robusto_gafas_1.json"
+        },
+        {
+          "id": "gafas de sol",
+          "etiqueta": "gafas de sol",
+          "genero": "fp",
+          "style": "sunglasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura",
+            "cristal"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 2,
+          "recurso": "res://data/piezas/robusto_gafas_2.json"
         }
       ]
     },
@@ -1159,6 +1678,7 @@
           "zonas": [
             "tela_a"
           ],
+          "solo_adultos": true,
           "ranura": "torso",
           "indice": 2
         },
@@ -1194,6 +1714,42 @@
           "recurso": "res://data/piezas/nino_torso_4.json"
         },
         {
+          "id": "gabardina",
+          "etiqueta": "gabardina",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 1,
+          "style": "coat",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "solo_adultos": true,
+          "sin_falda": true,
+          "no_se_sienta": true,
+          "sin_accesorios": [
+            "bag"
+          ],
+          "ranura": "torso",
+          "indice": 5,
+          "recurso": "res://data/piezas/nino_torso_5.json"
+        },
+        {
+          "id": "camiseta de tirantes",
+          "etiqueta": "camiseta de tirantes",
+          "genero": "f",
+          "zona_color": "tela_a",
+          "sleeve": 0,
+          "style": "tank",
+          "etiquetas": [],
+          "zonas": [
+            "tela_a"
+          ],
+          "ranura": "torso",
+          "indice": 6,
+          "recurso": "res://data/piezas/nino_torso_6.json"
+        },
+        {
           "id": "pantalón",
           "etiqueta": "pantalón",
           "genero": "m",
@@ -1224,6 +1780,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "piernas",
           "indice": 1
         },
@@ -1394,6 +1951,7 @@
           "zonas": [
             "tela_b"
           ],
+          "solo_adultos": true,
           "ranura": "cabeza",
           "indice": 6,
           "recurso": "res://data/piezas/nino_cabeza_6.json"
@@ -1412,6 +1970,64 @@
           "recurso": "res://data/piezas/nino_cabeza_7.json"
         },
         {
+          "id": "moño",
+          "etiqueta": "moño",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "bun",
+          "etiquetas": [],
+          "zonas": [
+            "pelo",
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 8,
+          "recurso": "res://data/piezas/nino_cabeza_8.json"
+        },
+        {
+          "id": "pelo rizado",
+          "etiqueta": "pelo rizado",
+          "genero": "m",
+          "zona_color": "pelo",
+          "style": "curly",
+          "etiquetas": [],
+          "zonas": [
+            "pelo"
+          ],
+          "ranura": "cabeza",
+          "indice": 9,
+          "recurso": "res://data/piezas/nino_cabeza_9.json"
+        },
+        {
+          "id": "boina",
+          "etiqueta": "boina",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "beret",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 10,
+          "recurso": "res://data/piezas/nino_cabeza_10.json"
+        },
+        {
+          "id": "gorra hacia atrás",
+          "etiqueta": "gorra hacia atrás",
+          "etiqueta_color": "gorra %s hacia atrás",
+          "genero": "f",
+          "zona_color": "tela_b",
+          "style": "cap_back",
+          "etiquetas": [],
+          "zonas": [
+            "tela_b"
+          ],
+          "ranura": "cabeza",
+          "indice": 11,
+          "recurso": "res://data/piezas/nino_cabeza_11.json"
+        },
+        {
           "id": "ninguno",
           "etiqueta": "sin accesorios",
           "genero": "f",
@@ -1420,6 +2036,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 3,
           "ranura": "accesorio",
           "indice": 0,
           "recurso": "res://data/piezas/nino_accesorio_0.json"
@@ -1433,6 +2050,7 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 1,
           "recurso": "res://data/piezas/nino_accesorio_1.json"
@@ -1446,9 +2064,83 @@
           "zonas": [
             "accesorio"
           ],
+          "peso": 2,
           "ranura": "accesorio",
           "indice": 2,
           "recurso": "res://data/piezas/nino_accesorio_2.json"
+        },
+        {
+          "id": "mochila",
+          "etiqueta": "mochila",
+          "genero": "f",
+          "style": "backpack",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "no_se_sienta": true,
+          "peso": 2,
+          "ranura": "accesorio",
+          "indice": 3,
+          "recurso": "res://data/piezas/nino_accesorio_3.json"
+        },
+        {
+          "id": "paraguas",
+          "etiqueta": "paraguas",
+          "genero": "m",
+          "style": "umbrella",
+          "zona_color": "accesorio",
+          "zonas": [
+            "accesorio"
+          ],
+          "mano_ocupada": true,
+          "peso": 1,
+          "ranura": "accesorio",
+          "indice": 4,
+          "recurso": "res://data/piezas/nino_accesorio_4.json"
+        },
+        {
+          "id": "sin gafas",
+          "etiqueta": "sin gafas",
+          "genero": "fp",
+          "style": "none",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 14,
+          "ranura": "gafas",
+          "indice": 0,
+          "recurso": "res://data/piezas/nino_gafas_0.json"
+        },
+        {
+          "id": "gafas",
+          "etiqueta": "gafas",
+          "genero": "fp",
+          "style": "glasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 1,
+          "recurso": "res://data/piezas/nino_gafas_1.json"
+        },
+        {
+          "id": "gafas de sol",
+          "etiqueta": "gafas de sol",
+          "genero": "fp",
+          "style": "sunglasses",
+          "zona_color": "montura",
+          "zonas": [
+            "montura",
+            "cristal"
+          ],
+          "peso": 3,
+          "ranura": "gafas",
+          "indice": 2,
+          "recurso": "res://data/piezas/nino_gafas_2.json"
         }
       ]
     }
@@ -1522,6 +2214,36 @@
         "sleeve": 0.35,
         "sport": true,
         "zona_color": "tela_a",
+        "zonas": [
+          "tela_a"
+        ]
+      },
+      {
+        "id": "gabardina",
+        "etiqueta": "gabardina",
+        "genero": "f",
+        "zona_color": "tela_a",
+        "sleeve": 1,
+        "style": "coat",
+        "etiquetas": [],
+        "zonas": [
+          "tela_a"
+        ],
+        "solo_adultos": true,
+        "sin_falda": true,
+        "no_se_sienta": true,
+        "sin_accesorios": [
+          "bag"
+        ]
+      },
+      {
+        "id": "camiseta de tirantes",
+        "etiqueta": "camiseta de tirantes",
+        "genero": "f",
+        "zona_color": "tela_a",
+        "sleeve": 0,
+        "style": "tank",
+        "etiquetas": [],
         "zonas": [
           "tela_a"
         ]
@@ -1717,6 +2439,52 @@
         "zonas": [
           "tela_b"
         ]
+      },
+      {
+        "id": "moño",
+        "etiqueta": "moño",
+        "genero": "m",
+        "zona_color": "pelo",
+        "style": "bun",
+        "etiquetas": [],
+        "zonas": [
+          "pelo",
+          "tela_b"
+        ]
+      },
+      {
+        "id": "pelo rizado",
+        "etiqueta": "pelo rizado",
+        "genero": "m",
+        "zona_color": "pelo",
+        "style": "curly",
+        "etiquetas": [],
+        "zonas": [
+          "pelo"
+        ]
+      },
+      {
+        "id": "boina",
+        "etiqueta": "boina",
+        "genero": "f",
+        "zona_color": "tela_b",
+        "style": "beret",
+        "etiquetas": [],
+        "zonas": [
+          "tela_b"
+        ]
+      },
+      {
+        "id": "gorra hacia atrás",
+        "etiqueta": "gorra hacia atrás",
+        "etiqueta_color": "gorra %s hacia atrás",
+        "genero": "f",
+        "zona_color": "tela_b",
+        "style": "cap_back",
+        "etiquetas": [],
+        "zonas": [
+          "tela_b"
+        ]
       }
     ],
     "accesorio": [
@@ -1728,7 +2496,8 @@
         "zona_color": "accesorio",
         "zonas": [
           "accesorio"
-        ]
+        ],
+        "peso": 3
       },
       {
         "id": "bufanda",
@@ -1738,7 +2507,8 @@
         "zona_color": "accesorio",
         "zonas": [
           "accesorio"
-        ]
+        ],
+        "peso": 2
       },
       {
         "id": "bandolera",
@@ -1748,7 +2518,68 @@
         "zona_color": "accesorio",
         "zonas": [
           "accesorio"
-        ]
+        ],
+        "peso": 2
+      },
+      {
+        "id": "mochila",
+        "etiqueta": "mochila",
+        "genero": "f",
+        "style": "backpack",
+        "zona_color": "accesorio",
+        "zonas": [
+          "accesorio"
+        ],
+        "no_se_sienta": true,
+        "peso": 2
+      },
+      {
+        "id": "paraguas",
+        "etiqueta": "paraguas",
+        "genero": "m",
+        "style": "umbrella",
+        "zona_color": "accesorio",
+        "zonas": [
+          "accesorio"
+        ],
+        "mano_ocupada": true,
+        "peso": 1
+      }
+    ],
+    "gafas": [
+      {
+        "id": "sin gafas",
+        "etiqueta": "sin gafas",
+        "genero": "fp",
+        "style": "none",
+        "zona_color": "montura",
+        "zonas": [
+          "montura"
+        ],
+        "peso": 14
+      },
+      {
+        "id": "gafas",
+        "etiqueta": "gafas",
+        "genero": "fp",
+        "style": "glasses",
+        "zona_color": "montura",
+        "zonas": [
+          "montura"
+        ],
+        "peso": 3
+      },
+      {
+        "id": "gafas de sol",
+        "etiqueta": "gafas de sol",
+        "genero": "fp",
+        "style": "sunglasses",
+        "zona_color": "montura",
+        "zonas": [
+          "montura",
+          "cristal"
+        ],
+        "peso": 3
       }
     ]
   },
@@ -1914,5 +2745,9 @@
     "media": "haya",
     "morena": "roble",
     "oscura": "nogal"
+  },
+  "tonos_gafas": {
+    "montura": "26272b",
+    "cristal": "14161a"
   }
 }

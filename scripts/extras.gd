@@ -304,7 +304,7 @@ func spawn(child = false) -> Pedestrian:
 	add_child(p)
 	var t = cast.generate(false)
 	var attempts = 0
-	while (t.profile == 3) != child and attempts < 40:
+	while ((t.profile == 3) != child or not cast.free_to_sit(t)) and attempts < 60:
 		t = cast.generate(false)
 		attempts += 1
 	p.setup(t,cast.catalog,7000+extras.size()*13)

@@ -61,7 +61,7 @@ Cualquier cambio o extensión en este repositorio **debe respetar estrictamente 
 
   | Nivel | Perfiles | Triángulos por viandante | Triángulos en escena | VRAM | Renderizador |
   |---|---|---:|---:|---:|---|
-  | `lo` | Android y respaldo sin Vulkan | ≤ 1.900 | ≤ 100.000 | < 60 MB | `gl_compatibility` |
+  | `lo` | Android y respaldo sin Vulkan | ≤ 2.000 | ≤ 100.000 | < 60 MB | `gl_compatibility` |
   | `hd` | Bajo, Medio, Alto y Ultra en escritorio (Ultra apunta a la RX 6700 XT del equipo, 1440p, 60 FPS) | ≤ 60.000 | ≤ 5.000.000 | < 8 GiB | `forward_plus` |
 
   Los perfiles de escritorio comparten la escena `hd` y solo reducen resolución interna, efectos y densidad de hierba. En Ultra no hay que escatimar polígonos mientras el rendimiento se mantenga. Lo comprueban `test_art.gd` (`lo`), `--smoke-test` (el nivel del renderizador) y `test_game.gd`.

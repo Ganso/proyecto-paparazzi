@@ -1841,6 +1841,7 @@ func set_seat(bench: Dictionary, slot: int, who) -> void:
 	bench.occupied = bench.seats[0] != null and bench.seats[1] != null
 
 func choose_bench(p: Pedestrian) -> void:
+	if p.never_sits: return   # (a backpack against the backrest, the tails of a trench coat)
 	for i in park.benches.size():
 		var bench = park.benches[i]
 		if bench.occupied: continue
@@ -3903,8 +3904,8 @@ func smoke_test() -> void:
 	var triangles = park.triangle_count
 	for p in people:
 		assert(p.primary_bone_count == 20)
-		# 1.900 per pedestrian in the base pieces; 60.000 for the Blender mannequins with wig and clothes (docs/futuro/18).
-		assert(p.triangle_count <= (60000 if Person.detail == "hd" else 1900),Texts.get_text("presupuesto_por_viandante"))
+		# 2.000 per pedestrian in the base pieces (1.900 until the trench coat, whose tails need the sides not to let the hips through); 60.000 for the Blender mannequins with wig and clothes (docs/futuro/18).
+		assert(p.triangle_count <= (60000 if Person.detail == "hd" else 2000),Texts.get_text("presupuesto_por_viandante"))
 		triangles += p.triangle_count
 	# Meadow extras (hd only) and the pigeons count towards the scene budget too.
 	for p in extras.extras:

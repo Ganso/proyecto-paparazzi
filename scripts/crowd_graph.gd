@@ -258,6 +258,7 @@ func plan_stop(p) -> void:
 
 # ---- Benches ----
 func choose_bench(p) -> bool:
+	if p.never_sits: return false
 	var f = frame(p)
 	var best = -1
 	var best_slot = 0

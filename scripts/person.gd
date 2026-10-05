@@ -39,7 +39,14 @@ var activity = "":
 	set(value):
 		# Children do not read the paper, drink coffee or carry a camera: they look around instead.
 		activity = CHILD_ACTIVITY.get(value,value) if is_child() else value
+		# A hand already holding something (the umbrella) takes nothing else.
+		if hand_busy: activity = BUSY_ACTIVITY.get(activity,activity)
 const CHILD_ACTIVITY = {"leer":"", "cafe":"", "foto":"mirar"}
+const BUSY_ACTIVITY = {"leer":"", "cafe":"mirar", "foto":"mirar", "movil":"mirar", "palomas":""}
+# From what is worn (data/catalogo.json): a hand taken by the umbrella, and pieces that do not
+# go with a bench (a backpack against the backrest, the tails of a trench coat).
+var hand_busy = false
+var never_sits = false
 func is_child() -> bool:
 	return str(profile.get("id","")) == "nino"
 var partner = null
@@ -127,7 +134,7 @@ func piece_resource(path: String) -> Dictionary:
 	return piece_cache[path]
 
 func selected_pieces(t: Dictionary, hd: bool) -> Array:
-	var slots = {"cuerpo":0,"torso":t.upper,"piernas":t.lower,"cabeza":t.hair,"accesorio":t.get("accessory",0)}
+	var slots = {"cuerpo":0,"torso":t.upper,"piernas":t.lower,"cabeza":t.hair,"accesorio":t.get("accessory",0),"gafas":t.get("glasses",0)}
 	var out = []
 	for piece in profile.piezas:
 		if piece.indice == slots[piece.ranura]:
@@ -237,6 +244,12 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 	make_rig()
 	primary_bone_count = rig.get_bone_count()
 	if detail == "hd" and catalog.piezas.accesorio[t.get("accessory",0)].style == "bag": arm_out["D"] = .2
+	# A closed umbrella in the left hand is carried clear of the leg; a trench coat's tails are
+	# wider than the hips, so both arms hang a little further out.
+	if catalog.piezas.torso[t.upper].style == "coat": arm_out = {"I": .12, "D": maxf(arm_out["D"],.12)}
+	if catalog.piezas.accesorio[t.get("accessory",0)].style == "umbrella": arm_out["I"] = maxf(arm_out["I"],.14)
+	hand_busy = catalog.piezas.accesorio[t.get("accessory",0)].get("mano_ocupada",false)
+	never_sits = catalog.piezas.accesorio[t.get("accessory",0)].get("no_se_sienta",false) or catalog.piezas.torso[t.upper].get("no_se_sienta",false)
 	# hd pieces may bring secondary bone chains (hair, skirt, scarf, bag) that SpringBoneSimulator3D
 	# swings (docs/futuro/18): they are added before the skin binds are built.
 	if detail == "hd": add_secondary_chains(t)
@@ -251,7 +264,10 @@ func setup(t: Dictionary, catalog: Dictionary, seed_value: int) -> void:
 		"tela_a":Color(catalog.tonos_ropa[t.upper_color].rgb),
 		"tela_b":Color(catalog.tonos_ropa[t.lower_color].rgb),
 		"pelo":Color(catalog.tonos_pelo[t.hair_color].rgb),
-		"calzado":Color(catalog.tonos_calzado[shoe_color(t,catalog)])
+		"calzado":Color(catalog.tonos_calzado[shoe_color(t,catalog)]),
+		# Glasses: one dark frame for everyone; the lenses of sunglasses, darker still.
+		"montura":Color(catalog.get("tonos_gafas",{}).get("montura","26272b")),
+		"cristal":Color(catalog.get("tonos_gafas",{}).get("cristal","14161a"))
 	}
 	var passes = ["both"] if detail != "hd" else (["visual"] if ambient else ["collision","visual"])
 	for pass_name in passes:
@@ -359,7 +375,7 @@ func collision_node(shape: Shape3D) -> CollisionShape3D:
 	return collision
 
 func append_primitive(primitive: Mesh, id: String, tr: Transform3D, color: Color, with_collision = true) -> void:
-	if build_pass == "visual" or ambient: with_collision = false
+	if build_pass == "visual" or ambient or not shape_collides: with_collision = false
 	if with_collision:
 		var shape = ConvexPolygonShape3D.new()
 		var collision_points = PackedVector3Array()
@@ -780,8 +796,12 @@ func control_points() -> Array[Vector3]:
 func vector(values: Array) -> Vector3:
 	return Vector3(values[0],values[1],values[2])
 
+# Whether the shape being built gives a collider (thin things carried in the hand do not: the
+# rays of a photo should not stop at an umbrella's shaft).
+var shape_collides = true
 func build_shape(shape: Dictionary, colors: Dictionary) -> void:
 	current_zone = shape.color
+	shape_collides = shape.get("collision",true)
 	var color: Color = colors[shape.color]
 	color = color.darkened(shape.get("darken",0)).lightened(shape.get("lighten",0))
 	# Alpha only flags shapes the ink outline must skip (cel_outline.gdshader); the surface is opaque.

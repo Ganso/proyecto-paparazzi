@@ -55,6 +55,29 @@ def loft_mesh(rings, segments=8):
     indices=sum(([indices[i],indices[i+2],indices[i+1]] for i in range(0,len(indices),3)),[])
     return dict(vertices=vertices,normals=normals,indices=indices)
 
+def strip_mesh(rings, a0, a1, steps=2, lift=1.03, double=True):
+    """A band of a loft between two angles (0 = front, towards -z): straps over the shoulders, the
+    open tails of a coat. Slightly outside the surface it follows; both faces if `double`."""
+    vertices,normals,tris=[],[],[]
+    for r,(y,rx,rz,cz) in enumerate(rings):
+        # (a0 may be a list, one half-opening per ring: a coat that closes at the belt and opens below.)
+        lo=a0[r] if isinstance(a0,(list,tuple)) else a0
+        hi=math.tau-lo if isinstance(a0,(list,tuple)) else a1
+        for i in range(steps+1):
+            a=lo+(hi-lo)*i/steps
+            sn,cs=math.sin(a),math.cos(a)
+            vertices.append([rx*sn*lift,y,cz-rz*cs*lift])
+            length=max(.0001,math.hypot(rz*sn,rx*cs))
+            normals.append([rz*sn/length,0,-rx*cs/length])
+    w=steps+1
+    for k in range(len(rings)-1):
+        for i in range(steps):
+            a,b,c,d=k*w+i,k*w+i+1,(k+1)*w+i,(k+1)*w+i+1
+            tris+=[(a,b,d),(a,d,c)]
+    indices=oriented(vertices,normals,tris)
+    if double: indices+=sum(([indices[i],indices[i+2],indices[i+1]] for i in range(0,len(indices),3)),[])
+    return dict(vertices=vertices,normals=normals,indices=indices)
+
 def oriented(vertices, normals, triangles):
     """Orders each triangle the way loft_mesh does (Godot front faces: cross product against the normal)."""
     indices=[]
@@ -156,26 +179,84 @@ for profile in cat['perfiles']:
                     ball('mano.'+side,[0,0,0],[j*1.55]*3,'piel',darken=JOINT)
             elif slot=='torso':
                 casual=piece['style'] in ('plain','hood')
-                bulk=1.08 if piece['style']=='hood' else 1.0
+                bulk=1.08 if piece['style']=='hood' else (1.07 if piece['style']=='coat' else 1.0)
+                tank=piece['style']=='tank'
                 # Waist, ribs, chest, rounded shoulders and a close-fitting neckline.
-                loft('lumbar',[(nz*y,shoulder*x*bulk,shoulder*z*bulk,0) for y,x,z in [
+                trunk=[(nz*y,shoulder*x*bulk,shoulder*z*bulk,0) for y,x,z in [
                     (-.08,.72,.50),(-.015,.76,.53),(.10,.77,.56),(.19,.94,.59),
-                    (.235,.92,.53),(.273,.47,.36),(.284,.30,.29)]],'tela_a')
+                    (.235,.92,.53),(.273,.47,.36),(.284,.30,.29)]]
+                if tank:
+                    # Tank top: the cloth stops under the arms; shoulders and upper chest are bare
+                    # wood, with two straps over them.
+                    cut=(nz*.205,shoulder*.935,shoulder*.565,0)
+                    loft('lumbar',trunk[:4]+[cut],'tela_a')
+                    loft('lumbar',[(nz*.200,shoulder*.925,shoulder*.555,0)]+trunk[4:],'piel')
+                    loft('lumbar',[(nz*.197,shoulder*.945,shoulder*.575,0),(nz*.208,shoulder*.94,shoulder*.57,0)],'tela_a',8,darken=.18)
+                    # Each strap keeps its distance from the neck: up the chest, over the slope of the
+                    # shoulder (where the body is as wide as the strap is far out) and down the back.
+                    lower,mid,high=cut,trunk[4],trunk[5]
+                    for sx in (-1,1):
+                        xt,half=shoulder*.42,shoulder*.10
+                        left,right=[],[]
+                        for x,row in ((xt-half,left),(xt+half,right)):
+                            pts=[]
+                            for (y,rx,rz,cz) in (lower,mid):
+                                k=math.sqrt(max(0.0,1-min(1.0,(x/(rx*1.07))**2)))
+                                pts.append((y,rz*1.07*k+.004))
+                            t=min(1.0,max(0.0,(mid[1]-x)/(mid[1]-high[1])))
+                            top=mid[0]+(high[0]-mid[0])*t+.006
+                            # Two more samples on the slope, which bulges: a straight strap cut through it.
+                            for u in (.45,.8):
+                                rx=mid[1]+(high[1]-mid[1])*t*u;rz=mid[2]+(high[2]-mid[2])*t*u
+                                k=math.sqrt(max(0.0,1-min(1.0,(x/(rx*1.07))**2)))
+                                pts.append((mid[0]+(high[0]-mid[0])*t*u,rz*1.07*k+.004))
+                            for y,z in pts: row.append([sx*x,y+.003,-z])
+                            row.append([sx*x,top,0])
+                            for y,z in reversed(pts): row.append([sx*x,y+.003,z])
+                        vertices=left+right
+                        m=len(left)
+                        tris=[]
+                        for i in range(m-1): tris+=[(i,i+1,m+i+1),(i,m+i+1,m+i)]
+                        normals=[[0,.3,-1] if i%m<4 else ([0,1,0] if i%m==4 else [0,.3,1]) for i in range(2*m)]
+                        ids=oriented(vertices,normals,tris)
+                        ids+=sum(([ids[i],ids[i+2],ids[i+1]] for i in range(0,len(ids),3)),[])
+                        shape('mesh','lumbar','tela_a',vertices=vertices,normals=normals,indices=ids,collision=False,outline=False)
+                else:
+                    loft('lumbar',trunk,'tela_a')
                 # Hem and a narrow collar add the ink-like edges visible in the mockup.
                 loft('lumbar',[(nz*-.081,shoulder*.726*bulk,shoulder*.51*bulk,0),(nz*-.07,shoulder*.74*bulk,shoulder*.52*bulk,0)],'tela_a',8,darken=.18)
-                loft('cuello',[(nz*.001,j*.99,j*.9,0),(nz*.013,j*.97,j*.88,0)],'tela_a',8,darken=.18)
+                if not tank: loft('cuello',[(nz*.001,j*.99,j*.9,0),(nz*.013,j*.97,j*.88,0)],'tela_a',8,darken=.18)
                 if piece['style']=='hood':
                     ball('cuello',[0,-nz*.034,nz*.06],[w*.48,nz*.13,nz*.13],'tela_a',darken=.12)
-                if piece['style'] in ('collar','lapel'):
+                if piece['style']=='coat':
+                    # Trench coat: belt, and tails down to mid-thigh that hang from the hips, open
+                    # in front so the legs walk through the gap instead of through the cloth.
+                    loft('lumbar',[(nz*-.02,shoulder*.80*bulk,shoulder*.555*bulk,0),(nz*.012,shoulder*.80*bulk,shoulder*.56*bulk,0)],'tela_a',8,darken=.32)
+                    # Wider than the trousers' seat and thighs at every height, with enough sides not to
+                    # cut inside them (a seven-sided tail let the hips show through its flat faces),
+                    # and open wide enough at the hem for a thigh to swing forward through the gap.
+                    # They start above the trousers' waistband (which is wider than the coat's body) and
+                    # only the lowest band, the one seen from inside through the gap, has two faces.
+                    tails=[(nz*y,shoulder*x,shoulder*z,0) for y,x,z in [(.122,.90,.70),(.085,1.05,.98),(.03,1.16,1.04),(-.15,1.18,1.14)]]
+                    shape('mesh','caderas','tela_a',**strip_mesh(tails[:3],[.06,.10,.50],None,S(12),1.0,False),collision=False,outline=False)
+                    shape('mesh','caderas','tela_a',**strip_mesh(tails[2:],[.50,1.36],None,S(12),1.0),collision=False,outline=False)
+                if piece['style'] in ('collar','lapel','coat'):
                     for sign in [-1,1]:
                         x=lambda value: sign*shoulder*value
                         # Lapels follow the chest contour into the centre of the garment.
-                        patch('lumbar',[[x(.21),nz*.278,-shoulder*.29],[x(.54),nz*.244,-shoulder*.43],[x(.25),nz*(.12 if piece['style']=='lapel' else .215),-shoulder*.585],[x(.04),nz*.233,-shoulder*.53]],'tela_a',lighten=.22)
+                        patch('lumbar',[[x(.21),nz*.278,-shoulder*.29],[x(.54),nz*.244,-shoulder*.43],[x(.25),nz*(.12 if piece['style'] in ('lapel','coat') else .215),-shoulder*.585],[x(.04),nz*.233,-shoulder*.53]],'tela_a',lighten=.22)
                     patch('lumbar',[[-.006,nz*-.065,-shoulder*.535],[.006,nz*-.065,-shoulder*.535],[.006,nz*.22,-shoulder*.58],[-.006,nz*.22,-shoulder*.58]],'tela_a',darken=.28)
                     for sign in [-1,1]:
                         patch('lumbar',[[sign*shoulder*.3,nz*.025,-shoulder*.54],[sign*shoulder*.64,nz*.035,-shoulder*.47],[sign*shoulder*.64,nz*.05,-shoulder*.47],[sign*shoulder*.3,nz*.04,-shoulder*.54]],'tela_a',darken=.17)
                 for side in ['I','D']:
                     arm,fore,sleeve=nz*.215,nz*.169,piece['sleeve']
+                    if tank:
+                        # Bare arm from the shoulder: ball joint and the whole upper arm in wood.
+                        ball('brazo.'+side,[0,-j*.2,0],[j*2.3]*3,'piel',darken=JOINT)
+                        loft('brazo.'+side,[(-arm,j*.84,j*.86,0),(-arm*.5,j*.98,j*1.0,0),(-j*.3,j*.94,j*.96,0)],'piel',6)
+                        ball('antebrazo.'+side,[0,0,0],[j*2.4]*3,'piel',darken=JOINT)
+                        loft('antebrazo.'+side,[(-fore,j*.66,j*.67,0),(-fore*.60,j*.90,j*.90,0),(-fore*.15,j*.96,j*.98,0),(0,j*.88,j*.91,0)],'piel',6)
+                        continue
                     ball('brazo.'+side,[0,-j*.25,0],[j*1.95,j*1.7,j*2.0],'tela_a')
                     end=-arm*sleeve
                     loft('brazo.'+side,[(end,j*.95,j*.97,0),(end*.64,j*1.16,j*1.12,0),(-j*.1,j*1.10,j*1.10,0)],'tela_a',6)
@@ -220,14 +301,22 @@ for profile in cat['perfiles']:
                     loft('caderas',[(nz*y,shoulder*x,shoulder*z,0) for y,x,z in [(-.295,1.08,.77),(-.28,1.11,.79),(-.04,1.07,.68),(.10,.95,.59)]],'tela_b',8)
                     loft('caderas',[(-nz*.297,shoulder*1.085,shoulder*.777,0),(-nz*.286,shoulder*1.105,shoulder*.790,0)],'tela_b',8,darken=.22)
             elif slot=='cabeza':
-                hair=piece['style'];color='tela_b' if hair in ('cap','hat','beanie') else 'pelo'
-                if hair=='cap':
+                hair=piece['style'];color='tela_b' if hair in ('cap','cap_back','hat','beanie','beret') else 'pelo'
+                if hair in ('cap','cap_back'):
                     # Smooth crown ending in a clean band at peak height, closed on top.
                     n=S(10)
                     crown=loft_mesh([(head*y,head*x,head*z,head*.03) for y,x,z in [(.60,.405,.425),(.80,.375,.405),(.95,.255,.295),(1.04,.04,.07)]],n)
                     crown['indices']=crown['indices'][:-n*6]+crown['indices'][-n*3:]
                     shape('mesh','cabeza',color,**crown)
-                elif hair!='bald':
+                elif hair=='beret':
+                    # Beret: a band round the head and a flat, wide crown pushed back, with its stalk.
+                    n=S(10)
+                    crown=loft_mesh([(head*y,head*x,head*z,head*cz) for y,x,z,cz in [(.62,.40,.42,.03),(.72,.41,.43,.035),(.80,.56,.58,.07),(.93,.54,.56,.09),(1.03,.30,.32,.09),(1.055,.03,.04,.09)]],n)
+                    crown['indices']=crown['indices'][:-n*6]+crown['indices'][-n*3:]
+                    shape('mesh','cabeza',color,**crown)
+                    loft('cabeza',[(head*.615,head*.405,head*.425,head*.03),(head*.665,head*.41,head*.43,head*.032)],color,8,darken=.3)
+                    ball('cabeza',[0,head*1.07,head*.09],[head*.07,head*.09,head*.07],color,darken=.2)
+                elif hair not in ('bald','curly'):
                     # Scalp follows the skull, with a high forehead and a lower nape.
                     rings=[(.39,.325,.34),(.66,.392,.414),(.85,.33,.365),(.98,.195,.245),(1.025,.035,.065)]
                     n=S(10)
@@ -247,9 +336,33 @@ for profile in cat['perfiles']:
                 if hair=='tail':
                     loft('cabeza',[(head*y,head*x,head*z,head*cz) for y,x,z,cz in [(-.11,.07,.065,.51),(.07,.16,.12,.55),(.36,.17,.14,.56),(.58,.10,.09,.43)]],color,6)
                     ball('cabeza',[0,head*.55,head*.41],[head*.21,head*.18,head*.19],color,darken=.28)
+                if hair=='bun':
+                    # Hair pulled back into a round bun high on the back of the head.
+                    ball('cabeza',[0,head*.86,head*.37],[head*.36,head*.34,head*.36],color,lighten=.04)
+                    ball('cabeza',[0,head*.80,head*.27],[head*.27,head*.2,head*.2],color,darken=.3)
+                if hair=='curly':
+                    # A round mass of curls, wider than the head: top, sides and back; the face stays clear.
+                    n=S(10)
+                    mass=loft_mesh([(head*y,head*x,head*z,head*cz) for y,x,z,cz in [(.40,.45,.40,.10),(.66,.51,.51,.05),(.86,.47,.48,.04),(1.01,.31,.33,.04),(1.09,.06,.08,.04)]],n)
+                    for i in range(n):
+                        mass['vertices'][i][1]+=head*.25*max(0,math.cos(math.tau*i/n))
+                    mass['indices']=mass['indices'][:4*n*6]+mass['indices'][-n*3:]
+                    shape('mesh','cabeza',color,**mass)
+                    # A few lumps break the smooth outline: curls, seen from afar.
+                    for a in (1.2,2.1,math.pi,-2.1,-1.2):
+                        ball('cabeza',[math.sin(a)*head*.47,head*.56,head*.06-math.cos(a)*head*.46],[head*.3,head*.3,head*.3],color,darken=.1,collision=False)
                 if hair=='cap':
                     # Peak only in front of the forehead; a full ring read as a halo from the front.
                     shape('mesh','cabeza',color,**visor_mesh(head,head*.035),darken=.12)
+                if hair=='cap_back':
+                    # The same cap worn backwards: the peak over the nape, mirrored front to back.
+                    peak=visor_mesh(head,head*.035)
+                    axis=head*.035
+                    peak['vertices']=[[x,y,2*axis-z] for x,y,z in peak['vertices']]
+                    peak['normals']=[[x,y,-z] for x,y,z in peak['normals']]
+                    ids=peak['indices']
+                    peak['indices']=sum(([ids[i],ids[i+2],ids[i+1]] for i in range(0,len(ids),3)),[])
+                    shape('mesh','cabeza',color,**peak,darken=.12)
                 if hair=='hat':
                     loft('cabeza',[(head*.82,head*.66,head*.63,0),(head*.86,head*.66,head*.63,0)],color,10)
                     loft('cabeza',[(head*.86,head*.36,head*.37,0),(head*1.28,head*.32,head*.33,0)],color,8)
@@ -264,6 +377,45 @@ for profile in cat['perfiles']:
                 if piece['style']=='bag':
                     shape('box','caderas','accesorio',position=[shoulder*.95,nz*.10,0],size=[shoulder*.7,nz*.18,shoulder*.7])
                     patch('lumbar',[[-shoulder*.8,nz*.23,-shoulder*.59],[-shoulder*.6,nz*.23,-shoulder*.60],[shoulder*.85,-nz*.06,-shoulder*.55],[shoulder*.65,-nz*.06,-shoulder*.56]],'accesorio')
+                if piece['style']=='backpack':
+                    # Backpack: a rounded bag on the back, a darker pocket and a strap over each shoulder.
+                    bag=loft_mesh([(nz*y,shoulder*x,shoulder*z,shoulder*cz) for y,x,z,cz in [(-.035,.50,.20,.80),(.03,.64,.29,.87),(.19,.60,.28,.86),(.245,.34,.14,.76)]],S(6))
+                    shape('mesh','lumbar','accesorio',**bag)
+                    pocket=loft_mesh([(nz*y,shoulder*x,shoulder*z,shoulder*cz) for y,x,z,cz in [(-.01,.36,.10,1.06),(.10,.38,.10,1.06)]],S(5))
+                    shape('mesh','lumbar','accesorio',**pocket,darken=.22,collision=False)
+                    over=[(nz*y,shoulder*x*1.01,shoulder*z*1.03,0) for y,x,z in [(.10,.77,.56),(.235,.92,.53),(.284,.30,.29)]]
+                    for centre in (.5,-.5,math.pi-.5,math.pi+.5):
+                        shape('mesh','lumbar','accesorio',**strip_mesh(over,centre-.1,centre+.1,1,1.06),collision=False,outline=False,darken=.15)
+                if piece['style']=='umbrella':
+                    # Closed umbrella carried by its handle in the left hand, pointing down like a cane.
+                    top=-nz*.035
+                    L=nz*.50
+                    seg('mano.I',[0,top-L*.12,-j*.5],[0,top-L,-j*.5],j*.78,j*.16,'accesorio',collision=False)
+                    seg('mano.I',[0,top+j*.4,-j*.5],[0,top-L*.12,-j*.5],j*.13,j*.13,'calzado',collision=False)
+                    ball('mano.I',[0,top+j*.55,-j*.1],[j*.36,j*.36,j*1.0],'calzado',collision=False)
+            elif slot=='gafas':
+                # Glasses: flat frames just in front of the faceless oval, at eye height. Plain glasses
+                # are only the rims (the wood shows through: clear lenses); sunglasses fill them dark.
+                style=piece['style']
+                if style!='none':
+                    ey,z=head*.50,-head*.405
+                    cx,hw,hh=head*.16,head*.115,head*.075
+                    t=head*.022
+                    def quad(x0,y0,x1,y1,color,zz=z,**kw):
+                        geometry.append(dict(type='mesh',bone='cabeza',color=color,collision=False,outline=False,
+                            vertices=[[x0,y0,zz],[x1,y0,zz],[x1,y1,zz],[x0,y1,zz]],normals=[[0,0,-1]]*4,indices=[0,1,2,0,2,3,0,2,1,0,3,2],**kw))
+                    for sx in (-1,1):
+                        x0,x1=sx*cx-hw,sx*cx+hw
+                        if style=='sunglasses': quad(x0,ey-hh,x1,ey+hh,'cristal',z+head*.004)
+                        quad(x0,ey+hh-t,x1,ey+hh,'montura')
+                        quad(x0,ey-hh,x1,ey-hh+t,'montura')
+                        quad(x0,ey-hh,x0+t,ey+hh,'montura')
+                        quad(x1-t,ey-hh,x1,ey+hh,'montura')
+                        # Temple arm along the side of the head, back to the ear.
+                        xa,xb=sx*(cx+hw),sx*head*.385
+                        geometry.append(dict(type='mesh',bone='cabeza',color='montura',collision=False,outline=False,
+                            vertices=[[xa,ey+hh*.2,z],[xb,ey+hh*.1,head*.02],[xb,ey+hh*.1+t,head*.02],[xa,ey+hh*.2+t,z]],normals=[[sx,0,0]]*4,indices=[0,1,2,0,2,3,0,2,1,0,3,2]))
+                    quad(-cx+hw,ey+hh*.25,cx-hw,ey+hh*.25+t,'montura')
             relative=f'{PIECES}/{profile["id"]}_{slot}_{index}.json'
             (ROOT/relative).write_text(json.dumps(dict(geometry=geometry),ensure_ascii=False,separators=(',',':'))+'\n')
             all_pieces.append(dict(piece,ranura=slot,indice=index,recurso='res://'+relative))

@@ -493,13 +493,16 @@ def build_torso(b, piece_def):
     style, sleeve_len = piece_def["style"], piece_def.get("sleeve", 1)
     W, S, nz = b.W, b.S, b.nz
     parts, hides = [], []
-    ease = {"plain": .012, "collar": .014, "lapel": .024, "hood": .03, "sport": .006}[style]
+    ease = {"plain": .012, "collar": .014, "lapel": .024, "hood": .03, "sport": .006, "tank": .008, "coat": .028}[style]
     # Bajos a la altura natural: camiseta y sudadera justo bajo el cinturón, americana tapando la cadera.
-    hem_y = {"plain": nz * .605, "collar": nz * .59, "lapel": nz * .53, "hood": nz * .6, "sport": nz * .61}[style]
+    hem_y = {"plain": nz * .605, "collar": nz * .59, "lapel": nz * .53, "hood": nz * .6, "sport": nz * .61, "tank": nz * .6, "coat": nz * .53}[style]
+    if style == "tank":
+        return build_tank(b, ease, hem_y)
+    tailored = style in ("lapel", "coat")
     body = cloth()
     parts.append(body)
     rings = torso_rings(b, ease, hem_y)
-    if style == "lapel":
+    if tailored:
         # Americana: hombros con hombrera y el cuerpo recto.
         rings = [(y, cx, cz, rx * (1.03 if y > nz * .9 else 1.0), rz) for (y, cx, cz, rx, rz) in rings]
     # Tela ahuecada sobre el cinturón y algo de arruga bajo el pecho.
@@ -510,8 +513,8 @@ def build_torso(b, piece_def):
     for side, sign in (("I", -1), ("D", 1)):
         arm_piece = cloth(candidates=ARM_BONES[side])
         parts.append(arm_piece)
-        sleeve(arm_piece, b, sign, ease * (.8 if style != "hood" else 1.0), sleeve_len if style != "lapel" else .98,
-               cuff=style in ("collar", "hood"), puff=1.08 if style == "lapel" else 1.0)
+        sleeve(arm_piece, b, sign, ease * (.8 if style != "hood" else 1.0), sleeve_len if not tailored else .98,
+               cuff=style in ("collar", "hood"), puff=1.08 if tailored else 1.0)
     hides += top_hides(sleeve_len)
     front_z = lambda y: front_of(rings, y)[2]
     if style == "collar":
@@ -536,13 +539,13 @@ def build_torso(b, piece_def):
         parts.append(pocket)
         py = nz * .86
         slab(pocket, [front_of(rings, py - .05, .045 * W), front_of(rings, py - .05, .105 * W), front_of(rings, py + .01, .105 * W), front_of(rings, py + .01, .045 * W)], (0, 0, -1), .003)
-    elif style == "lapel":
+    elif tailored:
         # Americana: abierta en V hasta el botón, con la camisa blanca a la vista, solapas de muesca
         # más oscuras que el paño, el canto del delantero, dos botones grandes, pañuelo en el
         # bolsillo del pecho y carteras. Todo en placas que siguen la curva del pecho (patch), no en
         # triángulos planos que se hundían en él: de lejos se leía como un jersey.
         cy = nz * .958
-        v_bottom = nz * .715
+        v_bottom = nz * (.715 if style == "lapel" else .76)
         steps = 8
         shirt = Piece("acento", candidates=TOP_BONES, subdivide=0)
         parts.append(shirt)
@@ -574,10 +577,13 @@ def build_torso(b, piece_def):
         parts.append(buttons)
         for y in (nz * .695, nz * .64):
             ball(buttons, (-.012, y, front_z(y) - .009), .013, 1, (1, 1, .45))
-        # Pañuelo en el bolsillo del pecho.
-        hanky = Piece("acento", candidates=TOP_BONES, subdivide=0)
-        parts.append(hanky)
-        patch(hanky, rings, [(nz * .862, .075 * W, .125 * W), (nz * .845, .07 * W, .13 * W)], .006, .004, 2)
+        if style == "lapel":
+            # Pañuelo en el bolsillo del pecho.
+            hanky = Piece("acento", candidates=TOP_BONES, subdivide=0)
+            parts.append(hanky)
+            patch(hanky, rings, [(nz * .862, .075 * W, .125 * W), (nz * .845, .07 * W, .13 * W)], .006, .004, 2)
+        else:
+            coat_extras(parts, b, rings, ease)
         flaps = cloth(darken=.16, subdivide=0)
         parts.append(flaps)
         for sign in (-1, 1):
@@ -625,6 +631,100 @@ def build_torso(b, piece_def):
                 x0 = sign * (.155 * W + ease + .001)
                 slab(stripes, [(x0, y0, -.02 + k * .018), (x0, y0, -.01 + k * .018), (sign * (.17 * W + ease), y1, -.01 + k * .018), (sign * (.17 * W + ease), y1, -.02 + k * .018)], (sign, 0, 0), .002)
     return parts, hides
+
+
+def build_tank(b, ease, hem_y):
+    """Camiseta de tirantes: el paño acaba bajo los brazos; hombros, brazos y lo alto del pecho son
+    madera a la vista, con un tirante sobre cada hombro. No oculta el pecho ni los brazos."""
+    W, S, nz = b.W, b.S, b.nz
+    parts = []
+    body = cloth()
+    parts.append(body)
+    full = torso_rings(b, ease, hem_y)
+    top_y = nz * .885
+    rings = [r for r in full if r[0] <= top_y + 1e-6]
+    folds = [(hem_y + .07, .05, .02, 110.0, 0), (nz * .76, .06, .025, 90.0, 1)]
+    loft(body, densify(rings, .015), 16, cap_bottom=False, cap_top=False, shape=wrinkles(folds, 2.3))
+    add_hem(body, rings[0], 16)
+    add_hem(body, rings[-1], 16, up=False)
+    straps = cloth(darken=.06, subdivide=0)
+    parts.append(straps)
+    for sign in (-1, 1):
+        x = sign * .088 * W
+        path, outs = [], []
+        for side in (-1, 1):                      # -1: por delante (subiendo); 1: por detrás (bajando)
+            ys = [.87, .90, .925, .945, .957]
+            for f in (ys if side < 0 else reversed(ys)):
+                cx, cz, rx, rz = ring_at(full, nz * f)
+                k = math.sqrt(max(0.0, 1 - min(1.0, (x / rx) ** 2)))
+                p = Vector((x, nz * f, cz + side * (rz * k + .003)))
+                path.append(p)
+                outs.append((p - Vector((x * .5, nz * .9, 0))).normalized())
+        ribbon(straps, path, outs, [.017 * S] * len(path), .003, 6)
+    return parts, ["abdomen", "cintura"]
+
+
+def open_shell(piece, rows, thickness=.005):
+    """Tela abierta (faldón de abrigo): rows = filas de puntos, de arriba abajo. Cara de fuera, cara
+    de dentro (desplazada hacia el eje) y los cantos, para que se vea por los dos lados."""
+    outer = [piece.verts(r) for r in rows]
+    inner = []
+    for r in rows:
+        pts = []
+        for (x, y, z) in r:
+            d = Vector((x, 0, z))
+            d = d.normalized() * thickness if d.length > 1e-6 else Vector()
+            pts.append((x - d.x, y, z - d.z))
+        inner.append(piece.verts(pts))
+    n = len(rows[0])
+    for r in range(len(rows) - 1):
+        for i in range(n - 1):
+            piece.face([outer[r][i], outer[r][i + 1], outer[r + 1][i + 1], outer[r + 1][i]])
+            piece.face([inner[r + 1][i], inner[r + 1][i + 1], inner[r][i + 1], inner[r][i]])
+        for i in (0, n - 1):
+            piece.face([outer[r][i], outer[r + 1][i], inner[r + 1][i], inner[r][i]])
+    for r in (0, len(rows) - 1):
+        for i in range(n - 1):
+            piece.face([outer[r][i], inner[r][i], inner[r][i + 1], outer[r][i + 1]])
+
+
+def coat_extras(parts, b, rings, ease):
+    """Gabardina: cinturón con hebilla y faldones hasta medio muslo, abiertos por delante en A para
+    que las piernas pasen por el hueco al andar en vez de atravesar la tela."""
+    W, S, nz = b.W, b.S, b.nz
+    belt = cloth(darken=.3, subdivide=0)
+    parts.append(belt)
+    by = nz * .655
+    cx, cz, rx, rz = ring_at(rings, by)
+    loft(belt, [(by - .022, 0, cz, rx + .005, rz + .005), (by + .022, 0, cz, rx + .005, rz + .005)], 20, False, False)
+    buckle = Piece("calzado", candidates=TOP_BONES, subdivide=0)
+    parts.append(buckle)
+    slab(buckle, [(-.022, by - .018, cz - rz - .008), (.022, by - .018, cz - rz - .008), (.022, by + .018, cz - rz - .008), (-.022, by + .018, cz - rz - .008)], (0, 0, -1), .004)
+    tails = cloth(candidates=["caderas", "lumbar"])
+    parts.append(tails)
+    top_y, hem = nz * .56, nz * .405
+    _, _, rx0, rz0 = ring_at(rings, nz * .56)
+    rows = []
+    steps, n = 6, 22
+    for k in range(steps + 1):
+        t = k / steps
+        y = top_y + (hem - top_y) * t
+        gap = .16 + 1.06 * t ** .55               # semiángulo de la abertura: casi cerrado arriba, 70° abajo
+        rx = rx0 - .004 + (.03 * W + .012) * t
+        rz = rz0 - .004 + (.05 * W + .016) * t
+        row = []
+        for i in range(n + 1):
+            a = gap + (math.tau - 2 * gap) * i / n
+            wave = 1.0 + .018 * t * math.sin(a * 7 + 1.3)
+            row.append((math.sin(a) * rx * wave, y, -math.cos(a) * rz * wave))
+        rows.append(row)
+    open_shell(tails, rows)
+    # Charreteras: la trabilla de los hombros de una gabardina.
+    tabs = cloth(darken=.14, subdivide=0)
+    parts.append(tabs)
+    for sign in (-1, 1):
+        y = b.sh_y + .05 * S
+        slab(tabs, [(sign * .07 * W, y + .012, -.02), (sign * .15 * W, y - .004, -.022), (sign * .15 * W, y - .004, .022), (sign * .07 * W, y + .012, .02)], (0, 1, 0), .005)
 
 
 def shoe(parts, b, sign, sport, formal):
@@ -1070,23 +1170,81 @@ def build_head(b, piece_def):
         tube(tail, path, [.024 * S, .028 * S, .022 * S, .01 * S], 10)
         tie = fabric(darken=.3, subdivide=0)
         tube(tie, [(0, nz + hh * .57, z0 - .005), (0, nz + hh * .53, z0 + .012)], .02 * S, 10)
-    elif style == "cap":
+    elif style == "bun":
+        # Moño: el pelo tirante hacia atrás y recogido en una bola alta, con su goma.
+        edge = lambda a: .72 * front(a) ** 2 + .42 * (1 - front(a) ** 2) - .08 * back(a)
+        hair_shell(hair(), b, edge, .008, 0.0, 5.1, n=24, volume=.2)
+        wig(hair(subdivide=0), b, edge, 5.1, 4, 22, .026 * S, .005 * S)
+        x8, z8, c8 = skull_radius(b, .84)
+        centre = (0, nz + hh * .90, hh * c8 + z8 * hh + .03)
+        bun = hair(lighten=.03)
+        lumps = lambda p: 1.0 + .1 * noise.noise(Vector((p[0] * 40, p[1] * 40, p[2] * 40)))
+        m = bmesh.new()
+        bmesh.ops.create_icosphere(m, subdivisions=2, radius=hh * .215)
+        lookup = {}
+        for v in m.verts:
+            k = lumps(v.co)
+            lookup[v] = bun.bm.verts.new(Vector(centre) + Vector((v.co.x * 1.05 * k, v.co.y * .95 * k, v.co.z * k)))
+        for f in m.faces:
+            bun.face([lookup[v] for v in f.verts])
+        m.free()
+        tie = fabric(darken=.3, subdivide=0)
+        tube(tie, [(0, centre[1] - hh * .1, centre[2] - hh * .13), (0, centre[1] - hh * .05, centre[2] - hh * .07)], hh * .1, 10)
+    elif style == "curly":
+        # Pelo rizado: un casquete con mucho volumen y una capa de rizos (bolas) por toda la cabeza.
+        edge = lambda a: .70 * front(a) ** 2 + .34 * (1 - front(a) ** 2) - .12 * back(a)
+        hair_shell(hair(), b, edge, .026, .006, 6.3, n=24, rows=8, volume=.1)
+        curls = hair(subdivide=1, lighten=.03)
+        # Los rizos se reparten por anillos, de la coronilla al borde, sobre el casquete (que
+        # abulta más arriba: de ahí el levante según la altura).
+        centre = Vector((0, nz + hh * .5, hh * .02))
+        ball(curls, (0, nz + hh * 1.0, hh * .02), .05 * S, 1, (1, .6, 1))
+        for r in range(1, 9):
+            f = 1.0 - r * .085
+            count = int(5 + r * 3.2)
+            for k in range(count):
+                a = (k + (.5 if r % 2 else 0.0)) * math.tau / count
+                a = math.atan2(math.sin(a), math.cos(a))
+                if f < edge(a) + .015:
+                    continue
+                jitter = noise.noise(Vector((k * .37 + r, 6.3, r * .7)))
+                lift = .026 * (1 + .35 * max(0.0, (f - .6) / .4)) + .014 + .006 * jitter
+                p = scalp(b, a, min(f, .96), lift)
+                ball(curls, tuple(p), (.03 + .006 * jitter) * S, 1, (1, .95, 1))
+    elif style == "beret":
+        # Boina: banda ceñida, plato ancho y plano caído hacia un lado y hacia atrás, y el rabillo.
+        x6, z6, c6 = skull_radius(b, .62)
+        cz0 = hh * c6
+        # (El plato cubre la coronilla del maniquí, que llega a 0,98 de la cabeza: más bajo, asomaba.)
+        rings = [(nz + hh * .58, 0, cz0, x6 * hh * 1.07, z6 * hh * 1.07), (nz + hh * .65, 0, cz0 + .004, x6 * hh * 1.09, z6 * hh * 1.09),
+                 (nz + hh * .72, .018, cz0 + .014, x6 * hh * 1.54, z6 * hh * 1.48), (nz + hh * .82, .03, cz0 + .024, x6 * hh * 1.52, z6 * hh * 1.46),
+                 (nz + hh * .94, .034, cz0 + .028, x6 * hh * 1.12, z6 * hh * 1.08), (nz + hh * 1.01, .036, cz0 + .03, x6 * hh * .6, z6 * hh * .58),
+                 (nz + hh * 1.025, .036, cz0 + .03, x6 * hh * .15, z6 * hh * .15)]
+        plate = fabric()
+        loft(plate, rings, 20, cap_bottom=False, cap_top=True)
+        band = fabric(darken=.3, subdivide=0)
+        loft(band, [(nz + hh * .575, 0, cz0, x6 * hh * 1.085, z6 * hh * 1.085), (nz + hh * .635, 0, cz0 + .003, x6 * hh * 1.1, z6 * hh * 1.1)], 20, False, False)
+        stalk = fabric(darken=.2, subdivide=0)
+        tube(stalk, [(.036, nz + hh * 1.02, cz0 + .03), (.039, nz + hh * 1.07, cz0 + .033)], .006, 6)
+    elif style in ("cap", "cap_back"):
         crown = fabric()
         hair_shell(crown, b, lambda a: .6, .02, 0.0, 0, n=16, rows=6, volume=.3)
         button = fabric(subdivide=0)
         ball(button, (0, nz + hh * 1.03, hh * .025), .012, 1, (1, .5, 1))
         visor = fabric(darken=.12)
         pts = []
+        # La gorra hacia atrás es la misma con la visera girada media vuelta, sobre la nuca.
+        turn = -1 if style == "cap_back" else 1
         for k in range(9):
             a = -1.2 + k * 2.4 / 8
             x, z, cz = skull_radius(b, .6)
-            inner = (math.sin(a) * x * hh * 1.05, nz + hh * .6, hh * cz - math.cos(a) * z * hh * 1.05)
+            inner = (turn * math.sin(a) * x * hh * 1.05, nz + hh * .6, hh * cz - turn * math.cos(a) * z * hh * 1.05)
             pts.append(inner)
         for k in range(8, -1, -1):
             a = -1.2 + k * 2.4 / 8
             x, z, cz = skull_radius(b, .6)
             reach = hh * (.08 + .2 * math.cos(a) ** 1.5)
-            pts.append((math.sin(a) * x * hh * 1.08, nz + hh * .58 - reach * .15, hh * cz - math.cos(a) * z * hh * 1.05 - reach))
+            pts.append((turn * math.sin(a) * x * hh * 1.08, nz + hh * .58 - reach * .15, hh * cz - turn * (math.cos(a) * z * hh * 1.05 + reach)))
         slab(visor, pts, (0, 1, 0), .006)
     elif style == "hat":
         # Sombrero de ala (fedora): copa con hendidura, cinta y ala curvada.
@@ -1201,7 +1359,113 @@ def build_accessory(b, piece_def, high=False):
         parts.append(handle)
         for sz in (-1, 1):
             tube(handle, [(cx + .016, cy + .08, cz + sz * half_w * .55), (cx + .018, cy + .13, cz + sz * half_w * .4), (cx + .018, cy + .15, cz)], .004, 5, caps=False)
+    elif style == "backpack":
+        # Mochila: saco redondeado a la espalda, bolsillo delantero, asa y un tirante por hombro que
+        # baja por el pecho y vuelve por debajo del brazo.
+        guide = torso_rings(b, .03, nz * .5)
+        back_z = lambda y: (lambda r: r[1] + r[3])(ring_at(guide, y))
+        y0, y1 = nz * .665, nz * .915
+        depth, half_w = .062 * W + .045, .118 * W
+        boxy = lambda a, yy: (abs(math.cos(a)) ** 4 + abs(math.sin(a)) ** 4) ** -.25
+        sack = Piece("accesorio", candidates=["torax", "lumbar"])
+        parts.append(sack)
+        zc = lambda y: back_z(y) + depth * .5 + .004
+        rings = []
+        for t, kx, kz in ((0, .7, .55), (.07, .95, .9), (.3, 1.0, 1.0), (.75, .97, .95), (.93, .85, .75), (1, .5, .4)):
+            y = y0 + (y1 - y0) * t
+            rings.append((y, 0, zc(y), half_w * kx, depth * .5 * kz))
+        loft(sack, rings, 16, True, True, shape=boxy)
+        pocket = Piece("accesorio", candidates=["torax", "lumbar"], darken=.2)
+        parts.append(pocket)
+        py0, py1 = y0 + .02, y0 + (y1 - y0) * .55
+        loft(pocket, [(py0, 0, zc(py0) + depth * .5, half_w * .6, .012), (py0 + .02, 0, zc(py0) + depth * .5 + .008, half_w * .74, .022),
+             (py1 - .02, 0, zc(py1) + depth * .5 + .006, half_w * .72, .02), (py1, 0, zc(py1) + depth * .5, half_w * .55, .01)], 12, True, True, shape=boxy)
+        handle = Piece("accesorio", candidates=["torax"], darken=.25, subdivide=0)
+        parts.append(handle)
+        tube(handle, [(-.03, y1 - .01, zc(y1) - .01), (-.02, y1 + .03, zc(y1) - .005), (.02, y1 + .03, zc(y1) - .005), (.03, y1 - .01, zc(y1) - .01)], .006, 6, caps=False)
+        straps = Piece("accesorio", candidates=["torax", "lumbar", "clavicula.I", "clavicula.D"], darken=.14, subdivide=0)
+        parts.append(straps)
+        for sign in (-1, 1):
+            x = sign * .092 * W
+            path = []
+            # Por detrás, de la mochila al hombro; por delante, del hombro a la axila; y de vuelta
+            # a la base de la mochila por el costado.
+            for f in (.90, .93, .952):
+                cx, cz, rx, rz = ring_at(guide, nz * f)
+                path.append(Vector((x, nz * f, cz + rz * math.sqrt(max(0.0, 1 - min(1.0, (x / rx) ** 2))) + .004)))
+            for f in (.957, .94, .91, .87, .83, .79):
+                cx, cz, rx, rz = ring_at(guide, nz * f)
+                path.append(Vector((x, nz * f, cz - rz * math.sqrt(max(0.0, 1 - min(1.0, (x / rx) ** 2))) - .004)))
+            for f, ang in ((.755, .9), (.725, 1.5), (.70, 2.2), (.685, 2.7)):
+                cx, cz, rx, rz = ring_at(guide, nz * f)
+                path.append(Vector((sign * math.sin(ang) * (rx + .004), nz * f, cz - math.cos(ang) * (rz + .004))))
+            outs = [Vector((p.x * .6, 0, p.z)).normalized() if abs(p.z) > .02 else Vector((sign, 0, 0)) for p in path]
+            outs[3] = Vector((0, 1, 0))
+            ribbon(straps, path, outs, [.02 * S] * len(path), .0035, 6)
+    elif style == "umbrella":
+        # Paraguas cerrado, llevado por el mango en la mano izquierda con la punta hacia abajo.
+        hl = nz * .082
+        x, z = -b.sh_x - .004, -.036 * S
+        top = b.wr_y - hl * .35
+        tip = max(.05, top - nz * .5)
+        wood = Piece("calzado", bone="mano.I")
+        parts.append(wood)
+        # Mango curvo (cayado) por encima del puño y varilla hasta la punta.
+        tube(wood, [(x, top + .035, z + .05), (x, top + .062, z + .04), (x, top + .07, z + .018), (x, top + .055, z), (x, top, z), (x, top - .09, z)],
+             [.011, .012, .012, .011, .01, .008], 8)
+        tube(wood, [(x, tip + .05, z), (x, tip, z)], [.006, .003], 6)
+        canopy = Piece("accesorio", bone="mano.I")
+        parts.append(canopy)
+        pleats = lambda a, yy: 1.0 + .16 * math.cos(a * 8)
+        c0, c1 = top - .085, tip + .045
+        loft(canopy, [(c1, x, z, .011, .011), (c1 + (c0 - c1) * .25, x, z, .027, .027), (c1 + (c0 - c1) * .7, x, z, .037, .037),
+             (c0 - .012, x, z, .034, .034), (c0, x, z, .014, .014)], 16, True, True, shape=pleats)
+        band = Piece("accesorio", bone="mano.I", darken=.3, subdivide=0)
+        parts.append(band)
+        cy = c1 + (c0 - c1) * .62
+        loft(band, [(cy - .01, x, z, .041, .041), (cy + .01, x, z, .041, .041)], 12, False, False)
     return parts, [], chains_out
+
+
+def build_glasses(b, piece_def):
+    """Gafas (ranura propia, se combinan con cualquier accesorio): montura redonda delante de la
+    cara lisa del maniquí, puente y patillas hasta las orejas. Las «gafas» son solo la montura (se
+    ve la madera: cristal transparente); las «gafas de sol» llevan además los cristales oscuros."""
+    style = piece_def["style"]
+    parts = []
+    if style == "none":
+        return parts, []
+    hh, nz = b.head, b.nz
+    f = .46
+    xr, zr, cz = skull_radius(b, f)
+    y = nz + hh * f
+    frame = Piece("montura", bone="cabeza", subdivide=0)
+    parts.append(frame)
+    lens_r = hh * .105
+    for sign in (-1, 1):
+        a = sign * .40                                   # el cristal mira un poco hacia fuera, siguiendo la cara
+        out = Vector((math.sin(a), 0, -math.cos(a)))
+        centre = Vector((math.sin(a) * xr * hh, y, hh * cz - math.cos(a) * zr * hh)) + out * .014
+        side = Vector((math.cos(a), 0, math.sin(a)))
+        up = Vector((0, 1, 0))
+        ring = [centre + (side * math.cos(q) + up * math.sin(q) * .88) * lens_r for q in [k * math.tau / 16 for k in range(17)]]
+        tube(frame, ring, .0032, 6, caps=False)
+        if style == "sunglasses":
+            lens = Piece("cristal", bone="cabeza", subdivide=0)
+            parts.append(lens)
+            slab(lens, [tuple(p - out * .001) for p in ring[:-1]], tuple(out), .002)
+        # Patilla: del borde exterior de la montura a la oreja, pegada a la sien.
+        hinge = centre + side * sign * lens_r
+        ear = Vector((sign * xr * hh * 1.03, y + .004, hh * cz + .012))
+        mid = Vector((sign * xr * hh * 1.06, y + .003, (hinge.z + ear.z) * .5))
+        tube(frame, [hinge, mid, ear, ear + Vector((0, -.012, .012))], .0026, 5)
+        if sign < 0:
+            inner_l = centre + side * lens_r
+        else:
+            inner_r = centre - side * lens_r
+    bridge_mid = (inner_l + inner_r) * .5 + Vector((0, .006, -.004))
+    tube(frame, [inner_l, bridge_mid, inner_r], .0028, 5)
+    return parts, []
 
 
 # ---------------------------------------------------------------- exportación
@@ -1345,9 +1609,11 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     only = set(argv[argv.index("--only") + 1].split(",")) if "--only" in argv else None
     slots = set(argv[argv.index("--slots") + 1].split(",")) if "--slots" in argv else None
+    # --pieces 5,6: solo esos índices de las ranuras elegidas (para probar una pieza nueva).
+    wanted = set(int(v) for v in argv[argv.index("--pieces") + 1].split(",")) if "--pieces" in argv else None
     bpy.ops.wm.read_factory_settings(use_empty=True)
     os.makedirs(OUT, exist_ok=True)
-    builders = {"torso": build_torso, "piernas": build_legs, "cabeza": build_head, "accesorio": build_accessory}
+    builders = {"torso": build_torso, "piernas": build_legs, "cabeza": build_head, "accesorio": build_accessory, "gafas": build_glasses}
     for profile in CATALOG["perfiles"]:
         if only and profile["id"] not in only:
             continue
@@ -1361,6 +1627,8 @@ def main():
                 continue
             report[slot] = []
             for index, piece_def in enumerate(CATALOG["piezas"][slot]):
+                if wanted and index not in wanted:
+                    continue
                 result = build(body, piece_def)
                 parts, hides = result[0], result[1]
                 chains = result[2] if len(result) > 2 else None

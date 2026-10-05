@@ -167,7 +167,7 @@ Límites por nivel de detalle ([futuro/17 §3](futuro/17_SALTO_GRAFICO_ULTRA.md)
 | Métrica | `lo` (Bajo, Medio, Alto) | `hd` (Ultra, Forward+) | Cómo se verifica |
 |---|:---:|:---:|---|
 | **Triángulos en escena** (incluye figurantes y palomas en `hd`) | $\le 100.000$ | $\le 5.000.000$ | `--smoke-test` |
-| **Triángulos por viandante** | $\le 1.900$ | $\le 60.000$ | `tests/test_art.gd` (`lo`), `--smoke-test` (`hd`) |
+| **Triángulos por viandante** | $\le 2.000$ | $\le 60.000$ | `tests/test_art.gd` (`lo`), `--smoke-test` (`hd`) |
 | **Memoria de vídeo (VRAM)** | $< 60\text{ MB}$ | $< 8\text{ GiB}$ | `tests/test_game.gd` |
 | **Resolución del visor 3D** | 1280 × 720 | Nativa de la ventana | `main.gd::update_render_resolution()` |
 | **Draw calls** | Día ≤ 300 en el visor (38 superficies de parque + 2 por viandante + pases de sombra del sol). De noche depende de las farolas con sombra del perfil | `--metrics` imprime `draw_calls`; `test_game.gd` impone el límite de día y comprueba las sombras de farola por perfil |

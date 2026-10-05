@@ -201,7 +201,7 @@ Medidas el **2026-09-27** con **Godot 4.7-stable** (Linux; suites con display en
 |---|:---:|:---:|---|
 | Comprobaciones de óptica | 535, 0 fallos | 0 fallos | `test_photography.gd` |
 | Ensamblajes de personajes | 2.880, 0 fallos | 0 fallos | `test_art.gd` |
-| Triángulos por viandante (**máximo** del catálogo) | 1.690 | ≤ 1.900 | `test_art.gd` |
+| Triángulos por viandante (**máximo** del catálogo) | 1.980 | ≤ 2.000 | `test_art.gd` |
 | Comprobaciones de prendas | 701, 0 fallos | 0 fallos | `test_art.gd` |
 | Comprobaciones de equipo | 570, 0 fallos (con los tres fijos nuevos de la réflex) | 0 fallos | `test_equipment.gd` |
 | Comprobaciones de marcha | 8.840, 0 fallos | 0 fallos | `test_gait.gd` |

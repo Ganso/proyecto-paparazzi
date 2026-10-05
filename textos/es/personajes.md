@@ -67,3 +67,7 @@ un arenero
 
 ### rasgo_con
  · con \
+### rasgo_y · Une las gafas y el accesorio en la descripción: «con gafas de sol y mochila roja»
+> máximo 6 caracteres
+ y \
+

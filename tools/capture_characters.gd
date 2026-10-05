@@ -10,8 +10,21 @@ const Cast = preload("res://scripts/casting.gd")
 const VIEWS = [["frente", 0.0], ["3/4", 40.0], ["perfil", 90.0], ["espalda", 180.0]]
 const CELL = Vector2i(400, 500)
 # Framing: [centre height (m), orthographic height (m)].
-const FRAMES = {"cuerpo": [0.9, 2.0], "torso": [1.3, 1.05], "piernas": [0.52, 1.15], "cabeza": [1.62, 0.5], "nino": [0.62, 1.45]}
+const FRAMES = {"cuerpo": [0.9, 2.0], "torso": [1.3, 1.05], "piernas": [0.52, 1.15], "cabeza": [1.62, 0.5], "nino": [0.62, 1.45], "abrigo": [1.05, 1.5], "paraguas": [0.62, 1.35], "mano": [0.5, 1.15]}
 
+# The pieces of 05-10-2026: [name, traits, framing]. Indices are those of data/catalogo.json.
+const NEW_PIECES = [
+	["gabardina", {"upper": 5, "upper_color": "beige", "lower": 1, "lower_color": "gris"}, "abrigo"],
+	["camiseta de tirantes", {"upper": 6, "upper_color": "rojo"}, "torso"],
+	["moño", {"hair": 8, "upper_color": "gris"}, "cabeza"],
+	["pelo rizado", {"hair": 9, "upper_color": "gris", "hair_color": "moreno"}, "cabeza"],
+	["boina", {"hair": 10, "upper_color": "gris", "lower_color": "burdeos"}, "cabeza"],
+	["gorra hacia atrás", {"hair": 11, "upper_color": "gris", "lower_color": "rojo"}, "cabeza"],
+	["mochila", {"accessory": 3, "upper_color": "gris", "accessory_color": "verde"}, "torso"],
+	["paraguas", {"accessory": 4, "upper_color": "gris", "accessory_color": "rojo"}, "mano"],
+	["gafas", {"glasses": 1, "upper_color": "gris"}, "cabeza"],
+	["gafas de sol", {"glasses": 2, "upper_color": "gris"}, "cabeza"],
+]
 var cast = Cast.new()
 var world: Node3D
 var camera: Camera3D
@@ -28,7 +41,7 @@ func base_traits() -> Dictionary:
 		"upper_color": "rojo", "lower_color": "azul marino", "accessory": 0, "accessory_color": "amarillo", "runner": false}
 
 func setup_world() -> void:
-	Person.detail = "hd"
+	Person.detail = "lo" if "--lo" in OS.get_cmdline_user_args() else "hd"   # (--lo: the light pieces of Android and the web)
 	var material = Person.mannequin_material()
 	material.set_shader_parameter("textured", true)
 	world = Node3D.new()
@@ -185,6 +198,70 @@ func run() -> void:
 		await catalogue_sheet("03_cabezas", "cabeza", "hair", "cabeza", func(t, piece): t.upper_color = "gris")
 	if wants("accesorios"):
 		await catalogue_sheet("04_accesorios", "accesorio", "accessory", "torso", func(t, piece): t.upper_color = "gris")
+	if wants("gafas"):
+		await catalogue_sheet("04b_gafas", "gafas", "glasses", "cabeza", func(t, piece): t.upper_color = "gris")
+	if wants("nuevas"):
+		# The pieces added on 05-10-2026, each framed on the part of the body it changes.
+		var cells = []
+		for item in NEW_PIECES:
+			clear_people()
+			var t = base_traits()
+			t.merge(item[1], true)
+			var p = spawn(t)
+			pose(p, "reposo")
+			frame(item[2])
+			for view in VIEWS:
+				p.rotation.y = deg_to_rad(view[1])
+				cells.append(await shot("%s · %s" % [item[0], view[0]]))
+		save_sheet("09_piezas_nuevas", cells, VIEWS.size())
+	if wants("nuevas_marcha"):
+		# The new pieces that move with the body, walking: backpack, umbrella, tank top; and the
+		# glasses under each kind of hat and hair that could touch them.
+		var cells = []
+		for item in [["mochila", {"accessory": 3, "accessory_color": "verde", "upper": 3}, "torso"], ["paraguas", {"accessory": 4, "accessory_color": "rojo"}, "cuerpo"],
+				["tirantes", {"upper": 6}, "torso"], ["mochila niño", {"accessory": 3, "profile": 3}, "nino"], ["paraguas robusto", {"accessory": 4, "profile": 2, "upper": 5, "upper_color": "beige"}, "cuerpo"]]:
+			for phase in [0, 2]:
+				clear_people()
+				var t = base_traits()
+				t.merge(item[1], true)
+				var p = spawn(t)
+				pose(p, "marcha", phase * PI * .5)
+				frame(item[2])
+				for view in [["frente", 0.0], ["perfil", 90.0], ["perfil izq.", -90.0], ["espalda", 180.0]]:
+					p.rotation.y = deg_to_rad(view[1])
+					cells.append(await shot("%s · paso %d · %s" % [item[0], phase, view[0]], false))
+		for combo in [["gafas + gorra", {"glasses": 1, "hair": 5}], ["gafas de sol + sombrero", {"glasses": 2, "hair": 6}], ["gafas + flequillo", {"glasses": 1, "hair": 1}], ["gafas de sol + rizado", {"glasses": 2, "hair": 9}],
+				["gafas + boina", {"glasses": 1, "hair": 10}], ["gafas de sol + gorro", {"glasses": 2, "hair": 7}], ["gafas + melena", {"glasses": 1, "hair": 2}], ["gafas de sol + niño", {"glasses": 2, "profile": 3}]]:
+			clear_people()
+			var t = base_traits()
+			t.merge(combo[1], true)
+			var p = spawn(t)
+			pose(p, "reposo")
+			frame("cabeza")
+			if t.profile == 3:
+				camera.size = .45
+				camera.position.y = 1.02
+				camera.look_at(Vector3(0, 1.02, 0))
+			for view in [["3/4", 40.0], ["perfil", 90.0]]:
+				p.rotation.y = deg_to_rad(view[1])
+				cells.append(await shot("%s · %s" % [combo[0], view[0]]))
+		save_sheet("11_piezas_nuevas_en_marcha", cells, 4)
+	if wants("gabardina"):
+		# Nothing may come through the trench coat: every body profile that can wear it, at four
+		# moments of the step, from the front, the side and the back.
+		var cells = []
+		for profile in 3:
+			for phase in 4:
+				clear_people()
+				var t = base_traits()
+				t.merge({"profile": profile, "upper": 5, "upper_color": "beige", "lower": [0, 1, 2][profile], "lower_color": "azul marino", "accessory": [0, 2, 1][profile]}, true)
+				var p = spawn(t)
+				pose(p, "marcha", phase * PI * .5)
+				frame("abrigo")
+				for view in [["frente", 0.0], ["3/4", 40.0], ["perfil", 90.0], ["espalda", 180.0]]:
+					p.rotation.y = deg_to_rad(view[1])
+					cells.append(await shot("%s · paso %d · %s" % [cast.catalog.perfiles[profile].id, phase, view[0]], false))
+		save_sheet("10_gabardina_marcha", cells, 4)
 	if wants("perfiles"):
 		var cells = []
 		for profile in 4:
