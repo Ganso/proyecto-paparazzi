@@ -29,7 +29,7 @@ func make(id: String, key: String, callback: Callable, primary = false) -> Butto
 	var b = Button.new()
 	b.text = Texts.get_text(key)
 	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_font_size_override("font_size",17)
+	b.add_theme_font_size_override("font_size",20)
 	b.add_theme_stylebox_override("normal",UiStyle.box(UiStyle.SKY if primary else Color(.03,.05,.08,.62),14,Color(1,1,1,.55),2))
 	b.add_theme_stylebox_override("hover",UiStyle.box(UiStyle.SKY if primary else Color(.03,.05,.08,.62),14,Color(1,1,1,.55),2))
 	b.add_theme_stylebox_override("pressed",UiStyle.box(UiStyle.SKY.lightened(.2),14,Color.WHITE,2))
@@ -96,23 +96,34 @@ func _process(_dt: float) -> void:
 	var x = 1146.0+out_right
 	if lesson and main.academy.panel.visible: x = main.academy.panel.position.x-134.0
 	stick_centre = STICK_CENTRE-Vector2(out_left,0)
-	place("pausa",Rect2(x,12,124,56),true)
-	place("ayuda",Rect2(x,76,124,56),not hands_off)
-	place("af",Rect2(x,372,124,66),eye and not hands_off and main.equipment.focus_mode != "MF")
-	place("disparar",Rect2(x,448,124,124),eye and not hands_off)
+	# Out in the bands the buttons take the whole band and grow to a finger's size (about 8 mm on
+	# a 6.7" phone: 78 units of the 720; the user, 05-10-2026: «los botones siguen siendo pequeños»).
+	# Over the picture (16:9 screens, the Academy's lessons) they keep the narrow column.
+	var wide_r = out_right >= 134 and not (lesson and main.academy.panel.visible)
+	var wide_l = out_left >= 134
+	var w = 124.0
+	if wide_r:
+		w = minf(152.0,main.frame_offset.x-main.safe_inset.y-8)
+		x = 1280.0+(main.frame_offset.x-main.safe_inset.y-w)*.5
+	var lw = minf(152.0,main.frame_offset.x-main.safe_inset.x-8) if wide_l else 124.0
+	var lx = -main.frame_offset.x+main.safe_inset.x+(main.frame_offset.x-main.safe_inset.x-lw)*.5 if wide_l else 10.0-out_left
+	place("pausa",Rect2(x,10,w,74),true)
+	place("ayuda",Rect2(x,92,w,74),not hands_off)
+	place("af",Rect2(x,346,w,78),eye and not hands_off and main.equipment.focus_mode != "MF")
+	place("disparar",Rect2(x,432,w,134),eye and not hands_off)
 	var can_lower = not lesson and not (main.tutorial.active and main.crowd == null and main.tutorial.id() in ["bienvenida","mirar","zoom"])
-	place("camara",Rect2(x,582,124,66),can_lower and not main.shooting)
+	place("camara",Rect2(x,574,w,78),can_lower and not main.shooting)
 	buttons.camara.text = Texts.get_text("tactil_camara_bajar" if main.camera_raised else "tactil_camara_subir")
 	var left = eye and not hands_off
-	place("tercios",Rect2(10-out_left,150,124,58),left)
-	place("bloqueo",Rect2(10-out_left,216,124,58),left)
-	place("medicion",Rect2(10-out_left,282,124,58),left and not lesson)
+	place("tercios",Rect2(lx,130,lw,74),left)
+	place("bloqueo",Rect2(lx,212,lw,74),left)
+	place("medicion",Rect2(lx,294,lw,74),left and not lesson)
 	buttons.medicion.text = Texts.get_text("fotometria_"+main.equipment.metering)
-	place("lupa",Rect2(10-out_left,348,124,58),left and main.equipment.tlr())
-	place("manivela",Rect2(10-out_left,414,124,58),left and main.equipment.tlr() and main.sandbox and not lesson and (not main.tlr_wound or main.tlr_frames <= 0))
+	place("lupa",Rect2(lx,376,lw,74),left and main.equipment.tlr())
+	place("manivela",Rect2(lx,458,lw,74),left and main.equipment.tlr() and main.sandbox and not lesson and (not main.tlr_wound or main.tlr_frames <= 0))
 	var park_walk: bool = main.crowd != null and not hands_off
-	place("agachar",Rect2(x,140,124,56),park_walk)
-	place("correr",Rect2(x,508,124,66),park_walk and walking)
+	place("agachar",Rect2(x,174,w,74),park_walk)
+	place("correr",Rect2(x,488,w,78),park_walk and walking)
 	if not park_walk and (main.touch_crouch or main.touch_run):
 		buttons.agachar.set_pressed_no_signal(false)
 		buttons.correr.set_pressed_no_signal(false)
