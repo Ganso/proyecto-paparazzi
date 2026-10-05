@@ -20,6 +20,7 @@ func run() -> void:
 	game = Main.instantiate()
 	root.add_child(game)
 	await frames(10)
+	game.look_invert = "no"   # (whatever the player has chosen in Options: the checks below assume the default)
 	check(game.mode == "INTRO","Starts at briefing menu")
 	await screenshot("inicio")
 	game.equipment.preset(2)
@@ -60,20 +61,24 @@ func run() -> void:
 	await frames(1)
 	game.pan_velocity = 0
 	old_angle = game.angle
+	var Glyphs = preload("res://scripts/input_glyphs.gd")
+	Glyphs.touch = true   # (as on a phone: the finger looks on both axes, the mouse only pans)
 	var touch = InputEventScreenTouch.new()
 	touch.index = 0
-	touch.position = Vector2(550,350)
+	touch.position = game.view_rect.get_center()
 	touch.pressed = true
 	Input.parse_input_event(touch)
 	await frames(1)
 	var touch_drag = InputEventScreenDrag.new()
 	touch_drag.index = 0
-	touch_drag.position = Vector2(550,410)
+	touch_drag.position = game.view_rect.get_center()+Vector2(0,60)
 	touch_drag.relative = Vector2(0,60)
 	var old_pitch = game.pitch
 	Input.parse_input_event(touch_drag)
 	await frames(1)
-	check(abs(game.angle-old_angle) < .01 and game.pitch > old_pitch+1,"Vertical drag tilts without horizontal pan (the finger drags the scene: down looks up)")
+	check(abs(game.angle-old_angle) < .01 and game.pitch > old_pitch+1,"Vertical drag tilts without horizontal pan (the finger drags the scene: down looks up; angle %.3f → %.3f, pitch %.2f → %.2f, %.0f mm)" % [old_angle,game.angle,old_pitch,game.pitch,game.focal])
+	Glyphs.touch = false
+	Glyphs.device = "teclado"
 	touch.position = touch_drag.position
 	touch.pressed = false
 	Input.parse_input_event(touch)

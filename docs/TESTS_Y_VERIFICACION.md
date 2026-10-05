@@ -182,6 +182,11 @@ Los que están pegados a su tamaño razonable (título de la Academia de 30, teo
 3. **Arranque**: el juego sigue vivo a los 30 s y al minuto, en `gl_compatibility`, sin errores en el registro y con menos de 1,5 GB de memoria (mide unos 230 MB).
 4. **Tacto**: «Entrar» abre el tutorial, se arrastra para mirar y «Disparar» hace una foto.
 5. **Segundo plano**: se manda al inicio y vuelve.
+6. **Botón «atrás»**: durante la partida pausa o vuelve; no cierra el juego.
+
+**En el PC, con forma de teléfono** (05-10-2026): `~/bin/godot-4-fp --path . --disable-vsync --rendering-method gl_compatibility --resolution 1600x720 -- --touch` abre la interfaz táctil en 20:9 (pantalla completa de [26](futuro/26_ANDROID_PERFECTO.md); `--write-movie` no sirve para esto, porque graba siempre a 1440 × 810). `-- --lean` activa en el PC el ahorro de animación del móvil (`main.gd::pose_person()`), para medirlo con `-- --metrics`. El contador «Ver FPS» del móvil añade CPU, física, llamadas de dibujo y triángulos.
+
+**Las pruebas no dependen de las opciones del jugador**: `test_game.gd` y `test_touch.gd` fijan `look_invert = "no"` antes de comprobar el arrastre (con «Invertir mirada» puesto en Opciones fallaban sin que hubiera nada roto).
 
 Capturas y registro en `build/android/`. Los APK de prueba son **x86_64** (`EMULATOR=1 tools/export_android.sh` → `build/paparazzi-emulador.apk`; con `ANDROID_ARGS="-- --smoke-test"`, `…-prueba.apk`): el de ARM que se reparte, traducido en un emulador x86, no sirve para probar. **No comprueba** que la interfaz sea cómoda en un móvil: sigue siendo la clásica con ayudas de teclado ([13](futuro/13_INTERFAZ_MOVIL_UTILIZABLE.md), pendiente), ni el rendimiento en un teléfono real.
 
