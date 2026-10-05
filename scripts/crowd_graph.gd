@@ -129,8 +129,7 @@ func walk(p, dt: float) -> void:
 	if p.pass_timer <= 0: p.pass_side = 0.0
 	var nearest_lat = NAN
 	var nearest_ahead = INF
-	var others = main.people+([main.player_proxy] if main.player_proxy else [])
-	for other in others:
+	for other in main.everybody():
 		if other == p or not other.visible: continue
 		var rel = other.position-p.position
 		if rel.length_squared() > 25.0: continue

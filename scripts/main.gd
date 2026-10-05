@@ -1716,6 +1716,7 @@ func update_person(p: Pedestrian, dt: float) -> void:
 # keeps its step — and everyone in the picture, every frame. Where each one walks, the photo and
 # its mark do not change: only how often a body nobody sees is bent.
 const POSE_EVERY = 4
+const POSE_FAR = 22.0      # metres with the naked eye (30 mm); further with a longer lens
 var lean_poses = false
 var pose_debt = {}
 func pose_person(p: Pedestrian, dt: float, distance: float) -> void:
@@ -1730,6 +1731,8 @@ func pose_person(p: Pedestrian, dt: float, distance: float) -> void:
 	# (Half the diagonal of the picture — 36 × 20 mm — plus a margin as wide as a body up close.)
 	var half = atan(20.7/maxf(view_focal(),12.0))+deg_to_rad(12.0)
 	var seen = to.length() < 2.5 or (-camera.global_basis.z).angle_to(to) < half
+	# In the picture but far away (a figure a few pixels tall): every other frame is enough.
+	if seen and to.length() > POSE_FAR*view_focal()/30.0 and debt[2] < 2: seen = false
 	if seen or debt[2] >= POSE_EVERY:
 		p.animate(debt[0],debt[1])
 		pose_debt[p] = [0.0,0.0,0]
@@ -4505,23 +4508,43 @@ func auto_expose() -> void:
 const LANES = [1.8,4.0,7.0,11.5]
 const LANE_OFFSETS = [0.33,0.35,0.35,0.35]
 const LANE_BOUNDS = [Vector2(1.05,2.7), Vector2(2.9,4.85), Vector2(6.1,7.9), Vector2(10.6,12.4)]
+# Called once or twice per pedestrian per frame, it was the dearest thing in the navigation: it
+# made a new shape, a new query and a new list of people every time, and measured everyone against
+# the step. Now the shape and the query are reused (only the height changes), the list is made
+# once per frame (everybody()) and whoever is too far for the step to reach is skipped before any
+# geometry. The answers are the same ones (tools/measure_flow.gd gives the same figures).
+var clear_shape: CapsuleShape3D
+var clear_query: PhysicsShapeQueryParameters3D
+var everybody_list: Array = []
+var everybody_frame = -1
+func everybody() -> Array:
+	var frame = Engine.get_process_frames()
+	if frame != everybody_frame or everybody_list.size() != people.size()+(1 if player_proxy else 0):
+		everybody_frame = frame
+		everybody_list = people+([player_proxy] if player_proxy else [])
+	return everybody_list
+
 func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true) -> bool:
 	# A swept body volume avoids stepping through benches, trunks and other people.
-	var shape = CapsuleShape3D.new()
-	shape.radius = .30
-	shape.height = p.height
-	var query = PhysicsShapeQueryParameters3D.new()
-	query.shape = shape
-	query.transform = Transform3D(Basis.IDENTITY,from+Vector3.UP*(p.height*.5))
-	query.motion = to-from
-	query.collision_mask = 2
-	var space = viewport.world_3d.direct_space_state
 	if static_check:
-		if not space.intersect_shape(query,1).is_empty(): return false
-		if space.cast_motion(query)[0] < 1.0: return false
-	var others = people+([player_proxy] if player_proxy else [])
-	for other in others:
+		if clear_shape == null:
+			clear_shape = CapsuleShape3D.new()
+			clear_shape.radius = .30
+			clear_query = PhysicsShapeQueryParameters3D.new()
+			clear_query.shape = clear_shape
+			clear_query.collision_mask = 2
+		clear_shape.height = p.height
+		clear_query.transform = Transform3D(Basis.IDENTITY,from+Vector3.UP*(p.height*.5))
+		clear_query.motion = to-from
+		var space = viewport.world_3d.direct_space_state
+		if not space.intersect_shape(clear_query,1).is_empty(): return false
+		if space.cast_motion(clear_query)[0] < 1.0: return false
+	# Nobody further than this from the start can be nearer than HARD_SPACE to any point of the step.
+	var reach = HARD_SPACE+from.distance_to(to)+.01
+	var reach_sq = reach*reach
+	for other in everybody():
 		if other == p or not other.visible: continue
+		if from.distance_squared_to(other.position) > reach_sq: continue
 		var nearest = Geometry3D.get_closest_point_to_segment(other.position,from,to)
 		var near_dist = nearest.distance_to(other.position)
 		if near_dist < HARD_SPACE:
