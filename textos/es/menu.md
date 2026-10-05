@@ -293,7 +293,7 @@ Gráficos · %s
 Versión web
 
 ### menu_aviso_web_cuerpo
-Esta es la versión para el navegador, con gráficos simplificados. La versión descargable (Windows, Mac, Linux y Android), gratis en esta misma página, tiene mejores gráficos y se maneja mejor.
+Esta es la versión para el navegador, con gráficos simplificados. La versión descargable (Windows, Mac y Linux), gratis en esta misma página, tiene mejores gráficos y se maneja mejor.
 
 ### menu_aviso_web_entendido
 Entendido

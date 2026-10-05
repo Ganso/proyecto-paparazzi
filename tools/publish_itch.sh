@@ -8,7 +8,7 @@
 #   windows  build/dist/PhotoHacks-<versión>-windows.zip
 #   linux    build/dist/PhotoHacks-<versión>-linux.zip
 #   mac      build/dist/PhotoHacks-<versión>-macos.zip
-#   android  build/paparazzi-debug.apk
+#   android  build/paparazzi-debug.apk                 (no se publica de momento: solo con --only)
 #   html5    build/dist/PhotoHacks-<versión>-web.zip   (la versión que se juega en la ficha)
 # La versión es la de export_presets.cfg. itch solo sube lo que cambia respecto a la anterior.
 #
@@ -19,7 +19,8 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 TARGET="${ITCH_TARGET:-geese-bumps/photohacks}"
 BUTLER="${BUTLER_BIN:-$(command -v butler || echo "$HOME/bin/butler")}"
-ONLY="windows,linux,mac,android,html5"
+# Android no se publica de momento (usuario, 05-10-2026): solo con --only android.
+ONLY="windows,linux,mac,html5"
 DRY=0
 while [ $# -gt 0 ]; do
 	case "$1" in
