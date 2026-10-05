@@ -252,8 +252,9 @@ func build_sandbox() -> void:
 	for k in times.size():
 		var chip = Button.new()
 		chip.text = Texts.get_text(times[k][1])
-		chip.position = Vector2(32+k*136,252)
-		chip.size = Vector2(126,38)
+		# (Taller under a finger: the row has the room, up to the «Entrar» button.)
+		chip.position = Vector2(32+k*136,248 if Glyphs.touch else 252)
+		chip.size = Vector2(126,50 if Glyphs.touch else 38)
 		chip.focus_mode = Control.FOCUS_ALL
 		chip.add_theme_stylebox_override("focus",box(Color.TRANSPARENT,19,SKY,3))
 		chip.add_theme_font_override("font",body_medium)

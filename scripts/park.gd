@@ -1007,6 +1007,12 @@ const GRADES = {
 }
 var grading_luts = {}
 
+const TONE_WHITE = 3.0
+const TONE_GAIN = 1.22
+const TONE_CONTRAST = .93
+const TONE_SATURATION = 1.07
+const GRADE_CONTRAST = .35
+const GRADE_LIFT = .045
 func grading_lut(tod: String) -> ImageTexture3D:
 	if grading_luts.has(tod): return grading_luts[tod]
 	var grade: Dictionary = GRADES.get(tod,GRADES["day"])
@@ -1020,7 +1026,9 @@ func grading_lut(tod: String) -> ImageTexture3D:
 				var luma = c.dot(Vector3(.2126,.7152,.0722))
 				c += grade.shadows*(1.0-smoothstep(0.0,.55,luma))+grade.highlights*smoothstep(.45,1.0,luma)
 				var curved = Vector3(smoothstep(0.0,1.0,c.x),smoothstep(0.0,1.0,c.y),smoothstep(0.0,1.0,c.z))
-				c = c.lerp(curved,grade.contrast)
+				c = c.lerp(curved,grade.contrast*GRADE_CONTRAST)
+				# The toe of a film curve: the darkest tones keep some detail instead of going black.
+				c += Vector3.ONE*GRADE_LIFT*pow(1.0-clampf(luma,0,1),3.0)
 				luma = c.dot(Vector3(.2126,.7152,.0722))
 				c = Vector3(luma,luma,luma).lerp(c,grade.saturation)
 				image.set_pixel(r,g,Color(clampf(c.x,0,1),clampf(c.y,0,1),clampf(c.z,0,1)))
@@ -1108,11 +1116,16 @@ func apply_preset_values(preset: String) -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	# A brighter golden hour: the low sun alone left the park too dark.
 	# Blue hour: no sun at all, only the sky: lift it so the park reads (as the eye adapts).
-	env.tonemap_exposure = 0.90 * {"golden":1.2,"blue":1.7}.get(time_of_day,1.0)
-	env.tonemap_white = 1.45
+	# A gentler, more natural tone curve (user, 05-10-2026: «nos hemos pasado y queda poco natural»).
+	# The white point was 1.45: everything a little above mid-grey burnt out, which with the
+	# contrast and the S-curve of the grading on top gave blocked shadows and hard highlights. Now
+	# the highlights roll off (TONE_WHITE), the shadows are lifted off pure black (GRADE_LIFT in
+	# the grading) and contrast and saturation stay near neutral.
+	env.tonemap_exposure = 0.90 * TONE_GAIN * {"golden":1.2,"blue":1.7}.get(time_of_day,1.0)
+	env.tonemap_white = TONE_WHITE
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.03
-	env.adjustment_saturation = 1.14
+	env.adjustment_contrast = TONE_CONTRAST
+	env.adjustment_saturation = TONE_SATURATION
 	env.adjustment_color_correction = grading_lut(time_of_day)
 	env.fog_enabled = true
 	env.fog_depth_begin = 30.0 if meadow else 8.0

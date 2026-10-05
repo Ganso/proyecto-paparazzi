@@ -205,3 +205,9 @@ El contraste (desviación del brillo) queda también parejo de día (55 frente a
 
 Tras el aviso de un MacBook Air que no llegaba a 60 FPS (allí Forward+ va sobre Metal): sin gráfica dedicada el juego arranca en **Medio** (era Alto), y los perfiles ligeros no siguen a la pantalla más allá de `main.gd::RENDER_LINES` (Bajo y Medio 1080 líneas, Alto 1440; la escala del perfil se aplica encima): una ventana de 1440 × 810 en una pantalla Retina son 2880 × 1620 píxeles reales. Ultra y Personalizado dibujan todos los píxeles, así que quien quiera más lo tiene a un clic. Si aun así el juego va a menos de 42 FPS durante 12 s, avisa una vez sobre el visor (`watch_speed()`, texto `aviso_rendimiento`).
 
+## Curva de tonos más natural (05-10-2026)
+
+Decisión del usuario: «nos hemos pasado y queda poco natural». La imagen sumaba tres empujones de contraste: un punto blanco muy bajo en el mapeo ACES (1,45: todo lo que pasaba un poco del gris medio se quemaba), contraste 1,03 con saturación 1,14, y la curva en S de la gradación por luz. Ahora (`park.gd`): punto blanco 3,0 con la exposición compensada (`TONE_WHITE`, `TONE_GAIN`), contraste 0,93 y saturación 1,07 (`TONE_CONTRAST`, `TONE_SATURATION`), la curva en S de la gradación al 35 % (`GRADE_CONTRAST`) y un «pie» de película que levanta las sombras del negro puro (`GRADE_LIFT`). Vale para los dos renderizadores.
+
+Medido en el plano de `tools/compare_renderers.sh` (Forward+, de día): contraste de 56 a 52, sombras (p5) de 2 a 19 sobre 255, luces (p95) de 215 a 208. El brillo de OpenGL queda a un 1–10 % del de Forward+ en las cuatro luces. Quien prefiera otra curva tiene ACES, AgX y Filmic en Personalizado.
+
