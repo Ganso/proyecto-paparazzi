@@ -238,6 +238,10 @@ Ayuda en pantalla: %s
 ### opcion_vibracion
 Vibración del mando: %s
 
+### opcion_vibracion_tactil · Opciones, en un teléfono (botón de 260 px: unos 24 caracteres)
+> máximo 24 caracteres
+Vibración: %s
+
 ### opcion_invertir
 Invertir mirada: %s
 

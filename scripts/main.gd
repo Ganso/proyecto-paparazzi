@@ -637,16 +637,28 @@ func glyph_label(parent: Control, rich: String, rect: Rect2, font_size = 16, col
 	parent.add_child(node)
 	return node
 
+# Under a finger (docs/futuro/26 A3) the buttons and lists of the screens grow to a height that
+# can be hit — about 6.5 mm on a 6.7" phone — around their own middle, without leaving the screen.
+# The screens are laid out with at least 60 units between rows, so nothing overlaps.
+const TOUCH_BUTTON = 66.0
+const TOUCH_OPTION = 56.0
+func finger_rect(rect: Rect2, least: float) -> Rect2:
+	if not Glyphs.touch or rect.size.y >= least or rect.size.y < 40: return rect
+	var grown = Rect2(rect.position.x,rect.position.y-(least-rect.size.y)*.5,rect.size.x,least)
+	grown.position.y = clampf(grown.position.y,4,716-least)
+	return grown
+
 func button(parent: Control, text_value: String, rect: Rect2, callback: Callable, primary = false) -> Button:
 	var node = Button.new()
 	node.text = text_value
+	rect = finger_rect(rect,TOUCH_BUTTON)
 	node.position = rect.position
 	node.size = rect.size
 	# Buttons of the screens can take the focus (gamepad and keyboard navigation, docs/futuro/14 §5);
 	# the HUD's stay out of it so the D-pad never steals it while searching.
 	var on_screen = is_instance_valid(modal) and (parent == modal or modal.is_ancestor_of(parent))
 	node.focus_mode = Control.FOCUS_ALL if on_screen else Control.FOCUS_NONE
-	node.add_theme_font_size_override("font_size",16)
+	node.add_theme_font_size_override("font_size",18 if Glyphs.touch and on_screen else 16)
 	if primary:
 		UiStyle.primary(node)
 		if on_screen: node.call_deferred("grab_focus")
@@ -1233,7 +1245,9 @@ func save_to_album(texture: Texture2D, result: Dictionary) -> String:
 	return Album.add(image,{"score":result.score,"stars":result.stars,"f":e.f,"n":e.n,"t":e.t,"iso":e.iso,"date":Time.get_datetime_string_from_system(false,true).substr(0,16),"where":where,"panning":result.get("panning",false)})
 
 var album_page = 0
+var album_viewing = false
 func show_album(page = 0) -> void:
+	album_viewing = false
 	mode = "ALBUM"
 	var root = create_modal()
 	var photos = Album.list()
@@ -1279,6 +1293,7 @@ func album_caption(photo: Dictionary) -> String:
 	return caption+(" · "+Texts.get_text("album_barrido") if photo.get("panning",false) else "")
 
 func show_album_photo(index: int) -> void:
+	album_viewing = true
 	var photos = Album.list()
 	if index < 0 or index >= photos.size():
 		show_album(album_page)
@@ -1466,6 +1481,8 @@ func _process(dt: float) -> void:
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)
+	# (The bars of the classic HUD used to show through the glass of the menu, like a ghost.)
+	if mode == "INTRO" and not hud_top.is_empty() and hud_top[0].visible: update_hud_visibility(dt)
 	update_portrait(dt)
 	if crowd and mode != "INTRO": update_photographer(dt)
 	elif mode != "INTRO": update_classic_raise(dt)
@@ -3645,14 +3662,14 @@ func show_pause(confirm = false) -> void:
 	var root = create_modal()
 	label(root,Texts.get_text("pausa_titulo"),Rect2(440,190,400,60),40)
 	if not confirm:
-		button(root,Texts.get_text("pausa_seguir"),Rect2(440,280,400,56),resume_search,true)
+		button(root,Texts.get_text("pausa_seguir"),Rect2(440,270 if Glyphs.touch else 280,400,56),resume_search,true)
 		button(root,Texts.get_text("pausa_ayuda"),Rect2(440,350,400,56),show_help)
-		button(root,Texts.get_text("pausa_salir"),Rect2(440,420,400,56),func(): show_pause(true))
+		button(root,Texts.get_text("pausa_salir"),Rect2(440,430 if Glyphs.touch else 420,400,56),func(): show_pause(true))
 	else:
 		var warn = label(root,Texts.get_text("pausa_confirmar"),Rect2(440,260,400,60),18,UiStyle.WARN)
 		warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button(root,Texts.get_text("pausa_no"),Rect2(440,340,400,56),resume_search,true)
-		button(root,Texts.get_text("pausa_si"),Rect2(440,410,400,56),leave_phase)
+		button(root,Texts.get_text("pausa_si"),Rect2(440,420 if Glyphs.touch else 410,400,56),leave_phase)
 
 # Pause of a lesson of the Academy (Esc, the ✕ button, Menu on the gamepad): everything the panel
 # offers, within reach of the gamepad too — carry on, next, back, pause the scene, leave.
@@ -3666,7 +3683,7 @@ func show_lesson_menu() -> void:
 		[Texts.get_text("academia_reanudar") if academy.paused else Texts.get_text("academia_pausar"),func(): resume_search(); academy.toggle_pause()],
 		[Texts.get_text("academia_salir"),func(): academy.exit_lesson()]]
 	for k in entries.size():
-		var b = button(root,entries[k][0],Rect2(440,200+k*66,400,54),entries[k][1],k == 0)
+		var b = button(root,entries[k][0],Rect2(440,200+k*(76 if Glyphs.touch else 66),400,54),entries[k][1],k == 0)
 		if k == 2 and academy.back_button.disabled: b.disabled = true
 
 func leave_phase() -> void:
@@ -3760,6 +3777,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				tutorial.stop()
 				intro()
 			elif mode == "BRIEFING": show_arcade() if arcade_level >= 0 else intro()
+			# (These three had no way back but their own button: Escape, B and Android's «back» now do.)
+			elif mode == "ALBUM":
+				if album_viewing: show_album(album_page)
+				else: intro()
+			elif mode in ["BADGES","ACADEMY"]: intro()
 			elif mode == "LEVEL_END": show_arcade()
 			elif mode == "RESULT" and not (academy and academy.active): resume_search() if shots > 0 and not level_over else finish_assignment()
 			return
@@ -4004,9 +4026,14 @@ func apply_equipment() -> void:
 
 func option(parent: Control, values: Array, selected: int, rect: Rect2, callback: Callable) -> OptionButton:
 	var control = OptionButton.new()
-	control.position = rect.position
-	control.size = rect.size
+	var shown = finger_rect(rect,TOUCH_OPTION) if rect.size.y >= 40 else rect
+	control.position = shown.position
+	control.size = shown.size
 	control.add_theme_font_size_override("font_size",20)
+	if Glyphs.touch:
+		# The list that drops down: taller rows and bigger letters, to pick one with a finger.
+		control.get_popup().add_theme_font_size_override("font_size",24)
+		control.get_popup().add_theme_constant_override("v_separation",22)
 	for value in values: control.add_item(str(value))
 	control.select(selected)
 	# Choosing rebuilds the screen: the same list keeps the focus (gamepad and keyboard), instead of
@@ -4180,6 +4207,9 @@ func show_graphics_settings() -> void:
 	mode = "GRAPHICS"
 	var root = create_modal()
 	label(root,Texts.get_text("gfx_titulo"),Rect2(60,18,500,46),34)
+	if not ParkScene.forward_plus():
+		show_light_graphics(root)
+		return
 	var sub = label(root,Texts.get_text("gfx_subtitulo"),Rect2(60,62,1160,24),14,Color("b5c3ad"))
 	label(root,Texts.get_text("gfx_perfil"),Rect2(60,96,200,18),12,Color("b8d78c"))
 	var names = ["Bajo","Medio","Alto","Ultra",Graphics.CUSTOM]
@@ -4273,16 +4303,41 @@ func show_graphics_settings() -> void:
 				y += 40
 		if column == 1: y += 40
 		list.custom_minimum_size = Vector2(1110,y+8)
-	button(root,Texts.get_text("gfx_volver"),Rect2(900,626,320,52),func():
-		mode = graphics_return
-		match graphics_return:
-			"INTRO": intro()
-			"RESULT": show_results()
-			"BRIEFING": show_assignment()
-			"EQUIPMENT": show_equipment()
-			_: close_modal()
-		refresh()
-	, true)
+	button(root,Texts.get_text("gfx_volver"),Rect2(900,626,320,52),leave_graphics,true)
+
+func leave_graphics() -> void:
+	mode = graphics_return
+	match graphics_return:
+		"INTRO": intro()
+		"RESULT": show_results()
+		"BRIEFING": show_assignment()
+		"EQUIPMENT": show_equipment()
+		_: close_modal()
+	refresh()
+
+# The graphics screen of the light renderer (phone, tablet, browser): the Forward+ parameters of
+# the desktop mean nothing there, so only what does something is offered, and big enough for a
+# finger: the profile (shadows, smoothing, detail), the frame limit and the frame counter.
+func show_light_graphics(root: Control) -> void:
+	label(root,Texts.get_text("gfx_subtitulo_ligero"),Rect2(60,70,1160,52),18,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label(root,Texts.get_text("gfx_perfil"),Rect2(60,150,200,22),15,Color("b8d78c"))
+	var names = ["Bajo","Medio","Alto","Ultra"]
+	if Graphics.is_custom(graphics_preset): graphics_preset = "Medio"
+	for i in names.size():
+		var pname: String = names[i]
+		var active = graphics_preset == pname
+		button(root,("✓ " if active else "")+pname,Rect2(60+i*292,180,276,76),func():
+			select_graphics_profile(pname)
+			show_graphics_settings()
+		,active).add_theme_font_size_override("font_size",22)
+	label(root,Texts.get_text("gfx_pantalla"),Rect2(60,300,200,22),15,Color("b8d78c"))
+	var d = Graphics.display
+	var limits = Graphics.FPS_LIMITS.map(func(v): return Texts.get_text("gfx_no") if v == 0 else str(v))
+	label(root,Texts.get_text("gfx_limite"),Rect2(60,348,170,34),22)
+	option(root,limits,maxi(0,Graphics.FPS_LIMITS.find(int(d.get("limit",60)))),Rect2(236,334,150,64),func(i): set_display("limit",Graphics.FPS_LIMITS[i])).add_theme_font_size_override("font_size",24)
+	label(root,Texts.get_text("gfx_fps"),Rect2(450,348,110,34),22)
+	option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(560,334,130,64),func(i): set_display("fps",i == 0)).add_theme_font_size_override("font_size",24)
+	button(root,Texts.get_text("gfx_volver"),Rect2(900,616,320,70),leave_graphics,true)
 
 # Frames per second, top left over everything (Graphics.display.fps): the average of the last
 # half second and its frame time.
@@ -4738,44 +4793,49 @@ func show_academy() -> void:
 	# One compact row per lesson, in a list that scrolls: the ten there are and the ones to come.
 	var scroll = ScrollContainer.new()
 	scroll.position = Vector2(75,128)
-	scroll.size = Vector2(1146,498)
+	scroll.size = Vector2(1146,488 if Glyphs.touch else 498)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
 	root.add_child(scroll)
 	var rows = Control.new()
 	scroll.add_child(rows)
 	var soon = 5
+	# Under a finger the rows are tall enough to hit their buttons (the list scrolls by dragging).
+	var st = 82 if Glyphs.touch else 49
+	var rh = st-4
+	var mid = (rh-45)/2
+	var title_size = 22 if Glyphs.touch else 18
 	for n in range(1,academy.LESSONS+1):
-		var y = (n-1)*49
-		panel(rows,Rect2(0,y,1130,45),Color(.075,.115,.085,.95))
-		label(rows,"%d" % n,Rect2(13,y+6,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label(rows,Texts.get_text(academy.lesson_key(n,"titulo")),Rect2(65,y+2,440,24),18,Color("e6ebdb"))
-		label(rows,Texts.get_text(academy.lesson_key(n,"resumen")),Rect2(65,y+25,440,18),12,Color("a9b8a0"))
+		var y = (n-1)*st
+		panel(rows,Rect2(0,y,1130,rh),Color(.075,.115,.085,.95))
+		label(rows,"%d" % n,Rect2(13,y+6+mid,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(rows,Texts.get_text(academy.lesson_key(n,"titulo")),Rect2(65,y+2+mid*.5,440,30),title_size,Color("e6ebdb"))
+		label(rows,Texts.get_text(academy.lesson_key(n,"resumen")),Rect2(65,y+25+mid*1.5,440,22),15 if Glyphs.touch else 12,Color("a9b8a0"))
 		var columns = [515,587,699,781]
 		var marks: Array = academy.PHASES+["examen"]
 		for k in marks.size():
 			var ph: String = marks[k]
 			var ok = academy.done(n,ph)
-			label(rows,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+12,112,22),13,Color("b8d78c") if ok else Color("8f9f86"))
+			label(rows,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+12+mid,112,22),13,Color("b8d78c") if ok else Color("8f9f86"))
 		# First the lesson, then its exam — and no exam before the theory has been read.
 		var started = academy.done(n,"teoria")
 		var first = n == 1 if academy.practices_done() == 0 and not academy.done(1,"teoria") else (not started and (n == 1 or academy.done(n-1,"teoria")))
-		button(rows,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(865,y+6,118,33),func(): close_modal(); academy.begin(n),first).add_theme_font_size_override("font_size",14)
-		var exam_button = button(rows,Texts.get_text("academia_examen_boton"),Rect2(993,y+6,127,33),func(): close_modal(); academy.begin(n,"examen"))
-		exam_button.add_theme_font_size_override("font_size",13)
+		button(rows,Texts.get_text("academia_repasar") if started else Texts.get_text("academia_empezar"),Rect2(865,y+6,118,rh-12),func(): close_modal(); academy.begin(n),first).add_theme_font_size_override("font_size",17 if Glyphs.touch else 14)
+		var exam_button = button(rows,Texts.get_text("academia_examen_boton"),Rect2(993,y+6,127,rh-12),func(): close_modal(); academy.begin(n,"examen"))
+		exam_button.add_theme_font_size_override("font_size",15 if Glyphs.touch else 13)
 		exam_button.disabled = not started
 		if not started: exam_button.focus_mode = Control.FOCUS_NONE
 	for k in soon:
-		var y = (academy.LESSONS+k)*49
-		panel(rows,Rect2(0,y,1130,45),Color(.075,.115,.085,.55))
-		label(rows,"%d" % (academy.LESSONS+k+1),Rect2(13,y+6,44,34),24,Color("8f9f86")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label(rows,Texts.get_text("academia_prox_%d" % (k+1)),Rect2(65,y+10,640,26),18,Color("a9b8a0"))
+		var y = (academy.LESSONS+k)*st
+		panel(rows,Rect2(0,y,1130,rh),Color(.075,.115,.085,.55))
+		label(rows,"%d" % (academy.LESSONS+k+1),Rect2(13,y+6+mid,44,34),24,Color("8f9f86")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(rows,Texts.get_text("academia_prox_%d" % (k+1)),Rect2(65,y+10+mid,640,26),18,Color("a9b8a0"))
 		# A button that does nothing, so the D-pad and the arrows reach the row and the list follows.
-		var later = button(rows,Texts.get_text("academia_proximamente"),Rect2(865,y+6,255,33),func(): pass)
+		var later = button(rows,Texts.get_text("academia_proximamente"),Rect2(865,y+6,255,rh-12),func(): pass)
 		later.add_theme_font_size_override("font_size",13)
 		later.add_theme_color_override("font_color",Color("efaf83"))
-	label(rows,Texts.get_text("academia_mucho_mas"),Rect2(65,(academy.LESSONS+soon)*49+8,640,26),18,Color("a9b8a0"))
-	rows.custom_minimum_size = Vector2(1130,(academy.LESSONS+soon)*49+46)
+	label(rows,Texts.get_text("academia_mucho_mas"),Rect2(65,(academy.LESSONS+soon)*st+8,640,26),18,Color("a9b8a0"))
+	rows.custom_minimum_size = Vector2(1130,(academy.LESSONS+soon)*st+46)
 	label(root,Texts.get_text("academia_progreso") % [academy.practices_done(),academy.LESSONS]+" · "+(Texts.get_text("academia_graduado") if academy.graduated() else Texts.get_text("academia_examenes_progreso") % [academy.exams_done(),academy.LESSONS]),Rect2(620,650,585,28),15,Color("a7c683"))
 	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,636,260,50),intro)
 	button(root,Texts.get_text("academia_reiniciar"),Rect2(350,636,240,50),func(): academy.reset_progress(); show_academy())

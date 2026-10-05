@@ -94,12 +94,13 @@ func _process(_dt: float) -> void:
 	var out_left = clampf(main.frame_offset.x-main.safe_inset.x,0,134)
 	var out_right = clampf(main.frame_offset.x-main.safe_inset.y,0,134)
 	var x = 1146.0+out_right
-	if lesson and main.academy.panel.visible: x = main.academy.panel.position.x-134.0
+	# (Only where there is no band to stand in: on a 16:9 screen the column would be under the panel.)
+	if lesson and main.academy.panel.visible and out_right < 134: x = main.academy.panel.position.x-134.0
 	stick_centre = STICK_CENTRE-Vector2(out_left,0)
 	# Out in the bands the buttons take the whole band and grow to a finger's size (about 8 mm on
 	# a 6.7" phone: 78 units of the 720; the user, 05-10-2026: «los botones siguen siendo pequeños»).
 	# Over the picture (16:9 screens, the Academy's lessons) they keep the narrow column.
-	var wide_r = out_right >= 134 and not (lesson and main.academy.panel.visible)
+	var wide_r = out_right >= 134
 	var wide_l = out_left >= 134
 	var w = 124.0
 	if wide_r:

@@ -33,6 +33,7 @@ var title_font: Font
 var body_font: Font
 var body_medium: Font
 var light_font: Font
+const FINGER = 1.22
 static var web_notice_shown = false
 var web_notice_modal: Control
 
@@ -135,22 +136,25 @@ func build() -> void:
 	add_child(logo)
 	text(self,Texts.get_text("menu_estudio"),Vector2(x+104,58),13,UiStyle.SKY_DEEP,body_medium)
 	text(self,Texts.get_text("nombre_juego"),Vector2(x+102,78),54,UiStyle.BRAND,title_font)
-	text(self,Texts.get_text("menu_lema"),Vector2(x,150),16,SOFT,light_font,600)
+	# Under a finger (docs/futuro/26 A3) the card is drawn FINGER times bigger, with everything in
+	# it: it takes the place of the tagline, and the arrows at its sides grow with it.
+	var big = FINGER if Glyphs.touch else 1.0
+	if not Glyphs.touch: text(self,Texts.get_text("menu_lema"),Vector2(x,150),16,SOFT,light_font,600)
 	# ‹ card › with the dots of the five modes under it.
-	var left = flat_button(self,"‹",Rect2(x-62,330,48,96),func(): change_mode(-1))
+	var left = flat_button(self,"‹",Rect2(x-76,300,64,140) if Glyphs.touch else Rect2(x-62,330,48,96),func(): change_mode(-1))
 	left.add_theme_font_size_override("font_size",40)
-	var right = flat_button(self,"›",Rect2(x+618,330,48,96),func(): change_mode(1))
+	var right = flat_button(self,"›",Rect2(x+600*big+12,300,64,140) if Glyphs.touch else Rect2(x+618,330,48,96),func(): change_mode(1))
 	right.add_theme_font_size_override("font_size",40)
 	for k in MODES.size():
 		var dot = Panel.new()
-		dot.position = Vector2(x+300-MODES.size()*12+k*24,602)
+		dot.position = Vector2(x+300*big-MODES.size()*12+k*24,640 if Glyphs.touch else 602)
 		dot.size = Vector2(12,12)
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(dot)
 		dots.append(dot)
 	hint = GlyphLabel.new()
-	hint.position = Vector2(x,628)
-	hint.size = Vector2(600,24)
+	hint.position = Vector2(x,662 if Glyphs.touch else 628)
+	hint.size = Vector2(600*big,24)
 	hint.font_size = 13
 	hint.color = FAINT
 	hint.align_center = true
@@ -181,8 +185,9 @@ func build_card() -> void:
 	if is_instance_valid(card): card.queue_free()
 	var x = 96.0
 	card = Panel.new()
-	card.position = Vector2(x,200)
+	card.position = Vector2(x,152 if Glyphs.touch else 200)
 	card.size = Vector2(600,390)
+	if Glyphs.touch: card.scale = Vector2(FINGER,FINGER)
 	card.add_theme_stylebox_override("panel",box(UiStyle.surf(.78),20,LINE,1,18))
 	add_child(card)
 	var mode: String = MODES[current]
@@ -239,8 +244,8 @@ func build_sandbox() -> void:
 	for k in 2:
 		var which = ["clasico","grande"][k]
 		var c = Button.new()
-		c.position = Vector2(32+k*276,170)
-		c.size = Vector2(260,70)
+		c.position = Vector2(32+k*276,164 if Glyphs.touch else 170)
+		c.size = Vector2(260,78 if Glyphs.touch else 70)
 		c.focus_mode = Control.FOCUS_ALL
 		c.add_theme_stylebox_override("focus",box(Color.TRANSPARENT,14,SKY,3))
 		c.pressed.connect(func(): select_scenario(which))
@@ -282,7 +287,7 @@ func build_options() -> void:
 		[Texts.get_text("menu_graficos"),main.show_graphics_settings],
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
 		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
-		[Texts.get_text("opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
+		[Texts.get_text("opcion_vibracion_tactil" if Glyphs.touch and OS.has_feature("mobile") else "opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
 		[Texts.get_text("opcion_invertir") % Texts.get_text("invertir_"+main.look_invert),func(): main.set_look_invert(main.INVERT_CHOICES[(main.INVERT_CHOICES.find(main.look_invert)+1)%4]); build_card()],
 		[Texts.get_text("menu_insignias"),main.show_badges],
 		[Texts.get_text("menu_album"),func(): main.show_album()],

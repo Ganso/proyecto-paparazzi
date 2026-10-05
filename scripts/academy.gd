@@ -263,6 +263,13 @@ func build_ui() -> void:
 	exit_button = make_button(panel,Texts.get_text("academia_salir"),Rect2(186,352,167,32),exit_lesson)
 	back_button = make_button(panel,Texts.get_text("academia_atras"),Rect2(12,394,120,46),go_back)
 	next_button = make_button(panel,Texts.get_text("academia_siguiente"),Rect2(138,394,215,46),go_next,true)
+	if Glyphs.touch:
+		# Under a finger: the panel grows downwards and its four buttons with it.
+		panel.position.y = PANEL_RECT.position.y-24
+		panel.size.y = PANEL_RECT.size.y+50
+		for pair in [[pause_button,Rect2(12,352,168,56)],[exit_button,Rect2(186,352,167,56)],[back_button,Rect2(12,418,120,72)],[next_button,Rect2(138,418,215,72)]]:
+			pair[0].position = pair[1].position
+			pair[0].size = pair[1].size
 	subtitle_panel = Panel.new()
 	subtitle_panel.position = Vector2(40,536)   # clear of the LED strip under the SLR finder
 	subtitle_panel.size = Vector2(840,58)

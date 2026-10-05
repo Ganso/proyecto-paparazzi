@@ -189,6 +189,10 @@ Ver FPS
 > máximo 14 caracteres
 Límite de FPS
 
+### gfx_subtitulo_ligero · Pantalla de gráficos del móvil y del navegador (1160 px a 18 px: dos líneas, unos 200 caracteres)
+> máximo 200 caracteres
+En el móvil y en el navegador el juego usa un renderizador ligero. El perfil cambia las sombras, el suavizado y el detalle: Si va lento, baja de perfil.
+
 ### aviso_rendimiento · Aviso sobre el visor cuando el juego va a menos de 42 FPS (700 px a 16 px: una línea, unos 85 caracteres)
 > máximo 90 caracteres
 El juego va lento en este equipo: Prueba un perfil más bajo en Opciones → Gráficos.
