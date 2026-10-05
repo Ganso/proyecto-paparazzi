@@ -186,7 +186,7 @@ func build_card() -> void:
 	card.add_theme_stylebox_override("panel",box(UiStyle.surf(.78),20,LINE,1,18))
 	add_child(card)
 	var mode: String = MODES[current]
-	text(card,Texts.get_text("modo_"+mode).to_upper(),Vector2(32,26),13,UiStyle.SKY_DEEP,body_medium)
+	text(card,(Texts.get_text("modo_d_de_d") % [current+1,MODES.size()]).to_upper(),Vector2(32,26),13,UiStyle.SKY_DEEP,body_medium)
 	text(card,Texts.get_text("modo_"+mode+"_titulo"),Vector2(30,44),44,UiStyle.BRAND,title_font)
 	text(card,Texts.get_text("modo_"+mode+"_texto"),Vector2(32,108),16,SOFT,light_font,536)
 	match mode:

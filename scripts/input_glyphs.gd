@@ -65,8 +65,8 @@ const TOUCH = {
 	"punto_enfoque": "un toque en la imagen", "tercios": "«Tercios»", "fotometria": "el botón de medición", "bloqueo": "«Bloqueo»",
 	"lupa": "«Lupa»", "manivela": "«Manivela»", "bajar": "«Cámara»", "ayuda_pantalla": "—", "controles": "la tira",
 	"ayuda": "«Ayuda»", "pausa": "«Pausa»", "atras": "«Atrás»", "aceptar": "un toque", "elegir_opcion": "un toque",
-	"cambiar_modo": "‹ › o deslizando", "andar": "la palanca de la izquierda", "correr": "llevándola al borde",
-	"agacharse": "—", "mirar_paseo": "arrastrando un dedo", "sacar": "«Cámara»",
+	"cambiar_modo": "‹ › o deslizando", "andar": "la palanca de la izquierda", "correr": "«Correr»",
+	"agacharse": "«Agacharse»", "mirar_paseo": "arrastrando un dedo", "sacar": "«Cámara»",
 }
 
 const MOUSE_SWITCH = 60.0        # pixels the mouse must travel within 0.4 s to take over

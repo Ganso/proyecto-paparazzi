@@ -30,7 +30,7 @@ Clásica · controles siempre a la vista
 {andar}: Andar · {correr}: Correr · {agacharse}: Agacharse · {mirar_paseo}: Mirar · {sacar}: Sacar la cámara · {pausa}: Pausa
 
 ### paseo_sandbox
-Paseo libre · saca la cámara con el clic derecho
+Paseo libre · saca la cámara con {sacar}
 
 ### tlr_manivela
 Gira la manivela (K) para avanzar la película.

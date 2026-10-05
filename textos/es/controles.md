@@ -172,12 +172,12 @@ Controles táctiles
 ### ayuda_texto_tactil
 Mirar: Arrastra un dedo por la imagen.
 Zoom: Pellizca con dos dedos, o elige Zoom en la tira de abajo y usa − y +.
-Enfocar: Un toque sobre la persona, o el botón «AF».
-Disparar: El botón ●.
-Ajustes de la cámara: Toca uno en la tira de abajo y cámbialo con − y +. Solo aparecen los que puedes cambiar.
+Enfocar: Un toque sobre la persona, o el botón «AF». Un toque largo enfoca y bloquea foco y exposición.
+Disparar: El botón ●. Al apretarlo enfoca y al soltarlo dispara. Si deslizas el dedo fuera, no dispara.
+Ajustes de la cámara: Toca uno en la tira de abajo y cámbialo con − y +, o desliza el dedo sobre él.
 Buscar a simple vista: «Cámara» la baja y la vuelve a subir.
 A la izquierda: Tercios, bloqueo de foco y exposición, y modo de medición.
-Parque grande: La palanca de la izquierda camina (hasta el borde, corre) y arrastrando el dedo se mira.
+Parque grande: La palanca camina y arrastrando el dedo se mira. «Correr» y «Agacharse» se quedan puestos.
 
 ### tactil_pausa
 Pausa
@@ -214,6 +214,14 @@ Manivela
 
 ### tactil_andar
 Andar
+
+### tactil_agachar · Botón táctil del parque grande (124 px: una palabra)
+> máximo 10 caracteres
+Agacharse
+
+### tactil_correr · Botón táctil del parque grande (124 px: una palabra)
+> máximo 10 caracteres
+Correr
 
 ### ayuda_fotometria
 Fotometría

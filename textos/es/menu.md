@@ -123,6 +123,10 @@ VERSIÓN ALFA 0.3.0 · EN DESARROLLO
 ### nombre_juego
 PhotoHacks
 
+### modo_d_de_d · Rótulo sobre el título de cada modo del menú
+> máximo 16 caracteres
+Modo %d de %d
+
 ### cargando_parque · Pantalla de carga (también va dibujado en assets/marca/carga.png: tools/build_branding.sh)
 > máximo 30 caracteres
 Cargando el parque…
@@ -174,21 +178,6 @@ Arcade · 20 niveles
 
 ### menu_sandbox_titulo
 SANDBOX · ELIGE ESCENARIO Y LUZ
-
-### modo_arcade
-Modo 1 de 6
-
-### modo_tutorial
-Modo 3 de 6
-
-### modo_sandbox
-Modo 4 de 6
-
-### modo_academia
-Modo 5 de 6
-
-### modo_opciones
-Modo 6 de 6
 
 ### modo_arcade_titulo
 Arcade
@@ -263,9 +252,6 @@ Vertical
 
 ### invertir_ambos
 Ambos
-
-### modo_historia
-Modo 2 de 6
 
 ### modo_historia_titulo
 Historia

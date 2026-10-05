@@ -138,6 +138,8 @@ var portrait_of = null
 # D-pad ↑↓ or Page Up/Down change. "" until chosen: then the first the camera lets the player drive.
 var selected_control = ""
 var touch_controls: Control
+var touch_crouch = false             # …and its «crouch» and «run» buttons (toggles)
+var touch_run = false
 var touch_move = Vector2.ZERO        # the walking stick of the touch interface
 var control_strip: Control
 var hunt_time = 0.0                 # seconds searching with the camera at the eye (hint: lower it)
@@ -1384,7 +1386,11 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_APPLICATION_PAUSED: to_background(true)
 	elif what == NOTIFICATION_APPLICATION_RESUMED: to_background(false)
 
+var last_back = -1000
 func go_back() -> void:
+	# (Android sends the request more than once for one press: one is enough.)
+	if Time.get_ticks_msec()-last_back < 350: return
+	last_back = Time.get_ticks_msec()
 	if mode == "INTRO":
 		get_tree().quit()
 		return
@@ -2268,8 +2274,8 @@ func update_photographer(dt: float) -> void:
 		var wish = forward*(-input.y)+right*input.x
 		# Gamepad: L3 toggles running (off again when the stick is let go), LT held crouches.
 		if pad.length() <= .2: pad_run = false
-		var crouching = Input.is_physical_key_pressed(KEY_CTRL) or Input.get_joy_axis(0,JOY_AXIS_TRIGGER_LEFT) > .5
-		var running = Input.is_physical_key_pressed(KEY_SHIFT) or pad_run or touch_move.length() > .92
+		var crouching = Input.is_physical_key_pressed(KEY_CTRL) or Input.get_joy_axis(0,JOY_AXIS_TRIGGER_LEFT) > .5 or touch_crouch
+		var running = Input.is_physical_key_pressed(KEY_SHIFT) or pad_run or touch_move.length() > .92 or (touch_run and touch_move.length() > .2)
 		var speed = (RUN_SPEED if running else WALK_SPEED)*(.55 if crouching else 1.0)
 		var target_velocity = wish.limit_length(1.0)*speed
 		var walk_velocity = player.velocity.move_toward(target_velocity,dt*9.0)
@@ -4097,7 +4103,7 @@ func show_graphics_settings() -> void:
 	# Display: any profile.
 	label(root,Texts.get_text("gfx_pantalla"),Rect2(60,172,200,18),12,Color("b8d78c"))
 	var d = Graphics.display
-	if OS.has_feature("web"):
+	if OS.has_feature("web") or OS.has_feature("mobile"):   # (no window to set in a browser or on a phone)
 		label(root,Texts.get_text("gfx_fps"),Rect2(60,194,60,30),14)
 		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(124,190,76,36),func(i): set_display("fps",i == 0))
 	else:

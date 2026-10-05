@@ -18,6 +18,8 @@ var held = 0                 # −1 / +1 while a touch button is held
 var held_time = 0.0
 var main
 var chips: Array = []
+var slide = 0.0
+const DRAG_STEP = 34.0
 var ids: Array = []
 var hint: Control
 var styled = ""              # the chip the styles were last set for
@@ -88,7 +90,15 @@ func rebuild(list: Array) -> void:
 		b.gui_input.connect(func(event):
 			if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 				main.selected_control = id
-				main.change_control(1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1))
+				main.change_control(1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1)
+			# A finger sliding over a chip changes its value, one step every DRAG_STEP (26 B3).
+			elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed: slide = 0.0
+			elif event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT and Glyphs.touch:
+				slide += event.relative.x
+				while absf(slide) >= DRAG_STEP:
+					main.selected_control = id
+					main.change_control(1 if slide > 0 else -1)
+					slide -= DRAG_STEP*signf(slide))
 		add_child(b)
 		chips.append(b)
 

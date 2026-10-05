@@ -62,6 +62,12 @@ func _ready() -> void:
 		main.update_finder_shader()
 		main.refresh())
 	make("manivela","tactil_manivela",func(): main.wind_film())
+	# The big park (docs/futuro/26 B9): crouch, with the camera at the eye or not, and run without
+	# having to keep the stick against its edge. Both stay on until touched again.
+	for id in ["agachar","correr"]:
+		var b = make(id,"tactil_"+id,func(): pass)
+		b.toggle_mode = true
+		b.toggled.connect(func(on): main.set("touch_crouch" if id == "agachar" else "touch_run",on))
 
 func place(id: String, rect: Rect2, show: bool) -> void:
 	var b: Button = buttons[id]
@@ -72,6 +78,8 @@ func place(id: String, rect: Rect2, show: bool) -> void:
 func _process(_dt: float) -> void:
 	visible = Glyphs.touch and Glyphs.device == "tactil" and main.mode == "SEARCH"
 	if not visible:
+		main.touch_crouch = false
+		buttons.agachar.set_pressed_no_signal(false)
 		stick_finger = -1
 		stick_vector = Vector2.ZERO
 		main.touch_move = Vector2.ZERO
@@ -102,6 +110,14 @@ func _process(_dt: float) -> void:
 	buttons.medicion.text = Texts.get_text("fotometria_"+main.equipment.metering)
 	place("lupa",Rect2(10-out_left,348,124,58),left and main.equipment.tlr())
 	place("manivela",Rect2(10-out_left,414,124,58),left and main.equipment.tlr() and main.sandbox and not lesson and (not main.tlr_wound or main.tlr_frames <= 0))
+	var park_walk: bool = main.crowd != null and not hands_off
+	place("agachar",Rect2(x,140,124,56),park_walk)
+	place("correr",Rect2(x,508,124,66),park_walk and walking)
+	if not park_walk and (main.touch_crouch or main.touch_run):
+		buttons.agachar.set_pressed_no_signal(false)
+		buttons.correr.set_pressed_no_signal(false)
+		main.touch_crouch = false
+		main.touch_run = false
 	main.touch_move = stick_vector if walking else Vector2.ZERO
 	if not walking:
 		stick_finger = -1
