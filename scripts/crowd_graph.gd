@@ -129,7 +129,13 @@ func walk(p, dt: float) -> void:
 	if p.pass_timer <= 0: p.pass_side = 0.0
 	var nearest_lat = NAN
 	var nearest_ahead = INF
-	for other in main.everybody():
+	var list: Array = main.everybody()
+	var at: PackedVector3Array = main.everybody_at
+	var here: Vector3 = p.position
+	for i in list.size():
+		# (25 m² is the exact limit just below; this sieve, on where each one began the round, is wider.)
+		if here.distance_squared_to(at[i]) > 36.0: continue
+		var other = list[i]
 		if other == p or not other.visible: continue
 		var rel = other.position-p.position
 		if rel.length_squared() > 25.0: continue

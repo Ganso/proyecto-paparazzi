@@ -1588,6 +1588,9 @@ func _process(dt: float) -> void:
 		get_tree().quit()
 
 func update_person(p: Pedestrian, dt: float) -> void:
+	# A new round over the people (several per frame when time is fast-forwarded): everybody()
+	# takes everyone's place again.
+	if p == people[0]: everybody_frame = -1
 	if crowd:
 		crowd.update(p,dt)
 		return
@@ -4541,7 +4544,13 @@ func everybody() -> Array:
 	if frame != everybody_frame or everybody_list.size() != people.size()+(1 if player_proxy else 0):
 		everybody_frame = frame
 		everybody_list = people+([player_proxy] if player_proxy else [])
+		# Where each one was when this round began: a cheap first sieve for the loops that measure
+		# everyone against everyone (nobody moves as much as NEAR_SLACK in one round).
+		everybody_at.resize(everybody_list.size())
+		for i in everybody_list.size(): everybody_at[i] = everybody_list[i].position
 	return everybody_list
+var everybody_at = PackedVector3Array()
+const NEAR_SLACK = 1.0
 
 func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true) -> bool:
 	# A swept body volume avoids stepping through benches, trunks and other people.
@@ -4561,7 +4570,11 @@ func travel_clear(p: Pedestrian, from: Vector3, to: Vector3, static_check = true
 	# Nobody further than this from the start can be nearer than HARD_SPACE to any point of the step.
 	var reach = HARD_SPACE+from.distance_to(to)+.01
 	var reach_sq = reach*reach
-	for other in everybody():
+	var list = everybody()
+	var sieve = (reach+NEAR_SLACK)*(reach+NEAR_SLACK)
+	for i in list.size():
+		if from.distance_squared_to(everybody_at[i]) > sieve: continue
+		var other = list[i]
 		if other == p or not other.visible: continue
 		if from.distance_squared_to(other.position) > reach_sq: continue
 		var nearest = Geometry3D.get_closest_point_to_segment(other.position,from,to)
