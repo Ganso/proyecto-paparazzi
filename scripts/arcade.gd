@@ -47,6 +47,14 @@ const LEVELS = [
 	{"scenario":"clasico","time":"night","body":2,"lens":2,"auto":false,"focus":"AF puntual","pace":.6,"shots":2,"limit":90,"min":80,"cond":{"ojos":true,"aislado":true,"grande":.5}},
 ]
 
+# Passing clouds darken the park only where reading the light is the job (user, 05-10-2026): the
+# levels with manual exposure, by day or at golden hour. Everywhere else the light holds still.
+# The level's briefing says so (arcade_aviso_nubes).
+static func clouds(n: int) -> bool:
+	if n < 0 or n >= LEVELS.size(): return false
+	var level: Dictionary = LEVELS[n]
+	return level.auto is bool and not level.auto and str(level.time) in ["day","golden"]
+
 static func block_of(n: int) -> int:
 	return n/5
 

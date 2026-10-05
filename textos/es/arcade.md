@@ -50,6 +50,10 @@ Condiciones
 ### arcade_sin_condiciones
 Ninguna: Solo la nota mínima.
 
+### arcade_aviso_nubes · Encargo de los niveles con exposición manual de día (640 px a 18 px: una línea, unos 70 caracteres)
+> máximo 70 caracteres
+Cuidado con las nubes, que oscurecen la zona cuando pasan.
+
 ### arcade_empezar
 Empezar
 

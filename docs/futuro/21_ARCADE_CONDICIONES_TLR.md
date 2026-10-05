@@ -103,3 +103,8 @@ El arcade tiene ahora **25 niveles en 5 bloques**. El quinto, «Maestría · la 
 - **El corredor de un nivel corre** (02-10-2026): en los niveles con `target: runner` se elige al del tercer camino (7 m; desde el 03-10-2026 los corredores van por los dos caminos exteriores con el centro libre, [NAVEGACION §3.2](../NAVEGACION_Y_COLISIONES.md)) y, mientras es el sujeto del nivel, no se para a estirar (`main.gd::runner_on_duty()`).
 
 - **04-10-2026 (usuario)**: en los niveles que piden al sujeto solo (`aislado`: 3, 12 y 15) el parque se queda más tranquilo: tres de cada cinco personas no aparecen (`main.gd::new_assignment()`, meta `away`: ocultas y sin colisionador para la foto). Con el parque lleno, el 15 no había manera de hacerlo. El 14 pasó a «Todo manual» con el sujeto grande.
+
+## Nubes solo donde toca medir (05-10-2026)
+
+Decisión del usuario: las nubes que pasan y oscurecen el parque **ya no son la norma**. Quedan para los niveles del arcade con **exposición manual** de día o a la hora dorada (`arcade.gd::clouds()`: `auto == false` y luz `day` o `golden`), que es donde leer la luz es el trabajo, y su encargo lo avisa con una línea más en «Condiciones»: «Cuidado con las nubes, que oscurecen la zona cuando pasan» (`arcade_aviso_nubes`). En el resto del juego (tutorial, Academia, demás niveles) la luz se queda quieta (`park.clouds_enabled` es `false` por defecto y `main.gd::start_session()` lo fija por nivel); el sandbox las sigue ofreciendo en sus ajustes («Nubes en movimiento»), apagadas de entrada. `tests/test_arcade.gd` lo comprueba.
+

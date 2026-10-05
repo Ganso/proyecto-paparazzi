@@ -403,6 +403,7 @@
   "arcade_nota_minima_d": "nota mínima %d",
   "arcade_condiciones": "Condiciones",
   "arcade_sin_condiciones": "Ninguna: Solo la nota mínima.",
+  "arcade_aviso_nubes": "Cuidado con las nubes, que oscurecen la zona cuando pasan.",
   "arcade_empezar": "Empezar",
   "arcade_otra_foto_d": "Otra foto (%d)",
   "arcade_terminar": "Terminar el nivel",

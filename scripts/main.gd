@@ -1101,7 +1101,9 @@ func start_session(time_mode = "day", free_play = false) -> void:
 	shot_serial = 0
 	release_lock()
 	park.weather_time = 0
-	if not free_play: park.clouds_enabled = true
+	# Clouds that darken the park: only the arcade levels that say so; the sandbox asks for them
+	# in its own settings.
+	park.clouds_enabled = Arcade.clouds(arcade_level) and not free_play
 	if time_mode is bool:
 		time_of_day = "night" if time_mode else "day"
 	else:
@@ -4754,6 +4756,7 @@ func show_level_briefing(root: Control) -> void:
 	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,442,640,24),15,Color("b8d78c"))
 	var conds = []
 	for key in level.cond: conds.append("• "+Conditions.describe(key,level.cond[key]))
+	if Arcade.clouds(arcade_level): conds.append("• "+Texts.get_text("arcade_aviso_nubes"))
 	label(root,"\n".join(conds) if not conds.is_empty() else Texts.get_text("arcade_sin_condiciones"),Rect2(565,468,640,140),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)

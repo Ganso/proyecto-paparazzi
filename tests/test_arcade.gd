@@ -21,6 +21,10 @@ func evidence(extra = {}) -> Dictionary:
 func _initialize() -> void:
 	# Level data: 20 levels in 4 blocks, the curve tightens.
 	check(Arcade.LEVELS.size() == 25 and Arcade.BLOCKS.size() == 5,"25 levels in 5 blocks")
+	# Passing clouds only where the exposure is the player's and there is a sun to cover.
+	var cloudy = range(25).filter(func(n): return Arcade.clouds(n))
+	check(not cloudy.is_empty() and cloudy.all(func(n): return Arcade.LEVELS[n].auto is bool and not Arcade.LEVELS[n].auto and Arcade.LEVELS[n].time in ["day","golden"]) and not Arcade.clouds(0) and not Arcade.clouds(-1),"Clouds darken only the manual-exposure levels by day (%s)" % str(cloudy.map(func(n): return n+1)))
+	check(Texts.get_text("arcade_aviso_nubes") != "arcade_aviso_nubes","…and their briefing warns about them")
 	check(Arcade.LEVELS[0].shots == 5 and Arcade.LEVELS[19].shots == 1,"Shots go from 5 to 1")
 	check(Arcade.LEVELS[0].min == 50 and Arcade.LEVELS[19].min == 75,"The pass mark goes from 50 to 75")
 	check(Arcade.LEVELS[0].limit == 0 and Arcade.LEVELS[19].limit > 0,"The clock appears along the way")

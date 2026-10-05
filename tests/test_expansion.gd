@@ -82,6 +82,7 @@ func run() -> void:
 	await screenshot("carrete")
 	game.restore_equipment_screen()
 	game.mode = "TEST"
+	game.park.clouds_enabled = true   # (as in an arcade level with manual exposure)
 	game.park.weather_time = 5.9
 	game.park.update_weather(0)
 	var ev_sun = game.park.illumination_ev(Vector3(0,.5,0),false)

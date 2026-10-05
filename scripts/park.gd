@@ -1504,7 +1504,7 @@ var clouds: Node3D
 var cloud_material: StandardMaterial3D
 var weather_time = 0.0
 var cloud_cover = 0.0
-var clouds_enabled = true
+var clouds_enabled = false     # (only the arcade levels with manual exposure, and the sandbox if asked)
 # A steady overcast (0–1) for the Academy's soft-light lessons; -1 leaves the weather alone.
 var forced_cover = -1.0
 # Cold moonlight keeps the night park readable in toon shading (dark albedos times ambient
