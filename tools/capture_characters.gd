@@ -226,7 +226,7 @@ func run() -> void:
 			for view in VIEWS:
 				p.rotation.y = deg_to_rad(view[1])
 				cells.append(await shot("%s · %s" % [item[0], view[0]]))
-		save_sheet("09_piezas_nuevas", cells, VIEWS.size())
+		save_sheet("11_piezas_nuevas", cells, VIEWS.size())
 	if only.has("giros"):
 		# A full turn of each new piece, framed on the part of the body it changes: frames for
 		# tools/capture_wardrobe_video.sh (giros/<nn>_<fff>.png). Only on request (--only=giros).
@@ -281,7 +281,7 @@ func run() -> void:
 			for view in [["3/4", 40.0], ["perfil", 90.0]]:
 				p.rotation.y = deg_to_rad(view[1])
 				cells.append(await shot("%s · %s" % [combo[0], view[0]]))
-		save_sheet("11_piezas_nuevas_en_marcha", cells, 4)
+		save_sheet("12_piezas_nuevas_en_marcha", cells, 4)
 	if wants("gabardina"):
 		# Nothing may come through the trench coat: every body profile that can wear it, at four
 		# moments of the step, from the front, the side and the back.
@@ -297,7 +297,7 @@ func run() -> void:
 				for view in [["frente", 0.0], ["3/4", 40.0], ["perfil", 90.0], ["espalda", 180.0]]:
 					p.rotation.y = deg_to_rad(view[1])
 					cells.append(await shot("%s · paso %d · %s" % [cast.catalog.perfiles[profile].id, phase, view[0]], false))
-		save_sheet("10_gabardina_marcha", cells, 4)
+		save_sheet("13_gabardina_marcha", cells, 4)
 	if wants("perfiles"):
 		var cells = []
 		for profile in 4:

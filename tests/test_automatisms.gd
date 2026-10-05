@@ -163,8 +163,19 @@ func run() -> void:
 	game.equipment.focus_mode = "AF automático"
 	game.af_a_following = false
 	game.focus_distance = 2.0
-	await follow.call(walker,1.0)
-	check(game.af_a_following and absf(game.focus_distance-game.camera.global_position.distance_to(walker.control_points()[1])) < .6,"AF-A follows a person who is walking")
+	# (Whoever is walking now: the one followed a few seconds ago may have stopped to look around,
+	# and then AF-A, rightly, does not follow.)
+	var moving = game.people.filter(func(p): return p.lane == 2 and p.visible and p.state == "CAMINANDO" and not p.runner and p.pending_stop.is_empty() and p.actual_velocity.length() > .3)
+	if not moving.is_empty(): walker = moving[0]
+	# Followed until nothing has stood between the camera and the walker for a second (someone
+	# crossing on a nearer path, a lamp post): AF-A is about what is under the point.
+	var clear = 0
+	for k in 100:
+		await follow.call(walker,.1)
+		var hit = game.point_hit(game.finder.points()[game.finder.active])
+		clear = clear+1 if not hit.is_empty() and hit.collider.has_meta("person") and hit.collider.get_meta("person") == walker else 0
+		if clear >= 10: break
+	check(game.af_a_following and absf(game.focus_distance-game.camera.global_position.distance_to(walker.control_points()[1])) < .6,"AF-A follows a person who is walking (%s at %.2f m/s, following %s, lens %.2f m of %.2f)" % [walker.state,walker.actual_velocity.length(),str(game.af_a_following),game.focus_distance,game.camera.global_position.distance_to(walker.control_points()[1])])
 	var still = game.people.filter(func(p): return p.visible and p.state in ["DETENIDO","SENTADO"])
 	if not still.is_empty():
 		game.focus_distance = 2.0
