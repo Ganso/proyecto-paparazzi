@@ -51,7 +51,9 @@ for channel in windows linux mac html5 android-experimental; do
 	if [ ! -s "$file" ]; then echo "  ✗ $channel: falta $file (./tools/export_all.sh)"; failed=1; continue; fi
 	echo "  → $channel: $file ($(du -h "$file" | cut -f1), $(date -r "$file" '+%d-%m %H:%M'))"
 	[ "$DRY" = 1 ] && continue
-	"$BUTLER" push --if-changed "$file" "$TARGET:$channel" --userversion "$VERSION" || failed=1
+	# (--if-changed tropieza al comparar el zip de macOS con la versión anterior, por la carpeta
+	# de la firma: si falla, se sube sin comparar.)
+	"$BUTLER" push --if-changed "$file" "$TARGET:$channel" --userversion "$VERSION" || "$BUTLER" push "$file" "$TARGET:$channel" --userversion "$VERSION" || failed=1
 done
 [ "$DRY" = 1 ] && echo "(simulación: no se ha subido nada)" || "$BUTLER" status "$TARGET" || true
 exit $failed
