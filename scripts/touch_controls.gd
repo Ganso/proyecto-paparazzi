@@ -47,7 +47,12 @@ func _ready() -> void:
 	make("pausa","tactil_pausa",func(): main.show_pause())
 	make("ayuda","tactil_ayuda",func(): main.show_help())
 	make("af","tactil_af",func(): main.autofocus())
-	make("disparar","tactil_disparar",func(): main.take_photo(),true).add_theme_font_size_override("font_size",40)
+	# The shutter in two stages, as on a camera (docs/futuro/26 B1): pressing it focuses, letting
+	# go takes the photo, and sliding the finger off the button before letting go cancels it.
+	var shutter = make("disparar","tactil_disparar",func(): main.take_photo(),true)
+	shutter.add_theme_font_size_override("font_size",40)
+	shutter.button_down.connect(func():
+		if main.equipment.focus_mode != "MF" and not main.focus_locked: main.autofocus())
 	make("camara","tactil_camara_bajar",func(): main.toggle_raise())
 	make("tercios","tactil_tercios",func(): main.finder.thirds = not main.finder.thirds)
 	make("bloqueo","tactil_bloqueo",func(): main.toggle_lock())

@@ -74,13 +74,14 @@ func run() -> void:
 	await frames(2)
 	check(absf(angle_difference(deg_to_rad(a0),deg_to_rad(game.angle))) > .02 and absf(game.pitch-p0) > .5,"One finger drags the view (%.1f° → %.1f°)" % [a0,game.angle])
 	# The finger drags the scene: to the left it turns the view right, downwards it looks up.
+	game.look_invert = "no"   # (whatever the player has chosen in Options)
 	var a1 = game.angle
 	var p1 = game.pitch
 	touch(0,centre,true)
 	await drag(0,centre,centre+Vector2(-100,80))
 	touch(0,centre+Vector2(-100,80),false)
 	var turned = angle_difference(deg_to_rad(a1),deg_to_rad(game.angle))
-	check(turned > 0 and game.pitch > p1,"The finger drags the scene on both axes")
+	check(turned > 0 and game.pitch > p1,"The finger drags the scene on both axes (%.3f, %.2f → %.2f)" % [turned,p1,game.pitch])
 	game.look_invert = "ambos"
 	a1 = game.angle
 	p1 = game.pitch
@@ -105,6 +106,25 @@ func run() -> void:
 	touch(0,corner,false)
 	await frames(3)
 	check(game.finder.active == 0,"A tap picks the focus point under the finger and focuses")
+	# A long press focuses there and locks focus and exposure; another one lets go (26 B4).
+	touch(0,centre,true)
+	await create_timer(game.HOLD_SECONDS+.25).timeout
+	check(game.exposure_locked and game.touch_held,"A long press on the picture locks focus and exposure")
+	touch(0,centre,false)
+	await frames(2)
+	check(game.exposure_locked,"…and lifting the finger does not undo it")
+	game.release_lock()
+	# The shutter in two stages: pressing it focuses, letting go shoots (26 B1).
+	var kept_pitch = game.pitch
+	game.pitch = -20.0   # (the ground: the point always finds something)
+	game.update_camera()
+	await frames(2)
+	game.focus_distance = 0.9
+	tc.buttons.disparar.button_down.emit()
+	await frames(2)
+	check(absf(game.focus_distance-0.9) > .3 and game.mode == "SEARCH","Pressing the shutter focuses without shooting yet (%.1f m, %s %s %s)" % [game.focus_distance,game.mode,game.equipment.focus_mode,str(game.focus_locked)])
+	game.pitch = kept_pitch
+	game.update_camera()
 	# The strip: tap a control, change it with − and +.
 	await frames(3)
 	var strip = game.control_strip

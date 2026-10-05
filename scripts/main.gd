@@ -250,8 +250,10 @@ var fps_label: Label
 
 func _ready() -> void:
 	load_theme()
-	if OS.has_feature("mobile"): Glyphs.touch = true
-	if OS.has_feature("mobile") or "--touch" in OS.get_cmdline_user_args():
+	# A phone or a tablet, also when the game runs in its browser (docs/futuro/27 B7).
+	var handheld = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	if handheld: Glyphs.touch = true
+	if handheld or "--touch" in OS.get_cmdline_user_args():
 		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 		get_viewport().size_changed.connect(fit_frame)
 		fit_frame()
@@ -1400,9 +1402,24 @@ func to_background(away: bool) -> void:
 	AudioServer.set_bus_mute(0,away)
 	if away and mode == "SEARCH" and not shooting and not smoke: show_pause()
 
+# A long press on the picture (docs/futuro/26 B4): focus there and lock focus and exposure, to
+# reframe afterwards. A short touch only focuses; a second long press lets the lock go.
+var touch_time = {}
+var touch_held = false
+const HOLD_SECONDS = .55
+func check_long_press() -> void:
+	if touch_held or touches.size() != 1 or had_multitouch or mode != "SEARCH" or not eye_ready(): return
+	var id = touches.keys()[0]
+	if total_time-touch_time.get(id,total_time) < HOLD_SECONDS or touches[id].distance_to(touch_start.get(id,touches[id])) >= 10: return
+	touch_held = true
+	if not (exposure_locked or focus_locked): nearest_af(touches[id])
+	toggle_lock()
+	rumble(.3,.6,.12)
+
 var band_key = ""
 func _process(dt: float) -> void:
 	total_time += dt
+	check_long_press()
 	if frame_offset != Vector2.ZERO and not is_instance_valid(boot_loader) and band_key != mode+interface_mode:
 		band_key = mode+interface_mode
 		update_bands()
@@ -3739,10 +3756,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.pressed:
 			touches[event.index] = event.position
 			touch_start[event.index] = event.position
+			touch_time[event.index] = total_time
+			touch_held = false
 			if touches.size() >= 2: had_multitouch = true
 			pan_velocity = 0
 		else:
-			if touches.has(event.index) and touches.size() == 1 and not had_multitouch and event.position.distance_to(touch_start[event.index]) < 10: nearest_af(event.position)
+			if touches.has(event.index) and touches.size() == 1 and not had_multitouch and not touch_held and event.position.distance_to(touch_start[event.index]) < 10: nearest_af(event.position)
 			touches.erase(event.index)
 			touch_start.erase(event.index)
 			if touches.is_empty(): had_multitouch = false
@@ -4179,7 +4198,7 @@ func update_fps_counter(dt: float) -> void:
 		fps_counter = Label.new()
 		# Upright along the left edge, half-way up: every corner holds something of some screen
 		# (the HUD's title, its sliders, the chips of the finder).
-		fps_counter.position = Vector2(3,300)
+		fps_counter.position = Vector2(3,600 if Glyphs.touch else 300)
 		fps_counter.rotation = -PI/2
 		fps_counter.add_theme_font_size_override("font_size",12)
 		fps_counter.add_theme_color_override("font_color",Color(.6,1,.6))
@@ -4193,6 +4212,9 @@ func update_fps_counter(dt: float) -> void:
 	fps_frames += 1
 	if fps_time >= .5:
 		fps_counter.text = "%d FPS · %.1f ms" % [roundi(fps_frames/fps_time),1000.0*fps_time/fps_frames]
+		# On a phone, where the time goes (docs/futuro/26 C1): the scripts of a frame, the physics
+		# and what is drawn. Read it out to know whether the CPU or the GPU holds the game back.
+		if Glyphs.touch: fps_counter.text += " · CPU %.1f · fís %.1f · %d dib · %dk tri" % [Performance.get_monitor(Performance.TIME_PROCESS)*1000,Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)*1000,int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)/1000)]
 		fps_time = 0.0
 		fps_frames = 0
 
