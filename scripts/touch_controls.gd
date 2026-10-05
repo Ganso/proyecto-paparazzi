@@ -17,6 +17,7 @@ const STICK_CENTRE = Vector2(150,560)
 const STICK_RADIUS = 95.0
 var main
 var buttons = {}
+var stick_centre = STICK_CENTRE
 var stick_finger = -1
 var stick_vector = Vector2.ZERO
 var look_fingers = {}
@@ -75,8 +76,13 @@ func _process(_dt: float) -> void:
 	var eye: bool = main.eye_ready()
 	var walking: bool = main.crowd != null and not main.camera_raised
 	# The Academy's panel takes the right side: the column moves to its left.
-	var x = 1146.0
+	# On a screen wider than 16:9 the columns move out into the side bands, as far as the notch
+	# or the punch-hole camera leaves room (main.gd::fit_frame()): the picture stays clear.
+	var out_left = clampf(main.frame_offset.x-main.safe_inset.x,0,134)
+	var out_right = clampf(main.frame_offset.x-main.safe_inset.y,0,134)
+	var x = 1146.0+out_right
 	if lesson and main.academy.panel.visible: x = main.academy.panel.position.x-134.0
+	stick_centre = STICK_CENTRE-Vector2(out_left,0)
 	place("pausa",Rect2(x,12,124,56),true)
 	place("ayuda",Rect2(x,76,124,56),not hands_off)
 	place("af",Rect2(x,372,124,66),eye and not hands_off and main.equipment.focus_mode != "MF")
@@ -85,12 +91,12 @@ func _process(_dt: float) -> void:
 	place("camara",Rect2(x,582,124,66),can_lower and not main.shooting)
 	buttons.camara.text = Texts.get_text("tactil_camara_bajar" if main.camera_raised else "tactil_camara_subir")
 	var left = eye and not hands_off
-	place("tercios",Rect2(10,150,124,58),left)
-	place("bloqueo",Rect2(10,216,124,58),left)
-	place("medicion",Rect2(10,282,124,58),left and not lesson)
+	place("tercios",Rect2(10-out_left,150,124,58),left)
+	place("bloqueo",Rect2(10-out_left,216,124,58),left)
+	place("medicion",Rect2(10-out_left,282,124,58),left and not lesson)
 	buttons.medicion.text = Texts.get_text("fotometria_"+main.equipment.metering)
-	place("lupa",Rect2(10,348,124,58),left and main.equipment.tlr())
-	place("manivela",Rect2(10,414,124,58),left and main.equipment.tlr() and main.sandbox and not lesson and (not main.tlr_wound or main.tlr_frames <= 0))
+	place("lupa",Rect2(10-out_left,348,124,58),left and main.equipment.tlr())
+	place("manivela",Rect2(10-out_left,414,124,58),left and main.equipment.tlr() and main.sandbox and not lesson and (not main.tlr_wound or main.tlr_frames <= 0))
 	main.touch_move = stick_vector if walking else Vector2.ZERO
 	if not walking:
 		stick_finger = -1
@@ -100,20 +106,20 @@ func _process(_dt: float) -> void:
 func _draw() -> void:
 	if not (main.crowd != null and not main.camera_raised): return
 	# The walking stick: a ring and its knob.
-	draw_circle(STICK_CENTRE,STICK_RADIUS,Color(0,0,0,.28))
-	draw_arc(STICK_CENTRE,STICK_RADIUS,0,TAU,64,Color(1,1,1,.6),2.0,true)
-	draw_circle(STICK_CENTRE+stick_vector*STICK_RADIUS*.75,34,Color(UiStyle.SKY.r,UiStyle.SKY.g,UiStyle.SKY.b,.85))
+	draw_circle(stick_centre,STICK_RADIUS,Color(0,0,0,.28))
+	draw_arc(stick_centre,STICK_RADIUS,0,TAU,64,Color(1,1,1,.6),2.0,true)
+	draw_circle(stick_centre+stick_vector*STICK_RADIUS*.75,34,Color(UiStyle.SKY.r,UiStyle.SKY.g,UiStyle.SKY.b,.85))
 	var font = UiStyle.font("Roboto-Medium")
 	var word = Texts.get_text("tactil_andar")
-	draw_string(font,STICK_CENTRE+Vector2(-font.get_string_size(word,HORIZONTAL_ALIGNMENT_LEFT,-1,14).x*.5,-STICK_RADIUS-10),word,HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
+	draw_string(font,stick_centre+Vector2(-font.get_string_size(word,HORIZONTAL_ALIGNMENT_LEFT,-1,14).x*.5,-STICK_RADIUS-10),word,HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
 
 # Walking: the stick and the look, before the game sees the touch (buttons take theirs first).
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible or not (main.crowd != null and not main.camera_raised): return
 	if event is InputEventScreenTouch:
-		var at = get_global_transform().affine_inverse()*event.position
+		var at = get_global_transform_with_canvas().affine_inverse()*event.position
 		if event.pressed:
-			if stick_finger < 0 and at.distance_to(STICK_CENTRE) <= STICK_RADIUS*1.6:
+			if stick_finger < 0 and at.distance_to(stick_centre) <= STICK_RADIUS*1.6:
 				stick_finger = event.index
 				push_stick(at)
 			else: look_fingers[event.index] = at
@@ -124,7 +130,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			look_fingers.erase(event.index)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag:
-		var at = get_global_transform().affine_inverse()*event.position
+		var at = get_global_transform_with_canvas().affine_inverse()*event.position
 		if event.index == stick_finger: push_stick(at)
 		elif look_fingers.has(event.index):
 			main.angle = fposmod(main.angle-event.relative.x*.16*main.look_sign().x,360)
@@ -133,4 +139,4 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func push_stick(at: Vector2) -> void:
-	stick_vector = ((at-STICK_CENTRE)/STICK_RADIUS).limit_length(1.0)
+	stick_vector = ((at-stick_centre)/STICK_RADIUS).limit_length(1.0)

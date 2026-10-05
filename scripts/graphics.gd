@@ -139,6 +139,7 @@ static func apply_display(window: Window) -> void:
 		"sin_bordes": window.mode = Window.MODE_FULLSCREEN
 		_:
 			window.mode = Window.MODE_WINDOWED
+			if "--touch" in OS.get_cmdline_user_args() and "--resolution" in OS.get_cmdline_args(): return   # (a phone's shape, for the touch tests)
 			var parts = str(display.size if display.size != "nativa" else "1440x810").split("x")
 			var size = Vector2i(int(parts[0]),int(parts[1]))
 			var screen = DisplayServer.screen_get_usable_rect(window.current_screen)

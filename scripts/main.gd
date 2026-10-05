@@ -251,6 +251,10 @@ var fps_label: Label
 func _ready() -> void:
 	load_theme()
 	if OS.has_feature("mobile"): Glyphs.touch = true
+	if OS.has_feature("mobile") or "--touch" in OS.get_cmdline_user_args():
+		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+		get_viewport().size_changed.connect(fit_frame)
+		fit_frame()
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="): screenshot_path = arg.trim_prefix("--screenshot=")
 		if arg == "--smoke-test": smoke = true
@@ -307,6 +311,8 @@ func _ready() -> void:
 	if get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty():
 		boot_loader = preload("res://scripts/boot_loader.gd").new()
 		add_child(boot_loader)
+		frame_layer(boot_loader)
+		if frame_offset != Vector2.ZERO: RenderingServer.set_default_clear_color(Color("296ca5"))
 		await boot_step()
 	await build_world()
 	var t_world = Time.get_ticks_msec()
@@ -639,11 +645,55 @@ func button(parent: Control, text_value: String, rect: Rect2, callback: Callable
 	parent.add_child(node)
 	return node
 
+# --- The whole screen on a phone (docs/futuro/26 A1, A2) --------------------------------------
+# The game is laid out on 1280 × 720. A phone is wider (20:9, 19.5:9) and a tablet taller: with
+# the touch interface the window shows more than those 1280 × 720 instead of adding black bands,
+# the game stays in the middle (frame_offset is its top-left corner; every CanvasLayer is moved
+# by it) and the touch buttons move out into the side bands, off the picture (touch_controls.gd).
+# safe_inset: what the notch or the punch-hole camera takes from each side, in ui units.
+var frame_offset = Vector2.ZERO
+var safe_inset = Vector2.ZERO       # x: left, y: right
+var frame_layers = []
+
+func fit_frame() -> void:
+	var window = get_window()
+	if window.content_scale_aspect != Window.CONTENT_SCALE_ASPECT_EXPAND: return
+	var size = get_viewport().get_visible_rect().size
+	frame_offset = ((size-Vector2(1280,720))*.5).max(Vector2.ZERO).floor()
+	frame_layers = frame_layers.filter(func(l): return is_instance_valid(l))
+	for layer in frame_layers: layer.offset = frame_offset
+	safe_inset = Vector2.ZERO
+	if OS.has_feature("mobile"):
+		var screen = Vector2(DisplayServer.screen_get_size())
+		var safe = DisplayServer.get_display_safe_area()
+		if screen.x > 0 and safe.size.x > 0:
+			var unit = size.x/screen.x
+			safe_inset = Vector2(maxf(0,safe.position.x),maxf(0,screen.x-safe.end.x))*unit
+	update_bands()
+
+# The whole window in ui coordinates (the game's 1280 × 720 plus the bands): backgrounds use it.
+func full_rect() -> Rect2:
+	return Rect2(-frame_offset,Vector2(1280,720)+frame_offset*2)
+
+# Follows a layer of the interface: it moves with the game when the window is wider than 16:9.
+func frame_layer(layer: CanvasLayer) -> void:
+	frame_layers.append(layer)
+	layer.offset = frame_offset
+
+# What is seen at the sides of the game: the camera's body while shooting through it, the colour
+# of the screens otherwise (the loading screen sets its own blue).
+func update_bands() -> void:
+	if frame_offset == Vector2.ZERO: return
+	var body = mode == "SEARCH" and interface_mode == "camara"
+	RenderingServer.set_default_clear_color(BAND_BODY if body else UiStyle.surf(1.0))
+const BAND_BODY = Color("2b2d30")
+
 func build_ui() -> void:
 	var layer = CanvasLayer.new()
 	add_child(layer)
+	frame_layer(layer)
 	ui = Control.new()
-	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ui.size = Vector2(1280,720)      # (not the window's: it may be wider than the game)
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.theme = UiStyle.theme()
 	layer.add_child(ui)
@@ -930,7 +980,8 @@ func create_modal() -> Control:
 	ui.add_child(modal)
 	# Every screen: the park behind frosted white glass, as the main menu.
 	var glass = ColorRect.new()
-	glass.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	glass.position = full_rect().position
+	glass.size = full_rect().size
 	var glass_material = ShaderMaterial.new()
 	glass_material.shader = preload("res://shaders/frosted_glass.gdshader")
 	glass_material.set_shader_parameter("wash",.6)
@@ -1323,8 +1374,39 @@ func track_camera_turn(dt: float) -> void:
 	camera_omega = lerpf(camera_omega,step/dt,clampf(dt*14.0,0.0,1.0))
 	if absf(camera_omega) < .05: camera_omega = 0.0
 
+# Android (docs/futuro/26 B7, E1): the system's «back» button or gesture does what Escape does
+# (pause while playing, back on a screen) and leaves the game from the menu; going to the
+# background (another app, a call, the screen off) pauses the game and silences it.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST: go_back()
+	elif what == NOTIFICATION_APPLICATION_PAUSED: to_background(true)
+	elif what == NOTIFICATION_APPLICATION_RESUMED: to_background(false)
+
+func go_back() -> void:
+	if mode == "INTRO":
+		get_tree().quit()
+		return
+	for pressed in [true,false]:
+		var esc = InputEventKey.new()
+		esc.keycode = KEY_ESCAPE
+		esc.physical_keycode = KEY_ESCAPE
+		esc.pressed = pressed
+		Input.parse_input_event(esc)
+
+var in_background = false
+func to_background(away: bool) -> void:
+	if away == in_background: return
+	in_background = away
+	AudioServer.set_bus_mute(0,away)
+	if away and mode == "SEARCH" and not shooting and not smoke: show_pause()
+
+var band_key = ""
 func _process(dt: float) -> void:
 	total_time += dt
+	if frame_offset != Vector2.ZERO and not is_instance_valid(boot_loader) and band_key != mode+interface_mode:
+		band_key = mode+interface_mode
+		update_bands()
+		place_view()
 	poll_pad()
 	if not shooting: track_camera_turn(dt)
 	update_continuous_af(dt)
@@ -2459,8 +2541,14 @@ func place_view() -> void:
 		view_rect = camera_body.view_rect_for(equipment.body,"walk" if walking else interface_mode)
 		camera_body.body = equipment.body
 		camera_body.mode = "walk" if walking else interface_mode
-	viewport_container.position = view_rect.position
+	viewport_container.position = view_rect.position+frame_offset
 	viewport_container.scale = view_rect.size/Vector2(viewport.size)
+	# On a screen: the park behind the glass covers the whole window, bands included.
+	if frame_offset != Vector2.ZERO and mode != "SEARCH":
+		var full = full_rect()
+		var cover = maxf(full.size.x/viewport.size.x,full.size.y/viewport.size.y)
+		viewport_container.scale = Vector2(cover,cover)
+		viewport_container.position = frame_offset+full.get_center()-Vector2(viewport.size)*cover*.5
 	if is_instance_valid(focus_aid):
 		focus_aid.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 		focus_aid.position = view_rect.position+view_shift
@@ -2539,7 +2627,10 @@ func set_interface(value: String) -> void:
 var vibration = true
 var rumbles = 0          # how many were asked for (tests: no pad is plugged in there)
 func rumble(weak: float, strong: float, seconds: float) -> void:
-	if not vibration or not Glyphs.pad(): return
+	if not vibration: return
+	# The phone itself: a short tick for the focus and the dials, a longer one for the shutter.
+	if Glyphs.touch and Glyphs.device == "tactil" and OS.has_feature("mobile"): Input.vibrate_handheld(int(clampf(seconds*250+strong*30,8,45)))
+	if not Glyphs.pad(): return
 	rumbles += 1
 	for id in Input.get_connected_joypads(): Input.start_joy_vibration(id,weak,strong,seconds)
 
@@ -3506,6 +3597,10 @@ func show_help() -> void:
 var help_return = "SEARCH"
 func _unhandled_input(event: InputEvent) -> void:
 	if run_metrics: return
+	# The pointer comes in window coordinates: bring it to the game's (see fit_frame()).
+	if frame_offset != Vector2.ZERO and (event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag):
+		event = event.duplicate()
+		event.position -= frame_offset
 	if crowd and mode == "SEARCH" and photographer_input(event): return
 	# A demonstration of the Academy is running: the tutor drives. Only the lesson's own keys
 	# (next, back, pause the scene) and the pause menu answer.
@@ -4080,6 +4175,7 @@ func update_fps_counter(dt: float) -> void:
 		var layer = CanvasLayer.new()
 		layer.layer = 50
 		add_child(layer)
+		frame_layer(layer)
 		fps_counter = Label.new()
 		# Upright along the left edge, half-way up: every corner holds something of some screen
 		# (the HUD's title, its sliders, the chips of the finder).

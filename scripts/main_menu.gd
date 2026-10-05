@@ -51,7 +51,8 @@ func _ready() -> void:
 	body_font = font("Roboto-Regular")
 	body_medium = font("Quicksand-Medium")
 	var glass = ColorRect.new()
-	glass.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	glass.position = main.full_rect().position
+	glass.size = main.full_rect().size
 	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mat = ShaderMaterial.new()
 	mat.shader = preload("res://shaders/frosted_glass.gdshader")
