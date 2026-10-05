@@ -177,3 +177,10 @@ Suites `tests/simulate_jams.gd`, `tests/test_navigation.gd`, `tests/test_crowd.g
 | Medias vueltas (atascos y salidas de banco) | 98 | 16 en 10 min, todas al levantarse de un banco |
 | Atascos resueltos con media vuelta | casi todas las anteriores | **0** en 15 min |
 | `test_crowd.gd`: mayor `stuck_time` en 60 s | hasta 5 s | 0,0 s |
+
+## Coste de `travel_clear()` y pasos a medio ritmo (05-10-2026)
+
+`main.gd::travel_clear()` se llama una o dos veces por viandante y fotograma. Creaba una forma, una consulta y una lista de gente nuevas cada vez y medía a todos contra el paso. Ahora reutiliza forma y consulta (solo cambia la altura), toma la lista de `everybody()` (una por fotograma) y salta a quien está más lejos que `HARD_SPACE` más la longitud del paso. No cambia ninguna respuesta: `tools/measure_flow.gd` da las mismas cifras antes y después (corredores al 98 %, paseantes al 90 %, 0 atascos resueltos dando la vuelta).
+
+Solo en móvil y navegador (`lean_poses`; `-- --lean` en el PC): fuera de cuadro cada viandante da su paso un fotograma de cada dos, con el tiempo de los dos (`step_person()`, tope de 0,08 s), y se dobla la mitad de esas veces (`pose_person()`). `tools/measure_flow.gd -- --lean` y las suites de navegación con `-- --lean` pasan igual. Nada de esto se aplica mientras se dispara ni a quien está en cuadro, así que la foto y la nota no cambian.
+
