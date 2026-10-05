@@ -108,3 +108,9 @@ En escritorio la interfaz es **siempre la de la cámara**: el visor de cada cuer
 - **Listas con desplazamiento** (Academia, gráficos): la seta derecha (o la izquierda) las mueve como una rueda (`scroll_with_stick()`), y la cruceta recorre también las filas «Próximamente».
 - **Nivel 14 del arcade**: ya no pide «exactamente dos personas más» (no quedaba claro quién contaba): ahora es «Todo manual», con el sujeto llenando al menos media foto. Las condiciones de compañía explican quién cuenta (quien ocupa un décimo de la altura).
 - **Parque grande**: la ayuda de enfoque manual ya no parpadea al andar con la cámara bajada.
+
+## Versión a la vista y novedades tras actualizar (05-10-2026)
+
+- **Indicador de versión**: en la esquina inferior izquierda del menú, en letra de 10 px, «v0.3.2-alpha · Android · OpenGL» (versión de `project.godot`, sistema y renderizador). Es para pruebas y soporte.
+- **Novedades**: al arrancar, si la versión es posterior a la última que abrió ese jugador (`interfaz.cfg`, `version_vista`), el menú abre una ventana con un bloque por versión intermedia, de la más nueva a la más antigua, cada una con dos o tres puntos y en una lista que se desplaza (`main.gd::VERSION_NOTES` y `check_version()`, `main_menu.gd::show_news()`, textos `novedades_*`). Las versiones que cambian los valores gráficos por defecto (la 0.3.1) lo dicen en rojo y la ventana ofrece **«Restablecer gráficos»** (`main.gd::reset_graphics()`: perfil que le toca al equipo, 60 FPS y sincronía vertical). Quien ya tenía el juego de antes de existir el aviso lo ve desde la 0.3.1; un jugador nuevo no ve nada. En el navegador, el aviso de la versión web sale después. Solo en el juego real: pruebas y capturas no lo abren ni tocan `interfaz.cfg`.
+

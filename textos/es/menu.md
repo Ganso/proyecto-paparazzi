@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.3.1 · EN DESARROLLO
+VERSIÓN ALFA 0.3.2 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -287,6 +287,78 @@ Esta es la versión para el navegador, con gráficos simplificados. La versión 
 
 ### menu_aviso_web_entendido
 Entendido
+
+### novedades_titulo · Ventana de novedades tras una actualización
+> máximo 20 caracteres
+Novedades
+
+### novedades_version_s · Cabecera de cada versión en las novedades
+> máximo 20 caracteres
+Versión %s
+
+### novedades_cerrar · Botón de las novedades
+> máximo 14 caracteres
+Entendido
+
+### novedades_graficos · Aviso de las versiones que cambian los gráficos por defecto (736 px a 16 px: dos líneas, unos 170 caracteres)
+> máximo 170 caracteres
+Esta versión cambia los valores gráficos por defecto: Se aconseja restablecer las opciones gráficas con el botón de abajo.
+
+### novedades_restablecer · Botón de las novedades (300 px)
+> máximo 24 caracteres
+Restablecer gráficos
+
+### novedades_restablecido · El mismo botón, ya pulsado
+> máximo 24 caracteres
+Gráficos restablecidos
+
+### novedades_0_3_2_1 · Novedades de la versión 0.3.2 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Android: Interfaz táctil a toda pantalla, con botones y menús más grandes. Es una versión experimental.
+
+### novedades_0_3_2_2 · Novedades de la versión 0.3.2 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Más fluido en móviles y navegadores, y los personajes ya no salen oscuros en ellos.
+
+### novedades_0_3_2_3 · Novedades de la versión 0.3.2 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Las nubes solo oscurecen el parque en los niveles del arcade con exposición manual, y el encargo lo avisa.
+
+### novedades_0_3_1_1 · Novedades de la versión 0.3.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Límite de 60 fotogramas por segundo para que el equipo no trabaje de más. Se cambia en Gráficos.
+
+### novedades_0_3_1_2 · Novedades de la versión 0.3.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Imagen más natural: Menos contraste, sombras con detalle y luces sin quemar.
+
+### novedades_0_3_1_3 · Novedades de la versión 0.3.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Los portátiles sin gráfica dedicada arrancan en el perfil Medio, con la resolución contenida.
+
+### novedades_0_3_0_1 · Novedades de la versión 0.3.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+El juego se llama PhotoHacks y estrena logotipo.
+
+### novedades_0_3_0_2 · Novedades de la versión 0.3.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Interfaz táctil y primera versión para Android.
+
+### novedades_0_3_0_3 · Novedades de la versión 0.3.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Opción para invertir la mirada.
+
+### novedades_0_2_0_1 · Novedades de la versión 0.2.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+La Academia crece hasta diez lecciones, cada una con su examen.
+
+### novedades_0_2_0_2 · Novedades de la versión 0.2.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+El tutorial termina paseando por el parque grande.
+
+### novedades_0_2_0_3 · Novedades de la versión 0.2.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Los ajustes de la cámara se manejan con el control en mano.
 
 ## Pausa
 

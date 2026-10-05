@@ -2,13 +2,14 @@
 # Sube a itch.io (https://geese-bumps.itch.io/photohacks) lo que dejó ./tools/export_all.sh,
 # con butler, la herramienta oficial de itch. Solo bajo demanda, como los ejecutables.
 #
-#   ./tools/publish_itch.sh [--only windows,linux,mac,android,html5] [--dry-run]
+#   ./tools/publish_itch.sh [--only windows,linux,mac,html5,android-experimental] [--dry-run]
 #
 # Un canal por plataforma (el nombre le dice a itch qué es cada fichero):
 #   windows  build/dist/PhotoHacks-<versión>-windows.zip
 #   linux    build/dist/PhotoHacks-<versión>-linux.zip
 #   mac      build/dist/PhotoHacks-<versión>-macos.zip
-#   android  build/paparazzi-debug.apk                 (no se publica de momento: solo con --only)
+#   android-experimental  build/dist/PhotoHacks-<versión>-android-EXPERIMENTAL.apk
+#            (desde la 0.3.2; el nombre del canal y del fichero dicen que es experimental)
 #   html5    build/dist/PhotoHacks-<versión>-web.zip   (la versión que se juega en la ficha)
 # La versión es la de export_presets.cfg. itch solo sube lo que cambia respecto a la anterior.
 #
@@ -19,8 +20,9 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 TARGET="${ITCH_TARGET:-geese-bumps/photohacks}"
 BUTLER="${BUTLER_BIN:-$(command -v butler || echo "$HOME/bin/butler")}"
-# Android no se publica de momento (usuario, 05-10-2026): solo con --only android.
-ONLY="windows,linux,mac,html5"
+# Android se publica desde la 0.3.2 como versión experimental, con la interfaz en desarrollo
+# (usuario, 05-10-2026).
+ONLY="windows,linux,mac,html5,android-experimental"
 DRY=0
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -35,7 +37,7 @@ declare -A FILE=(
 	[windows]="build/dist/PhotoHacks-$VERSION-windows.zip"
 	[linux]="build/dist/PhotoHacks-$VERSION-linux.zip"
 	[mac]="build/dist/PhotoHacks-$VERSION-macos.zip"
-	[android]="build/paparazzi-debug.apk"
+	[android-experimental]="build/dist/PhotoHacks-$VERSION-android-EXPERIMENTAL.apk"
 	[html5]="build/dist/PhotoHacks-$VERSION-web.zip"
 )
 if [ "$DRY" = 0 ] && [ -z "${BUTLER_API_KEY:-}" ] && [ ! -s "$HOME/.config/itch/butler_creds" ]; then
@@ -43,7 +45,7 @@ if [ "$DRY" = 0 ] && [ -z "${BUTLER_API_KEY:-}" ] && [ ! -s "$HOME/.config/itch/
 fi
 echo "==> $TARGET · versión $VERSION"
 failed=0
-for channel in windows linux mac android html5; do
+for channel in windows linux mac html5 android-experimental; do
 	case ",$ONLY," in *",$channel,"*) ;; *) continue ;; esac
 	file="${FILE[$channel]}"
 	if [ ! -s "$file" ]; then echo "  ✗ $channel: falta $file (./tools/export_all.sh)"; failed=1; continue; fi

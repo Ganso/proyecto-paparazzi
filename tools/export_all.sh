@@ -96,7 +96,7 @@ if want web; then
 	fi
 fi
 if want android; then
-	if GODOT_BIN="$GODOT" JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/default-java}" bash "$SCRIPT_DIR/export_android.sh" > "$PROJECT_DIR/build/export_android.log" 2>&1; then ok+=("android: build/paparazzi-debug.apk ($(du -h "$PROJECT_DIR/build/paparazzi-debug.apk" | cut -f1))")
+	if GODOT_BIN="$GODOT" JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/default-java}" bash "$SCRIPT_DIR/export_android.sh" > "$PROJECT_DIR/build/export_android.log" 2>&1; then cp "$PROJECT_DIR/build/paparazzi-debug.apk" "$PROJECT_DIR/build/dist/PhotoHacks-$GAME_VERSION-android-EXPERIMENTAL.apk"; ok+=("android: build/paparazzi-debug.apk ($(du -h "$PROJECT_DIR/build/paparazzi-debug.apk" | cut -f1)) · PhotoHacks-$GAME_VERSION-android-EXPERIMENTAL.apk")
 	else fail+=("android: $(grep -m1 ERROR "$PROJECT_DIR/build/export_android.log" || echo 'ver build/export_android.log')"); fi
 fi
 echo

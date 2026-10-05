@@ -359,6 +359,7 @@ func _ready() -> void:
 		if Graphics.load_display(): Graphics.apply_display(get_window())
 		Graphics.apply_fps_limit()
 		fps_limited = true
+		check_version()
 	if not equipment_state.is_empty():
 		equipment.body = equipment_state.body
 		equipment.lens_index = equipment_state.lens
@@ -4113,6 +4114,54 @@ const SCENE_TRIANGLES = {"Bajo": 100000, "Medio": 100000, "Alto": 100000, "Ultra
 func override_path() -> String:
 	if OS.has_feature("template"): return OS.get_executable_path().get_base_dir().path_join("override.cfg")
 	return ProjectSettings.globalize_path("res://override.cfg")
+
+# ---- What is new (shown once after an update) ----
+# Newest first: [version, how many points its text has (novedades_<version>_<k>), whether it
+# changed the default graphics (then the player is advised to reset the graphics options)].
+# Two or three points per version, only what a player notices. A new release adds its row here
+# and its texts in textos/es/menu.md.
+const VERSION_NOTES = [["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+var news: Array = []
+
+static func version() -> String:
+	return str(ProjectSettings.get_setting("application/config/version","0"))
+
+static func version_number(v: String) -> int:
+	var parts = v.split("-")[0].split(".")
+	var n = 0
+	for k in 3: n = n*1000+(int(parts[k]) if k < parts.size() else 0)
+	return n
+
+# Which versions to tell about: the ones after the last one this player opened, up to this one.
+# Someone who already had the game but from before this notice existed (there is a settings file,
+# and no version in it) is told from 0.3.1 on; a new player, nothing.
+func check_version() -> void:
+	var config = ConfigFile.new()
+	var had = config.load("user://interfaz.cfg") == OK
+	var seen = str(config.get_value("interfaz","version_vista","0.3.0" if had else version()))
+	news = VERSION_NOTES.filter(func(row): return version_number(row[0]) > version_number(seen) and version_number(row[0]) <= version_number(version()))
+	if news.is_empty(): mark_version_seen()
+
+func mark_version_seen() -> void:
+	news = []
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","version_vista",version())
+	config.save("user://interfaz.cfg")
+
+# The graphics as on a first launch on this machine: the profile for its hardware, 60 FPS, vsync.
+func reset_graphics() -> void:
+	var config = ConfigFile.new()
+	if config.load(override_path()) == OK and config.has_section_key("paparazzi","graficos/perfil"):
+		config.erase_section_key("paparazzi","graficos/perfil")
+		config.save(override_path())
+	if ProjectSettings.has_setting(PROFILE_SETTING): ProjectSettings.set_setting(PROFILE_SETTING,null)
+	Graphics.display.limit = 60
+	Graphics.display.vsync = true
+	Graphics.save_display()
+	Graphics.apply_display(get_window())
+	if fps_limited: Graphics.apply_fps_limit()
+	apply_graphics_preset(startup_profile())
 
 func startup_profile() -> String:
 	if ProjectSettings.has_setting(PROFILE_SETTING): return str(ProjectSettings.get_setting(PROFILE_SETTING))

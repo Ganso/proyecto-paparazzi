@@ -61,7 +61,9 @@ func _ready() -> void:
 	glass.material = mat
 	add_child(glass)
 	build()
-	if OS.has_feature("web") and not web_notice_shown:
+	# After an update: what is new, once. Then (in a browser) the notice of the web version.
+	if not main.news.is_empty(): call_deferred("show_news")
+	elif OS.has_feature("web") and not web_notice_shown:
 		web_notice_shown = true
 		call_deferred("show_web_notice")
 
@@ -135,6 +137,9 @@ func build() -> void:
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(logo)
 	text(self,Texts.get_text("menu_estudio"),Vector2(x+104,58),13,UiStyle.SKY_DEEP,body_medium)
+	# For support and testing: the exact build, small, in a corner.
+	var build_label = text(self,"v%s · %s · %s" % [main.version(),OS.get_name(),"Forward+" if main.ParkScene.forward_plus() else "OpenGL"],Vector2(8,702),10,FAINT,light_font)
+	build_label.modulate.a = .7
 	text(self,Texts.get_text("nombre_juego"),Vector2(x+102,78),54,UiStyle.BRAND,title_font)
 	# Under a finger (docs/futuro/26 A3) the card is drawn FINGER times bigger, with everything in
 	# it: it takes the place of the tagline, and the arrows at its sides grow with it.
@@ -304,13 +309,18 @@ func _input(event: InputEvent) -> void:
 	if is_instance_valid(web_notice_modal) and web_notice_modal.visible:
 		if event is InputEventKey and event.pressed and not event.echo:
 			if event.physical_keycode in [KEY_ENTER,KEY_KP_ENTER,KEY_SPACE,KEY_ESCAPE]:
+				# (Enter on the «reset the graphics» button of the news is that button's.)
+				if news_open and event.physical_keycode != KEY_ESCAPE: return
 				get_viewport().set_input_as_handled()
-				dismiss_web_notice()
+				if news_open: dismiss_news()
+				else: dismiss_web_notice()
 				return
 		elif event is InputEventJoypadButton and event.pressed:
+			if news_open and event.button_index == JOY_BUTTON_A: return
 			if event.button_index in [JOY_BUTTON_A,JOY_BUTTON_B,JOY_BUTTON_START]:
 				get_viewport().set_input_as_handled()
-				dismiss_web_notice()
+				if news_open: dismiss_news()
+				else: dismiss_web_notice()
 				return
 		return
 	var step = 0
@@ -365,6 +375,83 @@ func refresh() -> void:
 		chip.add_theme_stylebox_override("normal",box(SKY.lightened(.1) if on else UiStyle.surf(.5),19,Color.TRANSPARENT if on else LINE,1,8 if on else 0))
 		chip.add_theme_stylebox_override("hover",box(SKY.lightened(.18) if on else UiStyle.surf(.85),19,SKY.lightened(.35),1,8))
 		chip.add_theme_stylebox_override("pressed",box(SKY,19))
+
+# ---- What is new (main.gd::check_version()) ----
+# One block per version since the last one this player opened, newest first, in a list that
+# scrolls. A version that changed the default graphics says so and offers to reset them.
+func show_news() -> void:
+	if is_instance_valid(web_notice_modal): web_notice_modal.queue_free()
+	var overlay = Control.new()
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var backdrop = ColorRect.new()
+	backdrop.position = main.full_rect().position
+	backdrop.size = main.full_rect().size
+	backdrop.color = Color(0,0,0,.55)
+	overlay.add_child(backdrop)
+	var pw = 820.0
+	var ph = 560.0
+	var panel = Panel.new()
+	panel.size = Vector2(pw,ph)
+	panel.position = Vector2((1280-pw)*.5,(720-ph)*.5)
+	panel.add_theme_stylebox_override("panel",box(UiStyle.surf(.97),18,UiStyle.SKY,2,24))
+	overlay.add_child(panel)
+	text(panel,Texts.get_text("novedades_titulo"),Vector2(36,22),30,UiStyle.BRAND,title_font)
+	var scroll = ScrollContainer.new()
+	scroll.position = Vector2(36,78)
+	scroll.size = Vector2(pw-56,ph-78-96)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
+	var list = VBoxContainer.new()
+	list.custom_minimum_size = Vector2(pw-84,0)
+	list.add_theme_constant_override("separation",6)
+	scroll.add_child(list)
+	var line = func(value: String, size: int, color: Color, f: Font):
+		var l = Label.new()
+		l.text = value
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size = Vector2(pw-84,0)
+		l.add_theme_font_override("font",f)
+		l.add_theme_font_size_override("font_size",size)
+		l.add_theme_color_override("font_color",color)
+		list.add_child(l)
+	var advice = false
+	for row in main.news:
+		var key = "novedades_"+str(row[0]).replace(".","_")
+		line.call(Texts.get_text("novedades_version_s") % row[0],20,UiStyle.SKY_DEEP,body_medium)
+		for k in int(row[1]): line.call("•  "+Texts.get_text("%s_%d" % [key,k+1]),17,INK,body_font)
+		if row[2]:
+			advice = true
+			line.call(Texts.get_text("novedades_graficos"),16,UiStyle.WARN,body_medium)
+		var gap = Control.new()
+		gap.custom_minimum_size = Vector2(0,10)
+		list.add_child(gap)
+	var bh = 66.0 if Glyphs.touch else 52.0
+	var close = flat_button(panel,Texts.get_text("novedades_cerrar"),Rect2(pw-36-240,ph-22-bh,240,bh),dismiss_news,"primary")
+	close.focus_mode = Control.FOCUS_ALL
+	close.call_deferred("grab_focus")
+	if advice:
+		var reset = flat_button(panel,Texts.get_text("novedades_restablecer"),Rect2(36,ph-22-bh,300,bh),func(): pass)
+		reset.focus_mode = Control.FOCUS_ALL
+		reset.pressed.connect(func():
+			main.reset_graphics()
+			reset.text = Texts.get_text("novedades_restablecido")
+			reset.disabled = true)
+	add_child(overlay)
+	web_notice_modal = overlay
+	news_open = true
+
+var news_open = false
+func dismiss_news() -> void:
+	news_open = false
+	main.mark_version_seen()
+	if is_instance_valid(web_notice_modal):
+		web_notice_modal.queue_free()
+		web_notice_modal = null
+	if OS.has_feature("web") and not web_notice_shown:
+		web_notice_shown = true
+		show_web_notice()
+	else: change_mode(0)
 
 func show_web_notice() -> void:
 	if is_instance_valid(web_notice_modal):
