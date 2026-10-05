@@ -2564,6 +2564,14 @@ func place_view() -> void:
 		view_rect = camera_body.view_rect_for(equipment.body,"walk" if walking else interface_mode)
 		camera_body.body = equipment.body
 		camera_body.mode = "walk" if walking else interface_mode
+		# With the naked eye there is no camera around the picture: on a screen wider than 16:9
+		# the park fills it all (docs/futuro/26 A1). The photo is always the camera's 16:9.
+		var wide = walking and mode == "SEARCH" and frame_offset != Vector2.ZERO
+		if wide: view_rect = full_rect()
+		var wanted = Vector2i((view_rect.size if wide else Vector2(1280,720))*render_factor)
+		if viewport.size != wanted:
+			viewport.size = wanted
+			viewport_container.size = Vector2(wanted)
 	viewport_container.position = view_rect.position+frame_offset
 	viewport_container.scale = view_rect.size/Vector2(viewport.size)
 	# On a screen: the park behind the glass covers the whole window, bands included.
