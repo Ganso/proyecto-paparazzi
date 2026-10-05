@@ -115,7 +115,15 @@ const WINDOW_MODES = [["@gfx_ventana","ventana"],["@gfx_sin_bordes","sin_bordes"
 # In a window the size is the window's; in full screen it is the resolution of the 3D image (the
 # desktop's resolution is never changed: the image is scaled to fill the screen), or the screen's own.
 const WINDOW_SIZES = [["@gfx_nativa","nativa"],["1280 × 720","1280x720"],["1600 × 900","1600x900"],["1920 × 1080","1920x1080"],["2560 × 1440","2560x1440"],["3840 × 2160","3840x2160"]]
-static var display = {"mode":"ventana","size":"1440x810","vsync":true,"fps":false}
+# limit: the most frames per second the game draws (0: no limit). 60 by default: without it a
+# screen of 120 or 144 Hz, or a browser, keeps a laptop's processor and fans at full power.
+const FPS_LIMITS = [0,30,60,90,120,144]
+static var display = {"mode":"ventana","size":"1440x810","vsync":true,"fps":false,"limit":60}
+
+# On every platform, the browser and the phone included (only in the real game: tests, captures
+# and videos run as fast as they can; main.gd::_ready()).
+static func apply_fps_limit() -> void:
+	Engine.max_fps = int(display.limit) if int(display.limit) in FPS_LIMITS else 60
 
 static func load_display() -> bool:
 	var config = ConfigFile.new()

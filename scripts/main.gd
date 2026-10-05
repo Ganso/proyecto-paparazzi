@@ -354,8 +354,10 @@ func _ready() -> void:
 	apply_graphics_preset(graphics_preset)
 	# The saved display (window mode and size) applies to a normal run only: never to tests,
 	# captures or scripted runs, which need their own window.
-	if get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty() and Graphics.load_display():
-		Graphics.apply_display(get_window())
+	if get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty():
+		if Graphics.load_display(): Graphics.apply_display(get_window())
+		Graphics.apply_fps_limit()
+		fps_limited = true
 	if not equipment_state.is_empty():
 		equipment.body = equipment_state.body
 		equipment.lens_index = equipment_state.lens
@@ -4111,20 +4113,27 @@ func show_graphics_settings() -> void:
 	# Display: any profile.
 	label(root,Texts.get_text("gfx_pantalla"),Rect2(60,172,200,18),12,Color("b8d78c"))
 	var d = Graphics.display
+	var yes_no = [Texts.get_text("gfx_si"),Texts.get_text("gfx_no")]
+	var limits = Graphics.FPS_LIMITS.map(func(v): return Texts.get_text("gfx_no") if v == 0 else str(v))
+	var limit_at = maxi(0,Graphics.FPS_LIMITS.find(int(d.get("limit",60))))
 	if OS.has_feature("web") or OS.has_feature("mobile"):   # (no window to set in a browser or on a phone)
-		label(root,Texts.get_text("gfx_fps"),Rect2(60,194,60,30),14)
-		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(124,190,76,36),func(i): set_display("fps",i == 0))
+		label(root,Texts.get_text("gfx_limite"),Rect2(60,194,100,30),14)
+		option(root,limits,limit_at,Rect2(160,190,84,36),func(i): set_display("limit",Graphics.FPS_LIMITS[i]))
+		label(root,Texts.get_text("gfx_fps"),Rect2(264,194,60,30),14)
+		option(root,yes_no,0 if d.get("fps",false) else 1,Rect2(324,190,76,36),func(i): set_display("fps",i == 0))
 	else:
-		label(root,Texts.get_text("gfx_modo_ventana"),Rect2(60,194,60,30),14)
-		option(root,Graphics.WINDOW_MODES.map(func(c): return gfx_label(c[0])),maxi(0,Graphics.WINDOW_MODES.map(func(c): return c[1]).find(d.mode)),Rect2(120,190,300,36),func(i): set_display("mode",Graphics.WINDOW_MODES[i][1]))
-		label(root,Texts.get_text("gfx_resolucion" if d.mode == "ventana" else "gfx_resolucion_imagen"),Rect2(440,194,170,30),14)
+		# (No label for the first one: «Ventana», «Pantalla completa»… under «Pantalla» say it.)
+		option(root,Graphics.WINDOW_MODES.map(func(c): return gfx_label(c[0])),maxi(0,Graphics.WINDOW_MODES.map(func(c): return c[1]).find(d.mode)),Rect2(60,190,300,36),func(i): set_display("mode",Graphics.WINDOW_MODES[i][1]))
+		label(root,Texts.get_text("gfx_resolucion" if d.mode == "ventana" else "gfx_resolucion_imagen"),Rect2(382,194,153,30),14)
 		# In a window: its size. In full screen: the resolution of the image (or the screen's own).
 		var size_choices = Graphics.WINDOW_SIZES if d.mode != "ventana" else Graphics.WINDOW_SIZES.slice(1)
-		option(root,size_choices.map(func(c): return gfx_label(c[0])),maxi(0,size_choices.map(func(c): return c[1]).find(d.size)),Rect2(610,190,190,36),func(i): set_display("size",size_choices[i][1]))
-		label(root,Texts.get_text("gfx_vsync"),Rect2(815,194,175,30),14)
-		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.vsync else 1,Rect2(990,190,76,36),func(i): set_display("vsync",i == 0))
-		label(root,Texts.get_text("gfx_fps"),Rect2(1080,194,60,30),14)
-		option(root,[Texts.get_text("gfx_si"),Texts.get_text("gfx_no")],0 if d.get("fps",false) else 1,Rect2(1144,190,76,36),func(i): set_display("fps",i == 0))
+		option(root,size_choices.map(func(c): return gfx_label(c[0])),maxi(0,size_choices.map(func(c): return c[1]).find(d.size)),Rect2(536,190,154,36),func(i): set_display("size",size_choices[i][1]))
+		label(root,Texts.get_text("gfx_vsync"),Rect2(702,194,92,30),14)
+		option(root,yes_no,0 if d.vsync else 1,Rect2(794,190,76,36),func(i): set_display("vsync",i == 0))
+		label(root,Texts.get_text("gfx_limite"),Rect2(882,194,92,30),14)
+		option(root,limits,limit_at,Rect2(974,190,84,36),func(i): set_display("limit",Graphics.FPS_LIMITS[i]))
+		label(root,Texts.get_text("gfx_fps"),Rect2(1070,194,58,30),14)
+		option(root,yes_no,0 if d.get("fps",false) else 1,Rect2(1128,190,76,36),func(i): set_display("fps",i == 0))
 	for o in [sub]: o.autowrap_mode = TextServer.AUTOWRAP_OFF
 	var body = panel(root,Rect2(60,240,1160,372),Color(.075,.115,.085,.91))
 	if not Graphics.is_custom(graphics_preset):
@@ -4232,9 +4241,11 @@ func update_fps_counter(dt: float) -> void:
 		fps_time = 0.0
 		fps_frames = 0
 
+var fps_limited = false
 func set_display(key: String, value) -> void:
 	Graphics.display[key] = value
 	Graphics.save_display()
+	if fps_limited: Graphics.apply_fps_limit()
 	Graphics.apply_display(get_window())
 	update_render_resolution.call_deferred()
 	show_graphics_settings.call_deferred()

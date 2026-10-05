@@ -14,14 +14,11 @@ PERFIL
 ### gfx_pantalla
 PANTALLA
 
-### gfx_modo_ventana
-Modo
-
 ### gfx_resolucion
 Tamaño de la ventana
 
 ### gfx_vsync
-Sincronización vertical
+Sinc. vertical
 
 ### gfx_ventana
 Ventana
@@ -186,7 +183,11 @@ Resolución nativa con MSAA 4×, reflejos y rebote de luz en pantalla, hierba co
 Gráfica integrada: En los perfiles la iluminación global se desactiva (da una imagen lavada). En Personalizado puedes forzarla.
 
 ### gfx_fps
-FPS
+Ver FPS
+
+### gfx_limite · Pantalla de gráficos: rótulo del límite de fotogramas por segundo (92 px a 14 px)
+> máximo 14 caracteres
+Límite de FPS
 
 ### gfx_resolucion_imagen
 Resolución de la imagen

@@ -47,3 +47,8 @@ Modo **Ventana**, **Ventana a pantalla completa** (sin bordes) o **Pantalla comp
 ## 4. Pendiente
 
 Filtrado anisotrópico (exige reiniciar), VoxelGI o LightmapGI horneados y probar los valores extremos en otras GPU.
+
+## Límite de fotogramas por segundo (05-10-2026)
+
+A petición del usuario, tras avisos de equipos al 100 % en macOS y en la versión web: el juego dibuja **como mucho 60 fotogramas por segundo por defecto**. Se cambia en Gráficos → Pantalla → «Límite de FPS»: No (sin límite), 30, 60, 90, 120 o 144 (`Graphics.FPS_LIMITS`, `Graphics.display.limit`, `Graphics.apply_fps_limit()` → `Engine.max_fps`). Vale en todas las plataformas, también en el navegador y en el móvil, donde la pantalla de gráficos solo ofrece este límite y «Ver FPS». Solo se aplica en el juego real: pruebas, capturas y vídeos siguen sin límite. En el escritorio la fila de Pantalla queda: modo (sin rótulo), tamaño, «Sinc. vertical», «Límite de FPS» y «Ver FPS».
+
