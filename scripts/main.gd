@@ -255,6 +255,7 @@ func _ready() -> void:
 	# A phone or a tablet, also when the game runs in its browser (docs/futuro/27 B7).
 	var handheld = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
 	if handheld: Glyphs.touch = true
+	lean_poses = handheld or OS.has_feature("web") or "--lean" in OS.get_cmdline_user_args()
 	if handheld or "--touch" in OS.get_cmdline_user_args():
 		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 		get_viewport().size_changed.connect(fit_frame)
@@ -510,6 +511,7 @@ func build_world() -> void:
 # the way.
 const RUNNER_PLACES = [12,17,20]
 func populate() -> void:
+	pose_debt.clear()
 	if scenario == "grande":
 		populate_grande()
 		return
@@ -1685,7 +1687,32 @@ func update_person(p: Pedestrian, dt: float) -> void:
 			var diff = angle_difference(p.heading,p.face_target)
 			p.heading += clampf(diff,-deg_to_rad(70.0)*dt,deg_to_rad(70.0)*dt)
 		p.rotation.y = p.heading
-	p.animate(dt,p.position.distance_to(previous_position))
+	pose_person(p,dt,p.position.distance_to(previous_position))
+
+# On a phone or in a browser the processor is what holds the game back, and posing the 21
+# skeletons is a quarter of every frame (docs/futuro/26 C3). There, whoever is out of the picture
+# is posed one frame in POSE_EVERY — with all the time and distance gone by since, so the gait
+# keeps its step — and everyone in the picture, every frame. Where each one walks, the photo and
+# its mark do not change: only how often a body nobody sees is bent.
+const POSE_EVERY = 4
+var lean_poses = false
+var pose_debt = {}
+func pose_person(p: Pedestrian, dt: float, distance: float) -> void:
+	if not lean_poses or shooting:
+		p.animate(dt,distance)
+		return
+	var debt: Array = pose_debt.get(p,[0.0,0.0,p.get_index()%POSE_EVERY])
+	debt[0] += dt
+	debt[1] += distance
+	debt[2] += 1
+	var to: Vector3 = p.global_position+Vector3.UP*p.height*.5-camera.global_position
+	# (Half the diagonal of the picture — 36 × 20 mm — plus a margin as wide as a body up close.)
+	var half = atan(20.7/maxf(view_focal(),12.0))+deg_to_rad(12.0)
+	var seen = to.length() < 2.5 or (-camera.global_basis.z).angle_to(to) < half
+	if seen or debt[2] >= POSE_EVERY:
+		p.animate(debt[0],debt[1])
+		pose_debt[p] = [0.0,0.0,0]
+	else: pose_debt[p] = debt
 
 # ---- Smooth walking (docs/NAVEGACION_Y_COLISIONES.md §2) ----
 # Each pedestrian keeps a forward speed and a radial speed that only change with limited

@@ -96,7 +96,7 @@ func update(p, dt: float) -> void:
 			p.heading += clampf(angle_difference(p.heading,p.face_target),-deg_to_rad(70.0)*dt,deg_to_rad(70.0)*dt)
 		p.rotation.y = p.heading
 	react_to_photographer(p,dt)
-	p.animate(dt,p.position.distance_to(previous_position))
+	main.pose_person(p,dt,p.position.distance_to(previous_position))
 
 # Edge frame of the walker: start node, direction, length, right vector.
 func frame(p) -> Dictionary:
