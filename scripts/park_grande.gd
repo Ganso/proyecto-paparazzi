@@ -153,6 +153,17 @@ func ground_patch(origin: Vector3, size: Vector2, cells: int, color: Color, laye
 	piece.set_meta("ground",true)
 	if layer >= 0: piece.set_meta("ground_layer",layer)
 
+# Height of each kind of paving above the lawn. Every path used to lie at 6 mm and every plaza at
+# 8 mm: where two of them overlap (the asphalt diagonal under the paved round of the bandstand,
+# the gravel ring over the ends of the avenues) the two surfaces fought for the same depth and
+# flickered. Now each kind has its own level, a plaza lies above the paths of its own kind, and
+# whatever overlaps is at least 5 mm apart: asphalt and cobbles lowest (they never meet), then
+# gravel, then the flagstones of plazas and spurs. The tallest is 2,4 cm: feet do not sink.
+const PAVING_ORDER = {"asfalto":0, "adoquin":0, "grava":1, "losas":2}
+func paving_height(layer: int, plaza: bool) -> float:
+	var level = int(PAVING_ORDER.get(GROUND_LAYERS[layer] if layer >= 0 and layer < GROUND_LAYERS.size() else "",0))
+	return .006+level*.007+(.004 if plaza else 0.0)
+
 func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
 	var dir = (b-a).normalized()
 	var side = Vector3(-dir.z,0,dir.x)*width*.5
@@ -172,7 +183,7 @@ func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
 			var order = [0,2,1,0,3,2] if (pts[2]-pts[0]).cross(pts[1]-pts[0]).y < 0 else [0,1,2,0,2,3]
 			for m in order:
 				st.set_normal(Vector3.UP)
-				st.add_vertex(pts[m]+Vector3.UP*.006-centre)
+				st.add_vertex(pts[m]+Vector3.UP*paving_height(layer,false)-centre)
 	st.index()
 	var piece = prop(st.commit(),centre,Color("b8b29c"))
 	piece.set_meta("ground",true)
@@ -189,7 +200,8 @@ func disc(centre: Vector3, radius: float, layer: int) -> void:
 		for i in segments:
 			var a0 = TAU*i/segments
 			var a1 = TAU*(i+1)/segments
-			var pts = [Vector3(sin(a0)*r0,.008,cos(a0)*r0),Vector3(sin(a0)*r1,.008,cos(a0)*r1),Vector3(sin(a1)*r1,.008,cos(a1)*r1),Vector3(sin(a1)*r0,.008,cos(a1)*r0)]
+			var y = paving_height(layer,true)
+			var pts = [Vector3(sin(a0)*r0,y,cos(a0)*r0),Vector3(sin(a0)*r1,y,cos(a0)*r1),Vector3(sin(a1)*r1,y,cos(a1)*r1),Vector3(sin(a1)*r0,y,cos(a1)*r0)]
 			for m in [0,2,1,0,3,2]:
 				st.set_normal(Vector3.UP)
 				st.add_vertex(pts[m])

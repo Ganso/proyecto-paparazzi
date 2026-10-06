@@ -39,6 +39,14 @@ func run() -> void:
 	await frames(12)
 	var park = game.park
 	# --- The park and its graph ---
+	# Paving that overlaps (a path under a plaza, the ring over the end of an avenue) never shares a
+	# height: at the same depth the two surfaces flickered (z-fighting by the bandstand, 06-10-2026).
+	var layers: Array = game.park.GROUND_LAYERS
+	var h = func(kind, plaza): return game.park.paving_height(layers.find(kind),plaza)
+	for pair in [[h.call("losas",true),h.call("asfalto",false)],[h.call("losas",true),h.call("adoquin",false)],[h.call("losas",true),h.call("losas",false)],[h.call("losas",false),h.call("asfalto",false)],
+			[h.call("grava",false),h.call("asfalto",false)],[h.call("grava",false),h.call("adoquin",false)],[h.call("grava",true),h.call("grava",false)],[h.call("grava",true),h.call("losas",false)]]:
+		check(absf(pair[0]-pair[1]) >= .003,"Overlapping paving lies at different heights (%.3f and %.3f m)" % pair)
+	check(h.call("losas",true) <= .03,"…and none stands more than 3 cm over the lawn (feet do not sink)")
 	check(park.get_script().resource_path.ends_with("park_grande.gd"),"The big park is built")
 	check(game.people.size() == game.GRANDE_PEOPLE,"%d pedestrians" % game.GRANDE_PEOPLE)
 	var seen = {"PN":true}

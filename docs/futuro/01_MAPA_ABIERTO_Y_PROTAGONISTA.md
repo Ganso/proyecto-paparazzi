@@ -136,3 +136,7 @@ Los mismos encargos (5, con 3 disparos), sin límite de tiempo: el objetivo pase
 
 `tests/test_big_park.gd` (con display): el grafo es conexo y cada arista está pavimentada; 60 s de multitud sin atascos (> 5,5 s), sin salirse de los caminos ni solaparse y repartida por toda la red; alguien se sienta y alguien se para; se empieza paseando y sin interfaz; sin fotos con la cámara bajada; W avanza y la verja frena; el interruptor tarda el gesto y devuelve la interfaz; con la cámara en el ojo no hay paseo y se puede disparar; al bajarla se vuelve a pasear; una cámara a 1,8 m provoca una reacción.
 
+### Suelos que parpadeaban junto al quiosco (06-10-2026)
+
+El usuario vio el suelo del quiosco y el camino parpadear uno sobre otro. Todos los caminos estaban a 6 mm sobre el césped y todas las plazas a 8 mm: donde se solapan (la diagonal de asfalto bajo la plaza de losas del quiosco, el anillo de grava sobre el final de las avenidas, el ramal de losas al entrar en su plaza) las dos superficies se disputaban la misma profundidad. Ahora cada tipo de pavimento tiene su nivel (`park_grande.gd::paving_height()`: asfalto y adoquín 6 mm, grava 13 mm, losas 20 mm, y las plazas 4 mm por encima de los caminos de su tipo), de modo que lo que se solapa queda separado al menos 3 mm y casi siempre 7 o más; lo más alto está a 2,4 cm, sin que los pies se hundan. `tests/test_big_park.gd` lo comprueba. El parque clásico no tenía el problema: sus anillos no se solapan.
+
