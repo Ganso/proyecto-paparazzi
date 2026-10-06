@@ -49,6 +49,9 @@ tri=$(echo "$out" | sed -n 's/.* \([0-9]*\) triángulos.*/\1/p'); check "$([ -n 
 echo "== 3. Arranque del juego"
 export_apk ""; check "$([ -s build/paparazzi-emulador.apk ] && echo 1 || echo 0)" "APK del juego exportado"
 "$ADB" shell am force-stop $PKG; "$ADB" install -r build/paparazzi-emulador.apk >/dev/null 2>&1
+# Datos limpios: con los de una versión anterior el juego abre la ventana de novedades sobre el
+# menú y los toques de abajo no llegan a «Entrar».
+"$ADB" shell pm clear $PKG >/dev/null 2>&1
 "$ADB" logcat -c; "$ADB" shell am start -n $ACT >/dev/null
 sleep 30; shot 01_menu
 check "$([ -n "$("$ADB" shell pidof $PKG)" ] && echo 1 || echo 0)" "el juego sigue vivo a los 30 s (el fallo de audio lo mataba a los 8)"
