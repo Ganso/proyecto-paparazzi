@@ -1141,7 +1141,7 @@ func apply_preset_values(preset: String) -> void:
 	sun.shadow_enabled = reach > 0.0
 	if reach > 0.0:
 		sun.shadow_blur = .8
-		sun.directional_shadow_max_distance = reach
+		sun.directional_shadow_max_distance = reach*shadow_reach_factor()
 		sun.directional_shadow_blend_splits = reach > 34.0
 		sun.shadow_bias = 0.015 if reach > 44.0 else 0.02
 		sun.shadow_normal_bias = .6 if reach > 44.0 else .7
@@ -1165,6 +1165,11 @@ func apply_preset_values(preset: String) -> void:
 		if time_of_day == "day":
 			env.ambient_light_sky_contribution = 0.0
 			env.ambient_light_energy = LO_DAY_AMBIENT
+
+# How much further than the profile's distance the sun's shadows reach (the big park stretches
+# them at golden hour: park_grande.gd).
+func shadow_reach_factor() -> float:
+	return 1.0
 
 # What the engine's procedural sky lacked: moon and stars (night), cirrus and the afterglow.
 func sky_extras(sky_mat: ShaderMaterial, moon: float, stars: float, cirrus: float, cirrus_color: Color, glow: float, glow_color: Color) -> void:

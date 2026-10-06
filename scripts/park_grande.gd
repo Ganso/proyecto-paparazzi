@@ -60,11 +60,11 @@ func add_node(id: String, pos: Vector3) -> void:
 	nodes[id] = pos
 	neighbours[id] = []
 
-func add_edge(a: String, b: String, width: float, layer: String, paved = true) -> void:
+func add_edge(a: String, b: String, width: float, layer: String, paved = true, under = false) -> void:
 	edges.append([a,b,width])
 	neighbours[a].append(b)
 	neighbours[b].append(a)
-	if paved: strips.append([nodes[a],nodes[b],width,GROUND_LAYERS.find(layer)])
+	if paved: strips.append([nodes[a],nodes[b],width,GROUND_LAYERS.find(layer),under])
 
 func define_paths() -> void:
 	var corners = {"NE":Vector3(RING.x,0,-RING.y),"SE":Vector3(RING.x,0,RING.y),"SW":Vector3(-RING.x,0,RING.y),"NW":Vector3(-RING.x,0,-RING.y)}
@@ -92,7 +92,7 @@ func define_paths() -> void:
 	add_edge("PNW","DB",2.6,"asfalto")
 	add_edge("DB","CNW",2.6,"asfalto")
 	add_node("SB",BANDSTAND_POS+Vector3(0,0,6.2))
-	add_edge("DB","SB",2.4,"losas")
+	add_edge("DB","SB",2.4,"losas",true,true)    # the spurs end under the park's path, not over it
 	discs.append([BANDSTAND_POS,6.5,GROUND_LAYERS.find("losas"),true])   # (under the park's paths: user, 06-10-2026)
 	var se_dir = corners["SE"].normalized()
 	var dp = se_dir*(PLAYGROUND_POS.x/se_dir.x)
@@ -100,7 +100,7 @@ func define_paths() -> void:
 	add_edge("PSE","DP",2.6,"asfalto")
 	add_edge("DP","CSE",2.6,"asfalto")
 	add_node("SP",PLAYGROUND_POS+Vector3(0,0,-PLAYGROUND_R-.6))
-	add_edge("DP","SP",2.4,"losas")
+	add_edge("DP","SP",2.4,"losas",true,true)
 	discs.append([PLAYGROUND_POS,PLAYGROUND_R,GROUND_LAYERS.find("grava")])
 	# Ring path inside the fence.
 	var loop = ["CNE","RE","CSE","RS","CSW","RW","CNW","RN"]
@@ -131,7 +131,7 @@ func build_ground() -> void:
 			ground_patch(origin,Vector2(20,20),10,Color("81925c"),GROUND_LAYERS.find("cesped"),0.0)
 	for t in [[Vector3(-200,0,-200),Vector2(400,140)],[Vector3(-200,0,60),Vector2(400,140)],[Vector3(-200,0,-60),Vector2(120,120)],[Vector3(80,0,-60),Vector2(120,120)]]:
 		ground_patch(t[0],t[1],4,Color("7d8a5a"),GROUND_LAYERS.find("cesped"),-.01)
-	for s in strips: strip(s[0],s[1],s[2],s[3])
+	for s in strips: strip(s[0],s[1],s[2],s[3],s[4])
 	for d in discs: disc(d[0],d[1],d[2],d.size() > 3 and d[3])
 
 func ground_patch(origin: Vector3, size: Vector2, cells: int, color: Color, layer: int, y: float) -> void:
@@ -162,12 +162,14 @@ func ground_patch(origin: Vector3, size: Vector2, cells: int, color: Color, laye
 const PAVING_ORDER = {"asfalto":0, "adoquin":0, "grava":1, "losas":2}
 func paving_height(layer: int, plaza: bool) -> float:
 	var level = int(PAVING_ORDER.get(GROUND_LAYERS[layer] if layer >= 0 and layer < GROUND_LAYERS.size() else "",0))
-	return .012+level*.008+(.004 if plaza else 0.0)
+	return .014+level*.008+(.004 if plaza else 0.0)
 # The round of the bandstand lies under every path that reaches or crosses it: the park's ground
 # is the one seen on top, not the bandstand's own.
-const PAVING_UNDER = .006
+# So do the two flagstone spurs (to the bandstand and to the playground): they used to end on top
+# of the asphalt path, with their square end across it.
+const PAVING_UNDER = .008
 
-func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
+func strip(a: Vector3, b: Vector3, width: float, layer: int, under = false) -> void:
 	var dir = (b-a).normalized()
 	var side = Vector3(-dir.z,0,dir.x)*width*.5
 	var length = a.distance_to(b)
@@ -186,7 +188,7 @@ func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
 			var order = [0,2,1,0,3,2] if (pts[2]-pts[0]).cross(pts[1]-pts[0]).y < 0 else [0,1,2,0,2,3]
 			for m in order:
 				st.set_normal(Vector3.UP)
-				st.add_vertex(pts[m]+Vector3.UP*paving_height(layer,false)-centre)
+				st.add_vertex(pts[m]+Vector3.UP*(PAVING_UNDER-.003 if under else paving_height(layer,false))-centre)
 	st.index()
 	var piece = prop(st.commit(),centre,Color("b8b29c"))
 	piece.set_meta("ground",true)
@@ -336,6 +338,15 @@ func build_trees(rng: RandomNumberGenerator) -> void:
 		hd_only = i%2 == 1
 		build_tree(i%4,pos,8000+i*17,rng.randf_range(1.2,1.5))
 	hd_only = false
+
+# At golden hour the sun is 15° up and every tree throws a shadow four times its height: the
+# lawn is mostly in shade, with shafts of light between the trees. Shadows are only drawn up to a
+# distance from the camera, and beyond it the lawn was lit as if there were no trees; that edge
+# moves with the view, so looking up or down by the bandstand the lawn went from sunlit to wholly
+# in shade (user, 06-10-2026). Here the shadows reach the whole park at that hour, so the edge
+# falls outside it. The classic park is smaller than the shadow distance and never showed it.
+func shadow_reach_factor() -> float:
+	return 2.6 if time_of_day == "golden" else 1.0
 
 # ---- Lamps along the paths and round the plaza ----
 func build_lamps() -> void:
