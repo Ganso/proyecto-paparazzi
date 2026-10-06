@@ -25,6 +25,8 @@ func run() -> void:
 	await shot("02_equipo")
 	game.show_graphics_settings()
 	await shot("03_graficos")
+	game.show_badges()
+	await shot("03b_insignias")
 	game.intro()
 	game.start_session("day")
 	await shot("04_encargo")

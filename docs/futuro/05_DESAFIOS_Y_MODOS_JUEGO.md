@@ -103,3 +103,21 @@ Al completar los desafíos con puntuación sobresaliente ($\ge 90$ créditos), e
   1. Cada desafío aplica sus restricciones: con el 50 mm, `equipment.zoom() == false` y no se puede cambiar de objetivo; en Magnum, `shots == 1`; en el nocturno, el modo es `night`; en el contrarreloj, el encargo vale 0 si el tiempo expira.
   2. Las insignias se conceden con las condiciones exactas de la tabla §3 y de forma determinista: la misma secuencia de evidencias da las mismas insignias.
   3. Los textos de desafíos e insignias están en `data/textos.es.json`.
+
+### Diez insignias (06-10-2026)
+
+Replanteadas desde cero a petición del usuario: **una por cada cosa que el juego enseña**, ganada haciendo la foto, y dos de recorrido (`scripts/badges.gd`, `tests/test_badges.gd`; pantalla en dos columnas, `main.gd::show_badges()`).
+
+| Insignia (`id`) | Cómo se gana |
+|---|---|
+| Ojo de halcón (`halcon`) | 5 fotos con los ojos nítidos (0,020 mm o menos), 75 puntos o más. Antes exigía además los tercios; quien ya la tenía la conserva |
+| Regla de tercios (`tercios`) | 5 fotos con la persona sobre una línea de tercios y ocupando al menos el 40 % del alto |
+| Fotómetro humano (`fotometro`) | 5 fotos en modo manual con 0,3 EV de error o menos |
+| Fondo cremoso (`cremoso`) | 5 fotos con la persona nítida y el fondo desenfocado (0,07 mm o más diez metros detrás, como la condición `fondo`) |
+| Tiempo detenido (`detenido`) | 3 corredores congelados, sin barrer |
+| Barriendo para casa (`velocidad`) | 1 barrido con el fondo arrastrado 40 px o más |
+| Maestro de la noche (`noche`) | 5 fotos nocturnas con 0,3 EV de error o menos |
+| Instante decisivo (`decisiva`) | 5 encargos resueltos al primer disparo con 85 o más |
+| Graduado de la Academia (`graduado`) | Los diez exámenes |
+| Fotógrafo de calle (`calle`) | Los 25 niveles del arcade (`main.gd`, al superar el último que faltaba) |
+

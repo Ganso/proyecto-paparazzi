@@ -1334,15 +1334,17 @@ func show_badges() -> void:
 	label(root,Texts.get_text("insignias_titulo"),Rect2(75,30,1100,52),36)
 	label(root,Texts.get_text("insignias_subtitulo"),Rect2(75,86,1100,30),18,Color("b7c5ad"))
 	var state = Badges.load_state()
+	# Two columns of five.
 	for k in Badges.BADGES.size():
 		var id: String = Badges.BADGES[k]
-		var y = 136+k*92
+		var x = 60+(k/5)*585
+		var y = 132+(k%5)*96
 		var done = Badges.earned(id,state)
-		panel(root,Rect2(75,y,1130,82),Color(.075,.115,.085,.95))
-		label(root,Texts.get_text("insignia_conseguida") if done else Texts.get_text("insignia_pendiente"),Rect2(95,y+14,60,54),38,Color("f0c75e") if done else Color("5f6d59"))
-		label(root,Texts.get_text("insignia_%s_nombre" % id),Rect2(165,y+8,600,34),24,Color("e6ebdb"))
-		label(root,Texts.get_text("insignia_%s_texto" % id),Rect2(165,y+44,820,28),15,Color("a9b8a0"))
-		label(root,Texts.get_text("insignia_hecha") if done else "%d / %d" % [mini(state[id],Badges.GOALS[id]),Badges.GOALS[id]],Rect2(1000,y+26,190,30),18,Color("f0c75e") if done else Color("b7c5ad"))
+		panel(root,Rect2(x,y,573,88),Color(.075,.115,.085,.95))
+		label(root,Texts.get_text("insignia_conseguida") if done else Texts.get_text("insignia_pendiente"),Rect2(x+10,y+16,50,54),36,Color("f0c75e") if done else Color("5f6d59"))
+		label(root,Texts.get_text("insignia_%s_nombre" % id),Rect2(x+64,y+6,380,30),21,Color("e6ebdb"))
+		label(root,Texts.get_text("insignia_%s_texto" % id),Rect2(x+64,y+36,496,46),14,Color("a9b8a0")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label(root,Texts.get_text("insignia_hecha") if done else "%d / %d" % [mini(state[id],Badges.GOALS[id]),Badges.GOALS[id]],Rect2(x+440,y+8,120,26),15,Color("f0c75e") if done else Color("b7c5ad")).horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	button(root,Texts.get_text("academia_volver_menu"),Rect2(75,630,260,55),intro)
 
 func notify_player(message: String) -> void:
@@ -3330,7 +3332,7 @@ func take_photo() -> void:
 	# Mastery badges (docs/futuro/05 §3): every photo of a real assignment counts, never the sandbox
 	# nor the automatic captures.
 	if badges_count() and not sandbox and not (academy and academy.active and academy.phase == "demo"):
-		for id in Badges.register(current_result,{"night":time_of_day == "night","first_shot":shot_serial == 1}): announce_badge(id)
+		for id in Badges.register(current_result,{"night":time_of_day == "night","first_shot":shot_serial == 1,"manual":equipment.exposure_mode() == "M"}): announce_badge(id)
 	if not sandbox: shots -= 1
 	await RenderingServer.frame_post_draw
 	var clean_image = viewport.get_texture().get_image()
@@ -3609,7 +3611,10 @@ func end_level() -> void:
 	var level: Dictionary = Arcade.LEVELS[arcade_level]
 	var passed = not best.is_empty() and not best.rejected and best.score >= level.min
 	var stars = Arcade.stars_for(best.score,level.min) if passed else 0
-	if passed: Arcade.save_result(arcade_level,best.score,stars)
+	if passed:
+		Arcade.save_result(arcade_level,best.score,stars)
+		# Every level passed: the badge of the whole arcade.
+		if badges_count() and Arcade.load_progress().size() >= Arcade.LEVELS.size() and Badges.grant("calle"): announce_badge("calle")
 	var root = create_modal()
 	label(root,Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level),Rect2(50,38,900,25),14,Color("b8d78c"))
 	label(root,Texts.get_text("arcade_superado") if passed else Texts.get_text("arcade_no_superado"),Rect2(48,72,1180,55),43,Color("b8d78c") if passed else Color("efaf83"))
