@@ -21,6 +21,7 @@ func run() -> void:
 		if arg.begins_with("--only="): only = int(arg.trim_prefix("--only="))
 	var game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	for i in 40: await process_frame
 	game.academy.progress_path = "user://academia_play_test.cfg"
 	game.academy.load_progress()

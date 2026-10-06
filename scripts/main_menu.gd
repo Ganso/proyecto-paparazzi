@@ -24,6 +24,8 @@ var chips = {}
 var theme_buttons = []
 const MODES = ["tutorial","arcade","sandbox","academia","opciones","historia"]
 static var current = 0
+var stick_push = 0
+var stick_latched = false
 var card: Control
 var dots = []
 const Glyphs = preload("res://scripts/input_glyphs.gd")
@@ -343,15 +345,38 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton and event.pressed:
 		if event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_LEFT_SHOULDER]: step = -1
 		elif event.button_index in [JOY_BUTTON_DPAD_RIGHT,JOY_BUTTON_RIGHT_SHOULDER]: step = 1
-	# On a scenario card or a time chip, ← → move along that row (↑ ↓ reach them from «Entrar»).
-	if step != 0 and in_rows(get_viewport().gui_get_focus_owner()) and (event is InputEventKey and event.physical_keycode in [KEY_LEFT,KEY_RIGHT] or event is InputEventJoypadButton and event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT]):
+	# The left stick counts once per push, like the D-pad.
+	if event is InputEventJoypadMotion and event.axis == JOY_AXIS_LEFT_X:
+		var push = 0 if absf(event.axis_value) < .6 else signi(int(signf(event.axis_value)))
+		if push == 0: stick_latched = false
+		elif stick_latched:
+			get_viewport().set_input_as_handled()   # (the push that changed the mode must not also move the focus)
+			return
+		elif push != stick_push: step = push
+		stick_push = push
+	# ← → (arrows, D-pad, left stick) go first to whatever option is on that side of the one in
+	# focus; only when there is none do they change the mode. A/D and LB/RB always change it.
+	var moves_focus = event is InputEventKey and event.physical_keycode in [KEY_LEFT,KEY_RIGHT] or event is InputEventJoypadButton and event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT] or event is InputEventJoypadMotion
+	if step != 0 and moves_focus and option_beside(step) != null:
+		# (the stick's push is moved here, so that it counts exactly once)
+		if event is InputEventJoypadMotion:
+			option_beside(step).grab_focus()
+			stick_latched = true
+			get_viewport().set_input_as_handled()
 		return
 	if step != 0:
 		get_viewport().set_input_as_handled()
+		if event is InputEventJoypadMotion: stick_latched = true
 		change_mode(step)
 
-func in_rows(c: Control) -> bool:
-	return c != null and (c in cards.values() or c in chips.values())
+# The option to the left (−1) or right (+1) of the one in focus, if there is one.
+func option_beside(step: int) -> Control:
+	var from = get_viewport().gui_get_focus_owner()
+	if from == null or not is_ancestor_of(from): return null
+	var to = from.find_valid_focus_neighbor(SIDE_LEFT if step < 0 else SIDE_RIGHT)
+	if to == null or to == from or not is_ancestor_of(to) or not to.is_visible_in_tree(): return null
+	var shift = to.get_global_rect().get_center().x-from.get_global_rect().get_center().x
+	return to if shift*step > 4.0 else null
 
 func select_scenario(which: String) -> void:
 	scenario = which

@@ -45,6 +45,7 @@ func run() -> void:
 	# Search with a pad: buttons do what the help says.
 	var game = preload("res://main.tscn").instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	for i in 30: await process_frame
 	game.start_level(6)
 	game.begin_assignment()
@@ -302,6 +303,33 @@ func run() -> void:
 		await process_frame
 		check(m.scenario == "grande","A on the big park's card chooses it")
 		m.select_scenario("clasico")
+		# Opciones, two columns: → goes to the right column, and only from there to the next mode;
+		# the left stick does the same as the D-pad.
+		var opciones = m.MODES.find("opciones")
+		for way in ["cruceta","seta"]:
+			m.current = opciones
+			m.build_card()
+			for i in 3: await process_frame
+			var first = root.gui_get_focus_owner()
+			var push = func(value: float):
+				if way == "cruceta":
+					if value != 0.0: root.push_input(right)
+				else:
+					var motion = InputEventJoypadMotion.new()
+					motion.axis = JOY_AXIS_LEFT_X
+					motion.axis_value = value
+					root.push_input(motion)
+			push.call(1.0)
+			await process_frame
+			push.call(0.0)
+			await process_frame
+			var second = root.gui_get_focus_owner()
+			check(m.current == opciones and second != first and second.global_position.x > first.global_position.x,"Opciones, %s: → reaches the right column" % way)
+			push.call(1.0)
+			await process_frame
+			push.call(0.0)
+			await process_frame
+			check(m.current == opciones+1,"Opciones, %s: → from the right column goes to the next mode" % way)
 		m.current = 0
 		m.build_card()
 	else:

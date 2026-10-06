@@ -121,3 +121,7 @@ Al arrancar (solo el juego real, nunca pruebas ni herramientas), `main.gd::check
 ## Tercios de paso (06-10-2026, usuario)
 
 Opciones tiene un noveno botón, **«Pasos de exposición: Enteros / Tercios»** (la rejilla pasa a cinco filas de 40 px). El tutorial gana el paso informativo `tercios`, tras el del diafragma, que lo aconseja y dice cómo saltar un paso entero con el dispositivo en uso (`{paso_entero}`: Mayús pulsada, la cruceta mantenida, − o + mantenidos). Todo el detalle en [docs/EQUIPAMIENTO_Y_OPTICAS.md §3.5](../EQUIPAMIENTO_Y_OPTICAS.md).
+
+## Menú con mando: ← → van primero a la opción de al lado (06-10-2026, usuario)
+
+En el menú principal la cruceta, la seta izquierda y las flechas hacen lo mismo: ← → llevan a la opción que haya a ese lado de la que tiene el foco (la columna derecha de Opciones, la siguiente tarjeta de escenario) y **solo si no hay ninguna cambian de modo** (`main_menu.gd::option_beside()`). LB/RB y A/D cambian siempre de modo. La seta cuenta una vez por empujón (`stick_latched`). Comprobado en `tests/test_input.gd` con cruceta y con seta. Las pruebas fijan además `exposure_thirds = false` al crear el juego, para no depender de la opción del jugador.

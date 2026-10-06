@@ -170,6 +170,7 @@ func run() -> void:
 	var ui_file = FileAccess.get_file_as_bytes("user://interfaz.cfg")
 	game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	current_scene = game
 	guard()
 	var layer = CanvasLayer.new()

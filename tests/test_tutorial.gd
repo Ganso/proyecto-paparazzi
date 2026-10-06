@@ -47,6 +47,7 @@ func run() -> void:
 	var saved_ui_cfg = FileAccess.get_file_as_string("user://interfaz.cfg") if FileAccess.file_exists("user://interfaz.cfg") else ""
 	game = preload("res://main.tscn").instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await frames(30)
 	# Main menu: five modes, changed with the arrows.
 	game.intro()

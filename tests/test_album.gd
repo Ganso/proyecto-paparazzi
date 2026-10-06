@@ -28,6 +28,7 @@ func run() -> void:
 	check(Album.list().is_empty(),"An album that does not exist yet is empty")
 	var game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	for i in 30: await process_frame
 	check(not game.badges_count(),"A test run is not the real game: it would never write to the player's album")
 	game.start_level(0)

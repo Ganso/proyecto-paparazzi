@@ -47,6 +47,7 @@ func run() -> void:
 	Glyphs.device = "tactil"
 	game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await frames(30)
 	game.pad_polling = false
 	var tc = game.touch_controls

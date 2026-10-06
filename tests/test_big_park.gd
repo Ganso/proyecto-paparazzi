@@ -36,6 +36,7 @@ func run() -> void:
 	MainScript.scenario = "grande"
 	game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await frames(12)
 	var park = game.park
 	# --- The park and its graph ---

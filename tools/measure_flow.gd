@@ -18,6 +18,7 @@ func run() -> void:
 		if arg.begins_with("--level="): level = int(arg.get_slice("=",1))-1
 	var game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	for i in 10: await process_frame
 	if level >= 0:
 		load("res://scripts/arcade.gd").SAVE = "user://arcade_flow.cfg"

@@ -11,6 +11,7 @@ func frames(count = 3) -> void:
 func run() -> void:
 	game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await frames(10)
 	game.start_session(false)
 	game.begin_assignment() # starts the search phase with all 21 people walking

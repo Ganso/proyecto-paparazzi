@@ -25,6 +25,7 @@ func run() -> void:
 	var saved_interface = FileAccess.get_file_as_string("user://interfaz.cfg") if FileAccess.file_exists("user://interfaz.cfg") else ""
 	game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await frames(10)
 	game.start_session("day")
 	game.begin_assignment()

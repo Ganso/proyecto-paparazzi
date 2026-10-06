@@ -24,6 +24,7 @@ func make_game(which: String) -> void:
 	MainScript.scenario = which
 	game = Main.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await frames(20)
 
 # Brute force of the exposure settings on a copy of the evidence: the best passing combination.

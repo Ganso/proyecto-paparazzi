@@ -49,6 +49,7 @@ func phase_1_game_states() -> void:
 	print(">> FASE 1: Capturando estados del juego...")
 	var game = MainScene.instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	await wait_frames(12)
 
 	# 01. Inicio / Intro

@@ -19,6 +19,7 @@ func run() -> void:
 	MainScript.scenario = "grande"
 	var game = preload("res://main.tscn").instantiate()
 	root.add_child(game)
+	game.exposure_thirds = false   # (not the player's option)
 	for i in 30: await process_frame
 	game.start_session("day",true)
 	game.mode = "TEST"
