@@ -3764,7 +3764,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.physical_keycode == KEY_Y and mode == "SEARCH" and not crowd and not (academy and academy.active):
 			toggle_raise()
 			return
-		if event.physical_keycode == KEY_F1 and mode == "SEARCH":
+		# I (it was F1, which a Mac keeps for the screen brightness and a browser for its own help;
+		# F1 still works where it did).
+		if event.physical_keycode in [KEY_I,KEY_F1] and mode == "SEARCH":
 			control_help.set_enabled(not control_help.enabled)
 			return
 		if mode == "SEARCH" and event.is_action_pressed("camara_controles"):
@@ -4128,7 +4130,7 @@ func override_path() -> String:
 # changed the default graphics (then the player is advised to reset the graphics options)].
 # Two or three points per version, only what a player notices. A new release adds its row here
 # and its texts in textos/es/menu.md.
-const VERSION_NOTES = [["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+const VERSION_NOTES = [["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
 static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice

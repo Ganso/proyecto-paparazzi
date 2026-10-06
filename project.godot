@@ -14,7 +14,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/version="0.3.2-alpha"
+config/version="0.3.3-alpha"
 config/name="PhotoHacks"
 config/quit_on_go_back=false
 run/main_scene="res://main.tscn"

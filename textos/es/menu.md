@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.3.2 · EN DESARROLLO
+VERSIÓN ALFA 0.3.3 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -311,6 +311,18 @@ Restablecer gráficos
 ### novedades_restablecido · El mismo botón, ya pulsado
 > máximo 24 caracteres
 Gráficos restablecidos
+
+### novedades_0_3_3_1 · Novedades de la versión 0.3.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Vestuario nuevo: Gabardina, camiseta de tirantes, moño, pelo rizado, boina, gorra hacia atrás, mochila, paraguas y gafas.
+
+### novedades_0_3_3_2 · Novedades de la versión 0.3.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+La cámara mide en matricial salvo que elijas otra cosa, y la ayuda en pantalla pasa a la tecla I.
+
+### novedades_0_3_3_3 · Novedades de la versión 0.3.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Parque grande: Sombras estables a la hora dorada y caminos que ya no parpadean junto al cenador.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres

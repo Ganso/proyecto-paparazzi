@@ -124,7 +124,7 @@ MF: ⟦Mayús⟧ + rueda, ⟦R⟧⟦T⟧ o el deslizador. Con objetivo fijo tamb
 Réflex: Alinea las dos mitades del círculo. Telemétrica: Superpón la doble imagen.
 Exposición manual: ⟦Q⟧⟦E⟧ diafragma, ⟦Z⟧⟦X⟧ velocidad, ⟦C⟧⟦V⟧ ISO. Modo A: Tú eliges el diafragma. Modo S, el tiempo.
 Automática con compensación: ⟦[⟧⟦]⟧ o la rueda sobre el botón AUTO.
-⟦Espacio⟧ disparar · ⟦G⟧ tercios · ⟦Tab⟧ controles sobre el visor · ⟦F1⟧ ayuda en pantalla.
+⟦Espacio⟧ disparar · ⟦G⟧ tercios · ⟦Tab⟧ controles sobre el visor · ⟦I⟧ ayuda en pantalla.
 ⟦Y⟧ baja la cámara para buscar y la vuelve a llevar al ojo (parque clásico).
 TLR: Se mira desde arriba y el visor invierte izquierda y derecha. ⟦L⟧ lupa 3× · ⟦K⟧ manivela (sandbox, 12 fotos).
 Arcade: Cada nivel fija cámara, disparos, tiempo, nota mínima y condiciones.
@@ -161,7 +161,7 @@ Disparar: ⟦Espacio⟧
 Elegir control ⟦Tab⟧ y cambiarlo ⟦Re Pág⟧⟦Av Pág⟧ · bajar la cámara ⟦Y⟧ · tercios ⟦G⟧ · TLR: Lupa ⟦L⟧, manivela ⟦K⟧
 
 ### teclado_ayuda
-Esta ayuda ⟦H⟧ · ayuda en pantalla ⟦F1⟧ · pausa y salir ⟦Esc⟧ · aceptar ⟦Intro⟧
+Esta ayuda ⟦H⟧ · ayuda en pantalla ⟦I⟧ · pausa y salir ⟦Esc⟧ · aceptar ⟦Intro⟧
 
 ### ayuda_titulo_teclado
 Controles con teclado y ratón

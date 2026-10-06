@@ -39,7 +39,7 @@ const CONTROLS = {
 	"lupa": ["⟦L⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
 	"manivela": ["⟦K⟧","⦅X⦆","⦅▢⦆","⦅Y⦆"],
 	"bajar": ["⟦Y⟧","⦅Y⦆","⦅△⦆","⦅X⦆"],
-	"ayuda_pantalla": ["⟦F1⟧","⦅X⦆","⦅▢⦆","⦅Y⦆"],
+	"ayuda_pantalla": ["⟦I⟧","⦅X⦆","⦅▢⦆","⦅Y⦆"],
 	"controles": ["⟦Tab⟧","⦅View⦆","⦅Share⦆","⦅−⦆"],
 	"ayuda": ["⟦H⟧","⦅B⦆","⦅◯⦆","⦅A⦆"],
 	"pausa": ["⟦Esc⟧","⦅Menu⦆","⦅Options⦆","⦅+⦆"],

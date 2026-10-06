@@ -10,7 +10,7 @@ const GlyphLabel = preload("res://scripts/glyph_label.gd")
 var font: Font
 const U = 40.0          # one key unit in pixels
 const ROWS = [
-	[["Esc",1],["",.5],["F1",1],["",12.5]],
+	[["Esc",1],["",14]],
 	[["",1],["1",1],["2",1],["3",1],["4",1],["5",1],["6",1],["7",1],["8",1],["9",1],["",3]],
 	[["Tab",1.5],["Q",1],["W",1],["E",1],["R",1],["T",1],["Y",1],["U",1],["I",1],["O",1],["P",1],["[",1],["]",1]],
 	[["",1.75],["A",1],["S",1],["D",1],["F",1],["G",1],["H",1],["J",1],["K",1],["L",1],["",1],["",1],["Intro",1.75]],
@@ -24,7 +24,7 @@ const GROUPS = {
 	"exposicion": [Color("e0a030"),["Q","E","Z","X","C","V","[","]","M","B"]],
 	"disparar": [Color("e05a4a"),["Espacio"]],
 	"camara": [Color("8a6ad8"),["Y","G","L","K","Tab"]],
-	"ayuda": [Color("7a8a9a"),["H","F1","Esc","Intro"]],
+	"ayuda": [Color("7a8a9a"),["H","I","Esc","Intro"]],
 }
 
 func _ready() -> void:
