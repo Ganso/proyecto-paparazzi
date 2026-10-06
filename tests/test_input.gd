@@ -310,6 +310,9 @@ func run() -> void:
 			m.current = opciones
 			m.build_card()
 			for i in 3: await process_frame
+			# (the first two buttons span both columns: the rows of two start below them)
+			m.card.find_children("*","Button",true,false).filter(func(b): return b.focus_mode == Control.FOCUS_ALL and b.size.x < 300)[0].grab_focus()
+			await process_frame
 			var first = root.gui_get_focus_owner()
 			var push = func(value: float):
 				if way == "cruceta":
@@ -324,7 +327,7 @@ func run() -> void:
 			push.call(0.0)
 			await process_frame
 			var second = root.gui_get_focus_owner()
-			check(m.current == opciones and second != first and second.global_position.x > first.global_position.x,"Opciones, %s: → reaches the right column" % way)
+			check(m.current == opciones and second != first and second.global_position.x > first.global_position.x,"Opciones, %s: → reaches the right column (%s → %s, modo %d)" % [way,first.text,second.text,m.current])
 			push.call(1.0)
 			await process_frame
 			push.call(0.0)

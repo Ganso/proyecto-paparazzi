@@ -292,21 +292,25 @@ func build_sandbox() -> void:
 
 func build_options() -> void:
 	enter_callback = Callable()
+	# Two wide buttons and three rows of two (the on-screen help is switched while playing).
 	var rows = [
-		[Texts.get_text("menu_equipo"),main.show_equipment],
-		[Texts.get_text("menu_graficos"),main.show_graphics_settings],
+		[Texts.get_text("menu_graficos"),main.show_graphics_settings,true],
+		[Texts.get_text("opcion_equipo_sandbox"),main.show_equipment,true],
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
-		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
-		[Texts.get_text("opcion_vibracion_tactil" if Glyphs.touch and OS.has_feature("mobile") else "opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
 		[Texts.get_text("opcion_invertir") % Texts.get_text("invertir_"+main.look_invert),func(): main.set_look_invert(main.INVERT_CHOICES[(main.INVERT_CHOICES.find(main.look_invert)+1)%4]); build_card()],
+		[Texts.get_text("opcion_vibracion_tactil" if Glyphs.touch and OS.has_feature("mobile") else "opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
 		[Texts.get_text("opcion_pasos") % Texts.get_text("pasos_tercios" if main.exposure_thirds else "pasos_enteros"),func(): main.set_exposure_thirds(not main.exposure_thirds); build_card()],
-		[Texts.get_text("menu_insignias"),main.show_badges],
 		[Texts.get_text("menu_album"),func(): main.show_album()],
+		[Texts.get_text("menu_insignias"),main.show_badges],
 	]
+	var slot = 0
 	for k in rows.size():
-		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,158+(k/2)*45,260,40),rows[k][1])
+		var wide = rows[k].size() > 2
+		if wide and slot%2 == 1: slot += 1
+		var b = flat_button(card,rows[k][0],Rect2(32+(slot%2)*272,158+(slot/2)*45,532 if wide else 260,40),rows[k][1])
 		b.focus_mode = Control.FOCUS_ALL
 		if k == 0: b.call_deferred("grab_focus")
+		slot += 2 if wide else 1
 
 # ← → (keys, D-pad, LB/RB) change the mode; Enter / A enters it. In _input: the focused «Entrar»
 # button would take the arrows for focus navigation before _unhandled_input ever saw them.
@@ -358,11 +362,9 @@ func _input(event: InputEvent) -> void:
 	# focus; only when there is none do they change the mode. A/D and LB/RB always change it.
 	var moves_focus = event is InputEventKey and event.physical_keycode in [KEY_LEFT,KEY_RIGHT] or event is InputEventJoypadButton and event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT] or event is InputEventJoypadMotion
 	if step != 0 and moves_focus and option_beside(step) != null:
-		# (the stick's push is moved here, so that it counts exactly once)
-		if event is InputEventJoypadMotion:
-			option_beside(step).grab_focus()
-			stick_latched = true
-			get_viewport().set_input_as_handled()
+		option_beside(step).grab_focus()
+		if event is InputEventJoypadMotion: stick_latched = true   # (it counts exactly once)
+		get_viewport().set_input_as_handled()
 		return
 	if step != 0:
 		get_viewport().set_input_as_handled()
@@ -373,10 +375,17 @@ func _input(event: InputEvent) -> void:
 func option_beside(step: int) -> Control:
 	var from = get_viewport().gui_get_focus_owner()
 	if from == null or not is_ancestor_of(from): return null
-	var to = from.find_valid_focus_neighbor(SIDE_LEFT if step < 0 else SIDE_RIGHT)
-	if to == null or to == from or not is_ancestor_of(to) or not to.is_visible_in_tree(): return null
-	var shift = to.get_global_rect().get_center().x-from.get_global_rect().get_center().x
-	return to if shift*step > 4.0 else null
+	# The nearest one on the same row (Godot's own search would also take a wide button above).
+	var here = from.get_global_rect()
+	var best: Control = null
+	for c in find_children("*","Control",true,false):
+		if c == from or c.focus_mode != Control.FOCUS_ALL or not c.is_visible_in_tree() or c.is_queued_for_deletion(): continue
+		if c is BaseButton and c.disabled: continue
+		var there: Rect2 = c.get_global_rect()
+		if absf(there.get_center().y-here.get_center().y) > here.size.y*.5: continue
+		var shift = (there.get_center().x-here.get_center().x)*step
+		if shift > 4.0 and (best == null or shift < (best.get_global_rect().get_center().x-here.get_center().x)*step): best = c
+	return best
 
 func select_scenario(which: String) -> void:
 	scenario = which

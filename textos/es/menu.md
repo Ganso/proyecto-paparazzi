@@ -218,7 +218,7 @@ Opciones
 
 ### modo_opciones_texto
 > máximo 180 caracteres
-Equipo, gráficos, tema, ayuda, vibración, insignias y álbum.
+Gráficos, equipo y ajustes del juego; álbum e insignias.
 
 ### modo_entrar
 Entrar
@@ -232,9 +232,6 @@ Tema: %s
 ### opcion_interfaz
 Interfaz: %s
 
-### opcion_ayuda
-Ayuda en pantalla: %s
-
 ### opcion_vibracion
 Vibración del mando: %s
 
@@ -244,6 +241,10 @@ Vibración: %s
 
 ### opcion_invertir
 Invertir mirada: %s
+
+### opcion_equipo_sandbox · Opciones, botón a doble columna (532 px: unos 50 caracteres)
+> máximo 50 caracteres
+Equipo fotográfico para el modo Sandbox
 
 ### opcion_pasos · Opciones (botón de 260 px: unos 28 caracteres)
 > máximo 28 caracteres
