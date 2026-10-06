@@ -192,7 +192,7 @@ a %d mm hace falta 1/%d s o más rápido. Usaste 1/%d s
 
 ### cond_congelado_imposible
 > máximo 100 caracteres
-a %d mm y esta distancia ni 1/1000 s basta: Usa menos focal o fotografíala cuando venga hacia ti
+a %d mm y esta distancia ni 1/4000 s basta: Usa menos focal o fotografíala cuando venga hacia ti
 
 ### cond_congelado_quieto
 > máximo 100 caracteres

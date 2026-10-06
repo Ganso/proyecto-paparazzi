@@ -890,7 +890,7 @@ func set_shutter(denominator: int) -> void:
 func expose_with_shutter() -> void:
 	main.update_meter()
 	var best = INF
-	for t in Photo.DENOMINATORS.size():
+	for t in range(main.fastest_index(),Photo.DENOMINATORS.size()):
 		var delta = absf(Photo.ev(main.aperture_value(),1.0/Photo.DENOMINATORS[t],main.iso_value(),main.measured_ev))
 		if delta < best:
 			best = delta
@@ -982,7 +982,7 @@ func start_exam() -> void:
 			var guard = 0
 			while exam_needle() > -2.6 and guard < 12:
 				guard += 1
-				if main.t_index > 0: main.t_index -= 1
+				if main.t_index > main.fastest_index(): main.t_index -= 1
 				elif main.n_index < main.apertures().size()-1: main.n_index += 1
 				else: break
 		"dof":
@@ -1075,7 +1075,7 @@ static func exam_report(n: String, e: Dictionary, x: Dictionary) -> Dictionary:
 	if "pulso" in asks:
 		# Hand-held rule: no slower than 1/focal.
 		var steady = e.t*e.f <= 1.0+.0001
-		var safe: int = Photo.DENOMINATORS.max()
+		var safe: int = 1000
 		for d in Photo.DENOMINATORS:
 			if d >= e.f-.5 and d < safe: safe = d
 		lines.append([steady,Texts.get_text("academia_ex_pulso_ok") % [denominator,roundi(e.f)] if steady else Texts.get_text("academia_ex_pulso_mal") % [denominator,roundi(e.f),safe]])

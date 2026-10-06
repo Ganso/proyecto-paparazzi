@@ -108,7 +108,7 @@ func centre_meter(slowest = 0) -> void:
 			elif main.n_index > 0: await step("n",-1)
 			else: await step("iso",1)
 		else:
-			if main.t_index > 0: await step("t",-1)
+			if main.t_index > main.fastest_index(): await step("t",-1)
 			elif main.n_index < main.apertures().size()-1: await step("n",1)
 			else: await step("iso",-1)
 

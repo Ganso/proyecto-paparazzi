@@ -51,7 +51,7 @@ var n_index = 3:
 	set(value):
 		if value != n_index: fine["n"] = 0
 		n_index = value
-var t_index = 2:
+var t_index = 4:
 	set(value):
 		if value != t_index: fine["t"] = 0
 		t_index = value
@@ -938,7 +938,7 @@ func change_parameter(parameter: String, direction: int) -> void:
 		fine[parameter] = 0
 		match parameter:
 			"n": n_index = clampi(n_index+direction,0,apertures().size()-1)
-			"t": t_index = clampi(t_index+direction,0,Photo.DENOMINATORS.size()-1)
+			"t": t_index = clampi(t_index+direction,fastest_index(),Photo.DENOMINATORS.size()-1)
 			"iso": iso_index = clampi(iso_index+direction,0,Photo.ISOS.size()-1)
 	if equipment.auto_exposure: auto_expose()
 	refresh()
@@ -946,6 +946,12 @@ func change_parameter(parameter: String, direction: int) -> void:
 # Thirds of a stop (docs/EQUIPAMIENTO_Y_OPTICAS.md §8). The Academy teaches with whole stops.
 func thirds_on() -> bool:
 	return exposure_thirds and not (academy and academy.active)
+
+# The fastest shutter of the camera in hand: 1/4000 s on the SLR and the rangefinder, 1/1000 s on
+# the compact and the TLR, and in the Academy, whose lessons are written for 1/1000 s.
+func fastest_index() -> int:
+	if equipment.body in [1,2] and not (academy and academy.active): return 0
+	return Photo.DENOMINATORS.find(1000)
 
 func whole_table(parameter: String) -> Array:
 	return {"n":apertures(),"t":Photo.DENOMINATORS,"iso":Photo.ISOS}[parameter]
@@ -966,6 +972,7 @@ func fine_moved(parameter: String, at: Array, amount: int) -> Array:
 	var index: int = at[0]
 	var thirds: int = at[1]
 	var last = whole_table(parameter).size()-1
+	var first = fastest_index() if parameter == "t" else 0
 	for i in absi(amount):
 		if amount > 0:
 			if index >= last: break
@@ -974,7 +981,7 @@ func fine_moved(parameter: String, at: Array, amount: int) -> Array:
 				index += 1
 				thirds = 0
 		elif thirds > 0: thirds -= 1
-		elif index > 0:
+		elif index > first:
 			index -= 1
 			thirds = third_gap(parameter,index)-1
 	return [index,thirds]
@@ -1023,7 +1030,10 @@ func trim_exposure(target_ev: float) -> void:
 	if equipment.priority != "A": free.append("n")
 	if not equipment.film: free.append("iso")
 	for parameter in free: fine[parameter] = 0
-	if not thirds_on():
+	# The camera's own exposure is not tied to the player's whole stops: rounded to a whole stop,
+	# a reading half a stop off the subject became a photo a whole stop off. (The Academy keeps
+	# whole stops: its lessons count them.)
+	if academy and academy.active:
 		clear_fine()
 		return
 	var best = absf(Photo.ev(aperture_value(),1.0/shutter_denominator(),iso_value(),target_ev))
@@ -4250,6 +4260,7 @@ func apertures() -> Array:
 func apply_equipment() -> void:
 	focal = clampf(focal,equipment.lens().min,equipment.lens().max)
 	n_index = clampi(n_index,0,apertures().size()-1)
+	t_index = maxi(t_index,fastest_index())
 	lens_slider.min_value = equipment.lens().min
 	lens_slider.max_value = equipment.lens().max
 	if equipment.film: iso_index = equipment.film_iso_index
@@ -4787,7 +4798,14 @@ func select_matrix_point() -> void:
 # such (docs/futuro/12 §2.1), only what the ray finds there, or the sky.
 func ev_under(point: Vector2) -> float:
 	var hit = point_hit(point)
-	return park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,hit.collider.get_meta("person") if hit.collider.has_meta("person") else null)
+	if hit.is_empty(): return park.sky_ev(time_of_day)
+	# A person is read at the chest, where the photo is judged: with the sun low, the point under
+	# the meter could be a leg in the shadow of a hedge while the chest was in the sun, and the
+	# camera exposed for the shadow.
+	if hit.collider.has_meta("person"):
+		var who = hit.collider.get_meta("person")
+		if is_instance_valid(who) and who.has_method("control_points"): return park.illumination_ev(who.control_points()[1],time_of_day,who)
+	return park.illumination_ev(hit.position,time_of_day,null)
 
 # Metering modes (docs/futuro/12 §3). Spot: under the active focus point. Centre-weighted: 75 % for
 # the centre of the frame (the centre and a ring round it) and 25 % for the periphery. Matrix: 5 × 5
@@ -4799,7 +4817,8 @@ func ev_under(point: Vector2) -> float:
 # automatic camera left a subject in the sun a whole stop too bright, and the Academy's exposure
 # exam could not be passed by centring the needle. Spot is still the exact one, and the lesson
 # on metering still shows the difference.
-const MATRIX_SUBJECT = 36.0
+const MATRIX_SUBJECT = 144.0   # (six sevenths of the reading; 36 until 06-10-2026)
+const MATRIX_SUBJECT_ACADEMY = 36.0   # (the lesson on metering shows how the modes differ)
 func update_meter() -> void:
 	if exposure_locked: return
 	var active: Vector2 = finder.points()[finder.active]
@@ -4816,9 +4835,11 @@ func update_meter() -> void:
 			for row in 5:
 				for col in 5:
 					var at = view_point(Vector2((col+.5)/5.0,(row+.5)/5.0))
-					readings.append(ev_under(at))
 					var cell = Rect2(finder.view.position+finder.view.size*Vector2(col/5.0,row/5.0),finder.view.size/5.0)
-					weights.append(MATRIX_SUBJECT if cell.has_point(active) else 1.0)
+					# The zone of the focus point is read at the point itself: its centre could fall
+					# beside a subject that is narrower than the zone, and read the background.
+					readings.append(ev_under(active if cell.has_point(active) else at))
+					weights.append((MATRIX_SUBJECT_ACADEMY if academy and academy.active else MATRIX_SUBJECT) if cell.has_point(active) else 1.0)
 					mean += readings[-1]/25.0
 			var total = 0.0
 			var weight_sum = 0.0
@@ -4866,16 +4887,24 @@ func next_metering() -> void:
 	notify_player(Texts.get_text("fotometria_cambiada") % Texts.get_text("fotometria_"+equipment.metering))
 	refresh()
 
+# What the automatic exposure counts as a miss. Outside the Academy the thirds trim what is left
+# (trim_exposure()), so anything within a third of a stop is as good as exact and the camera
+# chooses among those by its preferences (hand-held shutter, low ISO, open aperture): counting
+# every hundredth, the names of the stops (f/22 is not exactly f/22.6) decided, and the program
+# went for f/22 at 1/60 s in full sun.
+func exposure_miss(delta: float) -> float:
+	return delta if academy and academy.active else maxf(0.0,delta-.34)
+
 # Correct exposure for a given scene EV (same criteria as auto_expose()).
 func expose_for(scene_ev: float) -> void:
 	var target_ev = scene_ev-equipment.exposure_compensation()
 	var best_cost = INF
 	var stops = apertures()
 	for n in stops.size():
-		for t in Photo.DENOMINATORS.size():
+		for t in range(fastest_index(),Photo.DENOMINATORS.size()):
 			for iso in ([equipment.film_iso_index] if equipment.film else range(Photo.ISOS.size())):
 				var delta = absf(Photo.ev(stops[n],1.0/Photo.DENOMINATORS[t],Photo.ISOS[iso],target_ev))
-				var cost = delta*10 + maxf(0,focal/Photo.DENOMINATORS[t]-1)*2 + iso*.12 + n*.03
+				var cost = exposure_miss(delta)*10 + maxf(0,focal/Photo.DENOMINATORS[t]-1)*2 + iso*.12 + n*.03
 				if cost < best_cost:
 					best_cost = cost
 					n_index = n
@@ -4889,7 +4918,7 @@ func auto_expose() -> void:
 	var stops = apertures()
 	# Aperture or shutter priority: the player's choice stays, the camera sets the rest.
 	var n_range = [n_index] if equipment.priority == "A" else range(stops.size())
-	var t_range = [t_index] if equipment.priority == "S" else range(Photo.DENOMINATORS.size())
+	var t_range = [t_index] if equipment.priority == "S" else range(fastest_index(),Photo.DENOMINATORS.size())
 	for n in n_range:
 		for t in t_range:
 			for iso in ([equipment.film_iso_index] if equipment.film else range(Photo.ISOS.size())):
@@ -4897,7 +4926,7 @@ func auto_expose() -> void:
 				var f_number = aperture_value() if equipment.priority == "A" else stops[n]
 				var denominator = shutter_denominator() if equipment.priority == "S" else Photo.DENOMINATORS[t]
 				var delta = absf(Photo.ev(f_number,1.0/denominator,Photo.ISOS[iso],target_ev))
-				var cost = delta*10 + maxf(0,focal/denominator-1)*2 + iso*.12 + n*.03
+				var cost = exposure_miss(delta)*10 + maxf(0,focal/denominator-1)*2 + iso*.12 + n*.03
 				if cost < best_cost:
 					best_cost = cost
 					n_index = n

@@ -10,7 +10,7 @@ extends RefCounted
 #   body: 0 compacta, 1 telemétrica, 2 réflex, 3 TLR · lens: index in equipment.gd LENSES
 #   auto: true (program), false (manual), "A" or "S" (priority) · pace: walkers' speed factor
 #   limit: seconds (0 = none) · target: "runner" picks someone running
-static var SAVE = "user://arcade.cfg"   # tests point it elsewhere
+static var SAVE = OS.get_environment("PAPARAZZI_ARCADE_CFG") if OS.has_environment("PAPARAZZI_ARCADE_CFG") else "user://arcade.cfg"   # tests and capture tools point it elsewhere
 const BLOCKS = ["arcade_bloque_1","arcade_bloque_2","arcade_bloque_3","arcade_bloque_4","arcade_bloque_5","arcade_bloque_6"]
 #   target: "runner" picks someone running, "activity" someone who sits down to do something,
 #           "dog" the dog's owner · toward: "quiosco" or "sol", whoever gets there first

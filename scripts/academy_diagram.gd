@@ -63,7 +63,7 @@ func draw_triangle() -> void:
 func draw_scales(stress: String) -> void:
 	var m = academy.main
 	var rows = [["n",Texts.get_text("esquema_diafragma"),m.apertures().map(func(n): return "f/%s" % str(n)),m.n_index,Texts.get_text("esquema_mas_luz")],
-		["t",Texts.get_text("esquema_velocidad"),Array(Photo.DENOMINATORS).map(func(d): return "1/%d" % d),m.t_index,Texts.get_text("esquema_menos_luz")],
+		["t",Texts.get_text("esquema_velocidad"),Array(Photo.DENOMINATORS).slice(m.fastest_index()).map(func(d): return "1/%d" % d),m.t_index-m.fastest_index(),Texts.get_text("esquema_menos_luz")],
 		["iso","ISO",Array(Photo.ISOS).map(func(i): return str(i)),m.iso_index,Texts.get_text("esquema_menos_luz")]]
 	for r in rows.size():
 		var row: Array = rows[r]

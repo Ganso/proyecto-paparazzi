@@ -142,7 +142,7 @@ func run() -> void:
 	check(target.theta == frozen_theta,"Results freeze simulation")
 	var first_score = game.best.score
 	game.resume_search()
-	game.t_index = 6
+	game.t_index = 8
 	game.n_index = game.apertures().size()-1
 	game.focal = 105
 	game.update_camera()
@@ -423,7 +423,7 @@ func run() -> void:
 	game.begin_assignment()
 	check(not game.finder.golden and game.finder.thirds,"Other levels draw the thirds")
 	var Photo = preload("res://scripts/photography.gd")
-	check(Photo.needed_shutter(2.8,70.0,8.0) == 1000 and Photo.needed_shutter(2.8,135.0,8.0) == -1 and Photo.needed_shutter(0.7,50.0,5.0) > 0,"The shutter needed to freeze a subject")
+	check(Photo.needed_shutter(2.8,70.0,8.0) == 1000 and Photo.needed_shutter(2.8,135.0,8.0) == 2000 and Photo.needed_shutter(2.8,200.0,3.0) == -1 and Photo.needed_shutter(0.7,50.0,5.0) > 0,"The shutter needed to freeze a subject")
 	var Conditions = preload("res://scripts/conditions.gd")
 	var frozen = Conditions.check({"f":70.0,"n":2.8,"t":1.0/250,"s":8.0,"d":8.0,"v":2.8,"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5)},{"congelado":true})[0]
 	check(not frozen.ok and frozen.text.contains("1/1000") and frozen.text.contains("1/250"),"Freezing explained in shutter speeds (%s)" % frozen.text)

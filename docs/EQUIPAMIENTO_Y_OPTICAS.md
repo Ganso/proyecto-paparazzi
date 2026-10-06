@@ -62,6 +62,8 @@ Cada objetivo expone solo el subconjunto comprendido entre su apertura máxima y
 ### 3.2 Tiempos de Obturación (`Photo.DENOMINATORS`)
 $$\tfrac{1}{1000} \;\cdot\; \tfrac{1}{500} \;\cdot\; \tfrac{1}{250} \;\cdot\; \tfrac{1}{125} \;\cdot\; \tfrac{1}{60} \;\cdot\; \tfrac{1}{30} \;\cdot\; \tfrac{1}{15} \;\cdot\; \tfrac{1}{8}\text{ s}$$
 
+**Desde el 06-10-2026 la escala empieza en 1/4000 s** (`[4000, 2000, 1000, 500, 250, 125, 60, 30, 15, 8]`): las dos más rápidas solo en la réflex y la telemétrica (`main.gd::fastest_index()`); compacta, TLR y Academia siguen en 1/1000 s. Ningún código usa índices literales de esta tabla: se busca con `find()`.
+
 ### 3.3 Sensibilidad ISO y Carrete (`Photo.ISOS`)
 $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cdot\; 3200$$
 

@@ -35,7 +35,7 @@ func best_settings(e: Dictionary, level: Dictionary) -> Dictionary:
 	var isos = [game.equipment.film_iso_index] if game.equipment.film else range(Photo.ISOS.size())
 	# An exposure to the quarter of a stop is found with thirds on the shutter, as a player would.
 	var shutters = []
-	for t in Photo.DENOMINATORS.size():
+	for t in range(game.fastest_index(),Photo.DENOMINATORS.size()):
 		for third in (game.third_gap("t",t) if level.cond.has("exposicion") else 1): shutters.append([t,third])
 	for n in stops.size():
 		for at in shutters:

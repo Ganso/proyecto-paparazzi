@@ -182,3 +182,15 @@ Decisión del usuario: en el juego se mide en **matricial** salvo que se pida ot
 No hay más: ni el arcade, ni el tutorial, ni el sandbox, ni las otras ocho lecciones fijan otra medición. Las herramientas de vídeo y las pruebas que necesitan una lectura exacta la ponen ellas (`tests/test_automatisms.gd`).
 
 De paso se corrigió un fallo que el cambio destapó: cada lección de la Academia heredaba la sensibilidad de la anterior (`apply_setup()` ahora parte de ISO 100 salvo que la lección diga otra), y el modelo de una lección es siempre un adulto (`stand_person()`).
+
+## 9. Exposición automática fiable (06-10-2026, usuario: «en las fases iniciales la foto me sale muchas veces mal expuesta aunque la medición sea matricial»)
+
+Medido nivel a nivel (24 fotos automáticas por nivel, apuntando al sujeto): en los diez primeros niveles del arcade entre un tercio y **todas** las fotos salían a más de medio paso del sujeto. Eran tres causas, las tres corregidas:
+
+| Causa | Arreglo |
+|---|---|
+| La zona del punto de enfoque se leía **en el centro de la zona**, que con un sujeto estrecho caía en el fondo; y a una persona se la leía donde tocaba el rayo (con el sol bajo, una pierna a la sombra de un seto con el pecho al sol) | La zona del punto activo se lee **en el propio punto**, y a una persona siempre **en el pecho**, que es donde se juzga la foto (`ev_under()`). La zona pesa 144 (seis séptimos de la lectura; `MATRIX_SUBJECT`), 36 en la Academia, donde la lección de medición enseña en qué se diferencian los modos (`MATRIX_SUBJECT_ACADEMY`) |
+| La exposición automática **redondeaba a pasos enteros**: una lectura 0,4 EV por debajo del sujeto se convertía en una foto 0,8 EV pasada | Fuera de la Academia los automatismos afinan **siempre por tercios** (`trim_exposure()`), tenga el jugador los pasos que tenga. Y lo que queda a menos de un tercio cuenta como exacto (`exposure_miss()`), para que el programa elija por sus preferencias (pulso, ISO bajo, diafragma abierto) y no por el redondeo de los nombres de los pasos, que lo llevaba a f/22 y 1/60 s a pleno sol |
+| **El obturador acababa en 1/1000 s**: con el 105 mm a f/1,8 a la hora dorada (nivel «Fondo desenfocado») la foto salía 2,3 pasos quemada, se hiciera lo que se hiciera | `Photo.DENOMINATORS` empieza en **1/4000 s** y 1/2000 s. Solo los tienen la réflex y la telemétrica (`main.gd::fastest_index()`); la compacta, la TLR y la Academia siguen en 1/1000 s |
+
+Tras el cambio: 0 o 1 de 24 fotos fuera de medio paso en casi todos los niveles; las que quedan son fotos con el punto de enfoque fuera del sujeto o con alguien cruzándose. Con un objetivo muy luminoso a pleno sol (f/1,4 a mediodía) ni 1/4000 s basta: es lo que pasa en una cámara real.

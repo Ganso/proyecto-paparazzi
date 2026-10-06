@@ -172,7 +172,7 @@ func run() -> void:
 	game.equipment.set_exposure_mode("M")
 	game.apply_equipment()
 	game.n_index = game.apertures().find(4.0)
-	game.t_index = 3
+	game.t_index = 5
 	game.iso_index = 0
 	game.change_parameter("n",1)
 	check(is_equal_approx(game.aperture_value(),5.6),"Whole stops: f/4 to f/5.6")
@@ -221,7 +221,7 @@ func run() -> void:
 	check(game.iso_value() == roll and game.fine["iso"] == 0,"Film keeps its ISO")
 	game.change_parameter("n",1)
 	check(game.fine["n"] > 0 or game.third_gap("n",game.n_index-1) == 1,"The TLR moves by thirds too")
-	# The automatic modes get closer with thirds than with whole stops.
+	# The automatic modes trim their exposure with thirds.
 	game.equipment.preset(1)
 	game.equipment.set_exposure_mode("P")
 	game.apply_equipment()
@@ -232,7 +232,8 @@ func run() -> void:
 			game.measured_ev = 5.0+step*.23
 			game.auto_expose()
 			worst[k] = maxf(worst[k],absf(game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),game.measured_ev)))
-	check(worst[1] < .25 and worst[1] < worst[0],"Auto exposure in thirds is finer (%.2f against %.2f)" % [worst[1],worst[0]])
+	# (the camera's own exposure goes by thirds whatever the player's steps are, since 06-10-2026)
+	check(worst[1] < .25 and worst[0] < .25,"Auto exposure lands within a quarter of a stop with either setting (%.2f, %.2f)" % [worst[1],worst[0]])
 	# Aperture priority keeps the player's third.
 	game.equipment.set_exposure_mode("A")
 	game.apply_equipment()

@@ -41,7 +41,7 @@ Estela: A 1/%d s y con la cámara quieta, el corredor se arrastra %.1f mm sobre 
 Moviste la cámara durante el disparo a 1/%d s: Quieta, o sigue a alguien que se mueva.
 
 ### mov_imposible
-Se mueve tanto que a %d mm ni 1/1000 s la congela: Usa menos focal o espera a que venga hacia ti.
+Se mueve tanto que a %d mm ni 1/4000 s la congela: Usa menos focal o espera a que venga hacia ti.
 
 ### ficha_foto
 %.0f mm · f/%s
