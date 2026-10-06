@@ -103,6 +103,9 @@ func flat_button(parent: Control, label: String, rect: Rect2, callback: Callable
 	b.position = rect.position
 	b.size = rect.size
 	b.focus_mode = Control.FOCUS_NONE
+	# (the mode that cannot be entered yet answers with a dull «no»)
+	var locked = label == Texts.get_text("modo_historia_boton")
+	b.pressed.connect(func(): main.play_sfx("ui_bloqueado" if locked else "ui_aceptar",-6.0))
 	b.add_theme_font_override("font",body_medium)
 	match style:
 		"primary":
@@ -187,6 +190,7 @@ func remember_mode() -> void:
 	config.save("user://interfaz.cfg")
 
 func change_mode(step: int) -> void:
+	main.play_sfx("ui_mover",-6.0)
 	current = posmod(current+step,MODES.size())
 	remember_mode()
 	build_card()

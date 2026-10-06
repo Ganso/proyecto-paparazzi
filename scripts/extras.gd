@@ -20,6 +20,11 @@ var ball: MeshInstance3D
 var ball_velocity = Vector3.ZERO
 var ball_area = Vector3.ZERO
 var kick_pause = 0.0
+# Counted for the sounds (scripts/sfx.gd): slides down the chute, kicks and bounces of the ball.
+var slides = 0
+var kicks = 0
+var bounces = 0
+var slide_phase = ""
 var cast = Cast.new()
 var rng = RandomNumberGenerator.new()
 
@@ -205,6 +210,8 @@ func update_slider(dt: float) -> void:
 			u = t/ph[1]
 			break
 		t -= ph[1]
+	if phase == "bajar" and slide_phase != "bajar": slides += 1
+	slide_phase = phase
 	var ladder_foot = Vector3(0,0,RUNG_Z-TOE_REACH)
 	var local = Vector3.ZERO
 	var pitch = 0.0
@@ -396,7 +403,9 @@ func update_ball_game(dt: float) -> void:
 	ball_velocity *= exp(-1.3*dt)
 	var next = ball.position+ball_velocity*dt
 	var off = Vector3(next.x-ball_area.x,0,next.z-ball_area.z)
-	if off.length() > 1.8: ball_velocity = ball_velocity.bounce(off.normalized())*.6
+	if off.length() > 1.8:
+		ball_velocity = ball_velocity.bounce(off.normalized())*.6
+		bounces += 1
 	ball.position += ball_velocity*dt
 	ball.position.y = .11
 	var speed = ball_velocity.length()
@@ -412,6 +421,7 @@ func update_ball_game(dt: float) -> void:
 	elif kick_pause <= 0:
 		var aim = (ball_area-ball.position).normalized().rotated(Vector3.UP,rng.randf_range(-1.2,1.2))
 		ball_velocity = aim*rng.randf_range(1.6,2.6)+to.normalized()*.6
+		kicks += 1
 		kick_pause = rng.randf_range(.6,1.4)
 	if kick_pause > 0: kid.state = "DETENIDO"
 	kid.animate(dt,moved)

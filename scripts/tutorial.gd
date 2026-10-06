@@ -109,7 +109,7 @@ func id() -> String:
 func complete() -> void:
 	if done_time >= 0.0: return
 	done_time = 0.0
-	main.play_tone(1320,.08)
+	if not main.play_sfx("tutorial_ok",-4.0): main.play_tone(1320,.08)
 	update_panel()
 
 func next() -> void:

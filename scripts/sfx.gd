@@ -1,0 +1,212 @@
+extends Node
+# Sound effects (docs/futuro/24_SONIDOS_NECESARIOS.md): the takes that tools/audio/
+# import_generated.py leaves in assets/audio/ (camara, interfaz, gente, ambiente), loaded at run
+# time by name. A sound with variations is name_1.wav, name_2.wav…: one is taken at random, never
+# the same twice running. Everything is optional: with a file missing, play() says so and the
+# caller keeps its old synthesized tone.
+#   play()      camera and interface, not placed in space
+#   play_at()   from a point of the park (heard by the camera's listener, fading with distance)
+#   loop_at()   a loop at a point, by key; stop_loop() ends it
+# update_world() gives the park its people sounds: steps of whoever walks near, chats, laughs,
+# pages, the dog, the ducks, the playground.
+const DIR = "res://assets/audio/"
+const FOLDERS = ["camara","interfaz","gente","ambiente"]
+const STEP_RANGE = 9.0          # metres within which a walker's steps are heard
+const STEP_VOICES = 5           # …and how many walkers at most, the nearest
+var main
+var world: Node                 # where the placed sounds live (the game's 3D viewport)
+var streams = {}
+var last_take = {}
+var flat: Array[AudioStreamPlayer] = []
+var spatial: Array[AudioStreamPlayer3D] = []
+var loops = {}
+var rng = RandomNumberGenerator.new()
+var enabled = true
+var step_half = {}              # walker → half of the stride it was on
+var timers = {}
+
+func setup(game, where: Node) -> void:
+	main = game
+	world = where
+	rng.seed = 2468
+	for i in 8:
+		var p = AudioStreamPlayer.new()
+		add_child(p)
+		flat.append(p)
+	for i in 14:
+		var p = AudioStreamPlayer3D.new()
+		p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+		p.max_distance = 45.0
+		world.add_child(p)
+		spatial.append(p)
+
+func takes(name: String) -> Array:
+	if streams.has(name): return streams[name]
+	var found = []
+	for folder in FOLDERS:
+		var single = DIR+folder+"/"+name+".wav"
+		if FileAccess.file_exists(single): found.append(AudioStreamWAV.load_from_file(single))
+		var k = 1
+		while FileAccess.file_exists(DIR+folder+"/"+name+"_%d.wav" % k):
+			found.append(AudioStreamWAV.load_from_file(DIR+folder+"/"+name+"_%d.wav" % k))
+			k += 1
+		if not found.is_empty(): break
+	found = found.filter(func(s): return s != null)
+	streams[name] = found
+	return found
+
+func has(name: String) -> bool:
+	return enabled and not takes(name).is_empty()
+
+func take(name: String) -> AudioStreamWAV:
+	var list = takes(name)
+	if list.is_empty(): return null
+	var k = rng.randi()%list.size()
+	if list.size() > 1 and k == int(last_take.get(name,-1)): k = (k+1)%list.size()
+	last_take[name] = k
+	return list[k]
+
+func free_of(pool: Array):
+	for p in pool:
+		if not p.playing: return p
+	return pool[0]
+
+func play(name: String, db = 0.0, pitch = 1.0) -> bool:
+	if not has(name): return false
+	var p: AudioStreamPlayer = free_of(flat)
+	p.stream = take(name)
+	p.volume_db = db
+	p.pitch_scale = pitch
+	p.play()
+	return true
+
+func play_at(name: String, pos: Vector3, db = 0.0, unit = 4.0, pitch = 1.0) -> bool:
+	if not has(name) or world == null: return false
+	var p: AudioStreamPlayer3D = free_of(spatial)
+	p.stream = take(name)
+	p.position = pos
+	p.volume_db = db
+	p.unit_size = unit
+	p.pitch_scale = pitch
+	p.play()
+	return true
+
+func looped(name: String) -> AudioStreamWAV:
+	var list = takes(name)
+	if list.is_empty(): return null
+	var s: AudioStreamWAV = list[0]
+	s.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	s.loop_begin = 0
+	s.loop_end = maxi(1,int(s.get_length()*s.mix_rate)-1)   # (the last frame: see ambience.gd)
+	return s
+
+# A loop by key; pos == null plays it unplaced (the zoom motor).
+func loop_at(key: String, name: String, pos, db = 0.0, unit = 4.0, pitch = 1.0) -> void:
+	if not enabled: return
+	if not loops.has(key):
+		var s = looped(name)
+		if s == null: return
+		var p = AudioStreamPlayer.new() if pos == null else AudioStreamPlayer3D.new()
+		p.stream = s
+		if pos == null: add_child(p)
+		else:
+			p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+			p.max_distance = 45.0
+			p.unit_size = unit
+			world.add_child(p)
+		p.pitch_scale = pitch
+		loops[key] = p
+	var player = loops[key]
+	if pos != null: player.position = pos
+	player.volume_db = db
+	if not player.playing: player.play()
+
+func stop_loop(key: String) -> void:
+	if loops.has(key) and loops[key].playing: loops[key].stop()
+
+func stop_world() -> void:
+	for key in loops.keys(): stop_loop(key)
+
+# true once every `every` seconds or so (a random wait between `least` and `most`).
+func due(key: String, dt: float, least: float, most: float) -> bool:
+	if not timers.has(key): timers[key] = rng.randf_range(least*.3,most)
+	timers[key] -= dt
+	if timers[key] > 0: return false
+	timers[key] = rng.randf_range(least,most)
+	return true
+
+# ---- The park: who is heard from where the camera is ----
+func update_world(dt: float) -> void:
+	if not enabled or main == null or not is_instance_valid(main.camera): return
+	if main.mode != "SEARCH":
+		for key in ["charla","jadeo"]: stop_loop(key)
+		return
+	var ear: Vector3 = main.camera.global_position
+	var big: bool = main.crowd != null
+	# Steps: the nearest walkers, one sound per foot that lands (the stride is two steps).
+	var near = []
+	for p in main.people:
+		if not p.visible or p.state != "CAMINANDO": continue
+		var d = p.global_position.distance_to(ear)
+		if d < STEP_RANGE: near.append([d,p])
+	near.sort_custom(func(a,b): return a[0] < b[0])
+	for k in mini(STEP_VOICES,near.size()):
+		var p = near[k][1]
+		var half = int(p.phase/PI)
+		if step_half.get(p,half) != half:
+			var name = "paso_corredor" if p.runner else ("paso_grava" if big else "paso_losa")
+			play_at(name,p.global_position,-9.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
+		step_half[p] = half
+	# What people do where they stop: a chat (one loop, the nearest), a laugh, a page, a cup.
+	var chat = null
+	var chat_d = 16.0
+	for p in main.people:
+		if not p.visible or p.state == "CAMINANDO": continue
+		var d = p.global_position.distance_to(ear)
+		if d > 16.0: continue
+		var at: Vector3 = p.global_position+Vector3.UP*1.2
+		match str(p.activity):
+			"charla":
+				if d < chat_d:
+					chat_d = d
+					chat = p
+				if due("risa",dt,14.0,40.0): play_at("risa",at,-8.0,3.0,rng.randf_range(.95,1.05))
+			"leer":
+				if due("periodico%d" % p.get_instance_id(),dt,9.0,22.0): play_at("periodico",at,-12.0,2.0)
+			"cafe":
+				if due("taza%d" % p.get_instance_id(),dt,14.0,30.0): play_at("taza",at,-10.0,2.0)
+			"movil":
+				if due("movil%d" % p.get_instance_id(),dt,18.0,45.0): play_at("movil",at,-10.0,2.0)
+			"palomas":
+				if due("migas%d" % p.get_instance_id(),dt,5.0,11.0): play_at("migas",p.global_position+Vector3.UP*.2,-10.0,2.0)
+	if chat != null: loop_at("charla","charla",chat.global_position+Vector3.UP*1.3,-10.0,3.0)
+	else: stop_loop("charla")
+	# The dog: it pants beside its owner and barks now and then.
+	if main.dog and is_instance_valid(main.dog) and main.dog.visible:
+		var at: Vector3 = main.dog.global_position+Vector3.UP*.3
+		if at.distance_to(ear) < 12.0:
+			loop_at("jadeo","perro_jadeo",at,-14.0,2.0)
+			if due("ladrido",dt,25.0,70.0): play_at("perro_ladrido",at,-4.0,5.0,rng.randf_range(.95,1.05))
+		else: stop_loop("jadeo")
+	# The playground: children's voices, the swing's chains at its own rhythm, the slide, the ball.
+	var extras = main.extras
+	if extras and is_instance_valid(extras):
+		if extras.swing_pivot != null and extras.swing_pivot.visible and extras.swing_pivot.global_position.distance_to(ear) < 30.0:
+			loop_at("columpio","columpio",extras.swing_pivot.global_position,-8.0,4.0)
+			loop_at("ninos","ninos_jugando",extras.swing_pivot.global_position+Vector3(1.5,1,0),-12.0,6.0)
+		else:
+			stop_loop("columpio")
+			stop_loop("ninos")
+		if extras.slides != int(timers.get("slides",extras.slides)): play_at("tobogan",extras.slide_origin+Vector3.UP,-6.0,4.0)
+		timers["slides"] = extras.slides
+		if extras.kicks != int(timers.get("kicks",extras.kicks)) and extras.ball != null: play_at("balon_patada",extras.ball.global_position,-6.0,4.0,rng.randf_range(.94,1.06))
+		timers["kicks"] = extras.kicks
+		if extras.bounces != int(timers.get("bounces",extras.bounces)) and extras.ball != null: play_at("balon_bote",extras.ball.global_position,-10.0,3.0)
+		timers["bounces"] = extras.bounces
+	# The ducks of the pond.
+	if main.ducks and is_instance_valid(main.ducks) and not main.ducks.ducks.is_empty() and main.park.time_of_day != "night":
+		if due("pato",dt,9.0,26.0):
+			var duck: Dictionary = main.ducks.ducks[rng.randi()%main.ducks.ducks.size()]
+			var node = duck.get("body",null)
+			var at: Vector3 = node.global_position if node is Node3D else main.ducks.global_position
+			play_at("pato" if rng.randf() < .7 else "pato_agua",at,-2.0,7.0,rng.randf_range(.92,1.08))

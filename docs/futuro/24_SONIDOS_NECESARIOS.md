@@ -1,6 +1,6 @@
 # 24 · Efectos de sonido que hacen falta
 
-**Estado: ⏳ Pendiente de recibir los sonidos del usuario** (lista enviada el 03-10-2026 y ampliada el 06-10-2026 con el apartado E; él avisará cuando los tenga). Hoy todo el sonido es sintetizado: `tools/audio/build_ambience.py` (ambiente), `tools/audio/build_camera_sounds.py` (obturadores) y tonos generados en `main.gd::play_tone()`.
+**Estado: ✅ Sonidos integrados el 06-10-2026** (ver «Integración» al final; faltan 32 variaciones y la música). Antes: pendiente de recibir los sonidos del usuario (lista enviada el 03-10-2026 y ampliada el 06-10-2026 con el apartado E; él avisará cuando los tenga). Hoy todo el sonido es sintetizado: `tools/audio/build_ambience.py` (ambiente), `tools/audio/build_camera_sounds.py` (obturadores) y tonos generados en `main.gd::play_tone()`.
 
 ## Formato de entrega
 
@@ -309,6 +309,58 @@ Solo los pitidos de tono puro (decisión del usuario): los sintetiza `tools/audi
 | 57 | `assets/audio/camara/bloqueo.wav` | Un pitido de 4 kHz de 0,12 s |
 
 **Todavía no suenan en el juego**: se conectarán junto con el resto. Quedan por generar 67 sonidos (109 ficheros), entre ellos las notas de campanilla (`estrella`, `tutorial_ok`, `condicion_ok`) y el `tictac`.
+
+## Integración (06-10-2026)
+
+El usuario generó los 70 sonidos dos veces, una toma por sonido: con **Stable Audio Open** (44,1 kHz estéreo) y con **AudioGen** (16 kHz mono). Se eligió una por sonido y se integró todo salvo la música y los tres pitidos de tono puro (que ya estaban sintetizados).
+
+**Cómo se eligió** (`tools/audio/import_generated.py`, que tiene la tabla y el motivo de cada excepción): no se pueden escuchar desde aquí, así que el criterio es lo medible frente a la ficha — duración útil, número de eventos, reparto del espectro, ruido de fondo, silencio final — y, a igualdad, Stable Audio (decisión del usuario). Stable Audio gana en casi todo: AudioGen sale limitado a 8 kHz y en muchas tomas con ruido continuo de fondo. Excepciones:
+
+| Sonido | Toma | Por qué |
+|---|---|---|
+| `zoom_compacta` | AudioGen | La de Stable Audio arranca y se para a los 0,67 s: no da un régimen constante para el bucle |
+| `charla` | AudioGen | La de Stable Audio es casi toda energía por debajo de 80 Hz, sin voces |
+| `hojas_viento` | **ninguna** | Las dos son un rumor por debajo de 80 Hz, sin hojas: hay que regenerarlo |
+
+**Lo que no se puede comprobar midiendo es si el sonido «es» lo que pide** (que el pato suene a pato): eso queda para la prueba del usuario.
+
+**Variaciones**: donde la ficha pide varias, la primera es la toma elegida y la segunda la del otro generador si vale. **Faltan 32** (se añaden como `NN_nombre_3.wav`… en la carpeta del generador y como otra toma en `TABLE`):
+
+| Sonido | Hay | Pide | Faltan | | Sonido | Hay | Pide | Faltan |
+|---|---:|---:|---:|---|---|---:|---:|---:|
+| `paso_losa` | 1 | 6 | **5** | | `motor_af` | 1 | 2 | 1 |
+| `paso_grava` | 2 | 6 | **4** | | `dial` | 2 | 3 | 1 |
+| `paso_cesped` | 1 | 4 | **3** | | `zureo` | 2 | 3 | 1 |
+| `hojas_viento` | 0 | 3 | **3** | | `aleteo_bandada` | 1 | 2 | 1 |
+| `anillo_enfoque` | 2 | 4 | 2 | | `aleteo_paloma` | 1 | 2 | 1 |
+| `paso_corredor` | 2 | 4 | 2 | | `charla` | 1 | 2 | 1 |
+| `pato` | 1 | 3 | 2 | | `risa` | 2 | 3 | 1 |
+| `balon_bote` | 1 | 2 | 1 | | `perro_ladrido` | 2 | 3 | 1 |
+| `pato_agua` | 1 | 2 | 1 | | `paraguas` | 1 | 2 | 1 |
+
+(Completos con dos: `balon_patada`, `periodico`, `movil`, `migas`.) Las segundas tomas de AudioGen que no valían: `motor_af`, `aleteo_*`, `paso_losa`, `paso_cesped`, `balon_bote`, `pato`, `pato_agua`, `paraguas` (ruido continuo o solo graves).
+
+**Tratamiento** de cada toma: 48 kHz y 16 bits (los ambientes en bucle, a 32 kHz y mono, porque suenan desde un punto del parque), paso alto, recorte a la parte útil (empieza en la primera muestra, acaba en silencio), pico de la ficha; los bucles, con el final fundido sobre el principio.
+
+**Dónde suena cada uno** (`scripts/sfx.gd`: `play()` sin colocar, `play_at()` y `loop_at()` desde un punto del parque; `main.gd::play_sfx()`; si falta un fichero se conserva el tono sintetizado de antes):
+
+| Qué | Sonidos | Dónde está el enganche |
+|---|---|---|
+| Disparo | `obturador_compacta`, `_telemetrica`, `_tlr`; la réflex, `obturador_reflex`, `_lento` (1/15 s o más lento) y `_rapido` (1/2000 s o más rápido) | `main.gd::shutter_sound()` |
+| Enfoque | `af_confirmado`, `af_fallo`, `motor_af` (réflex), `anillo_enfoque` (cada paso del enfoque manual), `bloqueo` | `autofocus()`, `adjust_focus_delta()`, `toggle_lock()` |
+| Diales | `dial` y `dial_tope` (al final del recorrido), `control_elegir`, `medicion` | `change_parameter()`, `select_control()`, `next_metering()` |
+| Cuerpo | `camara_subir`/`_bajar`, `zoom_compacta` (bucle mientras cambia la focal) y `_fin`, `lupa_tlr`, `manivela_tlr`, `carrete_nuevo` | `toggle_raise()`, `zoom_sound()`, `wind_film()` |
+| Interfaz | `ui_mover` (cambiar de modo), `ui_aceptar`/`ui_atras` (botones), `ui_bloqueado` (modo Historia), `pausa` | `main_menu.gd`, `main.gd::button()`, `show_pause()` |
+| Resultado | `revelado` o `foto_rechazada`; `condicion_ok` por condición cumplida y `estrella` por estrella, subiendo de tono | `result_sounds()` |
+| Nivel | `tictac` (últimos 10 s), `tiempo_agotado`, `nivel_superado`/`_no_superado` | reloj del arcade, `end_level()` |
+| Progreso | `insignia`, `graduado`, `album`, `leccion_superada`, `tutorial_ok` | `announce_badge()`, `save_to_album()`, `academy.gd`, `tutorial.gd` |
+| Ambiente | `pajaros_dia`, `pajaros_atardecer`, `hora_azul` (uno por luz), `grillos_noche`, `fuente`, `zureo`, `aleteo_bandada` | `ambience.gd` |
+| Gente | `paso_losa` (parque clásico), `paso_grava` (parque grande), `paso_corredor`: los cinco paseantes más cercanos a menos de 9 m, un sonido por pie que pisa; `charla` (bucle en la conversación más cercana), `risa`, `periodico`, `taza`, `movil`, `migas` según lo que hace cada uno | `sfx.gd::update_world()` |
+| Animales y juegos | `perro_jadeo` (bucle) y `perro_ladrido`; `pato` y `pato_agua`; `columpio` (bucle a su ritmo de 2,73 s), `ninos_jugando`, `tobogan`, `balon_patada`, `balon_bote` | `sfx.gd::update_world()`, contadores en `extras.gd` |
+
+**Sin enganchar todavía**: `aleteo_paloma`, `paso_cesped` y `paraguas` (no hay todavía un momento del juego que los pida), y `hojas_viento` (sin toma válida).
+
+**Los sonidos colocados en el parque no se oían** (ni los pájaros ni la fuente, desde que existen): el visor es un `SubViewport` y no tenía activado su propio oyente (`audio_listener_enable_3d`). Solo sonaban la cámara y la interfaz. Corregido en `main.gd` al crear el visor; comprobado grabando con `--write-movie` y midiendo con `ffmpeg -af volumedetect` (de −91 dB, silencio, a −34 dB de media de día).
 
 ## Al recibirlos
 

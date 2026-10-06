@@ -98,6 +98,7 @@ var touch_start = {}
 var ui_touch_ids = {}
 var had_multitouch = false
 var sound: AudioStreamPlayer
+var sfx                             # scripts/sfx.gd: the recorded effects (camera, interface, people)
 var graphics_preset: String = "Ultra"
 var graphics_button: Button
 var graphics_button_intro: Button
@@ -456,6 +457,9 @@ func build_world() -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.msaa_3d = Viewport.MSAA_DISABLED
 	viewport.positional_shadow_atlas_size = 2048
+	# The park's sounds are placed in this world: without its own listener nothing placed in it
+	# was heard at all (birds, fountain, pigeons), only the camera and the interface.
+	viewport.audio_listener_enable_3d = true
 	container.add_child(viewport)
 	update_render_resolution()
 	get_window().size_changed.connect(update_render_resolution)
@@ -503,6 +507,9 @@ func build_world() -> void:
 		ambience.cricket_points = [Vector3(-20,.3,14),Vector3(20,.3,-14),Vector3(0,.3,-40),Vector3(-48,.3,0),Vector3(48,.3,8)]
 	viewport.add_child(ambience)
 	ambience.build(park,pigeons)
+	sfx = preload("res://scripts/sfx.gd").new()
+	add_child(sfx)
+	sfx.setup(self,viewport)
 	world_times["sonido"] = Time.get_ticks_msec()-t_stage
 	camera = Camera3D.new()
 	camera.position.y = 1.6
@@ -708,6 +715,9 @@ func button(parent: Control, text_value: String, rect: Rect2, callback: Callable
 		UiStyle.primary(node)
 		if on_screen: node.call_deferred("grab_focus")
 	node.pressed.connect(callback)
+	# (going back sounds like going back: the buttons that lead to the menu or to the level list)
+	var back = callback in [Callable(self,"intro"),Callable(self,"show_arcade"),Callable(self,"show_academy")]
+	if on_screen: node.pressed.connect(func(): play_sfx("ui_atras" if back else "ui_aceptar",-6.0))
 	parent.add_child(node)
 	return node
 
@@ -932,6 +942,7 @@ func change_parameter(parameter: String, direction: int) -> void:
 	if equipment.auto_exposure and not ((parameter == "n" and equipment.priority == "A") or (parameter == "t" and equipment.priority == "S")): return
 	# The dials stop at their ends (wrapping from f/22 back to f/1.4 was disorienting).
 	if parameter == "iso" and equipment.film: return
+	var dial_before = [whole_index(parameter),fine[parameter]]
 	if thirds_on() and not (whole_hold or Input.is_key_pressed(KEY_SHIFT)):
 		fine_step(parameter,direction)
 	elif thirds_on():
@@ -942,6 +953,8 @@ func change_parameter(parameter: String, direction: int) -> void:
 			"n": n_index = clampi(n_index+direction,0,apertures().size()-1)
 			"t": t_index = clampi(t_index+direction,fastest_index(),Photo.DENOMINATORS.size()-1)
 			"iso": iso_index = clampi(iso_index+direction,0,Photo.ISOS.size()-1)
+	# A click of the dial, or the dull stop at the end of its travel.
+	play_sfx("dial" if [whole_index(parameter),fine[parameter]] != dial_before else "dial_tope",-3.0,randf_range(.96,1.04))
 	if equipment.auto_exposure: auto_expose()
 	refresh()
 
@@ -1076,7 +1089,7 @@ func select_control(step: int) -> void:
 	var list = selectable_controls()
 	if list.is_empty() or mode != "SEARCH": return
 	selected_control = list[posmod(list.find(current_control())+step,list.size())]
-	play_tone(1500,.02)
+	if not play_sfx("control_elegir",-4.0): play_tone(1500,.02)
 
 func change_control(step: int, coarse = 1.0) -> void:
 	if mode != "SEARCH": return
@@ -1423,6 +1436,7 @@ func save_to_album(texture: Texture2D, result: Dictionary) -> String:
 	darkroom.queue_free()
 	var e: Dictionary = result.evidence
 	var where = Texts.get_text("album_nivel") % (arcade_level+1) if arcade_level >= 0 else (Texts.get_text("academia") if academy and academy.active else Texts.get_text("album_tutorial"))
+	play_sfx("album",-6.0)
 	return Album.add(image,{"score":result.score,"stars":result.stars,"f":e.f,"n":e.n,"t":e.t,"iso":e.iso,"date":Time.get_datetime_string_from_system(false,true).substr(0,16),"where":where,"panning":result.get("panning",false)})
 
 var album_page = 0
@@ -1497,7 +1511,7 @@ func show_album_photo(index: int) -> void:
 func announce_badge(id: String) -> void:
 	notify_player(Texts.get_text("insignia_ganada") % Texts.get_text("insignia_%s_nombre" % id))
 	toast_time = 9.0
-	play_tone(1568,.12)
+	if not play_sfx("graduado" if id == "graduado" else "insignia",-4.0): play_tone(1568,.12)
 
 # The badges screen (Options): what each one asks for and how far the player is.
 func show_badges() -> void:
@@ -1674,9 +1688,12 @@ func _process(dt: float) -> void:
 	elif mode != "INTRO": update_classic_raise(dt)
 	# Arcade clock: it runs while searching; at zero the level ends with the best photo so far.
 	if mode == "SEARCH" and arcade_level >= 0 and level_limit() > 0 and not level_over:
+		var second_before = ceili(level_time)
 		level_time = maxf(0.0,level_time-dt)
+		if ceili(level_time) != second_before and level_time > 0.0 and level_time <= 10.0: play_sfx("tictac",-2.0)
 		if level_time <= 0.0:
 			level_over = true
+			play_sfx("tiempo_agotado",-4.0)
 			end_level()
 	if mode == "SEARCH" and not shooting:
 		# (While a demonstration of the Academy runs, the tutor drives: the held keys do nothing.)
@@ -1712,6 +1729,9 @@ func _process(dt: float) -> void:
 			if ducks: ducks.update(dt)
 			if dog: dog.update(dt)
 		ambience.update(dt)
+		if sfx:
+			sfx.update_world(dt)
+			zoom_sound(dt)
 		if academy: academy.update(dt)
 		if tutorial and tutorial.active: tutorial.update(dt)
 		update_hud_visibility(dt)
@@ -2547,7 +2567,7 @@ func set_raised(value: bool) -> void:
 func toggle_raise() -> void:
 	set_raised(not camera_raised)
 	if is_instance_valid(raise_flash): raise_flash.color.a = 0.0
-	play_tone(420 if camera_raised else 300,.03)
+	if not play_sfx("camara_subir" if camera_raised else "camara_bajar",2.0): play_tone(420 if camera_raised else 300,.03)
 
 # Walking: WASD (or the arrows), Shift to run, Ctrl to crouch; the mouse looks around (captured).
 # Raising the camera takes 0.35 s (the camera comes up to the eye), then the camera interface
@@ -2903,20 +2923,29 @@ func place_view() -> void:
 # cloth shutter, compact's electronic click. Falls back to the old tone if the files are missing.
 var shutter_player: AudioStreamPlayer
 var shutter_streams = {}
+# The compact's zoom motor: it whirrs while the focal length changes and stops with a tick.
+var zoom_heard = 0.0
+var zoom_hold = 0.0
+func zoom_sound(dt: float) -> void:
+	var moving = equipment.body == 0 and mode == "SEARCH" and absf(focal-zoom_heard) > .02 and eye_ready()
+	zoom_heard = focal
+	if moving:
+		zoom_hold = .1
+		sfx.loop_at("zoom","zoom_compacta",null,-12.0)
+	elif zoom_hold > 0:
+		zoom_hold -= dt
+		if zoom_hold <= 0:
+			sfx.stop_loop("zoom")
+			play_sfx("zoom_compacta_fin",-10.0)
+
 func shutter_sound() -> void:
-	var name = ["compacta","telemetrica","reflex","telemetrica"][equipment.body]   # TLR: leaf shutter, soft like the rangefinder's
-	if not shutter_streams.has(name):
-		var path = "res://assets/audio/camara/%s.wav" % name
-		shutter_streams[name] = AudioStreamWAV.load_from_file(path) if FileAccess.file_exists(path) else null
-	if shutter_streams[name] == null:
-		play_tone(100,.09)
-		return
-	if shutter_player == null:
-		shutter_player = AudioStreamPlayer.new()
-		shutter_player.volume_db = -4.0
-		add_child(shutter_player)
-	shutter_player.stream = shutter_streams[name]
-	shutter_player.play()
+	# The recorded shutter of the body in hand; the SLR's changes with the speed (the mirror's two
+	# clacks apart at slow speeds, one tight snap at the fastest).
+	var slow = shutter_denominator() <= 15
+	var fast = shutter_denominator() >= 2000
+	var recorded = ["obturador_compacta","obturador_telemetrica","obturador_reflex_lento" if slow else ("obturador_reflex_rapido" if fast else "obturador_reflex"),"obturador_tlr"][equipment.body]
+	if play_sfx(recorded,-1.0): return
+	play_tone(100,.09)
 
 # The exact depth of field is drawn in Ultra and Alto. A rangefinder's finder is a plain window onto
 # the scene, sharp from near to far: there the blur only appears in the photo (take_photo() turns
@@ -3098,11 +3127,13 @@ func autofocus() -> void:
 		focus_distance = maxf(.8,camera.global_position.distance_to(hit.position))
 		refresh()
 		# The scripted camera of the evidence video refocuses twice a second: silently.
-		if not demo.has("af"): play_tone(1100,.085)
+		if not demo.has("af"):
+			if equipment.body == 2: play_sfx("motor_af",-8.0)
+			if not play_sfx("af_confirmado",-6.0): play_tone(1100,.085)
 		rumble(.3,0.0,.04)
 		notify_player(Texts.get_text("af_confirmado_2f_m") % focus_distance)
 	else:
-		play_tone(230,.12)
+		if not play_sfx("af_fallo",-6.0): play_tone(230,.12)
 		notify_player(Texts.get_text("sin_superficie_bajo_ese_punto_el_enfoque_se_mantiene"))
 
 # AF-C (docs/futuro/12 §4.2): while this mode is on, the lens keeps following whatever is under
@@ -3163,10 +3194,12 @@ func wind_film() -> void:
 		tlr_frames = 12
 		tlr_wound = true
 		notify_player(Texts.get_text("tlr_carrete_cargado"))
-		ratchet_sound(10)
+		if play_sfx("carrete_nuevo",0.0): rumble(.35,.15,.35)
+		else: ratchet_sound(10)
 	elif not tlr_wound:
 		tlr_wound = true
-		ratchet_sound(6)
+		if play_sfx("manivela_tlr",0.0): rumble(.35,.15,.2)
+		else: ratchet_sound(6)
 	refresh()
 
 func ratchet_sound(clicks: int) -> void:
@@ -3411,6 +3444,7 @@ func update_pad(dt: float) -> void:
 			var loupe = Input.get_joy_axis(0,JOY_AXIS_TRIGGER_LEFT) > .5
 			if loupe != tlr_loupe:
 				tlr_loupe = loupe
+				play_sfx("lupa_tlr",-2.0)
 				update_finder_shader()
 	# Right trigger, a two-stage shutter: half way focuses (AF), all the way shoots.
 	update_trigger(Input.get_joy_axis(0,JOY_AXIS_TRIGGER_RIGHT))
@@ -3425,6 +3459,10 @@ func update_pad(dt: float) -> void:
 				change_control(dir[1])
 				whole_hold = false
 				pad_repeat = .125
+
+# A recorded effect by name (scripts/sfx.gd); false if there is none, and the caller keeps its tone.
+func play_sfx(name: String, db = 0.0, pitch = 1.0) -> bool:
+	return sfx != null and sfx.play(name,db,pitch)
 
 func play_tone(frequency: float, duration: float) -> void:
 	var stream = AudioStreamWAV.new()
@@ -3658,6 +3696,21 @@ func photo_preview(parent: Control, texture, result: Dictionary, rect: Rect2) ->
 	preview.material = photo_material(result)
 	parent.add_child(preview)
 
+# The photo comes out: the print, then a tick per condition met and a chime per star, going up.
+func result_sounds(r: Dictionary) -> void:
+	if r.rejected:
+		play_sfx("foto_rechazada",-4.0)
+		return
+	play_sfx("revelado",-4.0)
+	var at = .35
+	for c in r.get("conditions",[]):
+		if not c.ok: continue
+		get_tree().create_timer(at).timeout.connect(func(): if mode == "RESULT": play_sfx("condicion_ok",-6.0))
+		at += .14
+	for k in int(r.stars):
+		get_tree().create_timer(at).timeout.connect(func(): if mode == "RESULT": play_sfx("estrella",-8.0,1.0+.06*k))
+		at += .16
+
 func show_results() -> void:
 	if academy and academy.active:
 		show_academy_result()
@@ -3666,6 +3719,7 @@ func show_results() -> void:
 		show_sandbox_result()
 		return
 	var root = create_modal()
+	result_sounds(current_result)
 	var tutorial_on = tutorial and tutorial.active
 	var header = (Texts.get_text("arcade_nivel_d") % (arcade_level+1)+" · "+level_title(arcade_level)) if arcade_level >= 0 else Texts.get_text("revelado_encargo_02d") % (assignment+1)
 	label(root,header,Rect2(25,18,700,25),14,Color("a9c487"))
@@ -3839,6 +3893,9 @@ func end_level() -> void:
 	var level: Dictionary = Arcade.LEVELS[arcade_level]
 	var passed = not best.is_empty() and not best.rejected and best.score >= level.min
 	var stars = Arcade.stars_for(best.score,level.min) if passed else 0
+	# (out of time, the bell has already said so)
+	if passed: play_sfx("nivel_superado",-3.0)
+	elif not (level_limit() > 0 and level_time <= 0): play_sfx("nivel_no_superado",-3.0)
 	if passed:
 		Arcade.save_result(arcade_level,best.score,stars)
 		# Every level passed: the badge of the whole arcade.
@@ -3903,6 +3960,7 @@ func show_pause(confirm = false) -> void:
 		show_lesson_menu()
 		return
 	mode = "PAUSE"
+	play_sfx("pausa",-4.0)
 	var root = create_modal()
 	label(root,Texts.get_text("pausa_titulo"),Rect2(440,190,400,60),40)
 	if not confirm:
@@ -4064,6 +4122,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_L:
 				if equipment.tlr():
 					tlr_loupe = not tlr_loupe
+					play_sfx("lupa_tlr",-2.0)
 					update_finder_shader()
 					refresh()
 		if event.keycode == KEY_QUESTION or event.physical_keycode == KEY_H: show_help()
@@ -4723,7 +4782,7 @@ func adjust_focus_delta(delta_diopters: float) -> void:
 	var new_diop = clampf(current_diop + delta_diopters, 0.0, 1.25)
 	if absf(new_diop - current_diop) > 0.00005:
 		if int(new_diop / 0.025) != int(current_diop / 0.025):
-			play_tone(1800, 0.015)
+			if not play_sfx("anillo_enfoque",-2.0,randf_range(.94,1.06)): play_tone(1800, 0.015)
 		set_manual_focus(INF if new_diop <= 0.0005 else 1.0/new_diop)
 
 func adjust_focus(step: int) -> void:
@@ -4875,7 +4934,7 @@ func toggle_lock() -> void:
 	exposure_locked = true
 	focus_locked = equipment.focus_mode != "MF"
 	notify_player(Texts.get_text("bloqueo_puesto") % [Texts.get_text("infinito") if is_inf(focus_distance) else Texts.get_text("2f_m") % focus_distance,measured_ev])
-	play_tone(1320,.06)
+	if not play_sfx("bloqueo",-6.0): play_tone(1320,.06)
 	refresh()
 
 func release_lock() -> void:
@@ -4885,6 +4944,7 @@ func release_lock() -> void:
 func next_metering() -> void:
 	if mode != "SEARCH": return
 	equipment.next_metering()
+	play_sfx("medicion",-2.0)
 	release_lock()
 	update_meter()
 	if equipment.auto_exposure: auto_expose()
@@ -5198,6 +5258,7 @@ func show_academy() -> void:
 
 func show_academy_result() -> void:
 	var root = create_modal()
+	play_sfx("revelado",-4.0)
 	label(root,Texts.get_text("academia_resultado_titulo") % [academy.lesson,shot_serial],Rect2(25,24,1170,50),32)
 	var notes: Array = academy.on_practice_photo(current_photo,current_result) if academy.phase == "practica" else []
 	var pair: Array = academy.comparison_photos() if academy.phase == "practica" else []
@@ -5306,6 +5367,7 @@ func capture_sandbox_evidence() -> Dictionary:
 
 func show_sandbox_result() -> void:
 	var root = create_modal()
+	play_sfx("revelado",-4.0)
 	label(root,Texts.get_text("sandbox_foto_d") % shot_serial,Rect2(25,30,1170,60),36)
 	photo_preview(root,current_photo,current_result,Rect2(25,120,825,464))
 	var e: Dictionary = current_result.evidence

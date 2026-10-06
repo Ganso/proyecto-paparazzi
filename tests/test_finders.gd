@@ -150,7 +150,7 @@ func run() -> void:
 		await game.take_photo()
 		check(game.mode == "RESULT","Body %d: shooting through the finder works" % body)
 		if body == 1 and game.dof_allowed(): check(game.current_result.evidence.get("rendered_dof",false),"Rangefinder: the photo does get the depth of field")
-		check(FileAccess.file_exists("res://assets/audio/camara/%s.wav" % ["compacta","telemetrica","reflex","telemetrica"][body]),"Body %d: its shutter sound exists" % body)
+		check(game.sfx.has(["obturador_compacta","obturador_telemetrica","obturador_reflex","obturador_tlr"][body]),"Body %d: its shutter sound exists" % body)
 		game.resume_search()
 	# The classic interface is the full screen HUD, as before.
 	game.set_interface("clasica")
