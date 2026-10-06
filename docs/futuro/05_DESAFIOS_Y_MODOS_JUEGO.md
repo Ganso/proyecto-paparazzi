@@ -119,5 +119,5 @@ Replanteadas desde cero a petición del usuario: **una por cada cosa que el jueg
 | Maestro de la noche (`noche`) | 5 fotos nocturnas con 0,3 EV de error o menos |
 | Instante decisivo (`decisiva`) | 5 encargos resueltos al primer disparo con 85 o más |
 | Graduado de la Academia (`graduado`) | Los diez exámenes |
-| Fotógrafo de calle (`calle`) | Los 25 niveles del arcade (`main.gd`, al superar el último que faltaba) |
+| Fotógrafo de calle (`calle`) | Los 30 niveles del arcade (`main.gd`, al superar el último que faltaba) |
 

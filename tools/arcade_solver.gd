@@ -5,6 +5,7 @@ extends SceneTree
 # passes the conditions and the pass mark, then applies it and takes the real photo through the
 # game. In the big park it starts a few metres from the subject (walking there is not the test).
 #   ~/bin/godot-4-fp --path . --disable-vsync --script tools/arcade_solver.gd [-- --only=1,16]
+# SOLVER_DEBUG=1 prints every try; SOLVER_SHOTS=<folder> saves each level's result screen.
 # Prints «LEVEL n: PASS score/min» or «LEVEL n: FAIL …» and ARCADE SOLVER: passed/total.
 const Main = preload("res://main.tscn")
 const MainScript = preload("res://scripts/main.gd")
@@ -32,22 +33,26 @@ func best_settings(e: Dictionary, level: Dictionary) -> Dictionary:
 	var best = {}
 	var stops = game.apertures()
 	var isos = [game.equipment.film_iso_index] if game.equipment.film else range(Photo.ISOS.size())
+	# An exposure to the quarter of a stop is found with thirds on the shutter, as a player would.
+	var shutters = []
+	for t in Photo.DENOMINATORS.size():
+		for third in (game.third_gap("t",t) if level.cond.has("exposicion") else 1): shutters.append([t,third])
 	for n in stops.size():
-		for t in Photo.DENOMINATORS.size():
+		for at in shutters:
 			for iso in isos:
 				var trial = e.duplicate()
 				trial.n = stops[n]
-				trial.t = 1.0/Photo.DENOMINATORS[t]
+				trial.t = 1.0/game.fine_value("t",at)
 				trial.iso = Photo.ISOS[iso]
-				var r = Photo.evaluate(trial)
-				Conditions.apply(r,trial,level.cond)
+				var r = Conditions.judge(trial,level.cond)
 				if not r.rejected and r.score >= level.min and (best.is_empty() or r.score > best.score):
-					best = {"score":r.score,"n":n,"t":t,"iso":iso}
+					best = {"score":r.score,"n":n,"t":at[0],"t_fine":at[1],"iso":iso}
 	return best
 
 func solve(n: int) -> String:
 	var level: Dictionary = Arcade.LEVELS[n]
 	if MainScript.scenario != level.scenario or not is_instance_valid(game): await make_game(level.scenario)
+	game.exposure_thirds = level.cond.has("exposicion")
 	game.start_level(n)
 	await frames(3)
 	game.begin_assignment()
@@ -85,6 +90,7 @@ func solve(n: int) -> String:
 		var d = game.camera.global_position.distance_to(target.control_points()[1])
 		var want_f = h_goal*20.25*d/target.height
 		if level.cond.has("focal_min"): want_f = maxf(want_f,float(level.cond.focal_min))
+		if level.cond.has("focal_max"): want_f = minf(want_f,float(level.cond.focal_max))
 		game.focal = clampf(want_f,game.equipment.lens().min,game.equipment.lens().max)
 		game.update_camera()
 		# Golden section: turn so the chest sits on the 38 % line (on the square for the TLR).
@@ -94,6 +100,15 @@ func solve(n: int) -> String:
 			var width_frac = 9.0/16.0 if game.equipment.tlr() else 1.0
 			aim_offset = (e0.chest.x-.382)*rad_to_deg(hfov)*width_frac
 			game.angle += aim_offset
+			game.update_camera()
+		# Room ahead: the subject on the line behind its step. A landmark: half way between the two.
+		if level.cond.has("aire") or level.cond.has("lugar"):
+			var e0 = game.capture_evidence()
+			var hfov = rad_to_deg(2*atan(36.0/(2.0*game.focal)))
+			if level.cond.has("aire"): game.angle += (e0.chest.x-(.36 if e0.motion_sign > 0 else .64))*hfov
+			else:
+				var place: Dictionary = e0.places.get(str(level.cond.lugar),{})
+				if not place.is_empty() and place.front and absf(place.pos.x-.5) < .9: game.angle += (place.pos.x-.5)*.5*hfov
 			game.update_camera()
 		await physics_frame
 		var e = game.capture_evidence()
@@ -108,11 +123,12 @@ func solve(n: int) -> String:
 		var best = best_settings(e,level)
 		if best.is_empty():
 			if OS.has_environment("SOLVER_DEBUG") and (tries % 40 == 1 or tries < 12):
-				var r = Photo.evaluate(e)
-				Conditions.apply(r,e,level.cond)
+				var r = Conditions.judge(e.duplicate(),level.cond)
 				print("  try %d: d %.1f f %.0f h %.2f reason %s score %d" % [tries,e.d,e.f,absf(e.feet.y-e.head.y),r.reason,r.score])
 			continue
 		var m = game.equipment.exposure_mode()
+		# Against the light the meter reads the sun behind: two stops of compensation for the face.
+		if level.cond.has("contraluz") and m != "M": game.equipment.ev_comp_index = game.equipment.EV_COMPENSATIONS.size()-1
 		if m == "A":
 			game.n_index = best.n
 			game.auto_expose()
@@ -123,7 +139,7 @@ func solve(n: int) -> String:
 			pass   # the camera's own exposure (the photo is re-checked anyway)
 		else:
 			game.n_index = best.n
-			game.t_index = best.t
+			game.set_fine("t",[best.t,best.t_fine])
 			if not game.equipment.film: game.iso_index = best.iso
 		game.refresh()
 		if pans:
@@ -150,6 +166,11 @@ func solve(n: int) -> String:
 		if OS.has_environment("SOLVER_DEBUG"):
 			var cr: Dictionary = game.current_result
 			print("  shot: expected %d, got %d · %s · %s" % [best.score,cr.score,cr.get("reason",""),"foco %s expo %s mov %s ocl %s enc %s delta %s" % [str(cr.focus),str(cr.exposure),str(cr.movement),str(cr.occlusion),str(cr.framing),str(cr.delta)]])
+	# SOLVER_SHOTS=<folder>: the result screen of each level, as evidence.
+	if game.mode == "RESULT" and OS.has_environment("SOLVER_SHOTS"):
+		await frames(6)
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(OS.get_environment("SOLVER_SHOTS").path_join("nivel_%02d.png" % (n+1)))
 	if game.mode == "RESULT": game.end_level()
 	elif game.mode == "SEARCH": game.end_level()
 	var passed = not game.best.is_empty() and not game.best.rejected and game.best.score >= level.min

@@ -157,7 +157,7 @@ Tutorial completado
 
 ### tutorial_ir_arcade_texto
 > máximo 120 caracteres
-Por aquí se sigue: 25 niveles cortos, cada uno con su encargo y un control nuevo.
+Por aquí se sigue: 30 niveles cortos, cada uno con su encargo y un control nuevo.
 
 ### tutorial_ir_academia
 Ir a la Academia

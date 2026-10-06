@@ -108,3 +108,55 @@ El arcade tiene ahora **25 niveles en 5 bloques**. El quinto, «Maestría · la 
 
 Decisión del usuario: las nubes que pasan y oscurecen el parque **ya no son la norma**. Quedan para los niveles del arcade con **exposición manual** de día o a la hora dorada (`arcade.gd::clouds()`: `auto == false` y luz `day` o `golden`), que es donde leer la luz es el trabajo, y su encargo lo avisa con una línea más en «Condiciones»: «Cuidado con las nubes, que oscurecen la zona cuando pasan» (`arcade_aviso_nubes`). En el resto del juego (tutorial, Academia, demás niveles) la luz se queda quieta (`park.clouds_enabled` es `false` por defecto y `main.gd::start_session()` lo fija por nivel); el sandbox las sigue ofreciendo en sus ajustes («Nubes en movimiento»), apagadas de entrada. `tests/test_arcade.gd` lo comprueba.
 
+## Treinta niveles en seis bloques: un encargo por cada concepto (06-10-2026, usuario)
+
+El arcade pedía nueve cosas y varios niveles se resolvían igual. Ahora **cada concepto que el juego enseña tiene un nivel que lo exige**: 30 niveles en 6 bloques (se añade «La luz»), 19 condiciones. Los personajes no tienen ojos: los niveles de «cara nítida» bromean con ello en su encargo.
+
+| Nº | Título | Luz · equipo · exposición | Condiciones |
+|---|---|---|---|
+| 1–5 | **Primeros pasos** · compacta automática | | —, `grande` 60 %, `aislado`, `acompanado` 1 (90 s), `aurea` |
+| 6 | Teleobjetivo | Día · 70–200 · P | `focal_min` 135 |
+| 7 | **Con aire por delante** (nuevo) | Día · 24–105 · P | `focal_max` 35, `aire` |
+| 8 | Fondo desenfocado | Dorada · 105 f/1,8 · A | `fondo` |
+| 9 | Cara nítida | Día · 50 f/1,8 · AF puntual | `ojos`, `grande` 50 % |
+| 10 | Congela al corredor | Día · 70–200 · S | `congelado` |
+| 11 | Enfoque manual | Día · telemétrica · P | — |
+| 12 | Parque grande | Dorada · telemétrica · P | `aislado` |
+| 13 | **Lo que hace** (nuevo) | Día · telemétrica 50 · A · `target: activity` | `actividad`, `ojos` |
+| 14 | **Todo nítido** (nuevo) | Día · telemétrica 35 · A · `toward: quiosco` | `lugar` quiosco, `nitido` |
+| 15 | Todo manual | Parque grande, día · M | `grande` 50 % |
+| 16 | Hora azul | Azul · telemétrica · A | `ojos` |
+| 17 | **Exposición clavada** (nuevo) | Día con nubes · réflex · M | `exposicion` |
+| 18 | **A contraluz** (nuevo) | Dorada · réflex · A, medición puntual · `toward: sol` | `contraluz` |
+| 19 | **La silueta** (nuevo) | Dorada · réflex · M · `toward: sol` | `silueta` |
+| 20 | Noche en el quiosco | Noche · telemétrica · M | `aislado`, `ojos` |
+| 21–25 | **La TLR** (los antiguos 16–20) | | —, `aurea`, `ojos`+`fondo`+`grande`, `congelado`, `ojos`+`aislado` |
+| 26 | El barrido | Día · S | `barrido` |
+| 27 | **La estela** (nuevo) | Día · S | `estela` |
+| 28 | Retrato de autor | Dorada · 105 f/1,8 · A | `fondo`, `aurea` |
+| 29 | **Paseando al perro** (nuevo) | Parque grande, día · M · `target: dog` | `perro`, `grande` 40 % |
+| 30 | Nocturno | Noche · 50 f/1,8 · M | `ojos`, `aislado`, `grande` 50 % |
+
+Desaparecen dos niveles que repetían combinación («Sola y de cerca» y «Barrido al atardecer»); «En pareja» baja al nivel 4 (antes un nivel sin condición).
+
+**Condiciones nuevas** (`conditions.gd`; los datos salen de `main.gd::capture_evidence()`):
+
+| Clave | Qué comprueba |
+|---|---|
+| `focal_max` | Focal como mucho esa (un angular, de cerca) |
+| `aire` | El sujeto cruza el encuadre (≥ 0,25 m/s de lado) y tiene delante el lado ancho: pecho en x ≤ 45 % si va a la derecha, ≥ 55 % si va a la izquierda |
+| `exposicion` | Error de exposición ≤ ¼ de paso: con tercios se consigue siempre, con pasos enteros a veces |
+| `nitido` | Un punto 10 m detrás del sujeto dentro del límite de nitidez (0,030 mm) |
+| `lugar` | Un hito del parque (`park.places`: `quiosco`, `estanque`) delante de la cámara y dentro del encuadre |
+| `actividad` | El sujeto está sentado o parado haciendo algo (`e.activity`) |
+| `perro` | El perro del sujeto dentro del encuadre y nítido (≤ 0,045 mm a su distancia) |
+| `contraluz` | La cámara mira hacia el sol (`e.backlight` ≥ 0,5: a menos de 60° en planta) con el sujeto al sol, y la exposición acierta **dos pasos por encima** de lo que mide el fotómetro, ± 0,75 |
+| `silueta` | La misma luz, al revés: entre 0,7 y 2,7 pasos **por debajo** del fotómetro |
+| `estela` | Un corredor arrastrado ≥ 0,5 mm con la cámara quieta (fondo ≤ 0,030 mm) |
+
+- **Tres condiciones cambian cómo se juzga la foto**, no solo si pasa: `Conditions.prepare()` mueve el objetivo de exposición (contraluz −2 EV, silueta +1,7 EV respecto a la luz del sujeto) y marca la estela como virtud (`e.trail`: `Photography.evaluate()` da el movimiento por bueno y lo explica con `mov_estela`). `Conditions.judge()` hace las tres cosas (preparar, evaluar, aplicar) y es lo que usan `main.gd::take_photo()` y el solucionador. Sin el nivel, esas mismas fotos puntúan como siempre. La imagen revelada se sigue dibujando como era la escena (`e.ev_shift`): quemada alrededor de una cara bien expuesta a contraluz, oscura en una silueta.
+- **A contraluz mide en puntual** (`"metering":"puntual"` en el nivel): con la matricial la lectura depende de lo que rodea al sujeto y la compensación de +2 no acertaba de forma fiable (a la hora dorada las farolas ya alumbran).
+- **Sujetos especiales** (`new_assignment()`): `target: "activity"` elige a alguien del camino de los bancos que pueda sentarse, lo lleva a un banco libre (`seat_target()`) y lo mantiene en su actividad lo que dura el nivel (`activity_on_duty()`); `target: "dog"`, al dueño del perro; `toward` elige, de los del tercer camino, a quien antes vaya a pasar por delante del quiosco o por el lado del sol (`toward_theta()`), para no esperar una vuelta entera.
+- **Progreso**: `user://arcade.cfg` lleva `formato = 2`. Un fichero de los 25 niveles se migra al cargar (`Arcade.FROM_25`, `migrate()`): cada resultado va a donde está ahora su nivel y los de los dos niveles retirados se descartan. Un nivel ya superado sigue abierto aunque el anterior sea nuevo (`unlocked()`).
+- **Pantalla de niveles**: seis filas de tarjetas de 62 px.
+- **Pruebas**: `tests/test_arcade.gd` (183: datos de los niveles, migración, que cada condición la pida algún nivel y los casos de cada condición nueva), `tests/test_game.gd` (el sujeto de «Lo que hace» va a un banco, los datos nuevos de la foto, la medición puntual del contraluz) y `tools/arcade_solver.gd` (30 de 30; `SOLVER_SHOTS=<carpeta>` guarda la pantalla de resultado de cada nivel), que aprende a dejar aire, encuadrar el quiosco, exponer por tercios y compensar el contraluz.

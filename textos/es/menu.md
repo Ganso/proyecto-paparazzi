@@ -187,7 +187,7 @@ Arcade
 Veinticinco niveles con encargos cada vez más exigentes: De la compacta automática a la TLR manual y al barrido, un control nuevo cada vez.
 
 ### modo_arcade_progreso
-%d de 25 niveles superados · %d ★
+%d de 30 niveles superados · %d ★
 
 ### modo_tutorial_titulo
 Tutorial

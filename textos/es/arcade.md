@@ -12,13 +12,13 @@ La réflex
 Calle · telemétrica manual
 
 ### arcade_bloque_4
-La TLR
+La luz
 
 ### arcade_titulo
 Arcade
 
 ### arcade_subtitulo
-Veinticinco niveles. Cada uno fija escenario, luz y cámara, y añade un control manual cada vez. Supera uno para abrir el siguiente.
+Treinta niveles. Cada uno fija escenario, luz y cámara, y pide algo distinto. Supera uno para abrir el siguiente.
 
 ### arcade_nivel_d
 NIVEL %d
@@ -104,6 +104,9 @@ Este nivel fija la cámara y el objetivo. Puedes cambiar la interfaz y los gráf
 Cámara: %s · %s
 
 ### arcade_bloque_5
+La TLR
+
+### arcade_bloque_6
 Maestría · la réflex a fondo
 
 ### arcade_trampa
@@ -219,6 +222,170 @@ Barrido (sigue al corredor)
 > máximo 100 caracteres
 el fondo apenas se arrastra (%.1f mm a 1/%d s): Acércate con el zoom o espera a que pase más cerca
 
+### cond_focal_max
+> máximo 100 caracteres
+Focal · como mucho %.0f mm (%.0f mm)
+
+### cond_corta_focal_max
+> máximo 100 caracteres
+A %.0f mm o menos
+
+### cond_aire
+> máximo 100 caracteres
+Aire por delante · %s
+
+### cond_aire_ok
+> máximo 100 caracteres
+tiene espacio hacia donde camina
+
+### cond_aire_falta
+> máximo 100 caracteres
+el espacio queda a su espalda: Déjalo en el lado hacia el que camina
+
+### cond_aire_quieto
+> máximo 100 caracteres
+no cruza el encuadre: Espera a verla caminar de lado
+
+### cond_corta_aire
+> máximo 100 caracteres
+Espacio por delante de su paso
+
+### cond_exposicion
+> máximo 100 caracteres
+Exposición clavada · error de %+.2f EV (hasta ±0,25)
+
+### cond_corta_exposicion
+> máximo 100 caracteres
+Exposición a un cuarto de paso
+
+### cond_nitido
+> máximo 100 caracteres
+Todo nítido · desenfoque a 10 m detrás %.3f mm (nítido hasta 0,030)
+
+### cond_corta_nitido
+> máximo 100 caracteres
+El fondo, nítido también
+
+### cond_lugar
+> máximo 100 caracteres
+Con %s · %s
+
+### cond_lugar_ok
+> máximo 100 caracteres
+sale en la foto
+
+### cond_lugar_fuera
+> máximo 100 caracteres
+no sale en el encuadre
+
+### cond_corta_lugar
+> máximo 100 caracteres
+Con %s en el encuadre
+
+### lugar_quiosco
+> máximo 100 caracteres
+el quiosco
+
+### lugar_estanque
+> máximo 100 caracteres
+el estanque
+
+### cond_actividad
+> máximo 100 caracteres
+Haciendo algo · %s
+
+### cond_actividad_ok
+> máximo 100 caracteres
+la pillaste en ello
+
+### cond_actividad_no
+> máximo 100 caracteres
+ahora mismo no hace nada: Espera a que se siente
+
+### cond_corta_actividad
+> máximo 100 caracteres
+Mientras lee, mira el móvil, toma café o echa migas
+
+### cond_perro
+> máximo 100 caracteres
+Con su perro · %s
+
+### cond_perro_fuera
+> máximo 100 caracteres
+el perro no sale en el encuadre
+
+### cond_perro_ok
+> máximo 100 caracteres
+los dos nítidos (el perro, a %.3f mm)
+
+### cond_perro_borroso
+> máximo 100 caracteres
+el perro sale desenfocado (%.3f mm): Cierra el diafragma
+
+### cond_corta_perro
+> máximo 100 caracteres
+El perro también, y nítido
+
+### cond_contraluz
+> máximo 100 caracteres
+Contraluz · %s
+
+### cond_silueta
+> máximo 100 caracteres
+Silueta · %s
+
+### cond_luz_ok
+> máximo 100 caracteres
+conseguido
+
+### cond_luz_no
+> máximo 100 caracteres
+el sol no está detrás: Ponte de cara al sol, con tu objetivo en medio
+
+### cond_luz_oscura
+> máximo 100 caracteres
+la cara queda oscura: Mide sobre ella y compensa hacia +2
+
+### cond_luz_clara
+> máximo 100 caracteres
+te has pasado de luz: Compensa menos
+
+### cond_silueta_negra
+> máximo 100 caracteres
+demasiado oscura: El cielo también se apaga
+
+### cond_silueta_clara
+> máximo 100 caracteres
+se le distingue la ropa: Expón entre uno y dos pasos por debajo
+
+### cond_corta_contraluz
+> máximo 100 caracteres
+A contraluz, con la cara bien expuesta
+
+### cond_corta_silueta
+> máximo 100 caracteres
+En silueta contra el sol
+
+### cond_estela
+> máximo 100 caracteres
+Estela · %s
+
+### cond_estela_ok
+> máximo 100 caracteres
+a 1/%d s el corredor deja una estela de %.1f mm
+
+### cond_estela_camara
+> máximo 100 caracteres
+el fondo sale movido: No gires la cámara mientras disparas
+
+### cond_estela_corta
+> máximo 100 caracteres
+apenas se mueve (%.1f mm a 1/%d s): Usa una velocidad más lenta
+
+### cond_corta_estela
+> máximo 100 caracteres
+Corredor en estela, fondo nítido
+
 ## Nivel 1 · Primer encargo
 
 ### arcade_nivel_1_titulo · título
@@ -249,15 +416,15 @@ Sin compañía
 > máximo 220 caracteres
 Nadie más debe verse en el encuadre.
 
-## Nivel 4 · Contra el reloj
+## Nivel 4 · En pareja
 
 ### arcade_nivel_4_titulo · título
 > máximo 22 caracteres
-Contra el reloj
+En pareja
 
 ### arcade_nivel_4_texto · encargo
 > máximo 220 caracteres
-Tienes 90 segundos.
+Exactamente una persona más en el encuadre, y en 90 segundos: Espera a que se crucen.
 
 ## Nivel 5 · Proporción áurea
 
@@ -279,35 +446,35 @@ Teleobjetivo
 > máximo 220 caracteres
 Dispara a 135 mm o más.
 
-## Nivel 7 · Fondo desenfocado
+## Nivel 7 · Con aire por delante
 
 ### arcade_nivel_7_titulo · título
 > máximo 22 caracteres
-Fondo desenfocado
+Con aire por delante
 
 ### arcade_nivel_7_texto · encargo
 > máximo 220 caracteres
-Prioridad a la apertura: Tú eliges el diafragma ({diafragma}) y la cámara el resto. Ábrelo para desenfocar el fondo.
+Angular, a 35 mm o menos, y deja espacio en el lado hacia el que camina: Una foto respira por donde va su protagonista.
 
-## Nivel 8 · Cara nítida
+## Nivel 8 · Fondo desenfocado
 
 ### arcade_nivel_8_titulo · título
 > máximo 22 caracteres
-Cara nítida
+Fondo desenfocado
 
 ### arcade_nivel_8_texto · encargo
 > máximo 220 caracteres
-Enfoca a la cara con el AF puntual.
+Prioridad a la apertura: Tú eliges el diafragma ({diafragma}) y la cámara el resto. Ábrelo para desenfocar el fondo.
 
-## Nivel 9 · En pareja
+## Nivel 9 · Cara nítida
 
 ### arcade_nivel_9_titulo · título
 > máximo 22 caracteres
-En pareja
+Cara nítida
 
 ### arcade_nivel_9_texto · encargo
 > máximo 220 caracteres
-Exactamente una persona más en el encuadre.
+Dicen que hay que enfocar a los ojos. Nuestros maniquíes no tienen, así que nos conformamos con la cara: Ponle encima el punto del AF puntual.
 
 ## Nivel 10 · Congela al corredor
 
@@ -339,132 +506,183 @@ Parque grande
 > máximo 220 caracteres
 Encuéntrala paseando, y sola en la foto.
 
-## Nivel 13 · Hora azul
+## Nivel 13 · Lo que hace
 
 ### arcade_nivel_13_titulo · título
 > máximo 22 caracteres
-Hora azul
+Lo que hace
 
 ### arcade_nivel_13_texto · encargo
 > máximo 220 caracteres
-Poca luz: Prioridad a la apertura. Diafragma abierto y enfoque manual a la cara.
+Tu objetivo se sienta en un banco a leer, mirar el móvil, tomar café o echar migas. Fotografíalo mientras lo hace y con la cara nítida (ojos sigue sin tener).
 
-## Nivel 14 · Tres en el encuadre
+## Nivel 14 · Todo nítido
 
 ### arcade_nivel_14_titulo · título
 > máximo 22 caracteres
-Todo manual
+Todo nítido
 
 ### arcade_nivel_14_texto · encargo
 > máximo 220 caracteres
-Todo manual por primera vez: La exposición empieza bien medida. Ajústala con el exposímetro. Y acércate: El sujeto debe llenar al menos media foto.
+Tu objetivo y el quiosco en la misma foto, y los dos nítidos: Cierra el diafragma ({diafragma}) y espera a que pase por delante.
 
-## Nivel 15 · Noche en el quiosco
+## Nivel 15 · Todo manual
 
 ### arcade_nivel_15_titulo · título
 > máximo 22 caracteres
-Noche en el quiosco
+Todo manual
 
 ### arcade_nivel_15_texto · encargo
 > máximo 220 caracteres
-De noche, sola en la foto y con la cara nítida.
+Todo manual por primera vez: La exposición empieza bien medida. Ajústala con el exposímetro. Y acércate: El sujeto debe llenar al menos media foto.
 
-## Nivel 16 · A la cintura
+## Nivel 16 · Hora azul
 
 ### arcade_nivel_16_titulo · título
 > máximo 22 caracteres
-A la cintura
+Hora azul
 
 ### arcade_nivel_16_texto · encargo
 > máximo 220 caracteres
-La TLR se mira desde arriba y el visor invierte izquierda y derecha. Todo es manual, sin prisa.
+Poca luz: Prioridad a la apertura. Diafragma abierto y enfoque manual a la cara, que es donde estarían los ojos.
 
-## Nivel 17 · Espejo
+## Nivel 17 · Exposición clavada
 
 ### arcade_nivel_17_titulo · título
 > máximo 22 caracteres
-Espejo
+Exposición clavada
 
 ### arcade_nivel_17_texto · encargo
 > máximo 220 caracteres
-Proporción áurea en el cuadrado, con la imagen al revés.
+Todo manual y con nubes: Deja el exposímetro en cero con un error de un cuarto de paso. Con pasos enteros es cuestión de suerte; con tercios, de pulso.
 
-## Nivel 18 · Retrato 6×6
+## Nivel 18 · A contraluz
 
 ### arcade_nivel_18_titulo · título
 > máximo 22 caracteres
-Retrato 6×6
+A contraluz
 
 ### arcade_nivel_18_texto · encargo
 > máximo 220 caracteres
-Cara nítida, fondo desenfocado y el sujeto grande.
+El sol detrás de tu objetivo: La cámara mide ese sol y deja la cara oscura. Ponte de cara al sol, mide en puntual sobre tu objetivo y compensa hacia +2 ({compensacion}).
 
-## Nivel 19 · Corredor al espejo
+## Nivel 19 · La silueta
 
 ### arcade_nivel_19_titulo · título
 > máximo 22 caracteres
-Corredor al espejo
+La silueta
 
 ### arcade_nivel_19_texto · encargo
 > máximo 220 caracteres
-Congela a un corredor con la TLR: 1/500 s o más rápido.
+El mismo sol y la intención contraria: Que tu objetivo quede en negro contra el cielo. De cara al sol, expón entre uno y dos pasos por debajo de lo que pide el exposímetro.
 
-## Nivel 20 · Última luz
+## Nivel 20 · Noche en el quiosco
 
 ### arcade_nivel_20_titulo · título
 > máximo 22 caracteres
-Última luz
+Noche en el quiosco
 
 ### arcade_nivel_20_texto · encargo
 > máximo 220 caracteres
-Un solo disparo, 45 segundos, cara nítida y nadie más.
+De noche, sola en la foto y con la cara nítida.
 
-## Nivel 21 · El barrido
+## Nivel 21 · A la cintura
 
 ### arcade_nivel_21_titulo · título
 > máximo 22 caracteres
-El barrido
+A la cintura
 
 ### arcade_nivel_21_texto · encargo
 > máximo 220 caracteres
-Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: Él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro. Con ratón o mando, el pulso es tuyo.
+La TLR se mira desde arriba y el visor invierte izquierda y derecha. Todo es manual, sin prisa.
 
-## Nivel 22 · Retrato de autor
+## Nivel 22 · Espejo
 
 ### arcade_nivel_22_titulo · título
 > máximo 22 caracteres
-Retrato de autor
+Espejo
 
 ### arcade_nivel_22_texto · encargo
 > máximo 220 caracteres
-Con el 105 mm: Fondo desenfocado y la persona en la proporción áurea.
+Proporción áurea en el cuadrado, con la imagen al revés.
 
-## Nivel 23 · Sola y de cerca
+## Nivel 23 · Retrato 6×6
 
 ### arcade_nivel_23_titulo · título
 > máximo 22 caracteres
-Sola y de cerca
+Retrato 6×6
 
 ### arcade_nivel_23_texto · encargo
 > máximo 220 caracteres
-Todo manual: Encuéntrala, que salga grande y sin nadie más.
+Cara nítida (con la lupa comprobarás que ojos no hay), fondo desenfocado y el sujeto grande.
 
-## Nivel 24 · Barrido al atardecer
+## Nivel 24 · Corredor al espejo
 
 ### arcade_nivel_24_titulo · título
 > máximo 22 caracteres
-Barrido al atardecer
+Corredor al espejo
 
 ### arcade_nivel_24_texto · encargo
 > máximo 220 caracteres
-Otro barrido, ahora con todo manual y el corredor grande en el encuadre.
+Congela a un corredor con la TLR: 1/500 s o más rápido.
 
-## Nivel 25 · Nocturno
+## Nivel 25 · Última luz
 
 ### arcade_nivel_25_titulo · título
 > máximo 22 caracteres
-Nocturno
+Última luz
 
 ### arcade_nivel_25_texto · encargo
 > máximo 220 caracteres
+Un solo disparo, 60 segundos, cara nítida y nadie más.
+
+## Nivel 26 · El barrido
+
+### arcade_nivel_26_titulo · título
+> máximo 22 caracteres
+El barrido
+
+### arcade_nivel_26_texto · encargo
+> máximo 220 caracteres
+Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: Él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro. Con ratón o mando, el pulso es tuyo.
+
+## Nivel 27 · La estela
+
+### arcade_nivel_27_titulo · título
+> máximo 22 caracteres
+La estela
+
+### arcade_nivel_27_texto · encargo
+> máximo 220 caracteres
+Lo contrario del barrido: La cámara quieta y una velocidad lenta, 1/30 s o 1/60 s. El parque sale nítido y el corredor, convertido en una estela.
+
+## Nivel 28 · Retrato de autor
+
+### arcade_nivel_28_titulo · título
+> máximo 22 caracteres
+Retrato de autor
+
+### arcade_nivel_28_texto · encargo
+> máximo 220 caracteres
+Con el 105 mm: Fondo desenfocado y la persona en la proporción áurea.
+
+## Nivel 29 · Paseando al perro
+
+### arcade_nivel_29_titulo · título
+> máximo 22 caracteres
+Paseando al perro
+
+### arcade_nivel_29_texto · encargo
+> máximo 220 caracteres
+Busca a quien pasea al perro: Los dos en el encuadre y los dos nítidos, con todo manual. El dueño debe llenar al menos el 40 % de la altura.
+
+## Nivel 30 · Nocturno
+
+### arcade_nivel_30_titulo · título
+> máximo 22 caracteres
+Nocturno
+
+### arcade_nivel_30_texto · encargo
+> máximo 220 caracteres
 Dos disparos, de noche y todo manual: Pon el punto de enfoque en la cara. Que salga grande y sin nadie más.
+

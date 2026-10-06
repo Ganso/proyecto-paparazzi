@@ -9,6 +9,7 @@ var sun: DirectionalLight3D
 var lamps: Array[OmniLight3D] = []
 var materials = {}
 var benches: Array[Dictionary] = []
+var places: Dictionary = {}       # landmarks by key, for the arcade condition «lugar»
 var triangle_count = 0
 var current_graphics_preset = "Ultra"
 # Mesh detail, fixed when the park is built: "hd" in Forward+ (Ultra), "lo" in gl_compatibility
@@ -583,6 +584,7 @@ func landmark(asset: String, label: String, pos: Vector3, rotation_y: float) -> 
 	root.position = pos
 	root.rotation.y = rotation_y
 	add_child(root)
+	places[asset] = pos
 	var lo: Dictionary = ParkAssets.meshes(asset,"lo").get("",{})
 	if lo.has(""): collider(lo[""],label,root)
 	visual(asset,"",root)

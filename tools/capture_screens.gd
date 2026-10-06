@@ -19,6 +19,7 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	game = Main.instantiate()
 	root.add_child(game)
+	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	for i in 40: await process_frame
 	# --tercios: only the screens of the thirds of a stop (the switch is set in memory, not saved).
 	if "--tercios" in OS.get_cmdline_user_args():
@@ -53,7 +54,7 @@ func run() -> void:
 	# Arcade (docs/futuro/21): level select, a TLR level's briefing, its finder, a photo and the end.
 	game.show_arcade()
 	await shot("11_arcade")
-	game.start_level(15)
+	game.start_level(20)
 	await shot("12_nivel_encargo")
 	game.set_interface("camara")
 	game.begin_assignment()

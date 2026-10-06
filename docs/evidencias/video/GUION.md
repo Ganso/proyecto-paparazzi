@@ -26,7 +26,7 @@ Los rótulos marcados con ✎ los escribió el usuario y no se tocan.
 | 1:12 | 8 | ✎ Recorre el parque grande buscando a tu objetivo | Paseo y cámara al ojo |
 | 1:20 | 2 | Tutorial, Arcade, Sandbox y Academia | Cartela |
 | 1:22 | 4 | Tutorial: Los controles, paso a paso | |
-| 1:26 | 3 | Arcade: 25 niveles en cinco bloques | Pantalla de niveles |
+| 1:26 | 3 | Arcade: 30 niveles en seis bloques | Pantalla de niveles |
 | 1:29 | 8 | Arcade: Un barrido, con el corredor nítido y el fondo arrastrado | |
 | 1:37 | 4 | Sandbox: Fotografía libre, sin encargo | El dueño con su perro |
 | 1:41 | 2 | Diez lecciones para entender la fotografía | Cartela |

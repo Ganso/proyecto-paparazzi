@@ -1320,8 +1320,27 @@ func new_assignment() -> void:
 			runners = runners.filter(func(p): return p.lane == best_lane)
 		if not runners.is_empty(): candidates = runners
 	if candidates.is_empty(): candidates = people.filter(func(p): return p.visible)
+	var kind = str(level.get("target",""))
+	# The dog's owner; someone who can sit down on a bench (classic park: lane of the benches).
+	if kind == "dog" and dog and is_instance_valid(dog.walker): candidates = [dog.walker]
+	if kind == "activity" and not crowd:
+		var sitters = candidates.filter(func(p): return p.lane == 1 and not p.never_sits and not p.has_dog and p.state == "CAMINANDO")
+		if not sitters.is_empty(): candidates = sitters
 	var all_traits = people.map(func(p): return p.traits)
 	target = candidates[casting.rng.randi_range(0,candidates.size()-1)]
+	# Levels that need the subject somewhere (in front of the bandstand, against the sun): whoever
+	# will get there first, so that nobody waits a whole lap.
+	if level.has("toward") and not crowd and kind == "":
+		var goal = toward_theta(str(level.toward))
+		var soonest = INF
+		# (on the third path: far enough for a whole figure and what is behind it)
+		var far = candidates.filter(func(p): return p.lane == 2)
+		for p in (far if not far.is_empty() else candidates):
+			var lead = fposmod((goal-p.theta)*p.direction-25.0,360.0)/maxf(.05,p.speed/p.radius)
+			if lead < soonest:
+				soonest = lead
+				target = p
+	if kind == "activity" and not crowd: seat_target()
 	var predicates = casting.predicates_for(target.traits,all_traits)
 	assert(not predicates.is_empty(),Texts.get_text("el_encargo_debe_identificar_un_sujeto_unico"))
 	target.protected_target = true
@@ -1933,6 +1952,32 @@ func ahead_of(p: Pedestrian, theta: float) -> float:
 
 # A stop at a point of interest: slows down smoothly first (pending_stop, see walk_step()).
 # Sometimes two people walking towards each other stop to chat.
+# Where a level wants its subject, as an angle of the classic park: a landmark, or the sun.
+func toward_theta(what: String) -> float:
+	var at: Vector3 = park.sun.global_basis.z if what == "sol" else park.places.get(what,Vector3.FORWARD)
+	return fposmod(rad_to_deg(atan2(at.x,-at.z)),360.0)
+
+# The subject of an «actividad» level walks to a free bench, sits and stays at it for the level.
+const TARGET_ACTIVITIES = ["leer","movil","cafe","palomas"]
+func seat_target() -> void:
+	var bench_i = -1
+	for i in park.benches.size():
+		if park.benches[i].seats[0] == null and park.benches[i].seats[1] == null and not people.any(func(q): return q.bench_goal == i): bench_i = i
+	if bench_i < 0:
+		# No bench free: it stops where it is, with something in the hands.
+		target.pending_stop = {"activity":["movil","cafe"][casting.rng.randi()%2],"time":600.0}
+		return
+	var bench = park.benches[bench_i]
+	clear_sector([1],[target],30.0)
+	reset_walker(target,1,seat_theta(bench,0)-12.0,1.0)
+	set_seat(bench,0,target)
+	target.bench_slot = 0
+	target.bench_goal = bench_i
+	target.set_meta("seat_activity",TARGET_ACTIVITIES[casting.rng.randi()%TARGET_ACTIVITIES.size()])
+
+func activity_on_duty(p) -> bool:
+	return p.protected_target and arcade_level >= 0 and not sandbox and Arcade.LEVELS[arcade_level].get("target","") == "activity"
+
 func runner_on_duty(p) -> bool:
 	return p.protected_target and p.runner and arcade_level >= 0 and Arcade.LEVELS[arcade_level].get("target","") == "runner"
 
@@ -2139,8 +2184,10 @@ func update_still(p: Pedestrian, dt: float) -> void:
 				var to = p.partner.position-p.position
 				p.face_target = atan2(-to.x,-to.z)
 			p.state_time -= dt
+			if activity_on_duty(p) and p.activity != "": p.state_time = maxf(p.state_time,10.0)
 			if p.state_time <= 0: resume_walk(p)
 		"SENTADO":
+			if activity_on_duty(p): p.state_time = maxf(p.state_time,10.0)   # (the level's subject stays at it)
 			# Seated side by side: turn the head to the other one.
 			var target_yaw = 0.0
 			if p.activity == "charla" and is_instance_valid(p.partner):
@@ -3402,6 +3449,19 @@ func capture_evidence() -> Dictionary:
 		var seen = hit.is_empty() or (hit.collider.has_meta("person") and hit.collider.get_meta("person") == p)
 		others.append({"chest":chest,"h":absf(bottom.y-top.y),"visible":seen})
 	e["others"] = others
+	# For the arcade conditions about light, place and company (scripts/conditions.gd).
+	var sun_dir: Vector3 = park.sun.global_basis.z
+	e["backlight"] = Vector2(view_axis.x,view_axis.z).normalized().dot(Vector2(sun_dir.x,sun_dir.z).normalized())
+	e["sunlit"] = str(time_of_day) in ["day","golden"] and park.light_visible(points[1],points[1]+sun_dir*80,target)
+	e["activity"] = str(target.activity) if target.state in ["SENTADO","DETENIDO"] else ""
+	var places = {}
+	for key in park.places:
+		var spot: Vector3 = park.places[key]+Vector3.UP*1.6
+		places[key] = {"pos":camera.unproject_position(spot)/Vector2(viewport.size),"d":camera.global_position.distance_to(spot),"front":not camera.is_position_behind(spot)}
+	e["places"] = places
+	if dog and is_instance_valid(dog) and dog.walker == target:
+		var at: Vector3 = dog.global_position+Vector3.UP*.25
+		e["dog"] = {"pos":camera.unproject_position(at)/Vector2(viewport.size),"d":camera.global_position.distance_to(at),"front":not camera.is_position_behind(at)}
 	if equipment.tlr(): square_evidence(e)
 	return e
 
@@ -3413,6 +3473,8 @@ func square_evidence(e: Dictionary) -> void:
 	for key in ["head","feet","chest","eyes"]:
 		if e.has(key): e[key] = to_square.call(e[key])
 	for o in e.get("others",[]): o.chest = to_square.call(o.chest)
+	for key in e.get("places",{}): e.places[key].pos = to_square.call(e.places[key].pos)
+	if e.has("dog"): e.dog.pos = to_square.call(e.dog.pos)
 	e["square"] = true
 
 func take_photo() -> void:
@@ -3450,9 +3512,9 @@ func take_photo() -> void:
 	evidence["rendered_dof"] = dof_active()
 	evidence["ca"] = float(equipment.lens().get("ca",.5))
 	evidence["stops"] = 2.0*log(aperture_value()/equipment.apertures(focal)[0])/log(2.0)
-	current_result = Photo.evaluate(evidence)
+	if arcade_level >= 0 and not sandbox: current_result = Conditions.judge(evidence,Arcade.LEVELS[arcade_level].cond)
+	else: current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
-	if arcade_level >= 0 and not sandbox: Conditions.apply(current_result,evidence,Arcade.LEVELS[arcade_level].cond)
 	if equipment.tlr() and sandbox:
 		tlr_frames -= 1
 		tlr_wound = false
@@ -3536,7 +3598,7 @@ func photo_material(result: Dictionary) -> ShaderMaterial:
 	var strengths = lens_strengths(evidence.f,evidence.get("ca",.5),evidence.get("stops",1.0))
 	mat.set_shader_parameter("vignette_amount",strengths.x)
 	mat.set_shader_parameter("chromatic_aberration",strengths.y)
-	mat.set_shader_parameter("exposure",clampf(result.delta,-8,8))
+	mat.set_shader_parameter("exposure",clampf(result.delta+float(result.get("evidence",{}).get("ev_shift",0.0)),-8,8))
 	mat.set_shader_parameter("motion",Vector2(minf(result.drag/36*viewport.size.x,90)*result.get("drag_sign",evidence.get("motion_sign",1.0)),0))
 	# Panning: the background streaks by the camera's sweep and the subject keeps its own blur.
 	var streak: float = result.get("background",0.0)
@@ -3660,18 +3722,18 @@ func show_arcade() -> void:
 	var root = create_modal()
 	label(root,Texts.get_text("arcade_titulo"),Rect2(65,26,600,55),38)
 	label(root,Texts.get_text("arcade_subtitulo"),Rect2(65,82,1100,26),16,Color("b5c3ad"))
-	if Arcade.all_open: label(root,Texts.get_text("arcade_trampa"),Rect2(65,652,700,26),15,Color("f0c75e"))
+	if Arcade.all_open: label(root,Texts.get_text("arcade_trampa"),Rect2(65,662,700,26),15,Color("f0c75e"))
 	var progress = Arcade.load_progress()
 	var focus_set = false
 	for block in Arcade.BLOCKS.size():
-		var y = 116+block*103
+		var y = 112+block*88   # (six blocks)
 		label(root,Texts.get_text(Arcade.BLOCKS[block]),Rect2(65,y,1100,22),13,Color("b8d78c"))
 		for k in 5:
 			var n = block*5+k
 			var open = Arcade.unlocked(n,progress)
 			var card = Button.new()
 			card.position = Vector2(65+k*232,y+22)
-			card.size = Vector2(220,74)
+			card.size = Vector2(220,62)
 			# Reachable with the gamepad (D-pad / stick to move, A to start); the focus starts on the
 			# first level still to pass.
 			card.focus_mode = Control.FOCUS_ALL
@@ -3681,11 +3743,11 @@ func show_arcade() -> void:
 			if open and not progress.has(n) and not focus_set:
 				card.call_deferred("grab_focus")
 				focus_set = true
-			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,5,190,16),11,Color("b8d78c"))
-			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,20,196,26),18)
+			label(card,Texts.get_text("arcade_nivel_d") % (n+1),Rect2(14,3,190,16),11,Color("b8d78c"))
+			label(card,level_title(n) if open else Texts.get_text("arcade_bloqueado"),Rect2(14,16,196,26),18)
 			var stars = int(progress[n].stars) if progress.has(n) else 0
-			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else ("—" if OS.has_feature("web") else "🔒"),Rect2(14,46,196,24),16,Color("c9d790"))
-	button(root,Texts.get_text("arcade_menu"),Rect2(1035,640,180,52),intro)
+			label(card,"★".repeat(stars)+"☆".repeat(5-stars) if open else ("—" if OS.has_feature("web") else "🔒"),Rect2(14,38,196,22),15,Color("c9d790"))
+	button(root,Texts.get_text("arcade_menu"),Rect2(1035,650,180,48),intro)
 
 # A level fixes scenario, light and equipment; another scenario reloads the scene first.
 func start_level(n: int) -> void:
@@ -3698,6 +3760,8 @@ func start_level(n: int) -> void:
 	equipment.lens_index = level.lens
 	equipment.set_exposure_mode({true:"P",false:"M"}.get(level.auto,str(level.auto)))
 	if level.has("focus"): equipment.focus_mode = level.focus
+	if level.has("metering"): equipment.metering = level.metering
+	equipment.ev_comp_index = equipment.EV_COMPENSATIONS.find(0.0)   # (each level starts without the last one's compensation)
 	if level.has("iso"):
 		equipment.film = true
 		equipment.film_iso_index = level.iso

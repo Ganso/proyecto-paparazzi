@@ -87,7 +87,7 @@ Fotógrafo de calle
 
 ### insignia_calle_texto
 > máximo 100 caracteres
-Superar los 25 niveles del arcade.
+Superar los 30 niveles del arcade.
 
 ## Álbum
 

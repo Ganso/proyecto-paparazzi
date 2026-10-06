@@ -17,6 +17,7 @@ func screenshot(id: String) -> void:
 func run() -> void:
 	game = load("res://main.tscn").instantiate()
 	root.add_child(game)
+	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	await frames(12)
 	game.start_session(false)
 	check(game.mode == "BRIEFING","Assignment opens before search")

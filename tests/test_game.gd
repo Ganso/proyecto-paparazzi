@@ -314,8 +314,21 @@ func run() -> void:
 	game.start_level(9)
 	check(game.target.runner and game.equipment.exposure_mode() == "S" and game.equipment.body == 2,"Level 10 sets a running subject and the SLR in shutter priority")
 	check(game.briefing.text.contains("congelado"),"The search line lists the level's conditions")
+	# Levels about what people do, where they are and the light (06-10-2026).
+	game.start_level(12)
+	check(game.target.lane == 1 and game.target.bench_goal >= 0 and game.activity_on_duty(game.target),"«Lo que hace»: the subject heads for a bench to do something")
+	game.start_level(13)
+	game.begin_assignment()
+	await frames(3)
+	var place_e = game.capture_evidence()
+	check(place_e.places.has("quiosco") and place_e.has("backlight") and place_e.has("sunlit") and place_e.has("activity"),"The evidence knows the landmarks, the sun and what the subject is doing")
+	check(game.target.lane == 2,"«Todo nítido»: the subject walks the third path, towards the bandstand")
+	game.start_level(17)
+	check(game.equipment.metering == "puntual" and game.equipment.exposure_mode() == "A","«A contraluz»: spot metering and aperture priority")
+	game.start_level(0)
+	check(game.equipment.metering == game.equipment.DEFAULT_METERING,"…and the next level is back to the usual metering")
 	# TLR: waist level, square photo measured on the square, film, manual focus.
-	game.start_level(15)
+	game.start_level(20)
 	check(game.equipment.tlr() and game.equipment.film and game.equipment.focus_mode == "MF","Level 16: TLR with film and manual focus")
 	check(is_equal_approx(game.camera.position.y,1.1),"The TLR is held at the waist (1.10 m)")
 	game.begin_assignment()
@@ -346,7 +359,7 @@ func run() -> void:
 	game.apply_equipment()
 	# One manual control at a time: aperture priority keeps the player's aperture, the camera sets
 	# the rest; slower walkers where focus and exposure are manual (docs/futuro/21 §5).
-	game.start_level(6)
+	game.start_level(7)
 	game.begin_assignment()
 	check(game.equipment.exposure_mode() == "A","Level 7: aperture priority")
 	game.n_index = 0
@@ -387,7 +400,7 @@ func run() -> void:
 	check(angle_difference(deg_to_rad(angle_before),deg_to_rad(game.angle)) > 0,"Moving the mouse right turns the view right")
 	game.dragging = false
 	# Classic park: lower the camera to search with a wide view, raise it to shoot (docs/futuro/21 §8).
-	game.start_level(6)
+	game.start_level(7)
 	game.begin_assignment()
 	var aim = game.angle
 	game.toggle_raise()

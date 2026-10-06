@@ -12,6 +12,7 @@ const C = 0.030
 # Panning: the background has to streak at least this much on the sensor (mm; about 18 px of a
 # 1280 px frame) behind a subject that really moves (m/s across the view).
 const PAN_STREAK = .5
+const TRAIL = .5                # mm of drag from which a moving subject reads as a trail
 const PAN_SUBJECT_SPEED = .4
 # A pan is never perfect: the subject may keep this much drag (mm) and still read as sharp. With
 # 0.030 mm the turn had to match the runner within 1°/s; with 0.075 mm, within some 10 %.
@@ -61,6 +62,12 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	# A good pan is a deliberate slow shutter: the hand rule does not count against it.
 	var shake = 1.0 if panning else clampf(1-(ratio-1)/2, 0, 1)
 	var subject = 1.0 if panning else clampf((3*C-drag)/(2*C), 0, 1)
+	# A trail asked for (conditions.gd «estela»): a runner dragged on purpose with the camera still
+	# is what the photo is about, and the slow shutter is braced.
+	var trail: bool = e.get("trail", false) and e.v >= PAN_SUBJECT_SPEED and drag >= TRAIL and background <= C
+	if trail:
+		shake = 1.0
+		subject = 1.0
 	var movement = minf(shake, subject)
 	var occlusion = (5.0-e.blockers.size())/5.0
 	var h: float = abs(e.feet.y-e.head.y)
@@ -90,6 +97,7 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	elif shake < 1:
 		movement_text = Texts.get_text("mov_pulso") % [used, roundi(e.f), hand_needed]
 	if panning: movement_text = Texts.get_text("mov_barrido") % [used, background]
+	elif trail: movement_text = Texts.get_text("mov_estela") % [used, drag]
 	elif subject < 1 and background > C and e.v < PAN_SUBJECT_SPEED: movement_text = Texts.get_text("mov_camara") % used
 	var lines = [
 		Texts.get_text("enfoque_d_coc_3f_mm_nitido_0_030_foco_a_s_sujeto_a_2f_m_s") % [roundi(focus*100), blur, Texts.get_text("infinito") if is_inf(e.s) else Texts.get_text("2f_m") % e.s, e.get("d_eyes", e.d), Texts.get_text("vuelve_a_enfocar_sobre_el_sujeto") if focus < 1 else Texts.get_text("el_sujeto_esta_dentro_de_la_nitidez_aceptable")],

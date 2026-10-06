@@ -18,6 +18,7 @@ func _initialize() -> void:
 func run() -> void:
 	var game = Main.instantiate()
 	root.add_child(game)
+	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	game.exposure_thirds = false   # (not the player's option)
 	for i in 10: await process_frame
 	game.start_session("day")

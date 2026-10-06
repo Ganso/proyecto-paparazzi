@@ -34,6 +34,9 @@ La persona se mueve demasiado para 1/%d s: A %d mm hace falta 1/%d s o más ráp
 ### mov_barrido
 Barrido: Seguiste a la persona con la cámara a 1/%d s. Sale nítida y el fondo, arrastrado %.1f mm.
 
+### mov_estela
+Estela: A 1/%d s y con la cámara quieta, el corredor se arrastra %.1f mm sobre un fondo nítido.
+
 ### mov_camara
 Moviste la cámara durante el disparo a 1/%d s: Quieta, o sigue a alguien que se mueva.
 

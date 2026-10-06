@@ -27,6 +27,7 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	game = Main.instantiate()
 	root.add_child(game)
+	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	game.exposure_thirds = false   # (not the player's option)
 	for i in 30: await process_frame
 	academy = game.academy

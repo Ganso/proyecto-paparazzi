@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Vídeo largo de evidencias (bajo demanda): un tráiler de presentación del proyecto en unos 180 s,
 # por capítulos rotulados (el parque, su vida, las cámaras, los modos de juego, el parque grande y
-# el progreso), que enseña todo lo implementado. Contenido: pantalla de carga, menú y arcade (25 niveles, una
+# el progreso), que enseña todo lo implementado. Contenido: pantalla de carga, menú y arcade (30 niveles, una
 # condición, la TLR, el barrido), las cuatro luces con el cielo propio, los dos escenarios
 # (parque clásico y parque grande a pie), la vida del parque (bancos, palomas, perro, figurantes,
 # móviles de noche), los tres cuerpos con su visor real (compacta, telemétrica con enfoque manual,
@@ -67,11 +67,11 @@ SEQUENCES=(
 	"Compacta · zoom 24–120 y todo automático|3|--time=day --interface=camara --lens=0,0 --angle=200 --pitch=-3 --focal=35 --pan=3 --af"
 	"Réflex · teleobjetivo y autofoco continuo|4|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
 	"Telemétrica · enfoque manual, disparo y revelado|8|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=5"
-	"TLR 6×6 · a la cintura, visor espejado y foto cuadrada|9|--level=16 --interface=camara --follow-target --mf-rack --expose --shoot-at=6"
+	"TLR 6×6 · a la cintura, visor espejado y foto cuadrada|9|--level=21 --interface=camara --follow-target --mf-rack --expose --shoot-at=6"
 	"Modos de juego|2|@card:Tutorial, Arcade, Sandbox y Academia"
 	"Tutorial · los controles, paso a paso|4|--tutorial"
-	"Arcade · 25 niveles en cinco bloques|3|--arcade --cheat=niveles"
-	"Arcade · barrido: corredor nítido, fondo arrastrado|8|--level=21 --interface=camara --focal=85 --follow-target --pan-shot --shutter=30 --shoot-at=5"
+	"Arcade · 30 niveles en seis bloques|3|--arcade --cheat=niveles"
+	"Arcade · barrido: corredor nítido, fondo arrastrado|8|--level=26 --interface=camara --focal=85 --follow-target --pan-shot --shutter=30 --shoot-at=5"
 	"Parque grande · camina, busca y llévate la cámara al ojo|8|--scenario=grande --time=golden --photo-walk"
 	"Sandbox · fotografía libre, sin encargo|3|--sandbox --time=day --lens=0,0 --angle=150 --pitch=-2 --focal=50 --pan=3 --af"
 	"La Academia|2|@card:Diez lecciones para entender la fotografía"

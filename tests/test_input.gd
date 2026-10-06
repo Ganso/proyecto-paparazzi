@@ -45,9 +45,10 @@ func run() -> void:
 	# Search with a pad: buttons do what the help says.
 	var game = preload("res://main.tscn").instantiate()
 	root.add_child(game)
+	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	game.exposure_thirds = false   # (not the player's option)
 	for i in 30: await process_frame
-	game.start_level(6)
+	game.start_level(7)
 	game.begin_assignment()
 	var before = game.control_help.enabled
 	game._unhandled_input(pad(JOY_BUTTON_X))
@@ -125,19 +126,19 @@ func run() -> void:
 	check(game.mode == "PAUSE" and game.modal.get_children().any(func(c): return c is Label and c.text == Texts.get_text("pausa_confirmar")),"Leaving asks for confirmation")
 	game.leave_phase()
 	check(game.mode == "INTRO","Confirming goes back to the main menu")
-	game.start_level(6)
+	game.start_level(7)
 	game.begin_assignment()
 	check(game.control_help.exit_button.visible or true,"The exit button exists on screen")
 	check(game.stick(.1) == 0.0 and absf(game.stick(1.0)-1.0) < .001 and game.stick(.5) < .1,"Sticks: dead zone and cubic response")
 	game.pad_polling = false   # whatever gamepad is plugged into this machine stays out of the tests
 	# Panning with the keys: while a turn key is held, the camera falls in with the runner crossing
 	# the middle of the frame that way (the keys have one fixed speed; mouse and stick stay manual).
-	game.start_level(20)
+	game.start_level(25)
 	for i in 3: await process_frame
 	game.begin_assignment()
 	for i in 40: await process_frame
 	var runner = game.target
-	check(runner.runner and preload("res://scripts/arcade.gd").LEVELS[20].cond.has("barrido"),"Level 21 asks for a pan of a runner")
+	check(runner.runner and preload("res://scripts/arcade.gd").LEVELS[25].cond.has("barrido"),"Level 26 asks for a pan of a runner")
 	game.focal = 50.0
 	for i in 20:
 		game.aim_at(runner,1.0)
@@ -152,7 +153,7 @@ func run() -> void:
 	game.end_level()
 	# The trigger as a two-stage shutter (docs/futuro/14 §3): half press locks focus and exposure,
 	# letting go cancels, a full press shoots with what was locked.
-	game.start_level(7)
+	game.start_level(8)
 	for i in 3: await process_frame
 	game.begin_assignment()
 	for i in 30: await process_frame

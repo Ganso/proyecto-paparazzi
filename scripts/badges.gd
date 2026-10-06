@@ -14,7 +14,7 @@ extends RefCounted
 #   noche      5 night photos exposed within 0.3 EV, score ≥ 75
 #   decisiva   5 assignments solved with their first shot, score ≥ 85
 #   graduado   the ten exams of the Academy (given by academy.gd)
-#   calle      the 25 levels of the arcade passed (given by main.gd)
+#   calle      the 30 levels of the arcade passed (given by main.gd)
 # Whoever had «halcon» from before (it then asked for the thirds too) keeps it.
 const Photo = preload("res://scripts/photography.gd")
 static var SAVE = OS.get_environment("PAPARAZZI_BADGES_CFG") if OS.has_environment("PAPARAZZI_BADGES_CFG") else "user://insignias.cfg"
