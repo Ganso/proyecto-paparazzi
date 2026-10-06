@@ -300,19 +300,15 @@ En inglés, que es como mejor responden los generadores. Duración, bucle, canal
 
 ## Ya generados por código (06-10-2026)
 
-Los que son un tono puro o una nota de campanilla no hace falta grabarlos ni pedírselos a una IA: los sintetiza `tools/audio/build_beeps.py` (`python3 tools/audio/build_beeps.py`) con la duración, el canal y el pico de su ficha.
+Solo los pitidos de tono puro (decisión del usuario): los sintetiza `tools/audio/build_beeps.py` (`python3 tools/audio/build_beeps.py`) con la duración, el canal y el pico de su ficha.
 
 | N.º | Fichero | Qué es |
 |---|---|---|
 | 8 | `assets/audio/camara/af_confirmado.wav` | Dos tonos de 3 kHz de 60 ms separados 40 ms |
 | 9 | `assets/audio/camara/af_fallo.wav` | La variante de pitido grave (450 Hz, 0,35 s); la de motor que busca sigue pendiente si se prefiere |
 | 57 | `assets/audio/camara/bloqueo.wav` | Un pitido de 4 kHz de 0,12 s |
-| 48 | `assets/audio/interfaz/estrella.wav` | La5 (880 Hz) de campanilla, 0,30 s |
-| 53 | `assets/audio/interfaz/tutorial_ok.wav` | Mi6 de campanilla, 0,45 s |
-| 69 | `assets/audio/interfaz/condicion_ok.wav` | Do6 de campanilla, 0,20 s |
-| 51 | `assets/audio/interfaz/tictac.wav` | Un tic de 0,10 s |
 
-**Todavía no suenan en el juego**: quedan en `assets/audio/` (incluidos en la exportación) a la espera de conectarlos junto con el resto, como dice el apartado siguiente. Quedan por generar 63 sonidos (105 ficheros).
+**Todavía no suenan en el juego**: se conectarán junto con el resto. Quedan por generar 67 sonidos (109 ficheros), entre ellos las notas de campanilla (`estrella`, `tutorial_ok`, `condicion_ok`) y el `tictac`.
 
 ## Al recibirlos
 
