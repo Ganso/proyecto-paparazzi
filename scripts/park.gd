@@ -1075,7 +1075,12 @@ func apply_forward_effects(preset: String) -> void:
 	env.ssr_enabled = forward and fx.ssr
 	env.volumetric_fog_enabled = forward and fx.volumetric
 	env.glow_enabled = forward and g.glow
-	sun.light_angular_distance = .6 if forward and fx.penumbra else 0.0
+	sun.light_angular_distance = .6 if forward and fx.penumbra and not long_shadows() else 0.0
+	# Long, low-sun shadows (the big park at golden hour): the physical penumbra, spread over
+	# shadows a hundred metres long, came out different in each slice of the shadow map, so the
+	# half-lit lawn flickered as the view moved. There the shadows are plain and softer instead,
+	# and let part of the sun through: the same light on the ground, and it holds still.
+	sun.shadow_opacity = LONG_SHADOW_OPACITY if long_shadows() else 1.0
 	if forward: RenderingServer.directional_shadow_atlas_set_size(fx.atlas,true)
 	set_grass_fraction(fx.grass if forward else 0.0)
 	if not forward: return
@@ -1140,7 +1145,7 @@ func apply_preset_values(preset: String) -> void:
 	var reach = float(g.shadow_distance)
 	sun.shadow_enabled = reach > 0.0
 	if reach > 0.0:
-		sun.shadow_blur = .8
+		sun.shadow_blur = 2.0 if long_shadows() else .8
 		sun.directional_shadow_max_distance = reach*shadow_reach_factor()
 		sun.directional_shadow_blend_splits = reach > 34.0
 		sun.shadow_bias = 0.015 if reach > 44.0 else 0.02
@@ -1170,6 +1175,10 @@ func apply_preset_values(preset: String) -> void:
 # them at golden hour: park_grande.gd).
 func shadow_reach_factor() -> float:
 	return 1.0
+
+func long_shadows() -> bool:
+	return shadow_reach_factor() > 1.0
+const LONG_SHADOW_OPACITY = .55
 
 # What the engine's procedural sky lacked: moon and stars (night), cirrus and the afterglow.
 func sky_extras(sky_mat: ShaderMaterial, moon: float, stars: float, cirrus: float, cirrus_color: Color, glow: float, glow_color: Color) -> void:
