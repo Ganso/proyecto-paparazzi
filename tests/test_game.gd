@@ -353,6 +353,7 @@ func run() -> void:
 	game.auto_expose()
 	check(game.n_index == 0,"Aperture priority keeps the chosen aperture")
 	var t_before = game.t_index
+	game.exposure_thirds = false   # (the player's option must not change the test)
 	game.change_parameter("t",1)
 	game.change_parameter("n",1)
 	check(game.n_index == 1 and game.t_index == t_before or game.equipment.priority == "A","The aperture dial works, the shutter is the camera's")

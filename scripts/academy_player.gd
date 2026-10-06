@@ -81,10 +81,10 @@ func step(parameter: String, direction: int, times = 1) -> void:
 
 func aperture_to(f_number: float) -> void:
 	var guard = 0
-	while main.apertures()[main.n_index] < f_number-.01 and main.n_index < main.apertures().size()-1 and guard < 12:
+	while main.aperture_value() < f_number-.01 and main.n_index < main.apertures().size()-1 and guard < 12:
 		await step("n",1)
 		guard += 1
-	while main.apertures()[main.n_index] > f_number+.01 and main.n_index > 0 and guard < 24:
+	while main.aperture_value() > f_number+.01 and main.n_index > 0 and guard < 24:
 		await step("n",-1)
 		guard += 1
 
@@ -197,7 +197,7 @@ func practice() -> void:
 			await shoot()
 		"objetivos":
 			await aim(s,.5,.3)
-			while Photo.ISOS[main.iso_index] > 100: await step("iso",-1)
+			while main.iso_value() > 100: await step("iso",-1)
 			await aperture_to(4.0)
 			await centre_meter()
 			await wait(1.0)

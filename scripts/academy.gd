@@ -308,6 +308,7 @@ func begin(n: int, start_phase = "teoria") -> void:
 
 func apply_setup() -> void:
 	var s: Dictionary = SETUP[kind]
+	main.clear_fine()
 	main.equipment.film = false
 	main.equipment.body = s.body
 	main.equipment.lens_index = s.lens
@@ -890,7 +891,7 @@ func expose_with_shutter() -> void:
 	main.update_meter()
 	var best = INF
 	for t in Photo.DENOMINATORS.size():
-		var delta = absf(Photo.ev(main.apertures()[main.n_index],1.0/Photo.DENOMINATORS[t],Photo.ISOS[main.iso_index],main.measured_ev))
+		var delta = absf(Photo.ev(main.aperture_value(),1.0/Photo.DENOMINATORS[t],main.iso_value(),main.measured_ev))
 		if delta < best:
 			best = delta
 			main.t_index = t
@@ -1018,7 +1019,7 @@ func start_exam() -> void:
 # The needle for the current settings (negative: underexposed), computed here: the finder's own
 # value is only refreshed with the HUD.
 func exam_needle() -> float:
-	return -Photo.ev(main.apertures()[main.n_index],1.0/Photo.DENOMINATORS[main.t_index],Photo.ISOS[main.iso_index],main.measured_ev)
+	return -Photo.ev(main.aperture_value(),1.0/main.shutter_denominator(),main.iso_value(),main.measured_ev)
 
 const EXAM_SECOND_RADIUS = 5.0   # far enough to be clearly soft wide open (f/22 on the near one holds both)
 
@@ -1192,7 +1193,7 @@ func check_practice(dt: float) -> void:
 	var before = tasks.duplicate()
 	var new_hint = ""          # built from scratch every time (it used to pile up on itself)
 	var needle = exam_needle()
-	var n = main.apertures()[main.n_index]
+	var n = main.aperture_value()
 	match kind:
 		"composicion":
 			if main.finder.thirds: tasks[0] = true
@@ -1239,14 +1240,15 @@ func check_practice(dt: float) -> void:
 			elif not tasks[1]: new_hint = lesson_text("pista_s")
 			elif not tasks[2]: new_hint = lesson_text("pista_m") % ("%+.1f" % needle)
 		"objetivos":
-			var at_100 = Photo.ISOS[main.iso_index] == 100
+			var at_100 = main.iso_value() == 100
 			if main.equipment.lens_index == 0 and at_100 and absf(needle) <= HALF_STOP: tasks[0] = true
 			if tasks[0] and main.equipment.lens_index == 2 and n <= 1.81 and at_100 and absf(needle) <= HALF_STOP: tasks[1] = true
-			if not tasks[0]: new_hint = lesson_text("pista_zoom") % Photo.DENOMINATORS[main.t_index]
+			if not tasks[0]: new_hint = lesson_text("pista_zoom") % main.shutter_denominator()
 			elif not tasks[1]: new_hint = lesson_text("pista_fijo")
-			elif not tasks[2]: new_hint = lesson_text("pista_dispara") % Photo.DENOMINATORS[main.t_index]
+			elif not tasks[2]: new_hint = lesson_text("pista_dispara") % main.shutter_denominator()
 		"camaras":
 			new_hint = lesson_text(["pista_telemetrica","pista_tlr","pista_reflex"][tasks.find(false)]) if tasks.has(false) else ""
+	if tasks.all(func(t): return t): new_hint = done_advice()
 	hint = new_hint
 	highlight = practice_highlight()
 	if tasks != before or hint_label.text != hint: update_panel()
@@ -1264,11 +1266,15 @@ func practice_highlight() -> String:
 		"modos": return ["diafragma","velocidad","exposimetro"][next]
 	return ""
 
+# The exposure lesson ends with a piece of advice: the thirds of a stop, for the game.
+func done_advice() -> String:
+	return text("academia_exposicion_superada") if kind == "exposicion" else ""
+
 func complete_if_done() -> void:
 	if tasks.all(func(t): return t) and not practice_done_shown:
 		practice_done_shown = true
 		mark(lesson,"practica")
-		hint = ""
+		hint = done_advice()
 		update_panel()
 
 # Lesson 4: where the head of the person under the active point is, against the thirds.

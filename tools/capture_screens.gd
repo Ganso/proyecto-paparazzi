@@ -20,6 +20,11 @@ func run() -> void:
 	game = Main.instantiate()
 	root.add_child(game)
 	for i in 40: await process_frame
+	# --tercios: only the screens of the thirds of a stop (the switch is set in memory, not saved).
+	if "--tercios" in OS.get_cmdline_user_args():
+		await thirds()
+		quit()
+		return
 	await shot("01_menu")
 	game.show_equipment()
 	await shot("02_equipo")
@@ -86,4 +91,50 @@ func run() -> void:
 	await shot("22_pausa")
 	game.leave_phase()
 	game.set_interface("camara")
+	await thirds()
 	quit()
+
+# Thirds of a stop: the switch in Opciones, the finders with third values, and the three places
+# that advise it (tutorial, the Academy's exposure lesson and the briefing of a manual level).
+func thirds() -> void:
+	var G = preload("res://scripts/input_glyphs.gd")
+	game.exposure_thirds = true
+	game.intro()
+	game.modal.current = 4
+	game.modal.build_card()
+	await shot("23_opciones_tercios")
+	game.set_interface("camara")
+	for body in [1,2,3]:
+		game.start_session("day",true)
+		game.equipment.preset(body)
+		game.equipment.set_exposure_mode("M")
+		game.apply_equipment()
+		game.resume_search()
+		game.selected_control = "n"
+		for i in 4: game.change_parameter("n",1)
+		for i in 2: game.change_parameter("t",1)
+		for i in 4: game.change_parameter("iso",1)
+		for i in 30: await process_frame
+		await shot("24_visor_tercios_%d" % body)
+	game.exposure_thirds = false
+	game.intro()
+	game.start_tutorial()
+	game.tutorial.step = game.tutorial.STEPS.find("tercios")
+	for device in ["teclado","mando"]:
+		G.device = device
+		game.tutorial.enter_step()
+		await shot("25_tutorial_tercios_"+device)
+	G.device = "teclado"
+	game.tutorial.stop()
+	game.intro()
+	game.academy.progress_path = OS.get_cache_dir().path_join("photohacks_capturas_academia.cfg")   # (not the player's progress)
+	game.academy.begin(4,"practica")
+	for i in 20: await process_frame
+	game.academy.tasks = [true,true,true]
+	for i in 40: await process_frame
+	await shot("26_academia_tercios")
+	game.academy.stop()
+	game.intro()
+	game.start_level(18)
+	await shot("27_arcade_aviso_tercios")
+	game.intro()

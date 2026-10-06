@@ -144,7 +144,7 @@ func solve(n: int) -> String:
 			for i in points.size():
 				if points[i].distance_to(face) < points[nearest].distance_to(face): nearest = i
 			game.finder.active = nearest
-		if OS.has_environment("SOLVER_DEBUG"): print("  before: locks %s %s · point %d · t 1/%d n %s iso %d · meter %s" % [str(game.exposure_locked),str(game.focus_locked),game.finder.active,Photo.DENOMINATORS[game.t_index],str(game.apertures()[game.n_index]),Photo.ISOS[game.iso_index],str(game.measured_ev)])
+		if OS.has_environment("SOLVER_DEBUG"): print("  before: locks %s %s · point %d · t 1/%d n %s iso %d · meter %s" % [str(game.exposure_locked),str(game.focus_locked),game.finder.active,game.shutter_denominator(),str(game.aperture_value()),game.iso_value(),str(game.measured_ev)])
 		await game.take_photo()
 		if OS.has_environment("SOLVER_DEBUG"):
 			var cr: Dictionary = game.current_result

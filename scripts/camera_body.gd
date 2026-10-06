@@ -137,11 +137,11 @@ func seg_text(pos: Vector2, text_value: String, h: float, color: Color, dim = Co
 	return x-pos.x
 
 func shutter_digits() -> String:
-	var d = Photo.DENOMINATORS[main.t_index]
+	var d = main.shutter_denominator()
 	return str(d)
 
 func aperture_digits() -> String:
-	var n: float = main.apertures()[main.n_index]
+	var n: float = main.aperture_value()
 	return ("%.1f" % n) if n < 10 else str(int(n))
 
 # ---- Per frame ----
@@ -323,9 +323,9 @@ func draw_compact(r: Rect2) -> void:
 	# Bottom bar: shutter, aperture, ISO, exposure scale.
 	var y = r.end.y-18
 	draw_rect(Rect2(r.position.x,r.end.y-46,r.size.x,46),Color(0,0,0,.35))
-	txt.call(Vector2(r.position.x+16,y),"1/%d" % Photo.DENOMINATORS[main.t_index],22)
+	txt.call(Vector2(r.position.x+16,y),"1/%d" % main.shutter_denominator(),22)
 	txt.call(Vector2(r.position.x+130,y),"F%s" % aperture_digits(),22)
-	txt.call(Vector2(r.position.x+232,y),"ISO %d" % Photo.ISOS[main.iso_index],18)
+	txt.call(Vector2(r.position.x+232,y),"ISO %d" % main.iso_value(),18)
 	var sx = r.position.x+380
 	var d = meter_delta()
 	for i in range(-2,3):

@@ -80,6 +80,17 @@ $$\text{ISO } 100 \;\cdot\; 200 \;\cdot\; 400 \;\cdot\; 800 \;\cdot\; 1600 \;\cd
 
 ---
 
+### 3.5 Tercios de paso (06-10-2026)
+
+Interruptor **«Pasos de exposición: Enteros / Tercios»** en Opciones (`main.gd::set_exposure_thirds()`, clave `tercios` de `user://interfaz.cfg`; por defecto, enteros). Con tercios, diafragma, velocidad e ISO recorren las series que graban las cámaras: `Equipment.THIRD_STOPS` (f/1.4 · 1.6 · 1.8 · 2 · 2.2 · 2.5 · 2.8…), `Photo.THIRD_DENOMINATORS` (1/1000 · 800 · 640 · 500…) y `Photo.THIRD_ISOS` (100 · 125 · 160 · 200…).
+
+- **Cómo está hecho**: las tablas de pasos enteros y sus índices (`n_index`, `t_index`, `iso_index`) no cambian; cada dial lleva además cuántos tercios pasa de su índice (`main.fine`), que vuelve a cero cuando el índice cambia. **El valor se lee siempre con `aperture_value()`, `shutter_denominator()` e `iso_value()`**, nunca con `apertures()[n_index]` y similares. `fine_moved()` mueve un ajuste un número de tercios y `third_gap()` da cuántos hay entre dos pasos de la tabla (de f/1.4 a f/1.8 son dos).
+- **Los mismos gestos mueven un tercio** (teclas, rueda, cruceta, − y +, deslizar sobre la tira). **Un paso entero**: con Mayús pulsada (teclado y ratón) o manteniendo la cruceta o el botón táctil más de medio segundo (`main.whole_hold`); el control `{paso_entero}` lo dice en los textos según el dispositivo.
+- **Vale en todas las cámaras, la TLR incluida**, y en todos los modos menos la **Academia**, que enseña con pasos enteros (`thirds_on()`). Con carrete el ISO sigue siendo el del carrete.
+- **Los automatismos también afinan**: tras elegir los pasos enteros como siempre, `trim_exposure()` corrige lo que sobra con tercios en un dial (la velocidad si es suya; si no, el diafragma; si no, el ISO). En prioridad se respeta el tercio que haya puesto el jugador.
+- **Dónde se aconseja**: al superar la práctica de la lección de exposición, en el hueco de la pista (`academia_exposicion_superada`), en el paso `tercios` del tutorial (`tutorial_tercios`) y en el encargo de los niveles del arcade con exposición manual si la opción está desactivada (`arcade_aviso_tercios`, `Arcade.manual_exposure()`).
+- **Pruebas y capturas**: `tests/test_equipment.gd` (series, vuelta, un tercio es un tercio, salto entero, topes, carrete, TLR, automatismos más finos, prioridad); `tools/capture_screens.gd -- --tercios` (`23_opciones_tercios` a `27_arcade_aviso_tercios`). Las pruebas que mueven diales fijan `exposure_thirds = false`.
+
 ## 4. Instrumentación del Visor HUD (`viewfinder.gd`)
 
 ```

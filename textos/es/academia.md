@@ -89,6 +89,10 @@ Te toca. Cumple las tareas. Si te atascas, te soplo una pista.
 ### academia_practica_superada
 ¡Práctica superada! Sigue jugando con ello o vuelve al menú.
 
+### academia_exposicion_superada · Pista al superar la práctica de la lección de exposición (335 px a 14 px, cuatro líneas: unos 170 caracteres)
+> máximo 150 caracteres
+Consejo: Activa en Opciones los tercios de paso para afinar más en el juego. Cada gesto moverá un tercio; con {paso_entero}, un paso entero.
+
 ### academia_foto_demo
 Así sale la foto
 

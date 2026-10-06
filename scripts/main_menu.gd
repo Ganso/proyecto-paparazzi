@@ -297,11 +297,12 @@ func build_options() -> void:
 		[Texts.get_text("opcion_ayuda") % Texts.get_text("si" if main.control_help.enabled else "no"),func(): main.control_help.set_enabled(not main.control_help.enabled); build_card()],
 		[Texts.get_text("opcion_vibracion_tactil" if Glyphs.touch and OS.has_feature("mobile") else "opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
 		[Texts.get_text("opcion_invertir") % Texts.get_text("invertir_"+main.look_invert),func(): main.set_look_invert(main.INVERT_CHOICES[(main.INVERT_CHOICES.find(main.look_invert)+1)%4]); build_card()],
+		[Texts.get_text("opcion_pasos") % Texts.get_text("pasos_tercios" if main.exposure_thirds else "pasos_enteros"),func(): main.set_exposure_thirds(not main.exposure_thirds); build_card()],
 		[Texts.get_text("menu_insignias"),main.show_badges],
 		[Texts.get_text("menu_album"),func(): main.show_album()],
 	]
 	for k in rows.size():
-		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,162+(k/2)*54,260,46),rows[k][1])
+		var b = flat_button(card,rows[k][0],Rect2(32+(k%2)*272,158+(k/2)*45,260,40),rows[k][1])
 		b.focus_mode = Control.FOCUS_ALL
 		if k == 0: b.call_deferred("grab_focus")
 

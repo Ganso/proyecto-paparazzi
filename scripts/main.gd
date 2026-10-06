@@ -44,9 +44,24 @@ var lens_slider: HSlider
 var focus_slider: HSlider
 var modal: Control
 var toast: Label
-var n_index = 3
-var t_index = 2
-var iso_index = 0
+# The dials move by whole stops over these tables. With «Pasos de exposición: Tercios» each one
+# also carries how many thirds it is past its index (fine), so everything written for whole stops
+# keeps working: changing an index puts its thirds back to zero.
+var n_index = 3:
+	set(value):
+		if value != n_index: fine["n"] = 0
+		n_index = value
+var t_index = 2:
+	set(value):
+		if value != t_index: fine["t"] = 0
+		t_index = value
+var iso_index = 0:
+	set(value):
+		if value != iso_index: fine["iso"] = 0
+		iso_index = value
+var fine = {"n":0,"t":0,"iso":0}
+var exposure_thirds = false         # the switch in Opciones (user://interfaz.cfg)
+var whole_hold = false              # a held D-pad or touch button goes by whole stops
 var focal: float = 24.0
 var focus_distance: float = 4.0
 var angle: float = 120.0
@@ -147,6 +162,7 @@ var hunt_next = 30.0
 var pad_precision = false           # L3: sticks three times finer
 var pad_run = false                 # L3 while walking: run until the left stick is released
 var trigger_stage = 0               # RT: 0 rest, 1 half (AF), 2 fired
+var pad_held = 0.0
 var pad_repeat = 0.0                # D-pad ↑/↓ auto-repeat timer
 # ---- Scenarios (docs/futuro/01 Alternativa C) ----
 # "clasico": the photographer stands in the centre of the cylindrical park (and the Academy uses it).
@@ -893,13 +909,118 @@ func change_parameter(parameter: String, direction: int) -> void:
 		return
 	if equipment.auto_exposure and not ((parameter == "n" and equipment.priority == "A") or (parameter == "t" and equipment.priority == "S")): return
 	# The dials stop at their ends (wrapping from f/22 back to f/1.4 was disorienting).
-	match parameter:
-		"n": n_index = clampi(n_index+direction,0,apertures().size()-1)
-		"t": t_index = clampi(t_index+direction,0,Photo.DENOMINATORS.size()-1)
-		"iso":
-			if not equipment.film: iso_index = clampi(iso_index+direction,0,Photo.ISOS.size()-1)
+	if parameter == "iso" and equipment.film: return
+	if thirds_on() and not (whole_hold or Input.is_key_pressed(KEY_SHIFT)):
+		fine_step(parameter,direction)
+	elif thirds_on():
+		for i in 3: fine_step(parameter,direction)
+	else:
+		fine[parameter] = 0
+		match parameter:
+			"n": n_index = clampi(n_index+direction,0,apertures().size()-1)
+			"t": t_index = clampi(t_index+direction,0,Photo.DENOMINATORS.size()-1)
+			"iso": iso_index = clampi(iso_index+direction,0,Photo.ISOS.size()-1)
 	if equipment.auto_exposure: auto_expose()
 	refresh()
+
+# Thirds of a stop (docs/EQUIPAMIENTO_Y_OPTICAS.md §8). The Academy teaches with whole stops.
+func thirds_on() -> bool:
+	return exposure_thirds and not (academy and academy.active)
+
+func whole_table(parameter: String) -> Array:
+	return {"n":apertures(),"t":Photo.DENOMINATORS,"iso":Photo.ISOS}[parameter]
+func third_table(parameter: String) -> Array:
+	return {"n":equipment.THIRD_STOPS,"t":Photo.THIRD_DENOMINATORS,"iso":Photo.THIRD_ISOS}[parameter]
+func whole_index(parameter: String) -> int:
+	return {"n":n_index,"t":t_index,"iso":iso_index}[parameter]
+
+# Thirds between an entry of the whole-stop table and the next one (f/1.4 to f/1.8 is two).
+func third_gap(parameter: String, index: int) -> int:
+	var whole = whole_table(parameter)
+	if index >= whole.size()-1: return 1
+	var thirds = third_table(parameter)
+	return maxi(1,thirds.find(whole[index+1])-thirds.find(whole[index]))
+
+# A setting as [index, thirds], moved a number of thirds; it stops at the ends of the dial.
+func fine_moved(parameter: String, at: Array, amount: int) -> Array:
+	var index: int = at[0]
+	var thirds: int = at[1]
+	var last = whole_table(parameter).size()-1
+	for i in absi(amount):
+		if amount > 0:
+			if index >= last: break
+			thirds += 1
+			if thirds >= third_gap(parameter,index):
+				index += 1
+				thirds = 0
+		elif thirds > 0: thirds -= 1
+		elif index > 0:
+			index -= 1
+			thirds = third_gap(parameter,index)-1
+	return [index,thirds]
+
+func fine_value(parameter: String, at: Array):
+	var whole = whole_table(parameter)
+	var index = clampi(at[0],0,whole.size()-1)
+	if at[1] <= 0 or index >= whole.size()-1: return whole[index]
+	var thirds = third_table(parameter)
+	return thirds[mini(thirds.find(whole[index])+at[1],thirds.size()-1)]
+
+func set_fine(parameter: String, at: Array) -> void:
+	match parameter:
+		"n": n_index = at[0]
+		"t": t_index = at[0]
+		"iso": iso_index = at[0]
+	fine[parameter] = at[1]
+
+func fine_step(parameter: String, direction: int) -> void:
+	set_fine(parameter,fine_moved(parameter,[whole_index(parameter),fine[parameter]],direction))
+
+func clear_fine() -> void:
+	fine = {"n":0,"t":0,"iso":0}
+
+func aperture_value() -> float:
+	return fine_value("n",[n_index,fine["n"]])
+func shutter_denominator() -> int:
+	return fine_value("t",[t_index,fine["t"]])
+func iso_value() -> int:
+	return fine_value("iso",[iso_index,fine["iso"]])
+
+func set_exposure_thirds(value: bool) -> void:
+	exposure_thirds = value
+	if not value: clear_fine()
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","tercios",value)
+	config.save("user://interfaz.cfg")
+	if is_instance_valid(aperture_button): refresh()
+
+# After the whole stops are chosen, the camera trims what is left over with thirds on one dial:
+# the shutter if it is its own to move, else the aperture, else the ISO.
+func trim_exposure(target_ev: float) -> void:
+	var free = []
+	if equipment.priority != "S": free.append("t")
+	if equipment.priority != "A": free.append("n")
+	if not equipment.film: free.append("iso")
+	for parameter in free: fine[parameter] = 0
+	if not thirds_on():
+		clear_fine()
+		return
+	var best = absf(Photo.ev(aperture_value(),1.0/shutter_denominator(),iso_value(),target_ev))
+	var choice = []
+	for parameter in free:
+		var here = [whole_index(parameter),0]
+		for amount in [-1,1,-2,2]:
+			var at = fine_moved(parameter,here,amount)
+			var n = fine_value("n",at) if parameter == "n" else aperture_value()
+			var t = fine_value("t",at) if parameter == "t" else shutter_denominator()
+			var iso = fine_value("iso",at) if parameter == "iso" else iso_value()
+			var delta = absf(Photo.ev(n,1.0/t,iso,target_ev))
+			if delta < best-.02:
+				best = delta
+				choice = [parameter,at]
+		if not choice.is_empty(): break
+	if not choice.is_empty(): set_fine(choice[0],choice[1])
 
 # The settings the player drives on this camera, in the order of the strip.
 func selectable_controls() -> Array:
@@ -965,15 +1086,15 @@ func refresh() -> void:
 		update_dof_pass()
 	focus_aid.visible = equipment.focus_mode == "MF" and mode == "SEARCH" and not tlr_loupe and eye_ready()   # (walking with the camera down it blinked: refresh() showed it, update_focus_aid() hid it)
 	focus_aid.material.set_shader_parameter("body",equipment.body)
-	aperture_button.text = Texts.get_text("1f") % apertures()[n_index]
-	shutter_button.text = Texts.get_text("1_d") % Photo.DENOMINATORS[t_index]
-	iso_button.text = ("▣ " if equipment.film else "")+Texts.get_text("iso_d") % Photo.ISOS[iso_index]
+	aperture_button.text = Texts.get_text("1f") % aperture_value()
+	shutter_button.text = Texts.get_text("1_d") % shutter_denominator()
+	iso_button.text = ("▣ " if equipment.film else "")+Texts.get_text("iso_d") % iso_value()
 	focal_label.text = (Texts.get_text("estado_zoom") if equipment.zoom() else Texts.get_text("estado_fijo"))+" %.0f mm" % focal
 	focus_label.text = Texts.get_text("foco")+(Texts.get_text("infinito") if is_inf(focus_distance) else Texts.get_text("2f_m") % focus_distance)
 	update_lens_effects()
-	var depth = Photo.dof(focal,apertures()[n_index],focus_distance)
+	var depth = Photo.dof(focal,aperture_value(),focus_distance)
 	dof_label.text = Texts.get_text("nitido_2f_m_s") % [depth.x,Texts.get_text("infinito") if is_inf(depth.y) else Texts.get_text("2f_m") % depth.y]
-	finder.delta_ev = -Photo.ev(apertures()[n_index],1.0/Photo.DENOMINATORS[t_index],Photo.ISOS[iso_index],measured_ev)
+	finder.delta_ev = -Photo.ev(aperture_value(),1.0/shutter_denominator(),iso_value(),measured_ev)
 	if is_instance_valid(meter_bar): meter_bar.queue_redraw()
 	focus_slider.set_value_no_signal(1 if is_inf(focus_distance) else 1-.8/focus_distance)
 	lens_slider.set_value_no_signal(focal)
@@ -2798,6 +2919,7 @@ func load_theme() -> void:
 	var dark = config.load("user://interfaz.cfg") == OK and str(config.get_value("interfaz","tema","claro")) == "oscuro"
 	vibration = bool(config.get_value("interfaz","vibracion",true))
 	look_invert = str(config.get_value("interfaz","invertir_mirada","no"))
+	exposure_thirds = bool(config.get_value("interfaz","tercios",false))
 	if not look_invert in INVERT_CHOICES: look_invert = "no"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--ui="): dark = arg == "--ui=oscuro"
@@ -3127,9 +3249,11 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 		JOY_BUTTON_DPAD_UP:
 			change_control(1)
 			pad_repeat = .35
+			pad_held = 0.0
 		JOY_BUTTON_DPAD_DOWN:
 			change_control(-1)
 			pad_repeat = .35
+			pad_held = 0.0
 		JOY_BUTTON_RIGHT_STICK:
 			if finder.golden: finder.golden = false
 			else: finder.thirds = not finder.thirds
@@ -3213,8 +3337,12 @@ func update_pad(dt: float) -> void:
 	for dir in [[JOY_BUTTON_DPAD_UP,1],[JOY_BUTTON_DPAD_DOWN,-1]]:
 		if Input.is_joy_button_pressed(0,dir[0]):
 			pad_repeat -= dt
+			pad_held += dt
 			if pad_repeat <= 0.0:
+				# Held more than half a second, the dial goes by whole stops.
+				whole_hold = pad_held > .5
 				change_control(dir[1])
+				whole_hold = false
 				pad_repeat = .125
 
 func play_tone(frequency: float, duration: float) -> void:
@@ -3254,7 +3382,7 @@ func capture_evidence() -> Dictionary:
 	var velocity = target.actual_velocity if target.state == "CAMINANDO" else Vector3.ZERO
 	var view_axis = -camera.global_basis.z
 	var perpendicular = (velocity-view_axis*velocity.dot(view_axis)).length()
-	var e = {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],time_of_day,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
+	var e = {"f":focal,"n":aperture_value(),"t":1.0/shutter_denominator(),"iso":iso_value(),"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],time_of_day,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
 	# The subject is judged on its eyes, as photographers do (docs/futuro/21 §2): focus distance and
 	# position of the eyes, halfway up the head.
 	var eyes_world = target.global_transform*(head_pose*Vector3(0,.5*target.height/target.profile.relacion_cabeza,0))
@@ -3321,7 +3449,7 @@ func take_photo() -> void:
 	evidence["camera_omega"] = shot_omega
 	evidence["rendered_dof"] = dof_active()
 	evidence["ca"] = float(equipment.lens().get("ca",.5))
-	evidence["stops"] = 2.0*log(apertures()[n_index]/equipment.apertures(focal)[0])/log(2.0)
+	evidence["stops"] = 2.0*log(aperture_value()/equipment.apertures(focal)[0])/log(2.0)
 	current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
 	if arcade_level >= 0 and not sandbox: Conditions.apply(current_result,evidence,Arcade.LEVELS[arcade_level].cond)
@@ -3349,7 +3477,7 @@ func take_photo() -> void:
 		best["photo"] = clean_image
 	update_dof_pass()
 	shutter_sound()
-	if is_instance_valid(camera_body): camera_body.blackout(1.0/Photo.DENOMINATORS[t_index])
+	if is_instance_valid(camera_body): camera_body.blackout(1.0/shutter_denominator())
 	shooting = false
 	if academy_demo_shot:
 		# A shot of the Academy's demonstration: the photo goes to the tutor panel, no result screen.
@@ -3370,7 +3498,7 @@ func lens_strengths(focal_mm: float, ca_lens = -1.0, stops_closed = -1.0) -> Vec
 	if ca_lens < 0.0:
 		ca_lens = float(equipment.lens().get("ca",.5))
 		var open = equipment.apertures(focal_mm)[0]
-		stops_closed = 2.0*log(apertures()[n_index]/open)/log(2.0)
+		stops_closed = 2.0*log(aperture_value()/open)/log(2.0)
 	var aperture_factor = clampf(1.0-.22*stops_closed,.35,1.0)
 	return Vector2(.22+.26*wide,ca_lens*(.55+.45*wide)*aperture_factor)
 
@@ -3392,7 +3520,7 @@ func update_lens_effects() -> void:
 	if dof_active():
 		var dof_material: ShaderMaterial = dof_pass.material_override
 		dof_material.set_shader_parameter("focal_mm",focal)
-		dof_material.set_shader_parameter("aperture",apertures()[n_index])
+		dof_material.set_shader_parameter("aperture",aperture_value())
 		dof_material.set_shader_parameter("focus_m",-1.0 if is_inf(focus_distance) else focus_distance)
 		# Longitudinal chromatic aberration: the lens's own, strongest wide open (docs/futuro/07 §6).
 		dof_material.set_shader_parameter("loca",clampf(lens_strengths(focal).y*1.6,0.0,1.0) if Graphics.settings(graphics_preset).lens else 0.0)
@@ -4530,7 +4658,7 @@ func update_focus_aid(dt: float) -> void:
 	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
 	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
 	focus_aid.material.set_shader_parameter("offset", smoothed_focus_aid_offset)
-	var depth = Photo.dof(focal, apertures()[n_index], focus_distance)
+	var depth = Photo.dof(focal, aperture_value(), focus_distance)
 	var in_dof = patch_distance >= depth.x and (is_inf(depth.y) or patch_distance <= depth.y)
 	finder.mf_coincidence = in_dof or absf(smoothed_focus_aid_offset) < 0.003
 
@@ -4667,6 +4795,7 @@ func expose_for(scene_ev: float) -> void:
 					n_index = n
 					t_index = t
 					iso_index = iso
+	trim_exposure(target_ev)
 
 func auto_expose() -> void:
 	var target_ev = measured_ev-equipment.exposure_compensation()
@@ -4678,13 +4807,17 @@ func auto_expose() -> void:
 	for n in n_range:
 		for t in t_range:
 			for iso in ([equipment.film_iso_index] if equipment.film else range(Photo.ISOS.size())):
-				var delta = absf(Photo.ev(stops[n],1.0/Photo.DENOMINATORS[t],Photo.ISOS[iso],target_ev))
-				var cost = delta*10 + maxf(0,focal/Photo.DENOMINATORS[t]-1)*2 + iso*.12 + n*.03
+				# (the dial the player holds may be on a third)
+				var f_number = aperture_value() if equipment.priority == "A" else stops[n]
+				var denominator = shutter_denominator() if equipment.priority == "S" else Photo.DENOMINATORS[t]
+				var delta = absf(Photo.ev(f_number,1.0/denominator,Photo.ISOS[iso],target_ev))
+				var cost = delta*10 + maxf(0,focal/denominator-1)*2 + iso*.12 + n*.03
 				if cost < best_cost:
 					best_cost = cost
 					n_index = n
 					t_index = t
 					iso_index = iso
+	trim_exposure(target_ev)
 
 const LANES = [1.8,4.0,7.0,11.5]
 const LANE_OFFSETS = [0.33,0.35,0.35,0.35]
@@ -4859,6 +4992,7 @@ func show_level_briefing(root: Control) -> void:
 	var conds = []
 	for key in level.cond: conds.append("• "+Conditions.describe(key,level.cond[key]))
 	if Arcade.clouds(arcade_level): conds.append("• "+Texts.get_text("arcade_aviso_nubes"))
+	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append("• "+Texts.get_text("arcade_aviso_tercios"))
 	label(root,"\n".join(conds) if not conds.is_empty() else Texts.get_text("arcade_sin_condiciones"),Rect2(565,468,640,140),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)
@@ -5051,7 +5185,7 @@ func capture_sandbox_evidence() -> Dictionary:
 			distance = camera.global_position.distance_to(chest)
 	var axis = -camera.global_basis.z
 	var perpendicular = (velocity-axis*velocity.dot(axis)).length()
-	return {"f":focal,"n":apertures()[n_index],"t":1.0/Photo.DENOMINATORS[t_index],"iso":Photo.ISOS[iso_index],"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1,"person":person != null}
+	return {"f":focal,"n":aperture_value(),"t":1.0/shutter_denominator(),"iso":iso_value(),"s":focus_distance,"d":distance,"v":perpendicular,"scene_ev":park.sky_ev(time_of_day) if hit.is_empty() else park.illumination_ev(hit.position,time_of_day,person),"head":Vector2(.5,.2),"feet":Vector2(.5,.8),"chest":Vector2(.5,.5),"in_front":true,"blockers":[],"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1,"person":person != null}
 
 func show_sandbox_result() -> void:
 	var root = create_modal()

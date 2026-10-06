@@ -130,7 +130,7 @@ func run() -> void:
 	for ev in [3.0,7.0,11.0,15.0]:
 		game.measured_ev = ev
 		game.auto_expose()
-		var error = game.Photo.ev(game.apertures()[game.n_index],1.0/game.Photo.DENOMINATORS[game.t_index],game.Photo.ISOS[game.iso_index],ev)
+		var error = game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),ev)
 		check(absf(error)<.6,"Auto exposure follows local EV")
 	check(is_equal_approx(game.equipment.exposure_compensation(), 0.0), "Initial exposure compensation is 0.0 EV")
 	game.equipment.change_exposure_compensation(1)
@@ -146,10 +146,10 @@ func run() -> void:
 	game.apply_equipment()
 	game.measured_ev = 12.0
 	game.auto_expose()
-	var ev_base = game.Photo.ev(game.apertures()[game.n_index],1.0/game.Photo.DENOMINATORS[game.t_index],game.Photo.ISOS[game.iso_index],12.0)
+	var ev_base = game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),12.0)
 	game.change_parameter("ev_comp", 3)
 	check(is_equal_approx(game.equipment.exposure_compensation(), 1.0), "EV compensation changed via change_parameter")
-	var ev_comp_delta = game.Photo.ev(game.apertures()[game.n_index],1.0/game.Photo.DENOMINATORS[game.t_index],game.Photo.ISOS[game.iso_index],12.0)
+	var ev_comp_delta = game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),12.0)
 	check(ev_comp_delta < ev_base - 0.5, "Positive compensation lets in more light (lower camera EV delta)")
 	check(game.exposure_button.text == "AUTO +1.0", "Exposure button shows compensated value")
 	game.change_parameter("ev_comp", -3)
@@ -165,6 +165,85 @@ func run() -> void:
 	for i in 500:
 		var t = game.casting.generate()
 		check(not (game.casting.catalog.piezas.cabeza[t.hair].style == "bald" and (t.profile == 3 or t.gender == "f")),"Appearance compatibility")
+	# Thirds of a stop (docs/EQUIPAMIENTO_Y_OPTICAS.md): off, the dials go by whole stops as ever.
+	game.exposure_thirds = false
+	game.mode = "SEARCH"
+	game.equipment.preset(1)
+	game.equipment.set_exposure_mode("M")
+	game.apply_equipment()
+	game.n_index = game.apertures().find(4.0)
+	game.t_index = 3
+	game.iso_index = 0
+	game.change_parameter("n",1)
+	check(is_equal_approx(game.aperture_value(),5.6),"Whole stops: f/4 to f/5.6")
+	game.exposure_thirds = true
+	var seen = []
+	for i in 3:
+		game.change_parameter("n",1)
+		seen.append(game.aperture_value())
+	check(seen == [6.3,7.1,8.0],"Thirds: f/5.6, 6.3, 7.1, 8 (%s)" % str(seen))
+	game.change_parameter("n",-1)
+	check(is_equal_approx(game.aperture_value(),7.1),"Thirds go back the same way")
+	seen = []
+	for i in 4:
+		game.change_parameter("t",1)
+		seen.append(game.shutter_denominator())
+	check(seen == [100,80,60,50],"Thirds of the shutter: 1/100, 1/80, 1/60, 1/50 (%s)" % str(seen))
+	seen = []
+	for i in 3:
+		game.change_parameter("iso",1)
+		seen.append(game.iso_value())
+	check(seen == [125,160,200],"Thirds of the ISO: 125, 160, 200 (%s)" % str(seen))
+	# Each third is a third: three of them change the exposure by one stop.
+	var before = game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),12.0)
+	game.change_parameter("t",1)
+	var third = game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),12.0)
+	check(absf(absf(third-before)-1.0/3.0) < .08,"A third of a stop is a third (%.2f)" % absf(third-before))
+	# Held (D-pad, touch buttons) or with Shift, the dial jumps a whole stop from wherever it is.
+	game.whole_hold = true
+	var from = game.shutter_denominator()
+	game.change_parameter("t",1)
+	game.whole_hold = false
+	check(game.shutter_denominator() == 20 and from == 40,"A held dial jumps a whole stop (1/%d to 1/%d)" % [from,game.shutter_denominator()])
+	# The ends hold, and the lens's limits too.
+	for i in 80: game.change_parameter("n",1)
+	check(is_equal_approx(game.aperture_value(),game.apertures()[-1]),"The aperture stops at the lens's minimum")
+	for i in 80: game.change_parameter("n",-1)
+	check(is_equal_approx(game.aperture_value(),game.apertures()[0]),"The aperture stops at the lens's maximum")
+	for i in 80: game.change_parameter("t",1)
+	check(game.shutter_denominator() == 8,"The shutter stops at 1/8")
+	# Film: the ISO is the roll's, thirds or not.
+	game.equipment.preset(3)
+	game.apply_equipment()
+	game.refresh()
+	var roll = game.iso_value()
+	game.change_parameter("iso",1)
+	check(game.iso_value() == roll and game.fine["iso"] == 0,"Film keeps its ISO")
+	game.change_parameter("n",1)
+	check(game.fine["n"] > 0 or game.third_gap("n",game.n_index-1) == 1,"The TLR moves by thirds too")
+	# The automatic modes get closer with thirds than with whole stops.
+	game.equipment.preset(1)
+	game.equipment.set_exposure_mode("P")
+	game.apply_equipment()
+	var worst = [0.0,0.0]
+	for k in 2:
+		game.exposure_thirds = k == 1
+		for step in 40:
+			game.measured_ev = 5.0+step*.23
+			game.auto_expose()
+			worst[k] = maxf(worst[k],absf(game.Photo.ev(game.aperture_value(),1.0/game.shutter_denominator(),game.iso_value(),game.measured_ev)))
+	check(worst[1] < .25 and worst[1] < worst[0],"Auto exposure in thirds is finer (%.2f against %.2f)" % [worst[1],worst[0]])
+	# Aperture priority keeps the player's third.
+	game.equipment.set_exposure_mode("A")
+	game.apply_equipment()
+	game.n_index = game.apertures().find(4.0)
+	game.change_parameter("n",1)
+	game.measured_ev = 11.3
+	game.auto_expose()
+	check(is_equal_approx(game.aperture_value(),4.5),"Aperture priority keeps f/4.5 (%.1f)" % game.aperture_value())
+	# The Academy teaches with whole stops whatever the switch says.
+	game.exposure_thirds = false
+	game.clear_fine()
 	print("EQUIPMENT TESTS: %d checks, %d failures" % [checks,failures])
 	# TLR (docs/futuro/21 §3): film, manual focus only, 80 mm on 6×6 = 50 mm equivalent.
 	game.equipment.preset(3)

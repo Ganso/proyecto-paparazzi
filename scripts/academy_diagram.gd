@@ -50,7 +50,7 @@ func draw_triangle() -> void:
 	var c = Vector2(size.x*.5,size.y*.55)
 	var pts = [c+Vector2(0,-44),c+Vector2(-70,36),c+Vector2(70,36)]
 	draw_polyline(PackedVector2Array(pts+[pts[0]]),dim,2)
-	var labels = ["f/%s" % str(m.apertures()[m.n_index]),"1/%d s" % Photo.DENOMINATORS[m.t_index],"ISO %d" % Photo.ISOS[m.iso_index]]
+	var labels = ["f/%s" % str(m.aperture_value()),"1/%d s" % m.shutter_denominator(),"ISO %d" % m.iso_value()]
 	var names = ["Diafragma","Velocidad","ISO"]
 	for i in 3:
 		draw_circle(pts[i],6,green)
@@ -85,7 +85,7 @@ func draw_scales(stress: String) -> void:
 
 func draw_dof() -> void:
 	var m = academy.main
-	var n = m.apertures()[m.n_index]
+	var n = m.aperture_value()
 	var s = m.focus_distance
 	var range = Photo.dof(m.focal,n,s if not is_inf(s) else 1000.0)
 	var max_d = 16.0
@@ -117,13 +117,13 @@ func draw_dof() -> void:
 
 func draw_motion() -> void:
 	var m = academy.main
-	var t = 1.0/Photo.DENOMINATORS[m.t_index]
+	var t = 1.0/m.shutter_denominator()
 	var v = 2.8
 	var d = 7.0
 	var trail_mm = v*t*m.focal/d
 	var limit = Photo.C
 	var y = size.y*.55
-	txt(Vector2(8,16),Texts.get_text("esquema_corredor") % [v,d,Photo.DENOMINATORS[m.t_index]],11,ink)
+	txt(Vector2(8,16),Texts.get_text("esquema_corredor") % [v,d,m.shutter_denominator()],11,ink)
 	# The runner moving during the exposure: ghosts spread over the trail.
 	var trail_px = clampf(trail_mm/0.6*60.0,2,size.x-60)
 	var x0 = 40.0

@@ -16,6 +16,7 @@ var minus: Button
 var plus: Button
 var held = 0                 # −1 / +1 while a touch button is held
 var held_time = 0.0
+var held_total = 0.0
 var main
 var chips: Array = []
 var slide = 0.0
@@ -51,6 +52,7 @@ func step_button(caption: String, direction: int) -> Button:
 	b.button_down.connect(func():
 		main.change_control(direction)
 		held = direction
+		held_total = 0.0
 		held_time = -.35)
 	b.button_up.connect(func(): held = 0)
 	add_child(b)
@@ -64,10 +66,10 @@ func value_of(id: String) -> String:
 		"zoom": return "%d mm" % roundi(main.focal)
 		"foco": return Texts.get_text("infinito") if is_inf(main.focus_distance) else "%.1f m" % main.focus_distance
 		"n":
-			var n = main.apertures()[main.n_index]
+			var n = main.aperture_value()
 			return "f/%s" % (("%.1f" % n) if n < 10 else str(int(n)))
-		"t": return "1/%d s" % Photo.DENOMINATORS[main.t_index]
-		"iso": return str(Photo.ISOS[main.iso_index])
+		"t": return "1/%d s" % main.shutter_denominator()
+		"iso": return str(main.iso_value())
 		"ev_comp": return "%+.1f EV" % main.equipment.exposure_compensation()
 	return ""
 
@@ -164,9 +166,12 @@ func _process(_dt: float) -> void:
 		plus.disabled = locked
 		if held != 0:
 			held_time += _dt
+			held_total += _dt
 			if held_time > .12:
 				held_time = 0.0
+				main.whole_hold = held_total > .5   # held, it goes by whole stops
 				main.change_control(held)
+				main.whole_hold = false
 	hint.visible = main.control_help.enabled and not fingers
 	hint.position = Vector2(left+2,y-21)
 	hint.set_rich(Texts.get_rich("control_en_mano_ayuda"))

@@ -245,6 +245,16 @@ Vibración: %s
 ### opcion_invertir
 Invertir mirada: %s
 
+### opcion_pasos · Opciones (botón de 260 px: unos 28 caracteres)
+> máximo 28 caracteres
+Pasos de exposición: %s
+
+### pasos_enteros
+Enteros
+
+### pasos_tercios
+Tercios
+
 ### invertir_no
 No
 

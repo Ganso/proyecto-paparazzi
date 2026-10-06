@@ -3,6 +3,9 @@ extends RefCounted
 const Texts = preload("res://scripts/texts.gd")
 
 const APERTURES = [2.8, 4.0, 5.6, 8.0, 11.0, 16.0, 22.0]
+# The same scales in thirds of a stop, with the names cameras engrave (main.gd::fine_step()).
+const THIRD_DENOMINATORS = [1000,800,640,500,400,320,250,200,160,125,100,80,60,50,40,30,25,20,15,13,10,8]
+const THIRD_ISOS = [100,125,160,200,250,320,400,500,640,800,1000,1250,1600,2000,2500,3200]
 const DENOMINATORS = [1000, 500, 250, 125, 60, 30, 15, 8]
 const ISOS = [100, 200, 400, 800, 1600, 3200]
 const C = 0.030

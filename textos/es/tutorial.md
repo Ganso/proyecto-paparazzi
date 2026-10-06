@@ -65,6 +65,10 @@ Los controles manuales se manejan de tres maneras. Eligiendo uno con {elegir_tab
 > máximo 210 caracteres
 Prioridad a la apertura (A): Tú llevas el diafragma. Cámbialo dos veces: Elígelo en la tira de abajo y gira la rueda, o usa su atajo, {diafragma_y}.
 
+### tutorial_tercios · Consejo tras cambiar el diafragma; vale para teclado, mando y dedos
+> máximo 210 caracteres
+Un consejo: En Opciones puedes pasar los «Pasos de exposición» a tercios para afinar más. Los mismos controles mueven entonces un tercio de paso; con {paso_entero}, un paso entero.
+
 ### tutorial_abruma
 > máximo 210 caracteres
 Te recuerdo que, si ves demasiada información, puedes quitar y poner la ayuda con {ayuda_pantalla}. Queda la tira de abajo: Clic en lo que quieras cambiar, y la rueda. Solo muestra lo que puedes cambiar en cada momento.

@@ -54,6 +54,10 @@ Ninguna: Solo la nota mínima.
 > máximo 70 caracteres
 Cuidado con las nubes, que oscurecen la zona cuando pasan.
 
+### arcade_aviso_tercios · Encargo de los niveles con exposición manual si los tercios están desactivados (una línea, unos 70 caracteres)
+> máximo 70 caracteres
+Consejo: Activa los tercios de paso en Opciones para afinar.
+
 ### arcade_empezar
 Empezar
 

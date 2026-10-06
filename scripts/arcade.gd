@@ -55,6 +55,11 @@ static func clouds(n: int) -> bool:
 	var level: Dictionary = LEVELS[n]
 	return level.auto is bool and not level.auto and str(level.time) in ["day","golden"]
 
+# Levels where the player sets the exposure by hand (their briefing advises the thirds of a stop).
+static func manual_exposure(n: int) -> bool:
+	if n < 0 or n >= LEVELS.size(): return false
+	return LEVELS[n].auto is bool and not LEVELS[n].auto
+
 static func block_of(n: int) -> int:
 	return n/5
 

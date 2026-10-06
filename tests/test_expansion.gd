@@ -70,6 +70,7 @@ func run() -> void:
 	game.equipment.film_iso_index = 1
 	game.equipment.auto_exposure = false
 	game.apply_equipment()
+	game.exposure_thirds = false
 	game.change_parameter("iso",1)
 	check(game.iso_index == 1 and game.iso_button.disabled,"Film locks manual ISO")
 	game.equipment.auto_exposure = true

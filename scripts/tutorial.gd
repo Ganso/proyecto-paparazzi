@@ -8,13 +8,13 @@ const Texts = preload("res://scripts/texts.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 
-const STEPS = ["bienvenida","mirar","zoom","bajar","af","ayuda","disparar","encargo","controles","diafragma","abruma","mf","paseo","sacar","foto_paseo","fin"]
+const STEPS = ["bienvenida","mirar","zoom","bajar","af","ayuda","disparar","encargo","controles","diafragma","tercios","abruma","mf","paseo","sacar","foto_paseo","fin"]
 # The last steps are in the big park, on foot: the scene reloads there and the tutorial resumes.
 const WALKING = ["paseo","sacar","foto_paseo"]
 static var resume_step = -1
 const Glyphs = preload("res://scripts/input_glyphs.gd")
 # Steps that only explain: «Continuar» is there from the start.
-const INFO = ["controles","abruma"]
+const INFO = ["controles","tercios","abruma"]
 
 var main
 var active = false
@@ -74,7 +74,7 @@ func enter_step() -> void:
 			main.apply_equipment()
 		"encargo":
 			main.tutorial_assignment()
-		"controles", "diafragma", "abruma":
+		"controles", "diafragma", "tercios", "abruma":
 			main.equipment.set_exposure_mode("A")
 			main.apply_equipment()
 			main.selected_control = "zoom"   # the step teaches to choose the aperture on the strip

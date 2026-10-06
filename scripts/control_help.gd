@@ -109,11 +109,11 @@ func rows() -> Array:
 		out.append([Glyphs.k("enfoque_mf_zoom") if e.zoom() else Glyphs.k("enfoque_mf"),Texts.get_text("ayuda_enfoque"),dist,"manual","foco"])
 	else:
 		out.append([Glyphs.k("af"),Texts.get_text("ayuda_enfoque")+" AF",dist,"auto"])
-	var n = main.apertures()[main.n_index]
+	var n = main.aperture_value()
 	out.append([pad_key("diafragma","n"),Texts.get_text("ayuda_diafragma"),"f/%s" % (("%.1f" % n) if n < 10 else str(int(n))),"manual" if m in ["M","A"] else "auto","n"])
-	out.append([pad_key("velocidad","t"),Texts.get_text("ayuda_velocidad"),"1/%d s" % Photo.DENOMINATORS[main.t_index],"manual" if m in ["M","S"] else "auto","t"])
-	if e.film: out.append(["—","ISO",Texts.get_text("ayuda_carrete") % Photo.ISOS[main.iso_index],"fixed"])
-	else: out.append([pad_key("iso","iso"),"ISO",str(Photo.ISOS[main.iso_index]),"manual" if m == "M" else "auto","iso"])
+	out.append([pad_key("velocidad","t"),Texts.get_text("ayuda_velocidad"),"1/%d s" % main.shutter_denominator(),"manual" if m in ["M","S"] else "auto","t"])
+	if e.film: out.append(["—","ISO",Texts.get_text("ayuda_carrete") % main.iso_value(),"fixed"])
+	else: out.append([pad_key("iso","iso"),"ISO",str(main.iso_value()),"manual" if m == "M" else "auto","iso"])
 	if m != "M": out.append([pad_key("compensacion","ev_comp"),Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual","ev_comp"])
 	else: out.append(["",Texts.get_text("ayuda_exposimetro"),"%+.1f EV" % main.finder.delta_ev,"meter"])
 	out.append([Glyphs.k("fotometria"),Texts.get_text("ayuda_fotometria"),Texts.get_text("fotometria_"+e.metering),"manual"])
