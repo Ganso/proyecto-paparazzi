@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.3.4 · EN DESARROLLO
+VERSIÓN ALFA 0.4.0 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -346,6 +346,18 @@ Diez insignias, una por cada cosa que el juego enseña: Regla de tercios, fondo 
 ### novedades_0_3_4_3 · Novedades de la versión 0.3.4 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 Menú de Opciones reordenado, y con mando la cruceta y la seta izquierda recorren todas las opciones.
+
+### novedades_0_4_0_1 · Novedades de la versión 0.4.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Arcade de 30 niveles en seis bloques: Contraluz, silueta, estela, todo nítido, lo que hace la gente… Tu progreso se conserva.
+
+### novedades_0_4_0_2 · Novedades de la versión 0.4.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Sonido nuevo en todo el juego: Obturadores, diales, pasos, charlas, animales y un ambiente para cada luz del día.
+
+### novedades_0_4_0_3 · Novedades de la versión 0.4.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+La cámara expone mejor en automático, y la réflex y la telemétrica llegan a 1/4000 s.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres
