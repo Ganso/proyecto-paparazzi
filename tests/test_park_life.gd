@@ -275,12 +275,13 @@ func run() -> void:
 
 	# Sound effects (docs/futuro/24): the bank finds every sound the game asks for, the ones with
 	# variations have more than one take, and what is placed in the park has a listener to hear it.
-	var asked = ["obturador_compacta","obturador_telemetrica","obturador_reflex","obturador_reflex_lento","obturador_reflex_rapido","obturador_tlr","af_confirmado","af_fallo","motor_af","anillo_enfoque","bloqueo","dial","dial_tope","control_elegir","medicion","camara_subir","camara_bajar","zoom_compacta","zoom_compacta_fin","lupa_tlr","manivela_tlr","carrete_nuevo","ui_mover","ui_aceptar","ui_atras","ui_bloqueado","pausa","revelado","foto_rechazada","condicion_ok","estrella","tictac","tiempo_agotado","nivel_superado","nivel_no_superado","insignia","graduado","album","leccion_superada","tutorial_ok","paso_losa","paso_grava","paso_corredor","charla","risa","periodico","taza","movil","migas","perro_jadeo","perro_ladrido","pato","pato_agua","columpio","ninos_jugando","tobogan","balon_patada","balon_bote"]
+	var asked = ["obturador_compacta","obturador_telemetrica","obturador_reflex","obturador_reflex_lento","obturador_reflex_rapido","obturador_tlr","af_confirmado","af_fallo","motor_af","anillo_enfoque","bloqueo","dial","dial_tope","control_elegir","medicion","camara_subir","camara_bajar","zoom_compacta","zoom_compacta_fin","lupa_tlr","manivela_tlr","carrete_nuevo","ui_mover","ui_aceptar","ui_atras","ui_bloqueado","pausa","revelado","foto_rechazada","condicion_ok","estrella","tictac","tiempo_agotado","nivel_superado","nivel_no_superado","insignia","graduado","album","leccion_superada","tutorial_ok","paso_losa","paso_grava","paso_cesped","paso_corredor","charla","risa","periodico","taza","movil","migas","perro_jadeo","perro_ladrido","pato","pato_agua","columpio","ninos_jugando","tobogan","balon_patada","balon_bote"]
 	var absent = asked.filter(func(n): return not game.sfx.has(n))
 	check(absent.is_empty(),"Every sound the game plays is in the bank (missing: %s)" % str(absent))
 	check(game.sfx.takes("paso_grava").size() >= 2 and game.sfx.takes("dial").size() >= 2,"Sounds with variations have several takes")
 	var first_take = game.sfx.take("dial")
 	check(game.sfx.take("dial") != first_take,"…and never the same one twice running")
+	check(game.sfx.step_on(Vector3(4,0,0)) == "paso_losa","The classic park's paths sound of flagstones")
 	check(not game.sfx.play("no_existe"),"A missing sound says so (the caller keeps its tone)")
 	check(game.viewport.audio_listener_enable_3d,"The park's world has its own listener: what is placed in it is heard")
 	for name in ["pajaros_dia","pajaros_atardecer","hora_azul","grillos_noche","fuente"]:

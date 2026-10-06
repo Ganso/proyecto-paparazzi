@@ -59,7 +59,7 @@ TABLE = [
     (29, "paso_corredor", G, "one", 1, -9, .25, 40, ["SA", "AG:peak"]),
     (30, "charla", G, "loop", 1, -12, 11.0, 80, ["AG"]),                    # SA: casi todo por debajo de 80 Hz, sin voces
     (31, "risa", G, "one", 1, -12, 2.0, 80, ["SA", "AG"]),
-    (32, "ninos_jugando", G, "loop", 1, -9, 18.0, 150, ["SA"]),
+    (32, "ninos_jugando", G, "loop", 1, -9, 18.0, 150, ["AG"]),              # el usuario prefiere la de AudioGen (06-10-2026)
     (33, "columpio", G, "asis", 1, -15, 2.73, 150, ["SA"]),                 # 2,730 s exactos: se deja con su silencio final
     (34, "tobogan", G, "one", 1, -12, 1.3, 80, ["SA"]),
     (35, "balon_patada", G, "one", 1, -9, .25, 40, ["SA", "AG"]),

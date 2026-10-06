@@ -22,6 +22,7 @@ var spatial: Array[AudioStreamPlayer3D] = []
 var loops = {}
 var rng = RandomNumberGenerator.new()
 var enabled = true
+var own_half = 0
 var step_half = {}              # walker → half of the stride it was on
 var timers = {}
 
@@ -135,6 +136,12 @@ func due(key: String, dt: float, least: float, most: float) -> bool:
 	timers[key] = rng.randf_range(least,most)
 	return true
 
+# What a foot lands on: the big park's paths are gravel and the rest grass; the classic park's
+# paths are flagstones.
+func step_on(pos: Vector3) -> String:
+	if main.crowd == null: return "paso_losa"
+	return "paso_grava" if main.park.path_distance(pos) <= .1 else "paso_cesped"
+
 # ---- The park: who is heard from where the camera is ----
 func update_world(dt: float) -> void:
 	if not enabled or main == null or not is_instance_valid(main.camera): return
@@ -154,9 +161,22 @@ func update_world(dt: float) -> void:
 		var p = near[k][1]
 		var half = int(p.phase/PI)
 		if step_half.get(p,half) != half:
-			var name = "paso_corredor" if p.runner else ("paso_grava" if big else "paso_losa")
-			play_at(name,p.global_position,-9.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
+			play_at("paso_corredor" if p.runner else step_on(p.global_position),p.global_position,-9.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
 		step_half[p] = half
+	# Whoever walks on the meadow (the extras of the classic park, the child after the ball).
+	if main.extras and is_instance_valid(main.extras):
+		for p in main.extras.extras:
+			if not p.visible or p.state != "CAMINANDO" or p.global_position.distance_to(ear) > STEP_RANGE*1.6: continue
+			var half = int(p.phase/PI)
+			if step_half.get(p,half) != half: play_at("paso_cesped",p.global_position,-8.0,3.0,rng.randf_range(.92,1.08))
+			step_half[p] = half
+	# The photographer's own steps, walking the big park: under the feet, not placed anywhere.
+	if big and main.player != null:
+		var half = int(main.walk_phase/PI)
+		if half != own_half and main.player.velocity.length() > .2:
+			var running: bool = main.player.velocity.length() > main.WALK_SPEED*1.25
+			play("paso_corredor" if running and step_on(main.player.global_position) != "paso_cesped" else step_on(main.player.global_position),-9.0 if running else -12.0,rng.randf_range(.94,1.06))
+		own_half = half
 	# What people do where they stop: a chat (one loop, the nearest), a laugh, a page, a cup.
 	var chat = null
 	var chat_d = 16.0

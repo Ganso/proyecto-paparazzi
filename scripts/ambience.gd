@@ -13,6 +13,8 @@ var park
 var pigeons
 # Where the sounds come from (the big park passes its own; defaults: the classic park).
 var fountain_pos = Vector3.ZERO
+var fountain_unit = 2.5
+var fountain_db = -6.0
 var bird_points: Array = []
 var cricket_points: Array = []
 var streams = {}
@@ -72,7 +74,10 @@ func build(park_node, pigeons_node) -> void:
 		var c = player3d("grillos_noche",cricket_points[i],true,7.0,-6.0)
 		c.pitch_scale = [1.0,1.04,.96][i%3]
 		crickets.append(c)
-	fountain = player3d("fuente",fountain_pos,true,12.0,0.0)
+	# In the classic park the pond is 21 m away, beyond the fence: its water is a murmur from
+	# that side, not something heard all over the park (the user heard water and saw none near).
+	# In the big park the fountain is in the middle of the plaza the player walks through.
+	fountain = player3d("fuente",fountain_pos,true,fountain_unit,fountain_db)
 	if pigeons and not pigeons.flocks.is_empty():
 		for f in pigeons.flocks.size():
 			var p = player3d("zureo_1",pigeons.flocks[f].center,false,4.0,-4.0)

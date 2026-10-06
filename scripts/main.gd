@@ -503,6 +503,8 @@ func build_world() -> void:
 	ambience = preload("res://scripts/ambience.gd").new()
 	if scenario == "grande":
 		ambience.fountain_pos = Vector3(0,.8,0)
+		ambience.fountain_unit = 7.0
+		ambience.fountain_db = -2.0
 		ambience.bird_points = [Vector3(-30,5,20),Vector3(30,5,-24),Vector3(-40,5,-30),Vector3(36,5,32),Vector3(4,5,-24),Vector3(-6,5,26)]
 		ambience.cricket_points = [Vector3(-20,.3,14),Vector3(20,.3,-14),Vector3(0,.3,-40),Vector3(-48,.3,0),Vector3(48,.3,8)]
 	viewport.add_child(ambience)

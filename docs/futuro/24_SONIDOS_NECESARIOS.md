@@ -320,6 +320,7 @@ El usuario generó los 70 sonidos dos veces, una toma por sonido: con **Stable A
 |---|---|---|
 | `zoom_compacta` | AudioGen | La de Stable Audio arranca y se para a los 0,67 s: no da un régimen constante para el bucle |
 | `charla` | AudioGen | La de Stable Audio es casi toda energía por debajo de 80 Hz, sin voces |
+| `ninos_jugando` | AudioGen | La prefiere el usuario al oírlas (06-10-2026) |
 | `hojas_viento` | **ninguna** | Las dos son un rumor por debajo de 80 Hz, sin hojas: hay que regenerarlo |
 
 **Lo que no se puede comprobar midiendo es si el sonido «es» lo que pide** (que el pato suene a pato): eso queda para la prueba del usuario.
@@ -354,11 +355,11 @@ El usuario generó los 70 sonidos dos veces, una toma por sonido: con **Stable A
 | Resultado | `revelado` o `foto_rechazada`; `condicion_ok` por condición cumplida y `estrella` por estrella, subiendo de tono | `result_sounds()` |
 | Nivel | `tictac` (últimos 10 s), `tiempo_agotado`, `nivel_superado`/`_no_superado` | reloj del arcade, `end_level()` |
 | Progreso | `insignia`, `graduado`, `album`, `leccion_superada`, `tutorial_ok` | `announce_badge()`, `save_to_album()`, `academy.gd`, `tutorial.gd` |
-| Ambiente | `pajaros_dia`, `pajaros_atardecer`, `hora_azul` (uno por luz), `grillos_noche`, `fuente`, `zureo`, `aleteo_bandada` | `ambience.gd` |
-| Gente | `paso_losa` (parque clásico), `paso_grava` (parque grande), `paso_corredor`: los cinco paseantes más cercanos a menos de 9 m, un sonido por pie que pisa; `charla` (bucle en la conversación más cercana), `risa`, `periodico`, `taza`, `movil`, `migas` según lo que hace cada uno | `sfx.gd::update_world()` |
+| Ambiente (la fuente del parque clásico es un rumor lejano desde su lado: el estanque está a 21 m, tras la verja; en el grande suena en la plaza) | `pajaros_dia`, `pajaros_atardecer`, `hora_azul` (uno por luz), `grillos_noche`, `fuente`, `zureo`, `aleteo_bandada` | `ambience.gd` |
+| Gente | Pasos según lo que se pisa (`sfx.gd::step_on()`): `paso_losa` en los caminos del parque clásico, `paso_grava` en los del parque grande y `paso_cesped` fuera de ellos y en la pradera (figurantes, el niño del balón); `paso_corredor` para quien corre. Los cinco paseantes más cercanos a menos de 9 m, un sonido por pie que pisa. **También el fotógrafo** al caminar por el parque grande (sin colocar: bajo sus pies); `charla` (bucle en la conversación más cercana), `risa`, `periodico`, `taza`, `movil`, `migas` según lo que hace cada uno | `sfx.gd::update_world()` |
 | Animales y juegos | `perro_jadeo` (bucle) y `perro_ladrido`; `pato` y `pato_agua`; `columpio` (bucle a su ritmo de 2,73 s), `ninos_jugando`, `tobogan`, `balon_patada`, `balon_bote` | `sfx.gd::update_world()`, contadores en `extras.gd` |
 
-**Sin enganchar todavía**: `aleteo_paloma`, `paso_cesped` y `paraguas` (no hay todavía un momento del juego que los pida), y `hojas_viento` (sin toma válida).
+**Sin enganchar todavía**: `aleteo_paloma` y `paraguas` (no hay todavía un momento del juego que los pida), y `hojas_viento` (sin toma válida).
 
 **Los sonidos colocados en el parque no se oían** (ni los pájaros ni la fuente, desde que existen): el visor es un `SubViewport` y no tenía activado su propio oyente (`audio_listener_enable_3d`). Solo sonaban la cámara y la interfaz. Corregido en `main.gd` al crear el visor; comprobado grabando con `--write-movie` y midiendo con `ffmpeg -af volumedetect` (de −91 dB, silencio, a −34 dB de media de día).
 

@@ -162,6 +162,13 @@ func run() -> void:
 					var b = game.people[j]
 					if b.state != "CAMINANDO": continue
 					min_gap = minf(min_gap,Vector2(a.position.x-b.position.x,a.position.z-b.position.z).length())
+	# Steps by what is underfoot: gravel on the paths, grass off them.
+	check(game.sfx.step_on(Vector3.ZERO) == "paso_grava" and game.sfx.step_on(game.park.ring_point(0,0)+Vector3(13,0,7)) in ["paso_grava","paso_cesped"],"Steps sound of gravel on the plaza")
+	var lawn = Vector3(13,0,7)
+	for k in 40:
+		if game.park.path_distance(lawn) > .5: break
+		lawn += Vector3(1.3,0,.9)
+	check(game.sfx.step_on(lawn) == "paso_cesped","…and of grass on the lawn (%s)" % str(lawn))
 	print("BIG PARK CROWD: longest stuck %.1f s, off-path samples %d, min gap %.2f m, nodes visited %d/%d" % [max_stuck,off_path,min_gap,visited.size(),park.nodes.size()])
 	check(max_stuck < 5.5,"Nobody stays jammed (escalation turns back at 5 s)")
 	check(off_path < 60,"Walkers stay on the paths")
