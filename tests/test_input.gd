@@ -44,6 +44,7 @@ func run() -> void:
 	check(toks.size() == 5 and toks[1] == ["k","Q"] and toks[3] == ["b","A"],"Glyph text splits into words, keys and buttons")
 	# Search with a pad: buttons do what the help says.
 	var game = preload("res://main.tscn").instantiate()
+	preload("res://scripts/album.gd").DIR = "user://album_pruebas"   # (never the player's album)
 	root.add_child(game)
 	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	game.exposure_thirds = false   # (not the player's option)

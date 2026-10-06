@@ -46,6 +46,7 @@ func _initialize() -> void: call_deferred("run")
 func run() -> void:
 	var saved_ui_cfg = FileAccess.get_file_as_string("user://interfaz.cfg") if FileAccess.file_exists("user://interfaz.cfg") else ""
 	game = preload("res://main.tscn").instantiate()
+	preload("res://scripts/album.gd").DIR = "user://album_pruebas"   # (never the player's album)
 	root.add_child(game)
 	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	game.exposure_thirds = false   # (not the player's option)

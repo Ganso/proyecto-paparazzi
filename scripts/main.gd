@@ -110,6 +110,7 @@ var brief_preview: Pedestrian
 var brief_viewport: SubViewport
 var toast_time = 0.0
 var boot_frames = 0
+var boot_done = false
 var screenshot_path = ""
 var advance_seconds = 0.0
 var start_screen = ""
@@ -393,6 +394,7 @@ func _ready() -> void:
 		equipment.ev_comp_index = equipment_state.ev
 		apply_equipment()
 	intro()
+	boot_done = true
 	if is_instance_valid(boot_loader): boot_loader.finish()
 	if pending_start.has("level"):
 		start_level(int(pending_start.level))
@@ -1658,8 +1660,10 @@ func _process(dt: float) -> void:
 	update_continuous_af(dt)
 	update_fps_counter(dt)
 	scroll_with_stick(dt)
-	boot_frames += 1
 	if toast == null: return   # the world is still being built behind the loading screen
+	# (The start-up options below count frames from the menu: counted from before, with the world
+	# still loading, --academy, --arcade and --screen opened their screen and the menu covered it.)
+	if boot_done: boot_frames += 1
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)

@@ -16,6 +16,7 @@ func screenshot(id: String) -> void:
 	root.get_texture().get_image().save_png(output+"/paparazzi-"+id+".png")
 func run() -> void:
 	game = load("res://main.tscn").instantiate()
+	preload("res://scripts/album.gd").DIR = "user://album_pruebas"   # (never the player's album)
 	root.add_child(game)
 	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	await frames(12)

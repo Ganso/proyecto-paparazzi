@@ -58,8 +58,8 @@ SEQUENCES=(
 	"Así se juega|2|@card:Haz la foto perfecta para cada encargo"
 	"En cada nivel tendrás que buscar algo distinto|4|--level=9"
 	"Encuentra a tu objetivo entre la gente|5|--time=day --stage=banco --lens=0,0 --angle=110 --pitch=-5 --focal=35 --pan=5 --af"
-	"Usando una telemétrica: Enfoque y exposición manual|8|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=5"
-	"La foto revelada y su informe: Qué ha salido bien y por qué|6|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=2.5"
+	"Usando una telemétrica: Enfoque y exposición manual|8|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=9.5"
+	"La foto revelada y su informe: Qué ha salido bien y por qué|6|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose --shoot-at=5"
 	"Las cámaras|2|@card:Cuatro tipos de cámaras distintas"
 	"Compacta: Zoom y todo automático|3|--time=day --interface=camara --lens=0,0 --angle=103 --pitch=-2 --focal=60 --pan=2 --advance=6 --af"
 	"Réflex: Teleobjetivo y autofoco continuo|4|--time=day --interface=camara --lens=2,1 --angle=40 --focal=150 --follow --af"
@@ -67,7 +67,7 @@ SEQUENCES=(
 	"Diafragma, velocidad e ISO: Tú decides|5|--time=day --interface=camara --lens=2,0 --manual --strip-demo --angle=243 --pitch=-3 --focal=50"
 	"Los parques|2|@card:Dos parques, a cualquier hora"
 	"De día|4|--time=day --stage=palomas --angle=125 --pitch=-10 --focal=35 --af --scare-at=6"
-	"Hora dorada|4|--scenario=grande --time=golden --walk-demo"
+	"Hora dorada|4|--scenario=grande --time=golden --photo-walk"
 	"Hora azul|3|--time=blue --lens=0,0 --angle=300 --pitch=8 --focal=28 --pan=4 --af --activity=movil"
 	"De noche: Luna, estrellas y farolas|4|--time=night --lens=0,0 --angle=205 --pitch=20 --focal=28 --pan=3 --af"
 	"Recorre el parque grande buscando a tu objetivo|8|--scenario=grande --time=day --photo-walk"
@@ -86,7 +86,7 @@ SEQUENCES=(
 	"Tu progreso|2|@card:Álbum e insignias"
 	"Álbum: Tus mejores fotos|3|--screen=album"
 	"Insignias de maestría|3|--screen=insignias"
-	"Con teclado y ratón, con mando o con los dedos|4|--screen=ayuda"
+	"Con teclado y ratón, con mando o con los dedos|4|--time=day --lens=2,0 --angle=120 --focal=35 --af --screen=ayuda"
 	"PhotoHacks|4|@card:Windows · Linux · macOS · Web · Android — geese-bumps.itch.io/photohacks"
 )
 

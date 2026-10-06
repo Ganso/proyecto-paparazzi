@@ -24,6 +24,7 @@ func make_game(which: String) -> void:
 	await frames(2)
 	MainScript.scenario = which
 	game = Main.instantiate()
+	preload("res://scripts/album.gd").DIR = "user://album_pruebas"   # (never the player's album)
 	root.add_child(game)
 	game.exposure_thirds = false   # (not the player's option)
 	await frames(20)

@@ -1,6 +1,6 @@
 # 24 · Efectos de sonido que hacen falta
 
-**Estado: ⏳ Pendiente de recibir los sonidos del usuario** (lista enviada el 03-10-2026; él avisará cuando los tenga). Hoy todo el sonido es sintetizado: `tools/audio/build_ambience.py` (ambiente), `tools/audio/build_camera_sounds.py` (obturadores) y tonos generados en `main.gd::play_tone()`.
+**Estado: ⏳ Pendiente de recibir los sonidos del usuario** (lista enviada el 03-10-2026 y ampliada el 06-10-2026 con el apartado E; él avisará cuando los tenga). Hoy todo el sonido es sintetizado: `tools/audio/build_ambience.py` (ambiente), `tools/audio/build_camera_sounds.py` (obturadores) y tonos generados en `main.gd::play_tone()`.
 
 ## Formato de entrega
 
@@ -85,13 +85,36 @@
 | 52 | `tiempo_agotado` | Se acabó el tiempo | 0,6–1,0 s | No | 1 |
 | 53 | `tutorial_ok` | Paso del tutorial conseguido: un «ding» amable | 0,3–0,5 s | No | 1 |
 
-## E. Música (opcional, estéreo)
+## E. Añadidos desde la primera lista (06-10-2026)
+
+Lo que el juego ha ganado desde el 03-10 y todavía suena con un tono sintetizado o no suena.
+
+| N.º | Nombre | Qué es | Duración | Bucle | Canales | Var. |
+|---|---|---|---|---|---|---|
+| 54 | `obturador_reflex_rapido` | La réflex a 1/2000–1/4000: el mismo golpe de espejo, más seco y corto | 0,2–0,3 s | No | Mono | 1 |
+| 55 | `control_elegir` | Elegir otro ajuste en la tira del visor (más grave y blando que `dial`) | 0,05–0,1 s | No | Mono | 1 |
+| 56 | `dial_tope` | El dial llega al final de su recorrido: un clic sordo, sin avanzar | 0,05–0,1 s | No | Mono | 1 |
+| 57 | `bloqueo` | Bloqueo de foco y exposición (AE-L/AF-L): pitido corto y agudo, distinto de `af_confirmado` | 0,1–0,15 s | No | Mono | 1 |
+| 58 | `medicion` | Cambiar el modo de medición: un clic de conmutador | 0,08–0,12 s | No | Mono | 1 |
+| 59 | `lupa_tlr` | Desplegar la lupa del visor de la TLR: un «clac» metálico leve | 0,15–0,25 s | No | Mono | 1 |
+| 60 | `pato` | Graznido de pato | 0,3–0,6 s | No | Mono | 3 |
+| 61 | `pato_agua` | Un pato chapoteando o sacudiéndose en el estanque | 0,8–1,5 s | No | Mono | 2 |
+| 62 | `movil` | Vibración o aviso breve de un móvil, apagado, como dentro de un bolsillo | 0,4–0,8 s | No | Mono | 2 |
+| 63 | `migas` | Un puñado de migas cayendo al suelo | 0,3–0,5 s | No | Mono | 2 |
+| 64 | `paraguas` | Roce de la tela de un paraguas cerrado al caminar | 0,3–0,5 s | No | Mono | 2 |
+| 65 | `insignia` | Insignia conseguida: más breve y brillante que `nivel_superado` | 0,8–1,5 s | No | Estéreo | 1 |
+| 66 | `album` | Una foto entra en el álbum: una hoja que se desliza en su funda | 0,3–0,5 s | No | Estéreo | 1 |
+| 67 | `leccion_superada` | Práctica o examen de la Academia superado: un acorde amable, no una fanfarria | 1–1,5 s | No | Estéreo | 1 |
+| 68 | `graduado` | Título de la Academia (los diez exámenes aprobados): la fanfarria grande del juego | 3–5 s | No | Estéreo | 1 |
+| 69 | `condicion_ok` | Una condición del nivel cumplida, al aparecer en el resultado (suena una vez por condición) | 0,15–0,25 s | No | Estéreo | 1 |
+
+## F. Música (opcional, estéreo)
 
 | N.º | Nombre | Qué es | Duración | Bucle |
 |---|---|---|---|---|
-| 54 | `musica_menu` | Música tranquila para el menú principal, en la línea de `musica_videos.mp3` | 60–120 s | **Sí** |
+| 70 | `musica_menu` | Música tranquila para el menú principal, en la línea de `musica_videos.mp3` | 60–120 s | **Sí** |
 
-**Total: 54 sonidos, 95 ficheros contando las variaciones.** Los imprescindibles para notar el cambio son los de la cámara (1–9, 13–16), los pasos (26–29), los ambientes (17–21) y los de nivel (48–52).
+**Total: 70 sonidos, 121 ficheros contando las variaciones.** Los imprescindibles para notar el cambio son los de la cámara (1–9, 13–16), los pasos (26–29), los ambientes (17–21) y los de nivel (48–52).
 
 ## Al recibirlos
 

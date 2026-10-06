@@ -191,7 +191,9 @@ Los que están pegados a su tamaño razonable (título de la Academia de 30, teo
 
 **En el PC, con forma de teléfono** (05-10-2026): `~/bin/godot-4-fp --path . --disable-vsync --rendering-method gl_compatibility --resolution 1600x720 -- --touch` abre la interfaz táctil en 20:9 (pantalla completa de [26](futuro/26_ANDROID_PERFECTO.md); `--write-movie` no sirve para esto, porque graba siempre a 1440 × 810). `-- --lean` activa en el PC el ahorro de animación del móvil (`main.gd::pose_person()`), para medirlo con `-- --metrics`. El contador «Ver FPS» del móvil añade CPU, física, llamadas de dibujo y triángulos.
 
-**Las pruebas y las herramientas de captura no escriben en el progreso del jugador**: las que juegan niveles apuntan `Arcade.SAVE` a `user://arcade_pruebas.cfg` (antes, `capture_screens.gd` y varias pruebas podían guardar un nivel superado en `user://arcade.cfg`).
+**Las opciones de arranque que abren una pantalla (`--academy=`, `--arcade`, `--screen=`) cuentan los fotogramas desde que aparece el menú** (`main.gd::boot_done`): desde la pantalla de carga asíncrona se abrían con el mundo aún cargando y el menú las tapaba (el vídeo salía con el menú en esos planos).
+
+**Las pruebas y las herramientas de captura no escriben en el progreso del jugador** (ni en su álbum: `Album.DIR` a `user://album_pruebas`; `capture_video.sh` usa además `PAPARAZZI_ARCADE_CFG`): las que juegan niveles apuntan `Arcade.SAVE` a `user://arcade_pruebas.cfg` (antes, `capture_screens.gd` y varias pruebas podían guardar un nivel superado en `user://arcade.cfg`).
 
 **Las pruebas no dependen de las opciones del jugador**: `test_game.gd` y `test_touch.gd` fijan `look_invert = "no"` antes de comprobar el arrastre (con «Invertir mirada» puesto en Opciones fallaban sin que hubiera nada roto).
 

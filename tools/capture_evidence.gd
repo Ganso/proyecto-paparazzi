@@ -48,6 +48,7 @@ func start() -> void:
 func phase_1_game_states() -> void:
 	print(">> FASE 1: Capturando estados del juego...")
 	var game = MainScene.instantiate()
+	preload("res://scripts/album.gd").DIR = "user://album_pruebas"   # (never the player's album)
 	root.add_child(game)
 	preload("res://scripts/arcade.gd").SAVE = "user://arcade_pruebas.cfg"   # (never the player's progress)
 	game.exposure_thirds = false   # (not the player's option)

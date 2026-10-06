@@ -184,7 +184,7 @@ Arcade
 
 ### modo_arcade_texto
 > máximo 180 caracteres
-Veinticinco niveles con encargos cada vez más exigentes: De la compacta automática a la TLR manual y al barrido, un control nuevo cada vez.
+Treinta niveles con encargos cada vez más exigentes: De la compacta automática a la TLR manual, la luz y el barrido, cada uno con algo nuevo.
 
 ### modo_arcade_progreso
 %d de 30 niveles superados · %d ★

@@ -1,6 +1,6 @@
 # Guion definitivo del vídeo de presentación (usuario, 06-10-2026)
 
-Aprobado por el usuario como **el vídeo definitivo**: atemporal (enseña el estado del juego sin distinguir novedades ni citar versiones) y con la vida del parque como fondo de los planos, sin capítulo ni rótulos propios. 2:35, música `assets/audio/musica_videos.mp3`. **Pendiente de grabar**: `tools/capture_video.sh::SEQUENCES` aún tiene el guion anterior; faltan cinco planos (encargo, informe sostenido, exposición, controles y hora dorada en el parque grande).
+Aprobado por el usuario como **el vídeo definitivo**: atemporal (enseña el estado del juego sin distinguir novedades ni citar versiones) y con la vida del parque como fondo de los planos, sin capítulo ni rótulos propios. 2:35, música `assets/audio/musica_videos.mp3`. **Grabado el 06-10-2026** con `tools/capture_video.sh`, cuyo `SEQUENCES` es este guion (los títulos de las cartelas de capítulo son «Así se juega», «Las cámaras», «Los parques»…, con el rótulo del guion debajo).
 
 Los rótulos marcados con ✎ los escribió el usuario y no se tocan.
 
