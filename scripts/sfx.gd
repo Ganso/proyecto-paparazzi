@@ -22,6 +22,7 @@ var spatial: Array[AudioStreamPlayer3D] = []
 var loops = {}
 var rng = RandomNumberGenerator.new()
 var enabled = true
+var hurry = 1.0                 # --sonidos-seguidos: the occasional sounds, more often (evidence)
 var own_half = 0
 var step_half = {}              # walker → half of the stride it was on
 var timers = {}
@@ -133,7 +134,7 @@ func due(key: String, dt: float, least: float, most: float) -> bool:
 	if not timers.has(key): timers[key] = rng.randf_range(least*.3,most)
 	timers[key] -= dt
 	if timers[key] > 0: return false
-	timers[key] = rng.randf_range(least,most)
+	timers[key] = rng.randf_range(least,most)*hurry
 	return true
 
 # What a foot lands on: paving on the paths and plazas of both parks (a trainer's stride for

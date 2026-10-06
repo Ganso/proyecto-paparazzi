@@ -1,0 +1,18 @@
+Sonidos de PhotoHacks|3|@card:Sin música: solo lo que suena en el juego
+Cámara: Todos sus sonidos, uno a uno|27|--sound-board=camara
+Interfaz y progreso: Uno a uno|35|--sound-board=interfaz
+Parque de día: Pájaros, pasos, charla, risas y periódico|14|--time=day --stage=banco --lens=2,0 --angle=125 --pitch=-6 --focal=30 --sonidos-seguidos
+Palomas: Zureo, migas y la bandada alzando el vuelo|10|--time=day --stage=palomas --lens=2,0 --angle=125 --pitch=-10 --focal=35 --scare-at=9 --sonidos-seguidos
+El perro: Jadeo y ladridos|9|--time=day --stage=perro --lens=2,0 --pitch=-10 --focal=28 --sonidos-seguidos
+Corredores y patos del estanque|9|--time=day --lens=2,0 --angle=243 --pitch=-3 --focal=50 --pan=2 --sonidos-seguidos
+El niño del balón, en la pradera|7|--time=day --lens=2,1 --angle=137 --pitch=-3 --focal=100 --sonidos-seguidos
+Atardecer|6|--time=golden --lens=2,0 --angle=200 --pitch=3 --focal=35 --pan=3
+Hora azul: Últimos pájaros, primeros grillos y móviles|7|--time=blue --lens=2,0 --angle=300 --pitch=6 --focal=28 --pan=3 --activity=movil --sonidos-seguidos
+Noche: Grillos|6|--time=night --lens=2,0 --angle=205 --pitch=12 --focal=28 --pan=3
+Compacta: El motor del zoom|7|--time=day --interface=camara --lens=0,0 --angle=110 --focal=24 --zoom-to=120
+Réflex en manual: Diales, tope y disparo|9|--time=day --interface=camara --lens=2,0 --manual --strip-demo --angle=125 --focal=50 --shoot-at=11
+Una foto: Disparo, revelado, condiciones y estrellas|9|--level=21 --interface=camara --follow-target --mf-rack --expose --shoot-at=6
+Fin de nivel con el reloj: Tictac y tiempo agotado|10|--level=8 --interface=camara --clock=9
+Nivel superado|9|--level=1 --follow-target --expose --shoot-at=5 --end-at=10
+Parque grande: Tus pasos, la cámara al ojo y el disparo|12|--scenario=grande --time=day --photo-walk
+Parque infantil: Columpio, niños y tobogán|12|--scenario=grande --time=day --at=19,23,146 --hud=1 --sonidos-seguidos

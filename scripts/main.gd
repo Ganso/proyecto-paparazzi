@@ -319,6 +319,13 @@ func _ready() -> void:
 		if arg.begins_with("--shutter="): demo["shutter"] = int(arg.get_slice("=",1))
 		if arg.begins_with("--screen="): start_screen = arg.get_slice("=",1)
 		if arg.begins_with("--shoot-at="): demo["shoot-at"] = float(arg.get_slice("=",1))
+		# Sound evidence (docs/futuro/24): --sound-board=camara|interfaz plays those sounds one after
+		# another with their names on screen; --sonidos-seguidos makes the park's occasional sounds
+		# (barks, laughs, pages…) come five times as often; --end-at=N ends the level at second N
+		# and --clock=N leaves it N seconds on the clock.
+		if arg.begins_with("--sound-board="): sound_board = arg.get_slice("=",1)
+		if arg.begins_with("--end-at="): demo["end-at"] = float(arg.get_slice("=",1))
+		if arg.begins_with("--clock="): demo["clock"] = float(arg.get_slice("=",1))
 		if arg.begins_with("--debug-off="): debug_off = arg.trim_prefix("--debug-off=").split(",")
 		for key in ["angle","pitch","focal"]:
 			if arg.begins_with("--%s=" % key): shot_view[key] = float(arg.get_slice("=",1))
@@ -1680,6 +1687,14 @@ func _process(dt: float) -> void:
 	# (The start-up options below count frames from the menu: counted from before, with the world
 	# still loading, --academy, --arcade and --screen opened their screen and the menu covered it.)
 	if boot_done: boot_frames += 1
+	if sound_board != "" and boot_done and sfx: update_sound_board(dt)
+	# (--end-at counts by itself: the demo's clock stops on the result screen)
+	if demo.has("end-at") and boot_done and arcade_level >= 0 and not demo.has("ended"):
+		demo["end-clock"] = float(demo.get("end-clock",0.0))+dt
+		if demo["end-clock"] >= demo["end-at"]:
+			demo["ended"] = true
+			end_level()
+	if sfx and "--sonidos-seguidos" in OS.get_cmdline_user_args(): sfx.hurry = .2
 	toast_time = maxf(0,toast_time-dt)
 	toast.visible = toast_time > 0 and mode == "SEARCH"
 	if mode == "INTRO" and is_instance_valid(modal) and modal.get_script() == preload("res://scripts/main_menu.gd"): update_menu_background(dt)
@@ -3462,6 +3477,43 @@ func update_pad(dt: float) -> void:
 				whole_hold = false
 				pad_repeat = .125
 
+# --sound-board: the camera's or the interface's sounds in a row, each with its name on screen.
+const SOUND_BOARDS = {
+	"camara": ["obturador_compacta","obturador_telemetrica","obturador_reflex","obturador_reflex_lento","obturador_reflex_rapido","obturador_tlr","manivela_tlr","carrete_nuevo","af_confirmado","af_fallo","motor_af","bloqueo","anillo_enfoque","anillo_enfoque","anillo_enfoque","dial","dial","dial","dial_tope","control_elegir","medicion","lupa_tlr","camara_subir","camara_bajar","zoom_compacta","zoom_compacta_fin"],
+	"interfaz": ["ui_mover","ui_mover","ui_aceptar","ui_atras","ui_bloqueado","pausa","revelado","condicion_ok","condicion_ok","estrella","estrella","estrella","foto_rechazada","album","tictac","tictac","tictac","tiempo_agotado","nivel_superado","nivel_no_superado","tutorial_ok","leccion_superada","insignia","graduado"]}
+var sound_board = ""
+var board_time = -1.0
+var board_index = -1
+var board_label: Label
+func update_sound_board(dt: float) -> void:
+	var list: Array = SOUND_BOARDS.get(sound_board,[])
+	if board_label == null:
+		board_label = Label.new()
+		board_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		board_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		board_label.add_theme_font_size_override("font_size",64)
+		board_label.add_theme_color_override("font_color",UiStyle.BRAND)
+		board_label.add_theme_color_override("font_outline_color",Color.BLACK)
+		board_label.add_theme_constant_override("outline_size",12)
+		var layer = CanvasLayer.new()
+		layer.layer = 50
+		add_child(layer)
+		layer.add_child(board_label)
+		board_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		board_time = 4.2    # (the capture discards the first four seconds)
+	board_time -= dt
+	if board_time > 0 or board_index >= list.size()-1: return
+	board_index += 1
+	var name: String = list[board_index]
+	board_label.text = name
+	# The long ones get their time; the zoom motor is a loop, heard for a second.
+	board_time = {"carrete_nuevo":2.4,"nivel_superado":3.0,"nivel_no_superado":2.2,"graduado":5.4,"insignia":1.6,"leccion_superada":1.9,"tiempo_agotado":1.6,"obturador_reflex_lento":1.4,"manivela_tlr":1.3,"zoom_compacta":1.3}.get(name,.85 if sound_board == "camara" else 1.0)
+	if name == "zoom_compacta": sfx.loop_at("board","zoom_compacta",null,-6.0)
+	else:
+		sfx.stop_loop("board")
+		var rise = board_index-list.find(name) if name == "estrella" else 0
+		play_sfx(name,-2.0,1.0+.06*rise)
+
 # A recorded effect by name (scripts/sfx.gd); false if there is none, and the caller keeps its tone.
 func play_sfx(name: String, db = 0.0, pitch = 1.0) -> bool:
 	return sfx != null and sfx.play(name,db,pitch)
@@ -4251,6 +4303,9 @@ func update_demo(dt: float) -> void:
 					best = d
 					demo_follow = p
 	demo_time += dt
+	if demo.has("clock") and not demo.has("clocked") and arcade_level >= 0:
+		demo["clocked"] = true
+		level_time = float(demo["clock"])
 	angle = fposmod(angle+float(demo.get("pan","0"))*dt,360)
 	if demo.has("zoom-to"):
 		focal = lerpf(demo_focal_start,float(demo["zoom-to"]),smoothstep(0.0,12.0,demo_time))
