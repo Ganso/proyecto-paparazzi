@@ -4263,7 +4263,7 @@ func override_path() -> String:
 # changed the default graphics (then the player is advised to reset the graphics options)].
 # Two or three points per version, only what a player notices. A new release adds its row here
 # and its texts in textos/es/menu.md.
-const VERSION_NOTES = [["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+const VERSION_NOTES = [["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
 static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice
