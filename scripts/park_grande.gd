@@ -157,12 +157,12 @@ func ground_patch(origin: Vector3, size: Vector2, cells: int, color: Color, laye
 # 8 mm: where two of them overlap (the asphalt diagonal under the paved round of the bandstand,
 # the gravel ring over the ends of the avenues) the two surfaces fought for the same depth and
 # flickered. Now each kind has its own level, a plaza lies above the paths of its own kind, and
-# whatever overlaps is at least 5 mm apart: asphalt and cobbles lowest (they never meet), then
-# gravel, then the flagstones of plazas and spurs. The tallest is 2,4 cm: feet do not sink.
+# whatever overlaps is at least 4 mm apart: asphalt and cobbles lowest (they never meet), then
+# gravel, then the flagstones of plazas and spurs. The tallest is 2,6 cm: feet do not sink.
 const PAVING_ORDER = {"asfalto":0, "adoquin":0, "grava":1, "losas":2}
 func paving_height(layer: int, plaza: bool) -> float:
 	var level = int(PAVING_ORDER.get(GROUND_LAYERS[layer] if layer >= 0 and layer < GROUND_LAYERS.size() else "",0))
-	return .006+level*.007+(.004 if plaza else 0.0)
+	return .006+level*.008+(.004 if plaza else 0.0)
 
 func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
 	var dir = (b-a).normalized()
