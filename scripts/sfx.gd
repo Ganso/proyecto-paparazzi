@@ -162,7 +162,7 @@ func update_world(dt: float) -> void:
 		var p = near[k][1]
 		var half = int(p.phase/PI)
 		if step_half.get(p,half) != half:
-			play_at(step_on(p.global_position,p.runner),p.global_position,-9.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
+			play_at(step_on(p.global_position,p.runner),p.global_position,-13.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
 		step_half[p] = half
 	# Whoever walks on the meadow (the extras of the classic park, the child after the ball).
 	if main.extras and is_instance_valid(main.extras):
@@ -176,7 +176,7 @@ func update_world(dt: float) -> void:
 		var half = int(main.walk_phase/PI)
 		if half != own_half and main.player.velocity.length() > .2:
 			var running: bool = main.player.velocity.length() > main.WALK_SPEED*1.25
-			play(step_on(main.player.global_position,running),-8.0 if running else -12.0,rng.randf_range(.94,1.06))
+			play(step_on(main.player.global_position,running),-13.0 if running else -12.0,rng.randf_range(.94,1.06))
 		own_half = half
 	# What people do where they stop: a chat (one loop, the nearest), a laugh, a page, a cup.
 	var chat = null
