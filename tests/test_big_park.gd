@@ -163,7 +163,7 @@ func run() -> void:
 					if b.state != "CAMINANDO": continue
 					min_gap = minf(min_gap,Vector2(a.position.x-b.position.x,a.position.z-b.position.z).length())
 	# Steps by what is underfoot: gravel on the paths, grass off them.
-	check(game.sfx.step_on(Vector3.ZERO) == "paso_grava" and game.sfx.step_on(game.park.ring_point(0,0)+Vector3(13,0,7)) in ["paso_grava","paso_cesped"],"Steps sound of gravel on the plaza")
+	check(game.sfx.step_on(Vector3.ZERO) == "paso_losa" and game.sfx.step_on(Vector3.ZERO,true) == "paso_corredor","Steps sound of paving on the plaza, and of a trainer's stride when running")
 	var lawn = Vector3(13,0,7)
 	for k in 40:
 		if game.park.path_distance(lawn) > .5: break

@@ -6,6 +6,12 @@ extends Node3D
 # side of the park, pigeons coo and flutter off. No wind or city noise bed: the user found the
 # constant hiss annoying (01-10-2026).
 const DIR = "res://assets/audio/ambiente/"
+# Level of the beds, measured (06-10-2026): what reaches the camera in the middle of the classic
+# park is the recording's own level (about −23 dBFS RMS), this, the distance (−4 dB at 15 m with a
+# unit size of 10) and +6 dB for the four trees singing at once. At −2 dB the birds arrived at
+# −23 dBFS, above everything else in the game; a bed belongs at about −40.
+const BED_DB = -19.0
+const CRICKET_DB = -18.0
 const BIRD_SPOTS = [20.0, 110.0, 200.0, 290.0]
 const CRICKET_SPOTS = [60.0, 180.0, 300.0]
 
@@ -67,11 +73,11 @@ func build(park_node, pigeons_node) -> void:
 	if cricket_points.is_empty(): cricket_points = CRICKET_SPOTS.map(func(a): return polar(a,10.5)+Vector3.UP*.3)
 	if fountain_pos == Vector3.ZERO: fountain_pos = polar(245.0,21.0)+Vector3.UP*.8
 	for i in bird_points.size():
-		var b = player3d("pajaros_dia",bird_points[i],true,10.0,-2.0)
+		var b = player3d("pajaros_dia",bird_points[i],true,10.0,BED_DB)
 		b.pitch_scale = [1.0,.93,1.07,.97,1.03,.95][i%6]
 		birds.append(b)
 	for i in cricket_points.size():
-		var c = player3d("grillos_noche",cricket_points[i],true,7.0,-6.0)
+		var c = player3d("grillos_noche",cricket_points[i],true,7.0,CRICKET_DB)
 		c.pitch_scale = [1.0,1.04,.96][i%3]
 		crickets.append(c)
 	# In the classic park the pond is 21 m away, beyond the fence: its water is a murmur from
@@ -100,7 +106,8 @@ func apply_time(immediate = false, dt = 0.0) -> void:
 		for b in birds:
 			b.stream = stream(bed,true)
 			b.play(rng.randf_range(0,8))
-	var bird_db = {"day":0.0,"golden":-2.0,"blue":-3.0,"night":-80.0}.get(tod,0.0)
+	# (the three recordings are not equally loud: these offsets leave them at the same level)
+	var bird_db = {"day":0.0,"golden":3.5,"blue":2.0,"night":-80.0}.get(tod,0.0)
 	var cricket_db = {"night":0.0}.get(tod,-80.0)
 	for b in birds: fade(b,b.get_meta("db")+bird_db,immediate,dt)
 	for c in crickets: fade(c,c.get_meta("db")+cricket_db,immediate,dt)
@@ -119,11 +126,14 @@ func update(dt: float) -> void:
 		coo_timers[f] -= dt
 		if coo_timers[f] <= 0 and flock.state == "suelo":
 			coo_timers[f] = rng.randf_range(3,10)
-			player.stream = stream("zureo_%d" % (1+rng.randi()%2),false)
+			var coo = 1+rng.randi()%2
+			player.stream = stream("zureo_%d" % coo,false)
+			player.volume_db = [-14.0,-4.0][coo-1]   # (the first take is a steady tone, 10 dB louder at the same peak)
 			player.pitch_scale = rng.randf_range(.9,1.1)
 			player.play()
 		if flock.state == "vuelo" and flock_states[f] != "vuelo":
 			player.stream = stream("aleteo_bandada_1",false)
+			player.volume_db = -4.0
 			player.pitch_scale = rng.randf_range(.9,1.1)
 			player.play()
 		flock_states[f] = flock.state

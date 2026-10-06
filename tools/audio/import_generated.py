@@ -56,7 +56,7 @@ TABLE = [
     (26, "paso_grava", G, "one", 1, -12, .30, 40, ["SA", "AG"]),
     (27, "paso_losa", G, "one", 1, -12, .25, 40, ["SA"]),
     (28, "paso_cesped", G, "one", 1, -15, .30, 40, ["SA"]),
-    (29, "paso_corredor", G, "one", 1, -9, .25, 40, ["SA", "AG:peak"]),
+    (29, "paso_corredor", G, "one", 1, -9, .25, 40, ["SA"]),                 # AG: otro timbre; alternado con la de SA sonaba a dos personas
     (30, "charla", G, "loop", 1, -12, 11.0, 80, ["AG"]),                    # SA: casi todo por debajo de 80 Hz, sin voces
     (31, "risa", G, "one", 1, -12, 2.0, 80, ["SA", "AG"]),
     (32, "ninos_jugando", G, "loop", 1, -9, 18.0, 150, ["AG"]),              # el usuario prefiere la de AudioGen (06-10-2026)

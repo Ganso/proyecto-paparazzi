@@ -136,11 +136,12 @@ func due(key: String, dt: float, least: float, most: float) -> bool:
 	timers[key] = rng.randf_range(least,most)
 	return true
 
-# What a foot lands on: the big park's paths are gravel and the rest grass; the classic park's
-# paths are flagstones.
-func step_on(pos: Vector3) -> String:
-	if main.crowd == null: return "paso_losa"
-	return "paso_grava" if main.park.path_distance(pos) <= .1 else "paso_cesped"
+# What a foot lands on: paving on the paths and plazas of both parks (a trainer's stride for
+# whoever runs on it), grass everywhere else in the big park. (The gravel takes wait for a
+# gravel path: every path of the two parks is paved.)
+func step_on(pos: Vector3, running = false) -> String:
+	if main.crowd != null and main.park.path_distance(pos) > .1: return "paso_cesped"
+	return "paso_corredor" if running else "paso_losa"
 
 # ---- The park: who is heard from where the camera is ----
 func update_world(dt: float) -> void:
@@ -161,7 +162,7 @@ func update_world(dt: float) -> void:
 		var p = near[k][1]
 		var half = int(p.phase/PI)
 		if step_half.get(p,half) != half:
-			play_at("paso_corredor" if p.runner else step_on(p.global_position),p.global_position,-9.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
+			play_at(step_on(p.global_position,p.runner),p.global_position,-9.0 if p.runner else -14.0,2.5,rng.randf_range(.92,1.08))
 		step_half[p] = half
 	# Whoever walks on the meadow (the extras of the classic park, the child after the ball).
 	if main.extras and is_instance_valid(main.extras):
@@ -175,7 +176,7 @@ func update_world(dt: float) -> void:
 		var half = int(main.walk_phase/PI)
 		if half != own_half and main.player.velocity.length() > .2:
 			var running: bool = main.player.velocity.length() > main.WALK_SPEED*1.25
-			play("paso_corredor" if running and step_on(main.player.global_position) != "paso_cesped" else step_on(main.player.global_position),-9.0 if running else -12.0,rng.randf_range(.94,1.06))
+			play(step_on(main.player.global_position,running),-8.0 if running else -12.0,rng.randf_range(.94,1.06))
 		own_half = half
 	# What people do where they stop: a chat (one loop, the nearest), a laugh, a page, a cup.
 	var chat = null
@@ -206,7 +207,7 @@ func update_world(dt: float) -> void:
 		var at: Vector3 = main.dog.global_position+Vector3.UP*.3
 		if at.distance_to(ear) < 12.0:
 			loop_at("jadeo","perro_jadeo",at,-14.0,2.0)
-			if due("ladrido",dt,25.0,70.0): play_at("perro_ladrido",at,-4.0,5.0,rng.randf_range(.95,1.05))
+			if due("ladrido",dt,25.0,70.0): play_at("perro_ladrido",at,-9.0,5.0,rng.randf_range(.95,1.05))
 		else: stop_loop("jadeo")
 	# The playground: children's voices, the swing's chains at its own rhythm, the slide, the ball.
 	var extras = main.extras
