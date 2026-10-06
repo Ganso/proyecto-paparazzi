@@ -93,7 +93,7 @@ func define_paths() -> void:
 	add_edge("DB","CNW",2.6,"asfalto")
 	add_node("SB",BANDSTAND_POS+Vector3(0,0,6.2))
 	add_edge("DB","SB",2.4,"losas")
-	discs.append([BANDSTAND_POS,6.5,GROUND_LAYERS.find("losas")])
+	discs.append([BANDSTAND_POS,6.5,GROUND_LAYERS.find("losas"),true])   # (under the park's paths: user, 06-10-2026)
 	var se_dir = corners["SE"].normalized()
 	var dp = se_dir*(PLAYGROUND_POS.x/se_dir.x)
 	add_node("DP",dp)
@@ -132,7 +132,7 @@ func build_ground() -> void:
 	for t in [[Vector3(-200,0,-200),Vector2(400,140)],[Vector3(-200,0,60),Vector2(400,140)],[Vector3(-200,0,-60),Vector2(120,120)],[Vector3(80,0,-60),Vector2(120,120)]]:
 		ground_patch(t[0],t[1],4,Color("7d8a5a"),GROUND_LAYERS.find("cesped"),-.01)
 	for s in strips: strip(s[0],s[1],s[2],s[3])
-	for d in discs: disc(d[0],d[1],d[2])
+	for d in discs: disc(d[0],d[1],d[2],d.size() > 3 and d[3])
 
 func ground_patch(origin: Vector3, size: Vector2, cells: int, color: Color, layer: int, y: float) -> void:
 	var st = SurfaceTool.new()
@@ -162,7 +162,10 @@ func ground_patch(origin: Vector3, size: Vector2, cells: int, color: Color, laye
 const PAVING_ORDER = {"asfalto":0, "adoquin":0, "grava":1, "losas":2}
 func paving_height(layer: int, plaza: bool) -> float:
 	var level = int(PAVING_ORDER.get(GROUND_LAYERS[layer] if layer >= 0 and layer < GROUND_LAYERS.size() else "",0))
-	return .006+level*.008+(.004 if plaza else 0.0)
+	return .012+level*.008+(.004 if plaza else 0.0)
+# The round of the bandstand lies under every path that reaches or crosses it: the park's ground
+# is the one seen on top, not the bandstand's own.
+const PAVING_UNDER = .006
 
 func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
 	var dir = (b-a).normalized()
@@ -189,7 +192,7 @@ func strip(a: Vector3, b: Vector3, width: float, layer: int) -> void:
 	piece.set_meta("ground",true)
 	piece.set_meta("ground_layer",layer)
 
-func disc(centre: Vector3, radius: float, layer: int) -> void:
+func disc(centre: Vector3, radius: float, layer: int, under = false) -> void:
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rings = maxi(2,int(radius/1.2))
@@ -200,7 +203,7 @@ func disc(centre: Vector3, radius: float, layer: int) -> void:
 		for i in segments:
 			var a0 = TAU*i/segments
 			var a1 = TAU*(i+1)/segments
-			var y = paving_height(layer,true)
+			var y = PAVING_UNDER if under else paving_height(layer,true)
 			var pts = [Vector3(sin(a0)*r0,y,cos(a0)*r0),Vector3(sin(a0)*r1,y,cos(a0)*r1),Vector3(sin(a1)*r1,y,cos(a1)*r1),Vector3(sin(a1)*r0,y,cos(a1)*r0)]
 			for m in [0,2,1,0,3,2]:
 				st.set_normal(Vector3.UP)

@@ -1475,6 +1475,7 @@ var band_key = ""
 func _process(dt: float) -> void:
 	total_time += dt
 	watch_speed(dt)
+	if not debug_off.is_empty(): apply_debug_off()   # (the light of each hour sets the effects again)
 	check_long_press()
 	if frame_offset != Vector2.ZERO and not is_instance_valid(boot_loader) and band_key != mode+interface_mode:
 		band_key = mode+interface_mode

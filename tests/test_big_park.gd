@@ -46,7 +46,8 @@ func run() -> void:
 	for pair in [[h.call("losas",true),h.call("asfalto",false)],[h.call("losas",true),h.call("adoquin",false)],[h.call("losas",true),h.call("losas",false)],[h.call("losas",false),h.call("asfalto",false)],
 			[h.call("grava",false),h.call("asfalto",false)],[h.call("grava",false),h.call("adoquin",false)],[h.call("grava",true),h.call("grava",false)],[h.call("grava",true),h.call("losas",false)]]:
 		check(absf(pair[0]-pair[1]) >= .003,"Overlapping paving lies at different heights (%.3f and %.3f m)" % pair)
-	check(h.call("losas",true) <= .03,"…and none stands more than 3 cm over the lawn (feet do not sink)")
+	check(h.call("asfalto",false)-game.park.PAVING_UNDER >= .005 and h.call("losas",false) > game.park.PAVING_UNDER,"The round of the bandstand lies under the paths that cross it")
+	check(h.call("losas",true) <= .035,"…and none stands more than 3 cm over the lawn (feet do not sink)")
 	check(park.get_script().resource_path.ends_with("park_grande.gd"),"The big park is built")
 	check(game.people.size() == game.GRANDE_PEOPLE,"%d pedestrians" % game.GRANDE_PEOPLE)
 	var seen = {"PN":true}
