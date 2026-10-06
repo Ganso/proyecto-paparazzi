@@ -19,6 +19,10 @@ var park
 var pigeons
 # Where the sounds come from (the big park passes its own; defaults: the classic park).
 var fountain_pos = Vector3.ZERO
+# While the park loads the camera sits at the origin, which in the big park is the fountain
+# itself: it was heard at full blast for a second before the game began. main.gd turns it on
+# once the photographer is in place.
+var fountain_on = false
 var fountain_unit = 2.5
 var fountain_db = -6.0
 var bird_points: Array = []
@@ -84,6 +88,7 @@ func build(park_node, pigeons_node) -> void:
 	# that side, not something heard all over the park (the user heard water and saw none near).
 	# In the big park the fountain is in the middle of the plaza the player walks through.
 	fountain = player3d("fuente",fountain_pos,true,fountain_unit,fountain_db)
+	fountain.volume_db = -80.0   # (it comes in once the game is on: see fountain_on)
 	if pigeons and not pigeons.flocks.is_empty():
 		for f in pigeons.flocks.size():
 			var p = player3d("zureo_1",pigeons.flocks[f].center,false,4.0,-4.0)
@@ -118,6 +123,7 @@ func fade(player: Node, target: float, immediate: bool, dt: float) -> void:
 func update(dt: float) -> void:
 	if fountain == null: return
 	apply_time(false,dt)
+	fountain.volume_db = move_toward(fountain.volume_db,fountain_db if fountain_on else -80.0,dt*(90.0 if fountain_on else 400.0))
 	if pigeons == null: return
 	for f in coo_players.size():
 		var flock = pigeons.flocks[f]

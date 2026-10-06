@@ -1687,6 +1687,7 @@ func _process(dt: float) -> void:
 	# (The start-up options below count frames from the menu: counted from before, with the world
 	# still loading, --academy, --arcade and --screen opened their screen and the menu covered it.)
 	if boot_done: boot_frames += 1
+	if ambience: ambience.fountain_on = boot_done and boot_frames > 20
 	if sound_board != "" and boot_done and sfx: update_sound_board(dt)
 	# (--end-at counts by itself: the demo's clock stops on the result screen)
 	if demo.has("end-at") and boot_done and arcade_level >= 0 and not demo.has("ended"):
