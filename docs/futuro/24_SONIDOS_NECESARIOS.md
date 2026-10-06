@@ -114,7 +114,112 @@ Lo que el juego ha ganado desde el 03-10 y todavía suena con un tono sintetizad
 |---|---|---|---|---|
 | 70 | `musica_menu` | Música tranquila para el menú principal, en la línea de `musica_videos.mp3` | 60–120 s | **Sí** |
 
-**Total: 70 sonidos, 121 ficheros contando las variaciones.** Los imprescindibles para notar el cambio son los de la cámara (1–9, 13–16), los pasos (26–29), los ambientes (17–21) y los de nivel (48–52).
+**Total: 70 sonidos, 112 ficheros contando las variaciones.** Los imprescindibles para notar el cambio son los de la cámara (1–9, 13–16), los pasos (26–29), los ambientes (17–21) y los de nivel (48–52).
+
+## Fichas de producción (06-10-2026)
+
+La especificación unívoca que se envió al usuario para generar los sonidos. Reglas comunes: WAV PCM 48 kHz 16 bits; pico real el de cada ficha (tolerancia 0 a −1 dB, nunca por encima de −1 dBFS); ruido de fondo < −60 dBFS; paso alto a 40 Hz (80 Hz en cámara e interfaz); totalmente secos; los de un disparo empiezan en los primeros 5 ms y acaban en silencio digital; los bucles duran exactamente lo indicado (±1 ms) y enlazan sin fundidos; las variaciones son tomas distintas, no copias con el tono cambiado; M = mono, E = estéreo.
+
+
+### A. CÁMARAS (se oyen pegadas al oído del fotógrafo: primer plano, muy secas)
+
+| N.º | Fichero | Canales | Duración | Bucle | Var. | Pico | Descripción |
+|---|---|---|---|---|---|---|---|
+| 1 | `obturador_reflex` | M | 0,35–0,45 s | no | 1 | -3 dBFS | Réflex mecánica de 35 mm de los años 80 a 1/125 s. Tres eventos encadenados sin pausa audible: golpe del espejo al subir (grave, 150–400 Hz, ataque < 5 ms), chasquido de la cortinilla (2–6 kHz) y golpe del espejo al bajar, algo más flojo. Cuerpo metálico, sin motor de arrastre ni pitidos. |
+| 2 | `obturador_reflex_lento` | M | 0,70–0,90 s | no | 1 | -3 dBFS | La misma cámara a 1/8 s: espejo arriba + primera cortinilla, silencio real de 0,125 s (±10 ms) y segunda cortinilla + espejo abajo. Los dos golpes deben oírse claramente separados. |
+| 3 | `obturador_telemetrica` | M | 0,15–0,22 s | no | 1 | -6 dBFS | Cortinilla de tela de una telemétrica: un «clic» suave y corto, sin espejo. Energía en 1–4 kHz, casi sin graves. Mucho más discreto que la réflex. |
+| 4 | `obturador_compacta` | M | 0,25–0,35 s | no | 1 | -6 dBFS | Compacta digital de bolsillo: clic electrónico sintético (dos transitorios a 20–30 ms) seguido de un zumbido leve de motor de 80–120 ms que decae. |
+| 5 | `obturador_tlr` | M | 0,10–0,18 s | no | 1 | -6 dBFS | Obturador central de una TLR de formato medio: un «tic» metálico muy corto y seco, agudo (3–8 kHz), sin espejo ni cortinilla. |
+| 6 | `manivela_tlr` | M | 0,90–1,10 s | no | 1 | -6 dBFS | Avance de película de la TLR: media vuelta de manivela con trinquete (6–8 clics metálicos regulares en 0,6 s) y retorno de la manivela con un tope final. |
+| 7 | `carrete_nuevo` | M | 2,0–2,8 s | no | 1 | -6 dBFS | Cargar un rollo: apertura de la tapa trasera (clac), encaje del carrete (roce + tope), cierre de la tapa (clac más grave). Tres gestos separados unos 0,6 s. |
+| 8 | `af_confirmado` | M | 0,16–0,22 s | no | 1 | -9 dBFS | Doble pitido de foco conseguido: dos tonos senoidales de 2,8–3,2 kHz, de 60 ms cada uno, separados 40 ms. Envolvente con 5 ms de ataque y de caída, sin clic. |
+| 9 | `af_fallo` | M | 0,30–0,45 s | no | 1 | -9 dBFS | El autofoco no encuentra: zumbido corto de motor de ida y vuelta (sube y baja de tono) o, en su defecto, un pitido grave de 400–500 Hz. Debe leerse como «no» sin ser desagradable. |
+| 10 | `motor_af` | M | 0,20–0,35 s | no | 2 | -12 dBFS | Motor de enfoque de un objetivo de réflex moviéndose: zumbido mecánico de banda media con arranque y parada. Variación 1: recorrido corto (0,2 s). Variación 2: largo (0,35 s). |
+| 11 | `zoom_compacta` | M | 1,5 s exactos | SÍ | 1 | -12 dBFS | Motor del zoom de una compacta en marcha, régimen constante (sin arranque ni parada dentro del fichero). Bucle perfecto: tono y nivel estables. |
+| 12 | `zoom_compacta_fin` | M | 0,12–0,18 s | no | 1 | -12 dBFS | El mismo motor al detenerse: caída de tono y un tope mecánico leve. Empalma tras el bucle 11 (mismo timbre y nivel al inicio). |
+| 13 | `anillo_enfoque` | M | 0,03–0,06 s | no | 4 | -15 dBFS | Un «paso» del anillo de enfoque manual: roce de helicoide engrasado con un clic muy leve. Se dispara muchas veces seguidas (hasta 20 por segundo): sin cola, y las cuatro variaciones con ±5 % de tono y nivel para que no suene a ametralladora. |
+| 14 | `dial` | M | 0,03–0,08 s | no | 3 | -12 dBFS | Un clic de dial de velocidades o de diafragma: retén metálico con muelle, nítido y seco (2–5 kHz). Tres variaciones con diferencias mínimas. |
+| 15 | `camara_subir` | M | 0,30–0,45 s | no | 1 | -15 dBFS | Llevarse la cámara al ojo: roce de correa de nailon y de tela de la ropa, sin golpes. Suave, ascendente en intensidad. |
+| 16 | `camara_bajar` | M | 0,35–0,50 s | no | 1 | -15 dBFS | Bajar la cámara: el mismo roce, descendente, y al final el golpecito sordo de la cámara al quedar colgada sobre el pecho. |
+
+### B. AMBIENTE DEL PARQUE
+
+| N.º | Fichero | Canales | Duración | Bucle | Var. | Pico | Descripción |
+|---|---|---|---|---|---|---|---|
+| 17 | `pajaros_dia` | E | 45 s exactos | SÍ | 1 | -12 dBFS | Pájaros de parque urbano a mediodía: gorriones, mirlo, algún carbonero; cantos sueltos con pausas reales de silencio entre ellos (al menos el 40 % del tiempo sin canto). Sin tráfico, sin viento, sin voces, sin siseo de fondo. Imagen estéreo amplia. Sonoridad integrada en torno a −26 LUFS. |
+| 18 | `pajaros_atardecer` | E | 45 s exactos | SÍ | 1 | -12 dBFS | Hora dorada: mirlos y cantos más espaciados y melódicos que de día, alguna golondrina. Menos densidad que el 17 (silencio el 55 % del tiempo). Mismas restricciones. |
+| 19 | `hora_azul` | E | 40 s exactos | SÍ | 1 | -14 dBFS | Anochecer: los últimos cantos aislados de pájaros (dos o tres en todo el bucle) sobre los primeros grillos, escasos. Transición entre 18 y 20. |
+| 20 | `grillos_noche` | E | 30 s exactos | SÍ | 1 | -14 dBFS | Grillos de noche de verano: varios individuos a distancias distintas, con ritmo irregular. Sin ranas, sin viento, sin zumbido eléctrico. |
+| 21 | `fuente` | M | 12 s exactos | SÍ | 1 | -12 dBFS | Agua de un surtidor cayendo en su estanque, grabada a 1–2 m: chorro continuo y salpicaduras. Textura estable para que el bucle no se note. Sin eco de plaza. |
+| 22 | `hojas_viento` | M | 4–8 s | no | 3 | -15 dBFS | Una ráfaga suave en las copas de los árboles: entra, crece y se apaga dentro del fichero (fundidos naturales de 1 s). Suelta, no continua. Tres variaciones de 4, 6 y 8 s. |
+| 23 | `zureo` | M | 1,0–2,0 s | no | 3 | -12 dBFS | Arrullo de una paloma torcaz o bravía, de cerca. Tres frases distintas. |
+| 24 | `aleteo_bandada` | M | 1,5–2,5 s | no | 2 | -6 dBFS | Una bandada de 8 a 12 palomas alzando el vuelo de golpe desde el suelo: estallido de aleteos que se aleja y se apaga. Sin arrullos. |
+| 25 | `aleteo_paloma` | M | 0,4–0,6 s | no | 2 | -12 dBFS | Una sola paloma que se aparta con cuatro o cinco aleteos rápidos. |
+
+### C. GENTE, ANIMALES Y JUEGOS (fuentes puntuales: el juego las coloca en 3D y las atenúa con la distancia)
+
+| N.º | Fichero | Canales | Duración | Bucle | Var. | Pico | Descripción |
+|---|---|---|---|---|---|---|---|
+| 26 | `paso_grava` | M | 0,20–0,30 s | no | 6 | -12 dBFS | Un único paso de adulto sobre grava fina, calzado de calle. Seis variaciones (alternando pie izquierdo y derecho). Sin roce de ropa. |
+| 27 | `paso_losa` | M | 0,15–0,25 s | no | 6 | -12 dBFS | Un único paso sobre losas de piedra o adoquín: tacón y suela. Seis variaciones. |
+| 28 | `paso_cesped` | M | 0,20–0,30 s | no | 4 | -15 dBFS | Un único paso sobre hierba corta: sordo, con un leve crujido. Cuatro variaciones. |
+| 29 | `paso_corredor` | M | 0,15–0,25 s | no | 4 | -9 dBFS | Una zancada de alguien corriendo: zapatilla deportiva sobre firme duro, impacto más marcado que 27. Cuatro variaciones. |
+| 30 | `charla` | M | 12 s exactos | SÍ | 2 | -15 dBFS | Dos personas conversando a media voz sin que se entienda ninguna palabra (murmullo ininteligible, no un idioma reconocible). Variación 1: dos voces graves. Variación 2: una grave y una aguda. |
+| 31 | `risa` | M | 1,0–2,0 s | no | 3 | -12 dBFS | Una risa corta y natural de adulto. Tres personas distintas (dos mujeres, un hombre o al revés). |
+| 32 | `ninos_jugando` | M | 20 s exactos | SÍ | 1 | -12 dBFS | Tres o cuatro niños jugando: voces, grititos y risas sin palabras claras. Sin llanto. Densidad estable para el bucle. |
+| 33 | `columpio` | M | 2,730 s EXACTOS | SÍ | 1 | -15 dBFS | Chirrido de las cadenas de un columpio: un vaivén completo (ida con chirrido agudo, vuelta con chirrido algo más grave), repartidos a 0 s y a 1,365 s. La duración es crítica: el columpio del juego tarda 2,73 s por vaivén. |
+| 34 | `tobogan` | M | 1,0–1,3 s | no | 1 | -12 dBFS | Un niño deslizándose por un tobogán metálico: roce continuo que acelera y un golpe suave al llegar abajo. |
+| 35 | `balon_patada` | M | 0,15–0,25 s | no | 2 | -9 dBFS | Patada a un balón de cuero o plástico hinchado: impacto seco con resonancia hueca. |
+| 36 | `balon_bote` | M | 0,12–0,18 s | no | 2 | -12 dBFS | Un bote de balón sobre hierba: más sordo que la patada. |
+| 37 | `perro_ladrido` | M | 0,3–0,6 s | no | 3 | -9 dBFS | Un ladrido aislado de perro mediano, amistoso, sin gruñido ni agresividad. Tres variaciones. |
+| 38 | `perro_jadeo` | M | 2,5 s exactos | SÍ | 1 | -18 dBFS | Jadeo rítmico de un perro paseando con la lengua fuera (unas 5 respiraciones por segundo). |
+| 39 | `periodico` | M | 0,5–1,0 s | no | 2 | -15 dBFS | Pasar una página de periódico de papel prensa: crujido y sacudida final. |
+| 40 | `taza` | M | 0,15–0,25 s | no | 1 | -15 dBFS | Dejar un vaso de café de cartón, medio lleno, sobre un banco de madera: golpe sordo y hueco. |
+
+### D. INTERFAZ Y JUEGO (no diegéticos: limpios, discretos, familia tímbrica común)
+
+| N.º | Fichero | Canales | Duración | Bucle | Var. | Pico | Descripción |
+|---|---|---|---|---|---|---|---|
+| 41 | `ui_mover` | E | 0,05–0,10 s | no | 1 | -15 dBFS | Cambiar de modo o de botón en el menú: un «tic» blando y neutro (1–2 kHz), sin tono musical definido. Suena muchas veces: no debe cansar. |
+| 42 | `ui_aceptar` | E | 0,10–0,20 s | no | 1 | -12 dBFS | Confirmar o entrar: dos notas ascendentes muy breves (intervalo de cuarta o quinta), timbre cálido tipo marimba o campana apagada. |
+| 43 | `ui_atras` | E | 0,10–0,20 s | no | 1 | -12 dBFS | Volver o cancelar: el mismo timbre que 42 con el intervalo descendente. |
+| 44 | `ui_bloqueado` | E | 0,15–0,25 s | no | 1 | -12 dBFS | Opción no disponible: un «toc» grave y sordo (150–300 Hz), sin zumbido de error estridente. |
+| 45 | `pausa` | E | 0,18–0,25 s | no | 1 | -12 dBFS | Abrir la pausa: una nota suave descendente con filtro que se cierra, sensación de «el mundo se detiene». |
+| 46 | `revelado` | E | 0,4–0,7 s | no | 1 | -12 dBFS | Aparece la foto revelada: un «fss» de papel fotográfico saliendo, o de una hoja deslizándose, que termina en un golpecito leve. |
+| 47 | `foto_rechazada` | E | 0,3–0,5 s | no | 1 | -12 dBFS | La foto no vale: dos notas descendentes apagadas, del mismo timbre que 42. Informativo, no punitivo. |
+| 48 | `estrella` | E | 0,25–0,35 s | no | 1 | -9 dBFS | Una estrella conseguida: campanilla brillante con cola corta. Suena hasta cinco veces seguidas, una cada 0,15 s, y el juego sube el tono en cada una: entregar una sola nota (La5, 880 Hz) limpia. |
+| 49 | `nivel_superado` | E | 1,5–3,0 s | no | 1 | -6 dBFS | Pequeña fanfarria de nivel superado: arpegio mayor ascendente de 4 a 6 notas con un acorde final. Instrumentación acústica ligera (marimba, guitarra, pizzicato), no orquesta épica. |
+| 50 | `nivel_no_superado` | E | 1,0–2,0 s | no | 1 | -9 dBFS | Cierre breve y neutro: dos o tres notas que resuelven hacia abajo sin dramatismo. Mismo timbre que 49. |
+| 51 | `tictac` | E | 0,08–0,12 s | no | 1 | -12 dBFS | Un único tic de reloj mecánico. Suena una vez por segundo en los últimos 10 s de un nivel. |
+| 52 | `tiempo_agotado` | E | 0,6–1,0 s | no | 1 | -6 dBFS | Se acabó el tiempo: timbre de reloj de cocina o campanilla doble, claro pero no estridente. |
+| 53 | `tutorial_ok` | E | 0,3–0,5 s | no | 1 | -12 dBFS | Paso del tutorial conseguido: un «ding» amable de una sola nota (Mi6 aprox.), con cola de 0,3 s. |
+
+### E. AÑADIDOS EL 06-10
+
+| N.º | Fichero | Canales | Duración | Bucle | Var. | Pico | Descripción |
+|---|---|---|---|---|---|---|---|
+| 54 | `obturador_reflex_rapido` | M | 0,20–0,30 s | no | 1 | -3 dBFS | La réflex del sonido 1 a 1/2000–1/4000 s: mismo cuerpo y mismo espejo, con la cortinilla reducida a un chasquido único y todo el conjunto más compacto y seco. |
+| 55 | `control_elegir` | M | 0,05–0,10 s | no | 1 | -15 dBFS | Elegir otro ajuste en la tira del visor: clic más grave y blando que «dial» (500–1500 Hz), como un conmutador de palanca pequeño. |
+| 56 | `dial_tope` | M | 0,05–0,10 s | no | 1 | -15 dBFS | El dial llega al final de su recorrido: clic sordo y amortiguado, claramente distinto de «dial», que transmite «no pasa de aquí». |
+| 57 | `bloqueo` | M | 0,10–0,15 s | no | 1 | -9 dBFS | Bloqueo de foco y exposición: un solo pitido corto de 3,8–4,2 kHz, más agudo que af_confirmado y sin repetición. |
+| 58 | `medicion` | M | 0,08–0,12 s | no | 1 | -15 dBFS | Cambiar el modo de medición: clic de conmutador deslizante de tres posiciones. |
+| 59 | `lupa_tlr` | M | 0,15–0,25 s | no | 1 | -12 dBFS | Desplegar la lupa del capuchón de la TLR: un «clac» metálico leve de chapa fina con muelle. |
+| 60 | `pato` | M | 0,3–0,6 s | no | 3 | -9 dBFS | Un graznido de ánade real. Tres variaciones (una de ellas, doble: «cua-cua»). |
+| 61 | `pato_agua` | M | 0,8–1,5 s | no | 2 | -12 dBFS | Un pato chapoteando o sacudiéndose las alas sobre el agua: salpicaduras cortas, sin graznido. |
+| 62 | `movil` | M | 0,4–0,8 s | no | 2 | -18 dBFS | Aviso de un móvil apagado por la ropa: variación 1, dos pulsos de vibración; variación 2, un tono de mensaje breve y genérico, filtrado (sin agudos por encima de 3 kHz). Ninguna melodía de marca reconocible. |
+| 63 | `migas` | M | 0,3–0,5 s | no | 2 | -18 dBFS | Un puñado de migas de pan cayendo sobre grava o losa: lluvia breve de impactos diminutos. |
+| 64 | `paraguas` | M | 0,3–0,5 s | no | 2 | -18 dBFS | Roce de la tela de un paraguas cerrado contra la pierna al caminar. |
+| 65 | `insignia` | E | 0,8–1,5 s | no | 1 | -6 dBFS | Insignia conseguida: más breve y brillante que nivel_superado; tres notas ascendentes rápidas y un destello agudo (campanilla o glockenspiel). |
+| 66 | `album` | E | 0,3–0,5 s | no | 1 | -12 dBFS | Una foto entra en el álbum: una hoja de papel grueso deslizándose en una funda de plástico. |
+| 67 | `leccion_superada` | E | 1,0–1,5 s | no | 1 | -9 dBFS | Práctica o examen de la Academia superado: un acorde mayor arpegiado, amable y cálido; menos festivo que nivel_superado. |
+| 68 | `graduado` | E | 3,0–5,0 s | no | 1 | -3 dBFS | Título de la Academia: la fanfarria grande del juego. Misma instrumentación que 49 con más cuerpo (se admite un metal suave o cuerdas), frase de 4 compases con final rotundo. |
+| 69 | `condicion_ok` | E | 0,15–0,25 s | no | 1 | -12 dBFS | Una condición del nivel cumplida: «tic» afirmativo de una nota (Do6 aprox.), más corto y discreto que «estrella». Suena varias veces seguidas. |
+
+### F. MÚSICA (opcional)
+
+| N.º | Fichero | Canales | Duración | Bucle | Var. | Pico | Descripción |
+|---|---|---|---|---|---|---|---|
+| 70 | `musica_menu` | E | 90 s exactos (o múltiplo del compás) | SÍ | 1 | -6 dBFS | Música del menú principal: tranquila, optimista, tempo de 80–100 pulsos por minuto, instrumentación acústica ligera (guitarra, piano, pizzicato, percusión suave), en la línea de la música de los vídeos del proyecto. El final debe enlazar con el principio sin corte. Sonoridad integrada de −18 LUFS. |
 
 ## Al recibirlos
 
