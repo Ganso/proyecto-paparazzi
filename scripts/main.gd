@@ -628,6 +628,26 @@ func panel(parent: Control, rect: Rect2, color: Color, radius = 8) -> Panel:
 	parent.add_child(node)
 	return node
 
+# Lists with an orange dot before each item (the briefing, the report of a photo).
+func dot() -> String:
+	return "[color=#%s]●[/color] " % UiStyle.BRAND.to_html(false)
+func plain_bb(text_value: String) -> String:
+	return text_value.replace("[","[lb]")
+func dotted(items: Array) -> String:
+	return "\n".join(items.map(func(item): return dot()+plain_bb(str(item).substr(0,1).to_upper()+str(item).substr(1))))
+func rich_label(parent: Control, bbcode: String, rect: Rect2, font_size = 18, color = Color("e6e8dd")) -> RichTextLabel:
+	var node = RichTextLabel.new()
+	node.bbcode_enabled = true
+	node.scroll_active = false
+	node.text = bbcode
+	node.position = rect.position
+	node.size = rect.size
+	node.add_theme_font_size_override("normal_font_size",font_size)
+	node.add_theme_color_override("default_color",UiStyle.text_color(color))
+	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if parent: parent.add_child(node)
+	return node
+
 func label(parent: Control, text_value: String, rect: Rect2, font_size = 18, color = Color("e6e8dd")) -> Label:
 	var node = Label.new()
 	node.text = text_value
@@ -3668,11 +3688,13 @@ func show_results() -> void:
 		reason.add_theme_font_size_override("font_size",16)
 		column.add_child(reason)
 	for line in r.lines:
-		var text_label = Label.new()
-		text_label.text = line
-		text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text_label.add_theme_color_override("font_color",UiStyle.INK)
-		text_label.add_theme_font_size_override("font_size",16)
+		# Each part of the report with its orange dot, and its name and mark standing out.
+		var parts: PackedStringArray = str(line).split("\n",true,1)
+		var text_label = rich_label(null,dot()+"[b]"+plain_bb(parts[0])+"[/b]"+("\n"+plain_bb(parts[1]) if parts.size() > 1 else ""),Rect2(),16,UiStyle.INK)
+		text_label.fit_content = true
+		text_label.add_theme_color_override("default_color",UiStyle.INK)
+		text_label.add_theme_font_override("bold_font",UiStyle.font("Roboto-Medium"))
+		text_label.add_theme_font_size_override("bold_font_size",16)
 		column.add_child(text_label)
 	if tutorial_on:
 		# Beside the title: at the bottom it ran over the line of the best photo.
@@ -5038,8 +5060,7 @@ func show_assignment() -> void:
 	if arcade_level >= 0:
 		show_level_briefing(root)
 		return
-	var description = label(root,Texts.get_text("encargo_busca")+"\n\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,190,640,285),24)
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rich_label(root,plain_bb(Texts.get_text("encargo_busca"))+"\n\n"+dotted(Array(casting.descriptors(target.traits))),Rect2(565,190,640,285),24)
 	label(root,Texts.get_text("encargo_corredor") if target.runner else Texts.get_text("encargo_recuerda"),Rect2(565,505,635,65),18,Color("b8d78c")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button(root,Texts.get_text("entrar_fase"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("encargo_menu"),Rect2(565,625,165,60),intro)
@@ -5047,17 +5068,16 @@ func show_assignment() -> void:
 # Arcade briefing: who, then the level's rules (camera, shots, time, pass mark, conditions).
 func show_level_briefing(root: Control) -> void:
 	var level: Dictionary = Arcade.LEVELS[arcade_level]
-	var description = label(root,Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1))+"\n"+"\n".join(casting.descriptors(target.traits)),Rect2(565,160,640,215),18)
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rich_label(root,plain_bb(Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1)))+"\n[font_size=8] [/font_size]\n"+dotted(Array(casting.descriptors(target.traits))),Rect2(565,160,640,220),18)
 	var rules = [Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],
 		(Texts.get_text("arcade_un_disparo") if level.shots == 1 else Texts.get_text("arcade_disparos_d") % level.shots)+" · "+(Texts.get_text("arcade_tiempo_d") % level.limit if level.limit > 0 else Texts.get_text("arcade_sin_tiempo"))+" · "+Texts.get_text("arcade_nota_minima_d") % level.min]
 	label(root,"\n".join(rules),Rect2(565,385,640,50),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,442,640,24),15,Color("b8d78c"))
 	var conds = []
-	for key in level.cond: conds.append("• "+Conditions.describe(key,level.cond[key]))
-	if Arcade.clouds(arcade_level): conds.append("• "+Texts.get_text("arcade_aviso_nubes"))
-	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append("• "+Texts.get_text("arcade_aviso_tercios"))
-	label(root,"\n".join(conds) if not conds.is_empty() else Texts.get_text("arcade_sin_condiciones"),Rect2(565,468,640,140),18).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]))
+	if Arcade.clouds(arcade_level): conds.append(Texts.get_text("arcade_aviso_nubes"))
+	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append(Texts.get_text("arcade_aviso_tercios"))
+	rich_label(root,dotted(conds) if not conds.is_empty() else plain_bb(Texts.get_text("arcade_sin_condiciones")),Rect2(565,468,640,140),18)
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)
 

@@ -89,3 +89,11 @@ En el simulador:
   2. Con $\omega_{\text{cámara}} = \omega_{\text{sujeto}}$ a 1/30 s el sujeto queda nítido y el fondo estriado; con la cámara quieta, el sujeto queda movido.
   3. Mover la cámara durante una exposición larga sin sujeto al que seguir penaliza el pulso (hoy no ocurre).
   4. La previsualización DoF no cambia la puntuación: activarla o no da la misma nota.
+
+## Pendiente: que el barrido y la estela se vean reales en la foto (usuario, 06-10-2026)
+
+`shaders/develop.gdshader` arrastra **toda la imagen** con un único vector (`motion`), así que un barrido bien hecho y una estela (nivel 27 del arcade) se dibujan igual: todo el fotograma emborronado en horizontal. El informe sí los distingue; la imagen, no. Lo que falta:
+
+- **Barrido**: el sujeto seguido debe quedar nítido y solo el fondo arrastrado (hoy se compensa en parte con `drag_sign` y el fondo arrastrado, pero sin separar sujeto y fondo píxel a píxel).
+- **Estela**: al revés, el fondo nítido y solo el corredor arrastrado, con su rastro.
+- Hace falta una máscara del sujeto (o un búfer de velocidades por píxel) en la captura de la foto, y que el revelado aplique el arrastre según esa máscara. Mismo criterio en Vulkan y en OpenGL, y sin cambiar la nota (`tests/test_photography.gd`, `tests/test_finders.gd`).

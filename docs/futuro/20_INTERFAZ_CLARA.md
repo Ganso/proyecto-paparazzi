@@ -66,3 +66,7 @@ La identidad de **PhotoHacks** se articula en torno al naranja cálido de la mar
 | **Superficie Oscura** (`SURFACE`) | `#17212E` | Fondo base de tarjetas y paneles oscuros (`Color(.09, .13, .18)`). |
 | **Cristal Oscuro Fondo** (`GLASS_TINT`) | `#0D131A` | Tinte del cristal esmerilado en modo oscuro (`Color(.05, .075, .10)`). |
 
+
+## Listas con punto naranja (06-10-2026, usuario)
+
+En el encargo, los rasgos del objetivo y las condiciones del nivel van uno por línea, con un punto naranja delante y mayúscula inicial; en el resultado, cada apartado del informe (Enfoque, Exposición, Movimiento, Oclusión, Encuadre) lleva su punto naranja y el nombre con la nota en negrita. `main.gd::rich_label()`, `dotted()` y `dot()` (un `RichTextLabel`; `plain_bb()` protege los corchetes de los textos).
