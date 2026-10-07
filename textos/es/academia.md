@@ -978,7 +978,7 @@ El barrido: Al revés
 
 ### academia_movimiento_t5_texto · teoría 5 · texto
 > máximo 240 caracteres
-Y ahora, al revés: Si seguimos al corredor con la cámara y disparamos lento (1/30) sin dejar de girar, él sale nítido y el fondo, hecho rayas. Es el barrido: La foto que cuenta la velocidad. Lo probaremos más adelante.
+Y al revés: Sigue al corredor y dispara lento (1/30) sin dejar de girar. Él sale nítido y el fondo, hecho rayas: Es el barrido. Con el teclado, mantén la tecla de giro hacia donde corre: La cámara se adapta a su paso y avisa («Siguiendo»).
 
 ### academia_movimiento_d1 · demostración · subtítulo 1
 > máximo 110 caracteres
@@ -1000,6 +1000,14 @@ Disparo otra vez: Congelado en pleno vuelo.
 > máximo 110 caracteres
 Recuerda: Con 50 mm, a pulso, nunca por debajo de 1/60.
 
+### academia_movimiento_d6 · demostración · subtítulo 6
+> máximo 110 caracteres
+Y el barrido: Vuelvo a 1/30 y mantengo la tecla de giro hacia donde corre…
+
+### academia_movimiento_d7 · demostración · subtítulo 7
+> máximo 110 caracteres
+…la cámara se adapta a su paso y disparo sin soltar: Él nítido, el fondo corrido.
+
 ### academia_movimiento_p1 · práctica · tarea 1
 > máximo 75 caracteres
 Foto al corredor a 1/60 o más lenta: Mira el rastro
@@ -1010,7 +1018,7 @@ Congélalo: Foto al corredor a 1/500 o más rápida
 
 ### academia_movimiento_p3 · práctica · tarea 3
 > máximo 75 caracteres
-Compara las dos fotos
+Barrido a 1/30: Síguelo con la tecla de giro
 
 ### academia_movimiento_intro · práctica · presentación
 > máximo 110 caracteres
@@ -1027,6 +1035,14 @@ Pon una velocidad lenta ({velocidad}), 1/60 o menos.
 ### academia_movimiento_pista_rapida · pista · rapida
 > máximo 130 caracteres
 Ahora sube la velocidad ({velocidad}) a 1/500 o más y dispara cuando cruce.
+
+### academia_movimiento_pista_barrido · pista · barrido
+> máximo 130 caracteres
+Pon 1/30 y mantén {girar} hacia donde corre: Cuando veas «Siguiendo al sujeto», dispara sin soltar.
+
+### academia_movimiento_pista_barrido_movido · pista · barrido movido
+> máximo 130 caracteres
+Sale movido: No sueltes la tecla de giro hasta después de disparar.
 
 ### academia_movimiento_pista_no_corredor · pista · no corredor
 > máximo 130 caracteres

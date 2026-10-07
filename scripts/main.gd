@@ -1550,35 +1550,95 @@ func notify_player(message: String) -> void:
 # with them a matter of luck: so, while a key is held, the camera falls in with whoever is crossing
 # the middle of the frame that way, like a photographer following a subject. Mouse and gamepad
 # stick stay fully manual.
-func key_turn(axis: float) -> float:
+# ---- Following with the keys (docs/futuro/11 §1.4) ----
+# Holding a turn key towards where someone is going, the camera does not turn at the key's own
+# speed: it waits for that person to reach the active focus point (or catches up if they are
+# already past it) and then turns at their pace, keeping them on the point. The finder says so:
+# «Esperando al sujeto», then a blinking «Siguiendo al sujeto». The assignment's subject and
+# whoever runs are waited for and chased while in the frame or about to enter it; a passer-by is
+# only taken when already on the point (or every key press would be hijacked by someone).
+var follow_state = ""            # "", "esperando", "siguiendo"
+var follow_subject = null
+var follow_wait = 0.0
+var follow_given_up = false      # waited too long: the key turns freely until it is released
+const FOLLOW_GAIN = 4.0          # per second: how hard it closes the gap to the point
+const FOLLOW_PATIENCE = 4.0
+func key_turn(axis: float, dt = 0.0) -> float:
 	var speed = 42.0*24.0/view_focal()
-	if axis == 0.0: return 0.0
-	var follow = key_follow_speed(axis,speed)
-	return follow if follow != 0.0 else axis*speed
+	if axis == 0.0:
+		follow_state = ""
+		follow_subject = null
+		follow_wait = 0.0
+		follow_given_up = false
+		return 0.0
+	var turn = follow_turn(axis,speed,dt)
+	return turn if follow_state != "" else axis*speed
 
-func key_follow_speed(axis: float, speed: float) -> float:
-	if not eye_ready() or crowd != null: return 0.0
-	var best = 0.0
+func follow_turn(axis: float, speed: float, dt: float) -> float:
+	follow_state = ""
+	if not eye_ready() or follow_given_up or mode != "SEARCH" and mode != "TEST": return 0.0
+	var mark: Vector2 = image_position(finder.points()[finder.active])/Vector2(viewport.size)
+	var hfov = rad_to_deg(2.0*atan(36.0/(2.0*view_focal())))
+	var best = null
 	var best_score = 0.0
-	var zone = .3    # of the frame width, round its middle: only who is there counts
+	var best_gap = 0.0
+	var best_turn = 0.0
 	for p in people:
 		if not p.visible or p.state != "CAMINANDO": continue
 		var chest: Vector3 = p.control_points()[1]
 		if camera.is_position_behind(chest): continue
-		# Distance to the middle of the frame, across and up and down.
-		var on_screen = camera.unproject_position(chest)/Vector2(viewport.size)-Vector2(.5,.5)
-		var offset = Vector2(on_screen.x,on_screen.y*float(viewport.size.y)/viewport.size.x).length()
-		if offset >= zone: continue
 		var turn = rad_to_deg(p.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(chest)))
-		# Same way as the key, and not so slow or so fast that the key would feel hijacked.
-		if signf(turn) != signf(axis) or absf(turn) < speed*.3 or absf(turn) > speed*2.5: continue
-		# The faster and the nearer the middle, the more it is the one being followed: a runner a
-		# little off-centre (the camera leads it) rather than a walker who happens to be dead centre.
-		var score = absf(turn)*(1.0-offset/zone)
+		if signf(turn) != signf(axis) or absf(turn) < 1.0: continue
+		var at = camera.unproject_position(chest)/Vector2(viewport.size)
+		if absf(at.y-mark.y) > .3: continue
+		# Degrees from the point, along the way they go: + already past it, − still coming.
+		var gap = (at.x-mark.x)*signf(axis)*hfov
+		var mine = p == target and not sandbox
+		var fast = p.runner or p.actual_velocity.length() > 1.5
+		var reach = hfov*(.75 if mine or fast else .08)
+		if gap < -reach or gap > hfov*(.45 if mine or fast else .08): continue
+		# (the assignment's subject before anyone else: a passer-by crossing the point at that
+		# moment must not take the camera away from the runner it is waiting for)
+		var score = (100.0 if mine else 1.0)*(2.0 if fast else 1.0)*(1.5 if p == follow_subject else 1.0)/(1.0+absf(gap)/hfov*4.0)
 		if score > best_score:
 			best_score = score
-			best = turn
-	return best
+			best = p
+			best_gap = gap
+			best_turn = turn
+	follow_subject = best
+	if best == null:
+		follow_wait = 0.0
+		return 0.0
+	# Their pace plus what closes the gap: still while they are coming, faster than them when
+	# they are ahead, exactly their pace once on the point.
+	var want = clampf(absf(best_turn)+FOLLOW_GAIN*best_gap,0.0,absf(best_turn)*1.8+6.0)
+	var locked = absf(best_gap) <= hfov*.04+.3
+	follow_state = "siguiendo" if locked else "esperando"
+	if locked: follow_wait = 0.0
+	else:
+		follow_wait += dt
+		if follow_wait > FOLLOW_PATIENCE:
+			follow_given_up = true
+			follow_state = ""
+			return 0.0
+	return want*signf(axis)
+
+# The mark on the finder (never in the photo): fixed while waiting, blinking while following.
+var follow_label: Label
+func update_follow_mark() -> void:
+	if follow_label == null:
+		follow_label = label(ui,"",Rect2(0,0,420,30),20,UiStyle.SKY)
+		follow_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		follow_label.add_theme_color_override("font_color",Color("9ad8ff"))
+		follow_label.add_theme_color_override("font_outline_color",Color(0,0,0,.85))
+		follow_label.add_theme_constant_override("outline_size",6)
+		follow_label.z_index = 20
+	var on = follow_state != "" and mode == "SEARCH"
+	follow_label.visible = on
+	if not on: return
+	follow_label.text = Texts.get_text("seguimiento_"+follow_state)
+	follow_label.position = Vector2(view_rect.position.x+view_rect.size.x*.5-210,view_rect.position.y+view_rect.size.y*.16)
+	follow_label.modulate.a = 1.0 if follow_state == "esperando" or fmod(Time.get_ticks_msec()/1000.0,.5) < .3 else .15
 
 var meter_bar: Control
 func draw_meter_bar() -> void:
@@ -1718,7 +1778,8 @@ func _process(dt: float) -> void:
 		var hands_off = academy != null and academy.locks_input()
 		if (eye_ready() or not crowd) and not hands_off:
 			var axis = float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT))-float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT))
-			angle = fposmod(angle+key_turn(axis)*dt+pan_velocity*dt,360)
+			axis += float(demo_keys.get("turn",0.0))   # (tests and captures hold the key this way)
+			angle = fposmod(angle+key_turn(axis,dt)*dt+pan_velocity*dt,360)
 			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/view_focal()
 			pan_velocity = move_toward(pan_velocity,0,dt*180)
 			if eye_ready() and Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
@@ -1752,6 +1813,7 @@ func _process(dt: float) -> void:
 			zoom_sound(dt)
 		if academy: academy.update(dt)
 		if tutorial and tutorial.active: tutorial.update(dt)
+		update_follow_mark()
 		update_hud_visibility(dt)
 		update_hunt_hint(dt)
 		meter_timer -= dt
@@ -3626,6 +3688,9 @@ func take_photo() -> void:
 	# The turn of the camera at the instant of the shot (0 in the guided demonstrations, where the
 	# tutor's own tracking must not freeze the runner it is showing blurred).
 	var shot_omega = 0.0 if (academy and academy.active and academy.phase == "demo") or (not demo.is_empty() and not demo.has("pan-shot")) else deg_to_rad(camera_omega)
+	# The tutor's pan in the Academy's demonstration: the camera is taken to follow the runner exactly.
+	if academy and academy.active and academy.phase == "demo" and academy.demo_pan and is_instance_valid(academy.runner):
+		shot_omega = academy.runner.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(academy.runner.control_points()[1]))
 	if demo.has("pan-shot") and is_instance_valid(target):
 		# Capture helper: the scripted camera is taken to follow the subject exactly (its own
 		# smoothed tracking lags a little, which a real pan cannot afford).
@@ -5228,6 +5293,7 @@ func show_level_briefing(root: Control) -> void:
 	for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]))
 	if Arcade.clouds(arcade_level): conds.append(Texts.get_text("arcade_aviso_nubes"))
 	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append(Texts.get_text("arcade_aviso_tercios"))
+	if level.cond.has("barrido") and not Glyphs.pad() and Glyphs.device != "tactil": conds.append(Texts.get_text("arcade_aviso_barrido"))
 	rich_label(root,dotted(conds) if not conds.is_empty() else plain_bb(Texts.get_text("arcade_sin_condiciones")),Rect2(565,468,640,140),18)
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)

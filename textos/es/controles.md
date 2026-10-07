@@ -17,6 +17,9 @@ Ratón · flechas
 ### ayuda_mirar
 Mirar
 
+### ayuda_seguir · Ayuda en pantalla, solo con teclado: mantener la tecla de giro sigue al sujeto
+Mantener: Seguir al sujeto
+
 ### ayuda_tecla_zoom
 Rueda · W/S
 

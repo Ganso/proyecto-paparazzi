@@ -15,6 +15,7 @@ static var family = "xbox"              # "xbox", "ps" or "nintendo"
 # scripts/glyph_label.gd; plain labels get them without the marks (plain()).
 const CONTROLS = {
 	"mirar": ["Ratón · ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧","Stick izquierdo","Stick izquierdo","Stick izquierdo"],
+	"girar": ["⟦←⟧⟦→⟧ o ⟦A⟧⟦D⟧","el stick izquierdo","el stick izquierdo","el stick izquierdo"],
 	"zoom": ["Rueda · ⟦W⟧⟦S⟧","Stick derecho ↕","Stick derecho ↕","Stick derecho ↕"],
 	"enfoque_mf": ["Rueda · ⟦R⟧⟦T⟧","Stick derecho ↔","Stick derecho ↔","Stick derecho ↔"],
 	"enfoque_mf_zoom": ["⟦Mayús⟧+rueda · ⟦R⟧⟦T⟧","Stick derecho ↔","Stick derecho ↔","Stick derecho ↔"],
@@ -57,7 +58,7 @@ const CONTROLS = {
 
 # The same controls with the fingers (scripts/touch_controls.gd).
 const TOUCH = {
-	"mirar": "arrastrando un dedo por la imagen", "zoom": "pellizcando con dos dedos", "enfoque_mf": "Enfoque en la tira y − +",
+	"mirar": "arrastrando un dedo por la imagen", "girar": "el dedo sobre la imagen", "zoom": "pellizcando con dos dedos", "enfoque_mf": "Enfoque en la tira y − +",
 	"enfoque_mf_zoom": "Enfoque en la tira y − +", "af": "un toque sobre ella o «AF»", "disparar": "●",
 	"diafragma": "tócalo en la tira y usa − +", "velocidad": "tócala en la tira y usa − +", "iso": "tócalo en la tira y usa − +",
 	"compensacion": "tócala en la tira y usa − +", "diafragma_y": "− y +, tras tocarlo en la tira", "velocidad_y": "− y +, tras tocarla en la tira",

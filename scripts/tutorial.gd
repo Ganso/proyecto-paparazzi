@@ -8,7 +8,7 @@ const Texts = preload("res://scripts/texts.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 
-const STEPS = ["bienvenida","mirar","zoom","bajar","af","ayuda","disparar","encargo","controles","diafragma","tercios","abruma","mf","paseo","sacar","foto_paseo","fin"]
+const STEPS = ["bienvenida","mirar","zoom","bajar","af","ayuda","disparar","seguir","encargo","controles","diafragma","tercios","abruma","mf","paseo","sacar","foto_paseo","fin"]
 # The last steps are in the big park, on foot: the scene reloads there and the tutorial resumes.
 const WALKING = ["paseo","sacar","foto_paseo"]
 static var resume_step = -1
@@ -69,7 +69,7 @@ func enter_step() -> void:
 	var id: String = STEPS[step]
 	# What each step needs from the camera.
 	match id:
-		"bienvenida","mirar","zoom","bajar","af","ayuda","disparar":
+		"bienvenida","mirar","zoom","bajar","af","ayuda","disparar","seguir":
 			main.equipment.preset(0)
 			main.apply_equipment()
 		"encargo":
@@ -92,6 +92,11 @@ func enter_step() -> void:
 		return
 	# With the fingers there is no list of keys to hide or show: those two steps are skipped.
 	if Glyphs.touch and Glyphs.device == "tactil" and id in ["ayuda","abruma"]:
+		step += 1
+		enter_step()
+		return
+	# Following with the keys is the keyboard's: with a stick or a finger the turn is one's own.
+	if id == "seguir" and (Glyphs.pad() or Glyphs.device == "tactil"):
 		step += 1
 		enter_step()
 		return
@@ -174,6 +179,10 @@ func update(dt: float) -> void:
 		done_time += dt
 		return   # done: the «Continuar» button moves on, when the player is ready
 	match id():
+		"seguir":
+			# The camera has kept someone on the point for a second and a bit.
+			if main.follow_state == "siguiendo": track["followed"] = float(track.get("followed",0.0))+dt
+			if float(track.get("followed",0.0)) >= 1.2: complete()
 		"mirar":
 			# To the sides and up and down, in one step.
 			track.turn += absf(angle_difference(deg_to_rad(track.angle),deg_to_rad(main.angle)))

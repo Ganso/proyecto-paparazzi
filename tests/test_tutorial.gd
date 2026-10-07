@@ -118,7 +118,21 @@ func run() -> void:
 	await game.take_photo()
 	check(game.mode == "RESULT" and game.current_result.get("tutorial_note","") != "","The tutorial's photo shows its note")
 	game.resume_search()
-	check(await wait_step("encargo"),"A photo completes «disparar»")
+	check(await wait_step("seguir"),"A photo completes «disparar»")
+	# Following with the keys: the turn key held towards where a walker goes.
+	if game.mode == "RESULT": game.resume_search()
+	var walker = null
+	for someone in game.people:
+		if someone.visible and someone.state == "CAMINANDO" and not someone.runner and someone.lane in [1,2]: walker = someone
+	game.focal = 35.0
+	for i in 10:
+		game.aim_at(walker,1.0)
+		await process_frame
+	check(game.tutorial.done_time < 0.0,"Looking at someone does not complete «seguir»")
+	game.demo_keys["turn"] = signf(walker.actual_velocity.dot(game.camera.global_basis.x))
+	var followed = await wait_step("encargo",8.0)
+	game.demo_keys.erase("turn")
+	check(followed,"Holding the turn key the walker's way until the camera follows completes «seguir»")
 	check(game.target != null and not game.target.runner and game.briefing.text.begins_with("Busca"),"The assignment has a subject and its description")
 	# Frame the subject well and shoot until it passes.
 	var passed = false

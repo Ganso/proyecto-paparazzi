@@ -58,6 +58,10 @@ Cuidado con las nubes, que oscurecen la zona cuando pasan.
 > máximo 70 caracteres
 Consejo: Activa los tercios de paso en Opciones para afinar.
 
+### arcade_aviso_barrido · Encargo de los niveles de barrido, con teclado (una línea, unos 70 caracteres)
+> máximo 70 caracteres
+Mantén la tecla de giro hacia donde corre y dispara sin soltar.
+
 ### arcade_empezar
 Empezar
 
@@ -208,7 +212,7 @@ corredor nítido a 1/%d s con el fondo arrastrado %.1f mm
 
 ### cond_barrido_movido
 > máximo 100 caracteres
-el corredor sale movido: Gira la cámara a su ritmo mientras disparas
+el corredor sale movido: Mantén la tecla de giro hacia donde corre hasta después de disparar
 
 ### cond_barrido_corto
 > máximo 100 caracteres
@@ -385,6 +389,14 @@ apenas se mueve (%.1f mm a 1/%d s): Usa una velocidad más lenta
 ### cond_corta_estela
 > máximo 100 caracteres
 Corredor en estela, fondo nítido
+
+### seguimiento_siguiendo · Marca del visor mientras la cámara acompaña a alguien (parpadea)
+> máximo 30 caracteres
+● SIGUIENDO AL SUJETO
+
+### seguimiento_esperando · Marca del visor mientras espera a que llegue al punto de enfoque
+> máximo 30 caracteres
+ESPERANDO AL SUJETO…
 
 ## Nivel 1 · Primer encargo
 
@@ -644,7 +656,7 @@ El barrido
 
 ### arcade_nivel_26_texto · encargo
 > máximo 220 caracteres
-Sigue al corredor con la cámara y dispara lento (1/30 s) sin dejar de girar: Él sale nítido y el fondo, arrastrado. Con las teclas, la cámara acompaña sola a quien cruza el centro. Con ratón o mando, el pulso es tuyo.
+El barrido: Pon 1/30 s, mantén {girar} hacia donde corre y espera. La cámara se adapta a su paso («Siguiendo al sujeto»): Dispara sin soltar. Él sale nítido y el fondo, arrastrado. Con ratón o mando, el pulso es tuyo.
 
 ## Nivel 27 · La estela
 
@@ -654,7 +666,7 @@ La estela
 
 ### arcade_nivel_27_texto · encargo
 > máximo 220 caracteres
-Lo contrario del barrido: La cámara quieta y una velocidad lenta, 1/30 s o 1/60 s. El parque sale nítido y el corredor, convertido en una estela.
+Lo contrario del barrido: La cámara quieta y una velocidad lenta, 1/30 s o 1/60 s. Suelta las teclas de giro (con ellas la cámara lo seguiría): El parque sale nítido y el corredor, hecho una estela.
 
 ## Nivel 28 · Retrato de autor
 

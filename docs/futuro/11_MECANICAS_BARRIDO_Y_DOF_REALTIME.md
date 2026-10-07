@@ -90,6 +90,25 @@ En el simulador:
   3. Mover la cámara durante una exposición larga sin sujeto al que seguir penaliza el pulso (hoy no ocurre).
   4. La previsualización DoF no cambia la puntuación: activarla o no da la misma nota.
 
+## Seguimiento con las teclas (07-10-2026, usuario)
+
+Manteniendo una tecla de giro (←/→ o A/D) hacia donde va alguien, la cámara deja de girar a la velocidad fija de la tecla (`main.gd::key_turn()`, `follow_turn()`):
+
+| Estado (`follow_state`) | Cuándo | Qué hace la cámara | Marca en el visor |
+|---|---|---|---|
+| `esperando` | Se pulsa antes de que llegue: viene por detrás del punto de enfoque | Se queda quieta y arranca suavemente cuando se acerca | «Esperando al sujeto…», fija |
+| `esperando` | Ya ha pasado el punto y va por delante | Gira hasta 1,8 veces más rápido que él hasta alcanzarlo | «Esperando al sujeto…», fija |
+| `siguiendo` | Está en el punto de enfoque activo (± 4 % del campo) | Gira a su paso y lo mantiene clavado en el punto | «● Siguiendo al sujeto», parpadeante |
+
+- Una sola fórmula: velocidad = la del sujeto + `FOLLOW_GAIN` (4/s) × los grados que le faltan o le sobran para estar en el punto, entre 0 y 1,8 veces su velocidad. Por eso espera, alcanza y sigue sin saltos.
+- **Se le clava en el punto de enfoque activo**, no en el centro: con un punto lateral el barrido sale con aire por delante.
+- **A quién**: al sujeto del encargo antes que a nadie; si no, a quien corra. A ellos se les espera o se les alcanza mientras estén en el encuadre o a punto de entrar; a un paseante cualquiera solo se le coge si ya está en el punto (si no, cada pulsación se la llevaría alguien). Nunca a quien va en sentido contrario al de la tecla.
+- Tras 4 s esperando sin que llegue (`FOLLOW_PATIENCE`), la tecla vuelve a girar libre hasta que se suelta.
+- Vale en los dos parques con la cámara al ojo. Solo con teclado: con ratón, mando y dedos el giro es analógico y el pulso es del jugador.
+- La marca (`update_follow_mark()`) va en la interfaz, nunca en la foto.
+- **Dónde se enseña**: paso `seguir` del tutorial (solo con teclado: hay que mantener la tecla hasta que la cámara siga a alguien 1,2 s); Academia, lección 6: la página 5 de teoría lo explica, la demostración acaba con un barrido del tutor con la marca a la vista (`pan_runner`, `academy.demo_pan`) y **la tercera tarea de la práctica es un barrido** (`academy.gd::is_pan()`; antes era «compara las dos fotos»); arcade: encargo del nivel 26, aviso en «Condiciones» de los niveles de barrido con teclado (`arcade_aviso_barrido`), motivo de rechazo «sale movido», y en el 27 (la estela) el aviso contrario: soltar las teclas de giro; ayuda en pantalla, fila «Mantener: Seguir al sujeto».
+- **Pruebas**: `tests/test_input.gd` (a 35, 50, 85 y 105 mm: pulsando pronto espera sin moverse y luego sigue; pulsando tarde alcanza; lo mantiene en el punto segundo y medio; soltar lo termina), `tests/test_tutorial.gd` (el paso), `tests/test_academy.gd` (la tarea y el barrido de la demostración) y `tests/test_academy_play.gd -- --only=6` (el alumno automático hace el barrido manteniendo la tecla, `demo_keys.turn`).
+
 ## Pendiente: que el barrido y la estela se vean reales en la foto (usuario, 06-10-2026; revisado el 07-10)
 
 **Cómo está hoy** (`shaders/develop.gdshader`, `main.gd::photo_material()`): el revelado arrastra la imagen ya renderizada con 17 muestras a lo largo de un vector.

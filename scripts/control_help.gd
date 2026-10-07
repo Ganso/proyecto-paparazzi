@@ -102,6 +102,8 @@ func rows() -> Array:
 	var m: String = e.exposure_mode()
 	var out = []
 	out.append([Glyphs.k("mirar"),Texts.get_text("ayuda_mirar"),"","info"])
+	# (keyboard only: holding a turn key the camera goes with whoever walks that way)
+	if not Glyphs.pad() and Glyphs.device != "tactil": out.append([Glyphs.k("girar"),Texts.get_text("ayuda_seguir"),"","info"])
 	if e.zoom(): out.append([Glyphs.k("zoom"),Texts.get_text("ayuda_zoom"),"%d mm" % roundi(main.focal),"manual","zoom"])
 	else: out.append(["—",Texts.get_text("ayuda_zoom"),Texts.get_text("ayuda_objetivo_fijo") % roundi(main.focal),"fixed"])
 	var dist = Texts.get_text("infinito") if is_inf(main.focus_distance) else "%.1f m" % main.focus_distance

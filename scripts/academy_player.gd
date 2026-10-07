@@ -124,6 +124,32 @@ func shoot_runner() -> void:
 		waited += main.get_process_delta_time()
 	await shoot()
 
+# A pan: the key held the runner's way from before it arrives (main.gd waits for it, then goes with
+# it), and the photo once the camera has been following for a moment.
+func pan_runner() -> void:
+	for attempt in 4:
+		var r = academy.runner
+		var waited = 0.0
+		# Hold the key when the runner is coming and still a little short of the middle.
+		while waited < 25.0:
+			if is_instance_valid(r) and r.visible:
+				var off = rad_to_deg(angle_difference(deg_to_rad(main.angle),deg_to_rad(r.theta)))*r.direction
+				if off > -14.0 and off < -4.0: break
+			await main.get_tree().process_frame
+			waited += main.get_process_delta_time()
+		main.demo_keys["turn"] = float(r.direction)
+		var following = 0.0
+		var held = 0.0
+		while held < 5.0 and following < .5:
+			await main.get_tree().process_frame
+			held += main.get_process_delta_time()
+			following = following+main.get_process_delta_time() if main.follow_state == "siguiendo" else 0.0
+		if following >= .5: await shoot()
+		main.demo_keys.erase("turn")
+		await wait(.8)
+		if academy.tasks[2]: return
+		if main.mode == "RESULT": main.resume_search()
+
 # ---- The practices ----
 func practice() -> void:
 	var s = academy.subject
@@ -171,6 +197,8 @@ func practice() -> void:
 			await shoot_runner()
 			await speed_to(1000)
 			await shoot_runner()
+			await speed_to(30)
+			await pan_runner()
 		"medicion":
 			academy.do_action("meter:puntual")
 			await wait(1.2)

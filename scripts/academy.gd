@@ -102,6 +102,8 @@ var demo_photos: Array = []
 var demo_pending_label = ""
 var demo_done = false
 var frame_goal = {}         # {"who": Pedestrian, "x":…, "y":…}: keep a head at a screen fraction
+var demo_pan = false          # the demo shot in hand is a pan (main.gd gives it the runner's turn)
+var pan_time = 0.0
 var waiting_runner = null   # caption of a demo shot waiting for the runner to reach the centre
 var waiting_time = 0.0
 var waiting_subject = null  # caption of a demo shot waiting for the framing on the subject
@@ -613,6 +615,15 @@ func loop_runner() -> void:
 	if off > 32.0:
 		main.reset_walker(runner,2,main.angle-32.0*runner.direction,runner.direction)
 
+# A pan, as the arcade judges it (conditions.gd «barrido»): the camera turning with a runner at a
+# slow shutter, so that the runner stays sharp and the background streaks.
+static func is_pan(e: Dictionary) -> bool:
+	var pan: float = e.get("camera_omega",0.0)
+	var side: float = e.get("motion_sign",1.0)
+	if side == 0.0: side = 1.0
+	var drag: float = absf(e.v*side-pan*e.d)*e.t*e.f/e.d
+	return e.v >= 1.5 and absf(pan)*e.t*e.f >= Photo.PAN_STREAK and drag <= Photo.PAN_TOLERANCE
+
 # ---- Demonstration ----
 # Each step: time (s), subtitle index (or -1), action.
 func start_demo() -> void:
@@ -648,7 +659,9 @@ func start_demo() -> void:
 			[7.5,3,"hl:velocidad"],[8.0,-1,"t_set:1000"],
 			[11.3,4,"shoot_runner:1/1000"],
 			[15.5,5,"hl:velocidad"],
-			[19.5,-1,"end"]]
+			[19.5,6,"hl:velocidad"],[20.0,-1,"t_set:30"],
+			[22.5,7,"pan_runner:barrido 1/30"],
+			[27.5,-1,"end"]]
 		"composicion": demo_steps = [
 			[0.3,1,"thirds"],
 			[2.5,2,"frame:0.5:0.42"],
@@ -710,6 +723,35 @@ func run_demo(dt: float) -> void:
 		# that point), as a photographer pressing at the right instant would.
 		# (A child is narrower: the three probes of the AF point must still fit on the body.)
 		var on_runner = point_on(runner,9.0 if runner.is_child() else 16.0) if runner and absf(off) < 6.0 else -1
+		if demo_pan and runner and (on_runner >= 0 or pan_time > 0.0):
+			# The pan: once the runner is on the point the camera goes with it, as the keys do.
+			pan_time += dt
+			main.angle = runner.theta
+			main.update_camera()
+			main.follow_state = "siguiendo"
+			main.update_follow_mark()
+			if pan_time < 1.1: return
+			# The shot is of whoever is under the focus point: it has to be the runner.
+			var pan_point = point_on(runner,9.0 if runner.is_child() else 16.0)
+			if pan_point >= 0: main.finder.active = pan_point
+			elif pan_time < 3.0: return
+			# (after a restart it is still getting up to speed: the pan waits for its full stride)
+			if runner.state == "CAMINANDO" and runner.actual_velocity.length() < 2.4 and pan_time < 4.0: return
+			if runner.state != "CAMINANDO" or runner.actual_velocity.length() < 1.5 or pan_point < 0:
+				# It stopped or was held up on the way: another pass.
+				pan_time = 0.0
+				main.follow_state = ""
+				main.update_follow_mark()
+				main.clear_sector([1,2],[runner],45.0,true)
+				main.reset_walker(runner,2,main.angle-25.0,1.0)
+				return
+			main.follow_state = ""
+			main.update_follow_mark()
+			demo_shoot(waiting_runner)
+			waiting_runner = null
+			return
+		# (never while it is stopped or starting off: the photo is of someone running)
+		if on_runner >= 0 and runner.actual_velocity.length() < 1.5 and waiting_time < 8.0: return
 		if on_runner >= 0 or waiting_time > 8.0:
 			if on_runner >= 0: main.finder.active = on_runner
 			demo_shoot(waiting_runner)
@@ -817,8 +859,11 @@ func do_action(action: String, _from_page = false) -> void:
 				waiting_subject = parts[1] if parts.size() > 1 else ""
 				waiting_time = 0.0
 			else: demo_shoot(parts[1] if parts.size() > 1 else "")
-		"shoot_runner":
+		"shoot_runner", "pan_runner":
 			# Hold the timeline until the runner crosses the centre of the frame, then shoot.
+			# (pan_runner: the tutor then follows it for a second, the mark on, and shoots turning.)
+			demo_pan = parts[0] == "pan_runner"
+			pan_time = 0.0
 			waiting_runner = parts[1] if parts.size() > 1 else ""
 			waiting_time = 0.0
 			if runner:
@@ -1230,6 +1275,7 @@ func check_practice(dt: float) -> void:
 			loop_runner()
 			if not tasks[0]: new_hint = lesson_text("pista_espera")+"\n"+lesson_text("pista_lenta")
 			elif not tasks[1]: new_hint = lesson_text("pista_rapida")
+			elif not tasks[2]: new_hint = lesson_text("pista_barrido")
 		"medicion":
 			if main.equipment.metering == "puntual": tasks[0] = true
 			if tasks[0] and main.equipment.exposure_compensation() >= .99: tasks[1] = true
@@ -1355,9 +1401,12 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 		"movimiento":
 			var is_runner = e.v > 1.5
 			if not is_runner: notes.append(lesson_text("pista_no_corredor"))
-			elif e.t >= 1.0/60-.0001: tasks[0] = true
 			elif e.t <= 1.0/500+.0001: tasks[1] = true
-			if tasks[0] and tasks[1]: tasks[2] = true
+			# The pan: the runner sharp at a slow shutter, the background streaked.
+			elif is_pan(e): tasks[2] = true
+			elif e.t >= 1.0/60-.0001:
+				tasks[0] = true
+				if tasks[1] and not tasks[2]: notes.append(lesson_text("pista_barrido_movido"))
 		"medicion":
 			if tasks[1] and is_zero_approx(main.equipment.exposure_compensation()) and absf(result.delta) <= HALF_STOP: tasks[2] = true
 			elif tasks[1]: notes.append(lesson_text("pista_foto_no"))

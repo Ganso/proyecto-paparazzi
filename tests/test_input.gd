@@ -148,9 +148,47 @@ func run() -> void:
 	var turn = rad_to_deg(runner.actual_velocity.dot(game.camera.global_basis.x)/game.camera.global_position.distance_to(chest))
 	var key_speed = 42.0*24.0/game.view_focal()
 	check(absf(turn) > 8.0,"The runner crosses the view at %.1f°/s (the keys alone turn at %.1f°/s)" % [absf(turn),key_speed])
-	check(absf(game.key_turn(signf(turn))-turn) < .5,"Holding the key his way, the camera turns at his pace (runner %.1f°/s, key gives %.1f°/s)" % [turn,game.key_turn(signf(turn))])
-	check(signf(game.key_turn(-signf(turn))) == -signf(turn),"The other way, the key still turns the other way (it never follows someone against the key)")
-	check(game.key_turn(0.0) == 0.0,"No key, no turn")
+	game.key_turn(signf(turn))
+	check(game.follow_state in ["esperando","siguiendo"] and game.follow_subject == runner,"Holding the key his way, the camera takes him as its subject (%s)" % game.follow_state)
+	check(signf(game.key_turn(-signf(turn))) == -signf(turn) and game.follow_state == "","The other way, the key still turns the other way (it never follows someone against the key)")
+	check(game.key_turn(0.0) == 0.0 and game.follow_state == "","No key, no turn")
+	# Pressed before he arrives, the camera waits for him at the focus point, then goes with him and
+	# keeps him there; pressed late, it catches him up. At several focal lengths.
+	var his_way = signf(turn)
+	var where = func() -> float: return (game.camera.unproject_position(runner.control_points()[1])/Vector2(game.viewport.size)).x
+	for case in [[35.0,.22,"waits"],[85.0,.22,"waits"],[105.0,-.2,"catches up"],[50.0,-.2,"catches up"]]:
+		for i in 400:
+			await process_frame
+			if runner.state == "CAMINANDO" and runner.actual_velocity.length() > 1.5: break
+		game.focal = case[0]
+		game.finder.active = 4
+		game.aim_at(runner,1.0)
+		game.update_camera()
+		var hfov = rad_to_deg(2.0*atan(36.0/(2.0*game.focal)))
+		game.angle += his_way*case[1]*hfov      # + the camera ahead of him (he is still coming)
+		game.update_camera()
+		await process_frame
+		var start_angle = game.angle
+		game.demo_keys["turn"] = his_way
+		await process_frame
+		await process_frame
+		var first_state = game.follow_state
+		var early_move = absf(rad_to_deg(angle_difference(deg_to_rad(start_angle),deg_to_rad(game.angle))))
+		var clock = Time.get_ticks_msec()
+		while game.follow_state != "siguiendo" and Time.get_ticks_msec()-clock < 3500: await process_frame
+		var took = (Time.get_ticks_msec()-clock)/1000.0
+		check(first_state == "esperando" and game.follow_state == "siguiendo","%d mm, key pressed %s: the camera %s and then follows (%s → %s in %.1f s)" % [case[0],"early" if case[1] > 0 else "late",case[2],first_state,game.follow_state,took])
+		if case[1] > 0: check(early_move < hfov*.05,"%d mm: while he is still far the camera holds (it moved %.1f°)" % [case[0],early_move])
+		var worst = 0.0
+		clock = Time.get_ticks_msec()
+		while Time.get_ticks_msec()-clock < 1500:
+			await process_frame
+			worst = maxf(worst,absf(where.call()-.5))
+		check(worst < .07 and game.follow_state == "siguiendo","%d mm: he stays on the focus point for a second and a half (worst %.3f of the frame)" % [case[0],worst])
+		game.demo_keys.erase("turn")
+		await process_frame
+		await process_frame
+		check(game.follow_state == "","%d mm: letting go of the key ends it" % case[0])
 	game.end_level()
 	# The trigger as a two-stage shutter (docs/futuro/14 §3): half press locks focus and exposure,
 	# letting go cancels, a full press shoots with what was locked.

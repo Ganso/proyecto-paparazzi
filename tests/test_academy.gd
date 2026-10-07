@@ -2,6 +2,7 @@ extends SceneTree
 # Academia de fotografía (docs/futuro/06): texts, demonstrations, practice criteria and progress.
 # Needs a display (the demos shoot real photos):
 #   ~/bin/godot-4-fp --path . --disable-vsync --script tests/test_academy.gd
+const Conditions = preload("res://scripts/conditions.gd")
 const Main = preload("res://main.tscn")
 const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
@@ -69,7 +70,7 @@ func run() -> void:
 
 	# --- Demonstrations: they run to the end and take the photos they narrate ---
 	Engine.time_scale = 2.0
-	var expected_photos = {"exposicion":1, "dof":2, "movimiento":2, "composicion":1, "focal":2, "objetivos":2, "camaras":1, "enfoque":1, "medicion":1, "modos":1}
+	var expected_photos = {"exposicion":1, "dof":2, "movimiento":3, "composicion":1, "focal":2, "objetivos":2, "camaras":1, "enfoque":1, "medicion":1, "modos":1}
 	for n in range(1,academy.LESSONS+1):
 		print("· demo %d" % n)
 		academy.begin(n,"demo")
@@ -92,7 +93,8 @@ func run() -> void:
 					var d1 = Photo.dof(shots[1].f,shots[1].n,shots[1].s)
 					check(d1.y-d1.x > (d0.y-d0.x)*4,"Demo 2: the sharp zone grows a lot when closing down")
 			"movimiento":
-				if shots.size() == 2:
+				if shots.size() == 3:
+					check(Conditions.check(shots[2],{"barrido":true})[0].ok,"Demo 3 ends with a pan: the runner sharp at 1/30 s, the background streaked (%s)" % Conditions.check(shots[2],{"barrido":true})[0].text)
 					check(shots[0].t >= 1.0/30-.001 and shots[1].t <= 1.0/1000+.0001,"Demo 3 shoots at 1/30 and 1/1000")
 					check(shots[0].v > 1.5 and shots[1].v > 1.5,"Demo 3 catches the runner both times (%.2f, %.2f m/s)" % [shots[0].v,shots[1].v])
 					check(academy.demo_photos[0].result.drag > academy.demo_photos[1].result.drag*10,"Demo 3: 1/30 leaves a trail, 1/1000 freezes (%.3f / %.3f mm)" % [academy.demo_photos[0].result.drag,academy.demo_photos[1].result.drag])
@@ -123,7 +125,11 @@ func run() -> void:
 	check(academy.tasks[0],"Lesson 3: runner at 1/30 shows the trail")
 	check(not academy.tasks[2],"Movement: one photo is not the comparison yet")
 	academy.on_practice_photo(null,fake.call({"t":1.0/1000,"v":2.8}))
-	check(academy.tasks[1] and academy.tasks[2] and academy.done(L.call("movimiento"),"practica"),"Movement: the frozen one completes the comparison and the practice")
+	check(academy.tasks[1] and not academy.tasks[2] and not academy.done(L.call("movimiento"),"practica"),"Movement: frozen, and the pan still to do")
+	academy.on_practice_photo(null,fake.call({"t":1.0/30,"v":2.8,"d":7.0,"s":7.0,"motion_sign":1.0}))
+	check(not academy.tasks[2],"Movement: a still camera at 1/30 s is a trail, not a pan")
+	academy.on_practice_photo(null,fake.call({"t":1.0/30,"v":2.8,"d":7.0,"s":7.0,"motion_sign":1.0,"camera_omega":2.8/7.0}))
+	check(academy.tasks[2] and academy.done(L.call("movimiento"),"practica"),"Movement: following the runner at 1/30 s is the pan, and completes the practice")
 	check(academy.comparison_photos().size() == 2,"Movement: the result shows the trail and the frozen photo side by side")
 	check(game.equipment.exposure_mode() == "S" and academy.auto_subject() == academy.runner and academy.runner != null,"Movement runs in shutter priority and the camera looks after the runner's focus")
 	academy.begin(L.call("focal"),"practica")

@@ -53,6 +53,10 @@ El panel de la izquierda es la ayuda en pantalla: Tus controles, su valor y si l
 > máximo 210 caracteres
 Haz una foto a quien quieras: {disparar}. Después verás el revelado con su nota.
 
+### tutorial_seguir · Seguir a alguien con las teclas (solo teclado)
+> máximo 210 caracteres
+Sigue a alguien que camine: Mantén {girar} hacia donde va. La cámara espera a que llegue al punto de enfoque y se adapta a su paso: Verás «Siguiendo al sujeto». Así se hacen los barridos.
+
 ### tutorial_encargo
 > máximo 210 caracteres
 Un encargo de verdad: Arriba tienes la descripción. Baja la cámara ({bajar}) para encontrar a esa persona y súbela para la foto. Si hay demasiada información en pantalla, pulsa {ayuda_pantalla} para quitarla.
