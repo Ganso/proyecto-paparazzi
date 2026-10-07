@@ -156,6 +156,59 @@ func run() -> void:
 	game.set_interface("clasica")
 	await frames(3)
 	check(game.view_rect == screen and game.hud_top.all(func(n): return n.visible),"Classic interface: full screen and HUD always visible")
+	# The virtual shutter (docs/SIMULACION_FOTOGRAFICA.md §9): the photo as the mean of many frames.
+	# Under a test it is one frame unless asked; here, twelve.
+	var MainScript = preload("res://scripts/main.gd")
+	check(game.photo_samples_cap() == 1,"Tests take their photos with one frame")
+	game.set_interface("camara")
+	game.start_session("day",true)
+	game.equipment.preset(2)
+	game.equipment.set_exposure_mode("P")
+	game.apply_equipment()
+	game.resume_search()
+	game.sandbox_paused = true
+	game.focal = 50.0
+	game.update_camera()
+	await frames(6)
+	await game.take_photo()
+	var plain: Image = game.current_photo.get_image()
+	check(not game.current_result.evidence.get("exposed",false),"One frame: the photo is the plain frame, developed afterwards")
+	game.resume_search()
+	await frames(3)
+	MainScript.photo_samples_override = 12
+	var camera_before = [game.camera.position,game.angle,game.pitch,game.camera.fov,game.park.environment.environment.tonemap_exposure,DisplayServer.window_get_vsync_mode(),Engine.max_fps]
+	await game.take_photo()
+	var exposed: Image = game.current_photo.get_image()
+	var ev: Dictionary = game.current_result.evidence
+	check(ev.get("exposed",false) and int(ev.get("samples",0)) >= 8 and int(ev.samples) <= 12,"Twelve frames at most, eight at least (%d)" % int(ev.get("samples",0)))
+	check(not game.exposing and not game.curtain.visible,"The shutter is closed again")
+	check(game.camera.projection == Camera3D.PROJECTION_PERSPECTIVE and game.camera.keep_aspect == Camera3D.KEEP_WIDTH,"The camera is back to its own projection")
+	var camera_after = [game.camera.position,game.angle,game.pitch,game.camera.fov,game.park.environment.environment.tonemap_exposure,DisplayServer.window_get_vsync_mode(),Engine.max_fps]
+	check(camera_before[0].is_equal_approx(camera_after[0]) and is_equal_approx(camera_before[1],camera_after[1]) and is_equal_approx(camera_before[3],camera_after[3]),"…where it was (a still camera)")
+	check(is_equal_approx(camera_before[4],camera_after[4]) and camera_before[5] == camera_after[5] and camera_before[6] == camera_after[6],"The scene's exposure, the vsync and the frame cap are as they were")
+	var developed = game.photo_material(game.current_result)
+	check(developed.get_shader_parameter("coc_pixels") == 0.0 and developed.get_shader_parameter("exposure") == 0.0 and developed.get_shader_parameter("motion") == Vector2.ZERO and developed.get_shader_parameter("shake") == Vector2.ZERO,"The develop pass adds no blur nor exposure to an exposed photo")
+	# A still scene, well exposed: the mean of the frames is the same picture as the single frame.
+	var same_size = plain.get_size() == exposed.get_size()
+	var apart = 0.0
+	var light = [0.0,0.0]
+	if same_size:
+		var cells = 0
+		for y in range(8,plain.get_height()-8,24):
+			for x in range(8,plain.get_width()-8,24):
+				var a = plain.get_pixel(x,y)
+				var b = exposed.get_pixel(x,y)
+				apart += absf(a.get_luminance()-b.get_luminance())
+				light[0] += a.get_luminance()
+				light[1] += b.get_luminance()
+				cells += 1
+		apart /= cells
+		light[0] /= cells
+		light[1] /= cells
+	check(same_size and light[1] > .08 and absf(light[1]-light[0]) < .06 and apart < .08,"A still, well exposed scene comes out as the single frame did (light %.3f against %.3f, %.3f apart)" % [light[1],light[0],apart])
+	MainScript.photo_samples_override = -1
+	game.sandbox_paused = false
+	game.set_interface("clasica")
 	# Leave the player's own choice as it was.
 	if saved_interface != "":
 		var f = FileAccess.open("user://interfaz.cfg",FileAccess.WRITE)

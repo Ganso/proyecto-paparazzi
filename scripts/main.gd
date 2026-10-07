@@ -1730,6 +1730,7 @@ func watch_speed(dt: float) -> void:
 
 var band_key = ""
 func _process(dt: float) -> void:
+	if exposing: return     # the shutter is open: expose_photo() moves the world itself
 	total_time += dt
 	watch_speed(dt)
 	if not debug_off.is_empty(): apply_debug_off()   # (the light of each hour sets the effects again)
@@ -3003,6 +3004,215 @@ func place_view() -> void:
 # cloth shutter, compact's electronic click. Falls back to the old tone if the files are missing.
 var shutter_player: AudioStreamPlayer
 var shutter_streams = {}
+# ---- The virtual shutter (docs/SIMULACION_FOTOGRAFICA.md §9) ----
+# The photo is not one frame worked over afterwards: while the shutter is open the game renders
+# many frames and averages them in linear light, as a sensor does.
+#   · between frames the world moves on by a slice of the exposure time and the camera goes on
+#     turning if it was panning: the pan, the trail, the arms and legs that move more than the
+#     body, all come out by themselves;
+#   · the hand's tremble is a real wander of the camera during the exposure;
+#   · each frame is taken from another point of the lens's aperture with the plane of focus held
+#     still: depth of field with real edges, the same in Forward+ and in OpenGL;
+#   · each frame is shifted a fraction of a pixel: the photo is antialiased;
+#   · the exposure is set in the renderer's own tone curve for those frames, not multiplied
+#     afterwards on 8 bits: what burns, burns where the light really is.
+# Nothing here touches the score, which is decided before (capture_evidence()).
+var exposing = false
+static var photo_samples_override = -1      # tests: a fixed number of frames (1 = the plain frame)
+var acc_view: SubViewport
+var acc_rect: TextureRect
+var res_view: SubViewport
+var res_rect: TextureRect
+var curtain: ColorRect
+
+# Most frames a photo may take here: fewer where every frame waits for the screen.
+func photo_samples_cap() -> int:
+	if photo_samples_override >= 0: return photo_samples_override
+	if OS.has_environment("PAPARAZZI_PHOTO_SAMPLES"): return int(OS.get_environment("PAPARAZZI_PHOTO_SAMPLES"))   # (evidence tools)
+	# Tests and tools run the game from their own script: one frame, as fast as before.
+	if "--script" in OS.get_cmdline_args() or "-s" in OS.get_cmdline_args() or smoke or run_metrics: return 1
+	if OS.has_feature("movie"): return 24      # (a recording shows every frame of the exposure as black)
+	if OS.has_feature("web"): return 16
+	if OS.has_feature("mobile"): return 24
+	if not ParkScene.forward_plus(): return 32
+	return {"Bajo":24,"Medio":32,"Alto":48,"Ultra":64}.get(graphics_preset,48)
+
+# Frames this photo needs: as many as its longest blur asks for, eight at least (for the edges).
+func photo_samples(e: Dictionary, result: Dictionary) -> int:
+	var most = photo_samples_cap()
+	if most <= 1: return 1
+	var width = float(viewport.size.x)
+	var streak = maxf(float(result.get("drag",0.0)),float(result.get("background",0.0)))/36.0*width
+	var others = 3.0*e.t*e.f/3.0/36.0*width            # someone running three metres away
+	var shake = shake_pixels(e,result)
+	var far = Photo.coc(e.f,e.n,60.0,e.s)/36.0*width*.5
+	var near = Photo.coc(e.f,e.n,1.5,e.s)/36.0*width*.5
+	var blur = maxf(far,near)
+	return clampi(ceili(maxf(maxf(streak,maxf(others,shake))*.6,blur*blur*.2)),mini(8,most),most)
+
+# How far the hand's tremble carries the image during the exposure, in pixels (none in a pan or a
+# trail, where the slow shutter is deliberate and braced: Photography.evaluate() says the same).
+func shake_pixels(e: Dictionary, result: Dictionary) -> float:
+	var drag = float(result.get("drag",0.0))
+	var streak = float(result.get("background",0.0))
+	var panning = streak >= Photo.PAN_STREAK and drag <= Photo.PAN_TOLERANCE and e.v >= Photo.PAN_SUBJECT_SPEED
+	var trail = e.get("trail",false) and e.v >= Photo.PAN_SUBJECT_SPEED and drag >= Photo.TRAIL and streak <= Photo.C
+	if panning or trail: return 0.0
+	return minf(maxf(0.0,float(result.get("ratio",e.t*e.f))-1.0)*5.0,45.0)*viewport.size.x/1280.0
+
+func build_darkroom() -> void:
+	if is_instance_valid(acc_view): return
+	acc_view = SubViewport.new()
+	acc_view.disable_3d = true
+	acc_view.use_hdr_2d = true
+	acc_view.render_target_clear_mode = SubViewport.CLEAR_MODE_NEVER
+	acc_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(acc_view)
+	acc_rect = TextureRect.new()
+	acc_rect.texture = viewport.get_texture()
+	acc_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	acc_rect.material = ShaderMaterial.new()
+	acc_rect.material.shader = preload("res://shaders/photo_accumulate.gdshader")
+	acc_view.add_child(acc_rect)
+	res_view = SubViewport.new()
+	res_view.disable_3d = true
+	res_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(res_view)
+	res_rect = TextureRect.new()
+	res_rect.texture = acc_view.get_texture()
+	res_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	res_rect.material = ShaderMaterial.new()
+	res_rect.material.shader = preload("res://shaders/photo_resolve.gdshader")
+	res_view.add_child(res_rect)
+	# The finder goes dark while the shutter is open (the frames in between are not to be seen).
+	curtain = ColorRect.new()
+	curtain.color = Color.BLACK
+	curtain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	curtain.visible = false
+	curtain.z_index = 30
+	ui.add_child(curtain)
+
+# The world, a slice of the exposure on (what _process() does for it while searching).
+func advance_world(dt: float) -> void:
+	if (sandbox and sandbox_paused) or (academy and academy.active and academy.paused): return
+	for p in people: step_person(p,dt)
+	if pigeons: pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
+	if extras: extras.update(dt)
+	if ducks: ducks.update(dt)
+	if dog: dog.update(dt)
+
+# What the glass will make of the lights in front of it (only for the developed image, never for
+# the score): where the sun is and whether it reaches the lens, and the lamps that are lit.
+func lens_evidence(e: Dictionary) -> void:
+	var size = Vector2(viewport.size)
+	var wide = size.x/size.y
+	var to_frame = func(world: Vector3) -> Vector2:
+		var at = camera.unproject_position(world)/size
+		# (the TLR's negative is the central square of the frame)
+		if equipment.tlr(): at.x = .5+(at.x-.5)*wide
+		return at
+	e["tod"] = str(time_of_day)
+	e["aspect"] = 1.0 if equipment.tlr() else wide
+	var eye: Vector3 = camera.global_position
+	if str(time_of_day) in ["day","golden"]:
+		var toward: Vector3 = park.sun.global_basis.z
+		var far = eye+toward*500.0
+		if not camera.is_position_behind(far): e["sun"] = {"pos":to_frame.call(far),"seen":park.light_visible(eye,eye+toward*80.0,null)}
+	var lit = []
+	for lamp in park.lamps:
+		if lit.size() >= 12: break
+		if not lamp.visible or lamp.light_energy < .05: continue
+		var bulb: Vector3 = lamp.global_position
+		if camera.is_position_behind(bulb): continue
+		var at: Vector2 = to_frame.call(bulb)
+		if at.x < -.05 or at.x > 1.05 or at.y < -.05 or at.y > 1.05: continue
+		if park.light_visible(eye,bulb,null): lit.append(at)
+	e["lights"] = lit
+
+# The shape of the aperture: a circle wide open, a polygon of seven blades once it is closed a stop
+# or more (how far the edge is in that direction, against the circle of the same f-number).
+const BLADES = 7
+func blade_reach(direction: float, e: Dictionary) -> float:
+	var closed = clampf(float(e.get("stops",0.0)),0.0,1.0)
+	if closed <= 0.0: return 1.0
+	var sector = TAU/BLADES
+	var polygon = cos(sector*.5)/cos(fposmod(direction,sector)-sector*.5)
+	return lerpf(1.0,polygon*1.06,closed)
+
+func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int) -> Image:
+	build_darkroom()
+	var size: Vector2i = viewport.size
+	acc_view.size = size
+	res_view.size = size
+	acc_rect.size = Vector2(size)
+	res_rect.size = Vector2(size)
+	(acc_rect.material as ShaderMaterial).set_shader_parameter("decode",not ParkScene.forward_plus())
+	curtain.position = view_rect.position
+	curtain.size = view_rect.size
+	curtain.visible = true
+	exposing = true
+	set_dof_blur(false)
+	# As fast as the machine renders, not one frame per refresh of the screen.
+	var vsync = DisplayServer.window_get_vsync_mode()
+	var fps_cap = Engine.max_fps
+	if not OS.has_feature("web") and not OS.has_feature("mobile"):
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+		Engine.max_fps = 0
+	# The exposure, in the renderer's tone curve (and what a backlit level adds: conditions.gd).
+	var env: Environment = park.environment.environment
+	var tone = env.tonemap_exposure
+	var stops = clampf(float(result.get("delta",0.0))+float(e.get("ev_shift",0.0)),-7.0,7.0)
+	env.tonemap_exposure = tone*pow(2.0,-stops)
+	await get_tree().process_frame      # (the accumulator's own canvas, laid out)
+	acc_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var near = camera.near
+	var far = camera.far
+	var width = near*36.0/focal
+	var radius = focal/1000.0/(2.0*e.n)
+	var focus = clampf(e.s,.3,10000.0) if not is_inf(e.s) else 10000.0
+	var hfov = rad_to_deg(2.0*atan(36.0/(2.0*focal)))
+	var tremble = shake_pixels(e,result)/float(size.x)*hfov
+	var wander = float(e.get("seed",1))
+	var turn = rad_to_deg(omega)
+	var base_angle = angle
+	var base_pitch = pitch
+	var material = acc_rect.material as ShaderMaterial
+	for k in samples:
+		var u = (k+.5)/samples
+		advance_world(e.t/samples)
+		# The pan goes on, and the hand wanders (two slow waves each way, by the shot's seed).
+		angle = base_angle+turn*e.t*u+tremble*(sin(TAU*(.8*u+wander*.37))+.5*sin(TAU*(2.1*u+wander*.11)))/1.5*.5
+		pitch = base_pitch+tremble*(sin(TAU*(.6*u+wander*.73))+.5*sin(TAU*(1.7*u+wander*.29)))/1.5*.5
+		update_camera()
+		var base = camera.position
+		# A point of the aperture (even over the disc) and a fraction of a pixel.
+		var lens_turn = TAU*fmod(k*.569840291+wander*.13,1.0)
+		var lens = Vector2.from_angle(lens_turn)*radius*sqrt(fmod(k*.754877666+.5,1.0))*blade_reach(lens_turn,e)
+		var jitter = Vector2(fmod(k*.618033989,1.0)-.5,fmod(k*.414213562,1.0)-.5)*width/size.x
+		camera.set_frustum(width,-lens*near/focus+jitter,near,far)
+		camera.position = base+camera.basis.x*lens.x+camera.basis.y*lens.y
+		material.set_shader_parameter("weight",1.0/(k+1))
+		await RenderingServer.frame_post_draw
+		camera.position = base
+	camera.set_perspective(camera.fov,near,far)
+	camera.keep_aspect = Camera3D.KEEP_WIDTH
+	angle = base_angle+turn*e.t
+	pitch = base_pitch
+	update_camera()
+	env.tonemap_exposure = tone
+	acc_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	res_view.render_target_update_mode = SubViewport.UPDATE_ONCE
+	await RenderingServer.frame_post_draw
+	var image = res_view.get_texture().get_image()
+	if not OS.has_feature("web") and not OS.has_feature("mobile"):
+		DisplayServer.window_set_vsync_mode(vsync)
+		Engine.max_fps = fps_cap
+	e["exposed"] = true
+	e["samples"] = samples
+	exposing = false
+	curtain.visible = false
+	return image
+
 # The compact's zoom motor: it whirrs while the focal length changes and stops with a tick.
 var zoom_heard = 0.0
 var zoom_hold = 0.0
@@ -3704,6 +3914,7 @@ func take_photo() -> void:
 	evidence["rendered_dof"] = dof_active()
 	evidence["ca"] = float(equipment.lens().get("ca",.5))
 	evidence["stops"] = 2.0*log(aperture_value()/equipment.apertures(focal)[0])/log(2.0)
+	lens_evidence(evidence)
 	if arcade_level >= 0 and not sandbox: current_result = Conditions.judge(evidence,Arcade.LEVELS[arcade_level].cond)
 	else: current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
@@ -3716,8 +3927,14 @@ func take_photo() -> void:
 	if badges_count() and not sandbox and not (academy and academy.active and academy.phase == "demo"):
 		for id in Badges.register(current_result,{"night":time_of_day == "night","first_shot":shot_serial == 1,"manual":equipment.exposure_mode() == "M"}): announce_badge(id)
 	if not sandbox: shots -= 1
-	await RenderingServer.frame_post_draw
-	var clean_image = viewport.get_texture().get_image()
+	var clean_image: Image
+	var samples = photo_samples(evidence,current_result)
+	if samples > 1:
+		shutter_sound()
+		clean_image = await expose_photo(evidence,current_result,shot_omega,samples)
+	else:
+		await RenderingServer.frame_post_draw
+		clean_image = viewport.get_texture().get_image()
 	if equipment.tlr():
 		# The TLR negative is square, and the right way round (only the finder is mirrored).
 		var side = clean_image.get_height()
@@ -3730,7 +3947,7 @@ func take_photo() -> void:
 		best = current_result.duplicate(true)
 		best["photo"] = clean_image
 	update_dof_pass()
-	shutter_sound()
+	if samples <= 1: shutter_sound()
 	if is_instance_valid(camera_body): camera_body.blackout(1.0/shutter_denominator())
 	shooting = false
 	if academy_demo_shot:
@@ -3785,24 +4002,54 @@ func photo_material(result: Dictionary) -> ShaderMaterial:
 	var evidence: Dictionary = result.evidence
 	# With the viewfinder's exact depth of field the capture is already blurred per pixel; otherwise
 	# the develop pass blurs the whole frame by the subject's circle of confusion.
-	mat.set_shader_parameter("coc_pixels",0.0 if evidence.get("rendered_dof",false) else minf(result.coc/36*viewport.size.x*.5,35))
+	# A photo taken with the virtual shutter (expose_photo()) already has its depth of field, its
+	# movement, its shake and its exposure: the develop pass only adds the lens and the grain.
+	var exposed: bool = evidence.get("exposed",false)
+	# Diffraction: past f/11 the aperture itself softens everything a little (a pixel and a bit at f/22).
+	var diffraction = maxf(0.0,(float(evidence.n)-11.0)/11.0)*1.2*viewport.size.x/1280.0
+	mat.set_shader_parameter("coc_pixels",diffraction+(0.0 if exposed or evidence.get("rendered_dof",false) else minf(result.coc/36*viewport.size.x*.5,35)))
 	# The photo keeps the lens and aperture it was taken with (evidence.ca, evidence.stops).
 	var strengths = lens_strengths(evidence.f,evidence.get("ca",.5),evidence.get("stops",1.0))
 	mat.set_shader_parameter("vignette_amount",strengths.x)
 	mat.set_shader_parameter("chromatic_aberration",strengths.y)
-	mat.set_shader_parameter("exposure",clampf(result.delta+float(result.get("evidence",{}).get("ev_shift",0.0)),-8,8))
-	mat.set_shader_parameter("motion",Vector2(minf(result.drag/36*viewport.size.x,90)*result.get("drag_sign",evidence.get("motion_sign",1.0)),0))
+	mat.set_shader_parameter("exposure",0.0 if exposed else clampf(result.delta+float(result.get("evidence",{}).get("ev_shift",0.0)),-8,8))
+	mat.set_shader_parameter("motion",Vector2.ZERO if exposed else Vector2(minf(result.drag/36*viewport.size.x,90)*result.get("drag_sign",evidence.get("motion_sign",1.0)),0))
 	# Panning: the background streaks by the camera's sweep and the subject keeps its own blur.
 	var streak: float = result.get("background",0.0)
-	if streak > Photo.C and evidence.has("head") and evidence.has("feet"):
+	if streak > Photo.C and evidence.has("head") and evidence.has("feet") and not exposed:
 		var top: Vector2 = evidence.head
 		var bottom: Vector2 = evidence.feet
 		var tall = maxf(absf(bottom.y-top.y),.05)
 		mat.set_shader_parameter("pan",Vector2(minf(streak/36*viewport.size.x,140),0))
 		mat.set_shader_parameter("subject_box",Vector4((top.x+bottom.x)*.5,(top.y+bottom.y)*.5,tall*.24,tall*.6))
 	var shake_angle = fposmod(evidence.seed*2.399963,TAU)
-	mat.set_shader_parameter("shake",Vector2.from_angle(shake_angle)*minf(maxf(0,result.ratio-1)*5,45))
+	mat.set_shader_parameter("shake",Vector2.ZERO if exposed else Vector2.from_angle(shake_angle)*minf(maxf(0,result.ratio-1)*5,45))
 	mat.set_shader_parameter("grain",log(evidence.iso/100.0)/log(2.0)*.035)
+	mat.set_shader_parameter("film",1.0 if evidence.get("film",false) else 0.0)
+	# The glass (docs/SIMULACION_FOTOGRAFICA.md §9.5).
+	# Wide angles bow straight lines out, telephotos a little in.
+	mat.set_shader_parameter("distortion",.07*clampf((50.0-evidence.f)/26.0,-.3,1.0))
+	mat.set_shader_parameter("aspect",float(evidence.get("aspect",16.0/9.0)))
+	mat.set_shader_parameter("halation",1.0 if evidence.get("film",false) else 0.0)
+	# The sun in or near the frame veils the picture with its own light (more at the golden hour,
+	# when it is low and in front), fading as it leaves the frame.
+	var sun: Dictionary = evidence.get("sun",{})
+	var veil = 0.0
+	if not sun.is_empty() and sun.seen:
+		var out = maxf(0.0,maxf(absf(sun.pos.x-.5),absf(sun.pos.y-.5))-.5)
+		veil = (.9 if evidence.get("tod","day") == "golden" else .5)*clampf(1.0-out/.45,0.0,1.0)
+		mat.set_shader_parameter("sun_uv",sun.pos)
+		mat.set_shader_parameter("sun_color",Color(1.0,.78,.5) if evidence.get("tod","day") == "golden" else Color(1.0,.95,.86))
+	mat.set_shader_parameter("sun_veil",veil)
+	# Stars on the lamps once the aperture is small (from f/11; long at f/22).
+	var lights: Array = evidence.get("lights",[])
+	var star = clampf((float(evidence.n)-8.0)/14.0,0.0,1.0) if not lights.is_empty() else 0.0
+	mat.set_shader_parameter("star",star)
+	mat.set_shader_parameter("light_count",lights.size() if star > 0.0 else 0)
+	if star > 0.0:
+		var spots = PackedVector2Array(lights)
+		spots.resize(12)
+		mat.set_shader_parameter("lights",spots)
 	mat.set_shader_parameter("shot_seed",float(evidence.seed))
 	return mat
 

@@ -109,20 +109,6 @@ Manteniendo una tecla de giro (←/→ o A/D) hacia donde va alguien, la cámara
 - **Dónde se enseña**: paso `seguir` del tutorial (solo con teclado: hay que mantener la tecla hasta que la cámara siga a alguien 1,2 s); Academia, lección 6: la página 5 de teoría lo explica, la demostración acaba con un barrido del tutor con la marca a la vista (`pan_runner`, `academy.demo_pan`) y **la tercera tarea de la práctica es un barrido** (`academy.gd::is_pan()`; antes era «compara las dos fotos»); arcade: encargo del nivel 26, aviso en «Condiciones» de los niveles de barrido con teclado (`arcade_aviso_barrido`), motivo de rechazo «sale movido», y en el 27 (la estela) el aviso contrario: soltar las teclas de giro; ayuda en pantalla, fila «Mantener: Seguir al sujeto».
 - **Pruebas**: `tests/test_input.gd` (a 35, 50, 85 y 105 mm: pulsando pronto espera sin moverse y luego sigue; pulsando tarde alcanza; lo mantiene en el punto segundo y medio; soltar lo termina), `tests/test_tutorial.gd` (el paso), `tests/test_academy.gd` (la tarea y el barrido de la demostración) y `tests/test_academy_play.gd -- --only=6` (el alumno automático hace el barrido manteniendo la tecla, `demo_keys.turn`).
 
-## Pendiente: que el barrido y la estela se vean reales en la foto (usuario, 06-10-2026; revisado el 07-10)
+## Barrido y estela reales en la foto: ✅ hecho (07-10-2026)
 
-**Cómo está hoy** (`shaders/develop.gdshader`, `main.gd::photo_material()`): el revelado arrastra la imagen ya renderizada con 17 muestras a lo largo de un vector.
-- **Barrido**: el fondo se arrastra con `pan` y el sujeto conserva su propio arrastre dentro de `subject_box`, un **rectángulo** de bordes suaves (24 % × 60 % de su altura). Alrededor del sujeto queda un halo de fondo nítido, los brazos y piernas que salen del rectángulo se arrastran con el fondo, y los demás paseantes cuentan como fondo aunque se muevan de otra manera.
-- **Estela y sujeto movido con la cámara quieta**: sin `pan` no hay rectángulo, y **toda la imagen** se arrastra con el movimiento del sujeto. El fondo, que debería salir nítido, sale emborronado.
-- Con arrastres largos (tope de 140 px) las 17 muestras se ven como copias escalonadas, y una estela no deja ver el fondo a través.
-
-**Qué hay que hacer**
-1. **Velocidad por píxel en vez de un rectángulo.** Al disparar, un fotograma más con la misma cámara en el que cada persona se dibuja con un color plano que codifica su velocidad en pantalla (su movimiento menos el giro de la cámara) y el parque sale negro; `mannequin_pbr.gdshader` gana una rama para ese pase y el parque se deja a oscuras ese fotograma, sin cambiar materiales. El resultado es una textura de velocidades que se guarda con la foto.
-2. **El revelado arrastra cada píxel por su velocidad**: fondo con el giro de la cámara, cada persona con la suya. Sale bien el barrido (silueta exacta, sin halo), la estela (solo el corredor, fondo nítido) y cualquier paseante que se mueva.
-3. **Estela que deja ver el fondo**: los píxeles de fondo junto a quien se mueve también deben recoger su rastro (muestrear a lo largo de la velocidad del vecino más rápido y pesar cada muestra según pertenezca o no a quien se mueve).
-4. **Más muestras cuanto más largo el arrastre**, para que no se vean copias.
-5. **El álbum** vuelve a revelar la foto al guardarla: necesita la misma textura de velocidades.
-
-**Lo que no puede cambiar**: la nota (todo esto es solo la imagen revelada; `tests/test_photography.gd`, `tests/test_finders.gd`), el visor antes del disparo, y el resultado tiene que ser el mismo en Vulkan y en OpenGL (`tools/compare_renderers.sh`). Coste: un fotograma más por disparo, nada por fotograma de juego.
-
-**Atajo** si se quiere algo ya: invertir el rectángulo para la estela (arrastrar solo dentro de él). Arregla el caso peor en una hora, pero sigue siendo un rectángulo.
+Resuelto con el **obturador virtual** ([docs/SIMULACION_FOTOGRAFICA.md §9](../SIMULACION_FOTOGRAFICA.md)): la foto es el promedio de los fotogramas renderizados durante la exposición, con el mundo avanzando y la cámara girando entre uno y otro. El rectángulo `subject_box` y el arrastre de la imagen entera solo quedan para las fotos de un fotograma (pruebas).

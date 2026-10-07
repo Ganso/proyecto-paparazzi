@@ -139,3 +139,58 @@ $$\text{nota} = \text{round}\big(100 \cdot (0.28\,\text{foco} + 0.24\,\text{expo
 Suite `tests/test_photography.gd` (headless). Comando, volumen y criterios en [TESTS_Y_VERIFICACION.md](TESTS_Y_VERIFICACION.md).
 
 > **Barrido (02-10-2026)**: la evidencia lleva `camera_omega` (giro de la cámara en el disparo) y el arrastre del sujeto se calcula con su velocidad relativa a ese giro; seguir a un corredor a 1/30 s lo deja nítido con el fondo arrastrado. Detalle en [futuro/11 §1](futuro/11_MECANICAS_BARRIDO_Y_DOF_REALTIME.md).
+
+## 9. El obturador virtual: la foto como promedio de fotogramas (07-10-2026, usuario)
+
+Encargo: «que la fotografía resultante tenga el máximo realismo posible tanto en OpenGL como en Vulkan; el jugador nos puede perdonar que tardemos unos milisegundos más en presentarla». Hasta ahora la foto era **un fotograma** retocado después: el movimiento era un arrastre de la imagen entera (o de todo menos un rectángulo, en el barrido), la profundidad de campo real solo existía en Alto y Ultra (en Bajo, Medio, Android y web la foto entera se emborronaba por igual, y un fondo desenfocado conseguido salía nítido) y la exposición se multiplicaba sobre la imagen ya comprimida a 8 bits.
+
+### 9.1 Cómo se hace ahora (`main.gd::expose_photo()`)
+
+Mientras el obturador está abierto el juego renderiza entre 8 y 64 fotogramas y los promedia en luz lineal, que es lo que hace un sensor:
+
+| Qué | Cómo |
+|---|---|
+| **Movimiento** | Entre fotograma y fotograma el mundo avanza una fracción del tiempo de obturación (`advance_world()`) y la cámara sigue girando si se estaba barriendo (`shot_omega`). Salen solos el barrido (silueta exacta, sin halo), la estela semitransparente con el fondo nítido, los brazos y piernas más movidos que el tronco, las palomas en vuelo |
+| **Trepidación** | El pulso es un vaivén real de la cámara durante la exposición (dos ondas lentas en cada eje, por la semilla del disparo), con la misma amplitud que antes (`shake_pixels()`); ninguno en un barrido o una estela |
+| **Profundidad de campo** | Cada fotograma se toma desde otro punto de la abertura del diafragma (radio real, focal / 2N) desplazando la cámara y descentrando el frustum (`Camera3D.set_frustum()`) para que el plano de enfoque no se mueva. Desenfoque óptico con bordes y oclusiones correctos, **igual en todos los perfiles y en los dos renderizadores** |
+| **Antialiasing** | Cada fotograma va desplazado una fracción de píxel |
+| **Exposición** | Se aplica en la curva de tonos del propio renderizador (`Environment.tonemap_exposure` × 2^−ΔEV) durante esos fotogramas, no multiplicando después: lo que se quema, se quema donde de verdad está la luz |
+
+- **Acumulación**: un `SubViewport` 2D en coma flotante (`use_hdr_2d`) que no se borra entre fotogramas dibuja el visor encima con peso 1/(k+1) (`shaders/photo_accumulate.gdshader`); otro lo pasa a sRGB con medio escalón de ruido para que el cielo no haga bandas (`shaders/photo_resolve.gdshader`). En OpenGL el fotograma llega codificado en sRGB y se decodifica; en Forward+ el lienzo HDR ya lo entrega lineal (`decode`).
+- **Cuántos fotogramas** (`photo_samples()`): los que pide el arrastre o el desenfoque más largo de esa foto, 8 como mínimo y como máximo 64 en Ultra, 48 en Alto, 32 en Medio y en OpenGL de escritorio, 24 en Bajo, móviles y grabaciones, 16 en la web (`photo_samples_cap()`).
+- **Tiempo**: unos 8 ms por fotograma en Forward+ (Ultra, RX 6700 XT) y 4 ms en OpenGL: de 0,1 a 0,5 s por foto. Durante la exposición se desactiva la sincronía vertical y el tope de FPS (en escritorio) y el visor queda en negro (`curtain`).
+- **La nota no cambia**: se decide antes, con la evidencia del instante del disparo (`capture_evidence()`). Solo cambia la imagen. El revelado (`photo_material()`) ya no añade desenfoque, arrastre, trepidación ni exposición a una foto expuesta así (`evidence.exposed`): pone el objetivo (viñeteo, aberración) y el ruido.
+- **Pruebas y herramientas** que arrancan el juego desde su propio guion (`--script`) hacen la foto con **un fotograma**, como antes, para no tardar más; `PAPARAZZI_PHOTO_SAMPLES=N` o `Main.photo_samples_override` lo cambian.
+
+### 9.2 Lo que hubo que resolver
+
+- `RenderingServer.force_draw()` renderiza varias veces en un mismo fotograma (5 ms cada una), pero **no aplica los cambios de posición ni de esqueleto**, que Godot reparte al final de cada vuelta del bucle: cada muestra es un fotograma real del motor (`await RenderingServer.frame_post_draw`), con el `_process()` del juego detenido (`exposing`).
+- Los nodos del acumulador necesitan una vuelta del bucle antes de la primera muestra para que su lienzo exista.
+- El visor y el acumulador se dibujan en el mismo fotograma en ese orden (comprobado: una muestra con la vista girada sale girada).
+
+### 9.3 Ruido
+
+`shaders/develop.gdshader`, en luz lineal: **sensor** (cuerpos digitales), ruido de fotones que crece con la raíz de la luz más un suelo que asoma en las sombras, la mitad de color; **película** (`film`), grano en racimos de dos o tres píxeles, sin color, presente ya a ISO 100. Los dos crecen con la sensibilidad.
+
+### 9.4 Pruebas y evidencias
+
+`tests/test_finders.gd` (en Vulkan y en OpenGL): bajo una prueba la foto es de un fotograma; con doce, la cámara, la exposición de la escena, la sincronía vertical y el tope de FPS quedan como estaban, el revelado no añade nada, y **una escena quieta y bien expuesta sale igual que el fotograma único**. `PAPARAZZI_PHOTO_SAMPLES=64 SOLVER_SHOTS=<carpeta> tools/arcade_solver.gd` guarda el resultado de cada nivel con la foto de verdad.
+
+### 9.5 El cristal (07-10-2026)
+
+Lo que el objetivo y el soporte hacen con la imagen, en el revelado (`shaders/develop.gdshader`, `main.gd::photo_material()`), igual en los dos renderizadores. Los datos salen de `main.gd::lens_evidence()` al disparar (dónde está el sol y si llega al objetivo, qué farolas encendidas se ven): **solo para la imagen, nunca para la nota**.
+
+| Efecto | Cuándo | Cómo |
+|---|---|---|
+| **Velo y resplandor del sol** | De día y a la hora dorada, con el sol dentro del encuadre o cerca y sin nada que lo tape | Una capa de su propia luz sobre toda la foto (menos contraste, sombras levantadas), más fuerte hacia él, y su resplandor donde está; se apaga al salir del encuadre. Más fuerte a la hora dorada |
+| **Estrellas en las farolas** | Desde f/11, largas a f/22 | Seis puntas en cada luz puntual visible (`lights`, hasta 12) |
+| **Forma del desenfoque** | Al cerrar el diafragma un paso o más | El muestreo de la abertura del obturador virtual pasa de círculo a polígono de siete láminas (`blade_reach()`) |
+| **Difracción** | Por encima de f/11 | Una ligera pérdida de nitidez general (algo más de un píxel a f/22) |
+| **Distorsión** | Según la focal | Barril en angular (máxima a 24 mm), un poco de cojín en tele |
+| **Halación** | Con carrete | Resplandor rojizo alrededor de lo que se quema |
+
+Evidencias en `docs/evidencias/foto/`.
+
+### 9.6 Pendiente
+
+Balance de blancos (película de luz día bajo farolas) · «ojo de gato» del desenfoque en las esquinas · un fundido entre muestras para los desenfoques muy grandes, donde 24 fotogramas todavía se adivinan.
