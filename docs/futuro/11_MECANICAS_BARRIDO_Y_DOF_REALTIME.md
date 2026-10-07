@@ -90,10 +90,20 @@ En el simulador:
   3. Mover la cámara durante una exposición larga sin sujeto al que seguir penaliza el pulso (hoy no ocurre).
   4. La previsualización DoF no cambia la puntuación: activarla o no da la misma nota.
 
-## Pendiente: que el barrido y la estela se vean reales en la foto (usuario, 06-10-2026)
+## Pendiente: que el barrido y la estela se vean reales en la foto (usuario, 06-10-2026; revisado el 07-10)
 
-`shaders/develop.gdshader` arrastra **toda la imagen** con un único vector (`motion`), así que un barrido bien hecho y una estela (nivel 27 del arcade) se dibujan igual: todo el fotograma emborronado en horizontal. El informe sí los distingue; la imagen, no. Lo que falta:
+**Cómo está hoy** (`shaders/develop.gdshader`, `main.gd::photo_material()`): el revelado arrastra la imagen ya renderizada con 17 muestras a lo largo de un vector.
+- **Barrido**: el fondo se arrastra con `pan` y el sujeto conserva su propio arrastre dentro de `subject_box`, un **rectángulo** de bordes suaves (24 % × 60 % de su altura). Alrededor del sujeto queda un halo de fondo nítido, los brazos y piernas que salen del rectángulo se arrastran con el fondo, y los demás paseantes cuentan como fondo aunque se muevan de otra manera.
+- **Estela y sujeto movido con la cámara quieta**: sin `pan` no hay rectángulo, y **toda la imagen** se arrastra con el movimiento del sujeto. El fondo, que debería salir nítido, sale emborronado.
+- Con arrastres largos (tope de 140 px) las 17 muestras se ven como copias escalonadas, y una estela no deja ver el fondo a través.
 
-- **Barrido**: el sujeto seguido debe quedar nítido y solo el fondo arrastrado (hoy se compensa en parte con `drag_sign` y el fondo arrastrado, pero sin separar sujeto y fondo píxel a píxel).
-- **Estela**: al revés, el fondo nítido y solo el corredor arrastrado, con su rastro.
-- Hace falta una máscara del sujeto (o un búfer de velocidades por píxel) en la captura de la foto, y que el revelado aplique el arrastre según esa máscara. Mismo criterio en Vulkan y en OpenGL, y sin cambiar la nota (`tests/test_photography.gd`, `tests/test_finders.gd`).
+**Qué hay que hacer**
+1. **Velocidad por píxel en vez de un rectángulo.** Al disparar, un fotograma más con la misma cámara en el que cada persona se dibuja con un color plano que codifica su velocidad en pantalla (su movimiento menos el giro de la cámara) y el parque sale negro; `mannequin_pbr.gdshader` gana una rama para ese pase y el parque se deja a oscuras ese fotograma, sin cambiar materiales. El resultado es una textura de velocidades que se guarda con la foto.
+2. **El revelado arrastra cada píxel por su velocidad**: fondo con el giro de la cámara, cada persona con la suya. Sale bien el barrido (silueta exacta, sin halo), la estela (solo el corredor, fondo nítido) y cualquier paseante que se mueva.
+3. **Estela que deja ver el fondo**: los píxeles de fondo junto a quien se mueve también deben recoger su rastro (muestrear a lo largo de la velocidad del vecino más rápido y pesar cada muestra según pertenezca o no a quien se mueve).
+4. **Más muestras cuanto más largo el arrastre**, para que no se vean copias.
+5. **El álbum** vuelve a revelar la foto al guardarla: necesita la misma textura de velocidades.
+
+**Lo que no puede cambiar**: la nota (todo esto es solo la imagen revelada; `tests/test_photography.gd`, `tests/test_finders.gd`), el visor antes del disparo, y el resultado tiene que ser el mismo en Vulkan y en OpenGL (`tools/compare_renderers.sh`). Coste: un fotograma más por disparo, nada por fotograma de juego.
+
+**Atajo** si se quiere algo ya: invertir el rectángulo para la estela (arrastrar solo dentro de él). Arregla el caso peor en una hora, pero sigue siendo un rectángulo.
