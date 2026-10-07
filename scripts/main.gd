@@ -325,6 +325,9 @@ func _ready() -> void:
 		# and --clock=N leaves it N seconds on the clock.
 		if arg.begins_with("--sound-board="): sound_board = arg.get_slice("=",1)
 		if arg.begins_with("--end-at="): demo["end-at"] = float(arg.get_slice("=",1))
+		# --hold-turn=N: the camera waits ahead of the level's subject and the turn key is held its
+		# way from second N (evidence of the following with the keys).
+		if arg.begins_with("--hold-turn="): demo["hold-turn"] = float(arg.get_slice("=",1))
 		if arg.begins_with("--clock="): demo["clock"] = float(arg.get_slice("=",1))
 		if arg.begins_with("--debug-off="): debug_off = arg.trim_prefix("--debug-off=").split(",")
 		for key in ["angle","pitch","focal"]:
@@ -1571,8 +1574,31 @@ func key_turn(axis: float, dt = 0.0) -> float:
 		follow_wait = 0.0
 		follow_given_up = false
 		return 0.0
+	if legacy:
+		var old = legacy_follow(axis,speed)
+		return old if old != 0.0 else axis*speed
 	var turn = follow_turn(axis,speed,dt)
 	return turn if follow_state != "" else axis*speed
+
+# (as it was: the pace of whoever walks the key's way near the middle of the frame, nothing else)
+func legacy_follow(axis: float, speed: float) -> float:
+	if not eye_ready() or crowd != null: return 0.0
+	var best = 0.0
+	var best_score = 0.0
+	for p in people:
+		if not p.visible or p.state != "CAMINANDO": continue
+		var chest: Vector3 = p.control_points()[1]
+		if camera.is_position_behind(chest): continue
+		var on_screen = camera.unproject_position(chest)/Vector2(viewport.size)-Vector2(.5,.5)
+		var offset = Vector2(on_screen.x,on_screen.y*float(viewport.size.y)/viewport.size.x).length()
+		if offset >= .3: continue
+		var turn = rad_to_deg(p.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(chest)))
+		if signf(turn) != signf(axis) or absf(turn) < speed*.3 or absf(turn) > speed*2.5: continue
+		var score = absf(turn)*(1.0-offset/.3)
+		if score > best_score:
+			best_score = score
+			best = turn
+	return best
 
 func follow_turn(axis: float, speed: float, dt: float) -> float:
 	follow_state = ""
@@ -1590,11 +1616,12 @@ func follow_turn(axis: float, speed: float, dt: float) -> float:
 		var turn = rad_to_deg(p.actual_velocity.dot(camera.global_basis.x)/maxf(.5,camera.global_position.distance_to(chest)))
 		if signf(turn) != signf(axis) or absf(turn) < 1.0: continue
 		var at = camera.unproject_position(chest)/Vector2(viewport.size)
-		if absf(at.y-mark.y) > .3: continue
-		# Degrees from the point, along the way they go: + already past it, − still coming.
-		var gap = (at.x-mark.x)*signf(axis)*hfov
 		var mine = p == target and not sandbox
 		var fast = p.runner or p.actual_velocity.length() > 1.5
+		# (on the point's row; the subject and the runners, anywhere up or down the frame but its edges)
+		if absf(at.y-mark.y) > (.42 if mine or fast else .3): continue
+		# Degrees from the point, along the way they go: + already past it, − still coming.
+		var gap = (at.x-mark.x)*signf(axis)*hfov
 		var reach = hfov*(.75 if mine or fast else .08)
 		if gap < -reach or gap > hfov*(.45 if mine or fast else .08): continue
 		# (the assignment's subject before anyone else: a passer-by crossing the point at that
@@ -3018,6 +3045,10 @@ var shutter_streams = {}
 #     afterwards on 8 bits: what burns, burns where the light really is.
 # Nothing here touches the score, which is decided before (capture_evidence()).
 var exposing = false
+# Evidence only (tools/capture_before_after.sh): the photo and the key turn as they were before
+# 07-10-2026 (one frame worked over afterwards, no glass, the old grain; the key only matching
+# the pace of whoever was already near the middle, with no mark).
+static var legacy = OS.has_environment("PAPARAZZI_LEGACY")
 static var photo_samples_override = -1      # tests: a fixed number of frames (1 = the plain frame)
 var acc_view: SubViewport
 var acc_rect: TextureRect
@@ -3027,6 +3058,7 @@ var curtain: ColorRect
 
 # Most frames a photo may take here: fewer where every frame waits for the screen.
 func photo_samples_cap() -> int:
+	if legacy: return 1
 	if photo_samples_override >= 0: return photo_samples_override
 	if OS.has_environment("PAPARAZZI_PHOTO_SAMPLES"): return int(OS.get_environment("PAPARAZZI_PHOTO_SAMPLES"))   # (evidence tools)
 	# Tests and tools run the game from their own script: one frame, as fast as before.
@@ -4026,6 +4058,10 @@ func photo_material(result: Dictionary) -> ShaderMaterial:
 	mat.set_shader_parameter("shake",Vector2.ZERO if exposed else Vector2.from_angle(shake_angle)*minf(maxf(0,result.ratio-1)*5,45))
 	mat.set_shader_parameter("grain",log(evidence.iso/100.0)/log(2.0)*.035)
 	mat.set_shader_parameter("film",1.0 if evidence.get("film",false) else 0.0)
+	mat.set_shader_parameter("legacy_grain",legacy)
+	if legacy:
+		mat.set_shader_parameter("coc_pixels",0.0 if exposed or evidence.get("rendered_dof",false) else minf(result.coc/36*viewport.size.x*.5,35))
+		return mat
 	# The glass (docs/SIMULACION_FOTOGRAFICA.md §9.5).
 	# Wide angles bow straight lines out, telephotos a little in.
 	mat.set_shader_parameter("distortion",.07*clampf((50.0-evidence.f)/26.0,-.3,1.0))
@@ -4616,6 +4652,15 @@ func update_demo(dt: float) -> void:
 					best = d
 					demo_follow = p
 	demo_time += dt
+	if demo.has("hold-turn") and is_instance_valid(target):
+		var his_way = signf(target.actual_velocity.dot(camera.global_basis.x))
+		if not demo.has("held") and target.state == "CAMINANDO" and target.actual_velocity.length() > 2.0 and demo_time > 1.0:
+			# A third of the frame ahead of him, and still.
+			demo["held"] = his_way
+			demo["hold-from"] = demo_time+float(demo["hold-turn"])
+			angle = rad_to_deg(atan2(target.position.x,-target.position.z))+float(target.direction)*rad_to_deg(2.0*atan(36.0/(2.0*focal)))*.55
+			pitch = -rad_to_deg(atan((camera.global_position.y-target.control_points()[1].y)/maxf(1.0,camera.global_position.distance_to(target.control_points()[1]))))
+		if demo.has("held") and demo_time >= float(demo["hold-from"]): demo_keys["turn"] = float(demo["held"])
 	if demo.has("clock") and not demo.has("clocked") and arcade_level >= 0:
 		demo["clocked"] = true
 		level_time = float(demo["clock"])

@@ -9,6 +9,7 @@ uniform vec2 shake = vec2(0.0);
 uniform vec2 pan = vec2(0.0);
 uniform vec4 subject_box = vec4(0.5, 0.5, 0.0, 0.0);
 uniform float grain = 0.0;      // stops of ISO over 100, times 0.035
+uniform bool legacy_grain = false;
 uniform float film = 0.0;       // 1 on a roll of film: grain in clumps, no colour noise
 uniform float shot_seed = 0.0;
 uniform float vignette_amount : hint_range(0.0, 1.0) = 0.38;
@@ -128,8 +129,13 @@ void fragment() {
 	vec3 sigma = 0.55 * sqrt(max(lin, vec3(0.0))) + 0.05;
 	vec3 sensor = mix(vec3(mono), fine, 0.5) * sigma * grain * 1.5;
 	vec3 emulsion = vec3(mix(mono, clump, 0.65)) * sigma * (grain + 0.03) * 2.1;
-	lin = max(lin + mix(sensor, emulsion, film), vec3(0.0));
+	if (!legacy_grain) lin = max(lin + mix(sensor, emulsion, film), vec3(0.0));
 	color = linear_to_srgb(lin);
+	if (legacy_grain) {
+		// (the grain as it was until 07-10-2026, kept for the before-and-after evidence)
+		float old_lum = dot(color, vec3(0.299, 0.587, 0.114));
+		color += (random(UV) - 0.5) * grain * clamp(1.0 - abs(old_lum - 0.45) * 1.6, 0.25, 1.0);
+	}
 
 	// Optical lens vignetting (natural cos^4 falloff simulation)
 	float vig = clamp(1.0 - r2 * 2.4 * vignette_amount, 0.0, 1.0);
