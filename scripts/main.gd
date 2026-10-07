@@ -3241,6 +3241,19 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 		Engine.max_fps = fps_cap
 	e["exposed"] = true
 	e["samples"] = samples
+	# A machine whose graphics cannot accumulate in floating point gives back one flat colour:
+	# there the photo is the plain frame, developed as before.
+	var probe: Image = image.duplicate()
+	probe.resize(6,4,Image.INTERPOLATE_BILINEAR)
+	var flat = true
+	for y in 4:
+		for x in 6:
+			if not probe.get_pixel(x,y).is_equal_approx(probe.get_pixel(0,0)): flat = false
+	if flat:
+		e["exposed"] = false
+		e["samples"] = 1
+		await RenderingServer.frame_post_draw
+		image = viewport.get_texture().get_image()
 	exposing = false
 	curtain.visible = false
 	return image
@@ -4838,7 +4851,7 @@ func override_path() -> String:
 # changed the default graphics (then the player is advised to reset the graphics options)].
 # Two or three points per version, only what a player notices. A new release adds its row here
 # and its texts in textos/es/menu.md.
-const VERSION_NOTES = [["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+const VERSION_NOTES = [["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
 static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice

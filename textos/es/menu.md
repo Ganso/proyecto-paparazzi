@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.4.0 · EN DESARROLLO
+VERSIÓN ALFA 0.5.0 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -358,6 +358,18 @@ Sonido nuevo en todo el juego: Obturadores, diales, pasos, charlas, animales y u
 ### novedades_0_4_0_3 · Novedades de la versión 0.4.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 La cámara expone mejor en automático, y la réflex y la telemétrica llegan a 1/4000 s.
+
+### novedades_0_5_0_1 · Novedades de la versión 0.5.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Fotos mucho más reales: Barridos y estelas de verdad, desenfoque óptico en todos los equipos, trepidación, ruido y grano.
+
+### novedades_0_5_0_2 · Novedades de la versión 0.5.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Mantén la tecla de giro hacia donde va alguien: La cámara lo espera, se adapta a su paso y avisa («Siguiendo al sujeto»).
+
+### novedades_0_5_0_3 · Novedades de la versión 0.5.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+El objetivo también cuenta: El sol vela la foto, las farolas hacen estrella al cerrar el diafragma y a f/22 se pierde nitidez.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres

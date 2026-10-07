@@ -121,3 +121,20 @@ Replanteadas desde cero a petición del usuario: **una por cada cosa que el jueg
 | Graduado de la Academia (`graduado`) | Los diez exámenes |
 | Fotógrafo de calle (`calle`) | Los 30 niveles del arcade (`main.gd`, al superar el último que faltaba) |
 
+## Pendiente: sacarle partido a lo que la foto enseña ahora (usuario, 07-10-2026)
+
+Con el obturador virtual y el cristal ([SIMULACION §9](../SIMULACION_FOTOGRAFICA.md)) la foto muestra efectos que antes no existían y que **ningún nivel, lección ni insignia pide todavía**. Ideas, de más a menos jugosas (falta decidir si van como niveles nuevos del arcade, como prácticas de las lecciones que ya hay o como un modo de desafíos):
+
+| Idea | Qué pediría | Dónde encaja | Coste |
+|---|---|---|---|
+| **Estrellas en las farolas** | De noche, cerrar a f/16–22 con una farola en el encuadre: obliga a subir ISO o alargar el tiempo, y aparecen el ruido y la trepidación | Nivel de «La luz» o Maestría; página en la lección de exposición | Bajo (los datos ya están en `evidence.lights`) |
+| **El sol dentro o fuera** | El mismo sujeto dos veces: con el sol en el encuadre (velo, poco contraste) y tapándolo o girando un poco | Práctica de la lección de medición; refuerza los niveles 18 y 19 | Bajo |
+| **Diafragma dulce** | Máxima nitidez: ni abierto del todo ni a f/22 (difracción). Hoy cerrar nunca tiene coste en nitidez para la nota | Lección de profundidad de campo; condición «nitidez máxima» | Bajo |
+| **Larga exposición a pulso** | De noche, aguantar 1/15 con angular frente a subir ISO: ruido contra trepidación, dos fotos comparadas | Práctica en movimiento o exposición | Bajo |
+| **Fantasmas** | Estela de gente caminando con el sujeto quieto y nítido (sentado) a 1/8 | Maestría; combina con «Lo que hace» | Medio |
+| **Barrido con aire** | Barrido con el corredor en un punto de enfoque lateral (el seguimiento con teclas ya lo permite) | Variante del nivel 26 | Bajo |
+| **Película contra sensor** | La misma escena de noche con la TLR a ISO 1600 y con la réflex: grano y halación frente a ruido de color | Lección de cámaras | Bajo |
+| **Líneas rectas** | El quiosco sin que se curve: alejarse y usar 50 mm en vez de 24 mm pegado | Lección de objetivos | Medio |
+| **Bokeh con forma** | Luces desenfocadas redondas (abierto) o poligonales (cerrado) | Curiosidad en profundidad de campo | Bajo |
+
+Insignias que salen solas: «Cazador de estrellas», «A pulso» (1/15 o más lento sin trepidar), «Contra el sol». Recomendación: empezar por las cuatro primeras filas.
