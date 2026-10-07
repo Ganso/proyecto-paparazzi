@@ -282,6 +282,16 @@ func run() -> void:
 	var first_take = game.sfx.take("dial")
 	check(game.sfx.take("dial") != first_take,"…and never the same one twice running")
 	check(game.sfx.step_on(Vector3(4,0,0)) == "paso_losa","The classic park's paths sound of flagstones")
+	# Loops go out with a fade, never dead.
+	game.sfx.loop_at("prueba","charla",Vector3(3,1,0),-10.0)
+	for i in 40: game.sfx._process(1.0/60)
+	var chat_player = game.sfx.loops["prueba"]
+	check(chat_player.playing and is_equal_approx(chat_player.volume_db,-10.0),"A loop comes in to its level")
+	game.sfx.stop_loop("prueba")
+	game.sfx._process(.1)
+	check(chat_player.playing and chat_player.volume_db < -10.0 and chat_player.volume_db > -30.0,"Stopped, it is still fading a moment later (%.1f dB)" % chat_player.volume_db)
+	for i in 80: game.sfx._process(1.0/60)
+	check(not chat_player.playing,"…and silent within a second or so")
 	check(not game.sfx.play("no_existe"),"A missing sound says so (the caller keeps its tone)")
 	check(game.viewport.audio_listener_enable_3d,"The park's world has its own listener: what is placed in it is heard")
 	for name in ["pajaros_dia","pajaros_atardecer","hora_azul","grillos_noche","fuente"]:

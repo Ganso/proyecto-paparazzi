@@ -102,7 +102,13 @@ func looped(name: String) -> AudioStreamWAV:
 	s.loop_end = maxi(1,int(s.get_length()*s.mix_rate)-1)   # (the last frame: see ambience.gd)
 	return s
 
-# A loop by key; pos == null plays it unplaced (the zoom motor).
+# A loop by key; pos == null plays it unplaced (the zoom motor). Loops never start or stop dead:
+# they come in over a third of a second and go out over one (a chat that ended was cut mid-word;
+# the same went for the dog's panting, the swing and the children when walking away from them).
+const FADE_IN = 90.0            # dB per second
+const FADE_OUT = 45.0
+const SILENT = -45.0
+var loop_target = {}            # key → level it is heading for (SILENT: on its way out)
 func loop_at(key: String, name: String, pos, db = 0.0, unit = 4.0, pitch = 1.0) -> void:
 	if not enabled: return
 	if not loops.has(key):
@@ -120,11 +126,27 @@ func loop_at(key: String, name: String, pos, db = 0.0, unit = 4.0, pitch = 1.0) 
 		loops[key] = p
 	var player = loops[key]
 	if pos != null: player.position = pos
-	player.volume_db = db
-	if not player.playing: player.play()
+	loop_target[key] = db
+	if not player.playing:
+		player.volume_db = db-30.0
+		player.play()
 
-func stop_loop(key: String) -> void:
-	if loops.has(key) and loops[key].playing: loops[key].stop()
+# quick: the zoom motor, which stops with its own tick.
+func stop_loop(key: String, quick = false) -> void:
+	if not loops.has(key) or not loops[key].playing: return
+	if quick:
+		loops[key].stop()
+		loop_target.erase(key)
+	else: loop_target[key] = SILENT
+
+func _process(dt: float) -> void:
+	for key in loop_target.keys():
+		var player = loops[key]
+		var target: float = loop_target[key]
+		player.volume_db = move_toward(player.volume_db,target,dt*(FADE_OUT if target <= SILENT else FADE_IN))
+		if target <= SILENT and player.volume_db <= SILENT+.5:
+			player.stop()
+			loop_target.erase(key)
 
 func stop_world() -> void:
 	for key in loops.keys(): stop_loop(key)

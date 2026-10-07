@@ -2953,7 +2953,7 @@ func zoom_sound(dt: float) -> void:
 	elif zoom_hold > 0:
 		zoom_hold -= dt
 		if zoom_hold <= 0:
-			sfx.stop_loop("zoom")
+			sfx.stop_loop("zoom",true)
 			play_sfx("zoom_compacta_fin",-10.0)
 
 func shutter_sound() -> void:
@@ -3511,7 +3511,7 @@ func update_sound_board(dt: float) -> void:
 	board_time = {"carrete_nuevo":2.4,"nivel_superado":3.0,"nivel_no_superado":2.2,"graduado":5.4,"insignia":1.6,"leccion_superada":1.9,"tiempo_agotado":1.6,"obturador_reflex_lento":1.4,"manivela_tlr":1.3,"zoom_compacta":1.3}.get(name,.85 if sound_board == "camara" else 1.0)
 	if name == "zoom_compacta": sfx.loop_at("board","zoom_compacta",null,-6.0)
 	else:
-		sfx.stop_loop("board")
+		sfx.stop_loop("board",true)
 		var rise = board_index-list.find(name) if name == "estrella" else 0
 		play_sfx(name,-2.0,1.0+.06*rise)
 

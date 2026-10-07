@@ -363,6 +363,8 @@ El usuario generó los 70 sonidos dos veces, una toma por sonido: con **Stable A
 
 **Vídeo de los sonidos** (sin música): `MUSIC=/nonexistent ./tools/capture_video.sh --sequences tools/audio/video_sonidos.seq --res 1280x720 --out build/video/sonidos.mp4` (3:21). Empieza con los de cámara y los de interfaz uno a uno, con su nombre en pantalla (`-- --sound-board=camara|interfaz`, `main.gd::update_sound_board()`), y sigue con escenas del juego. Para que quepa lo ocasional: `--sonidos-seguidos` (ladridos, risas, páginas… cinco veces más a menudo), `--clock=N` (deja N segundos en el reloj del nivel) y `--end-at=N` (termina el nivel).
 
+**Los bucles no empiezan ni acaban de golpe** (usuario, 07-10-2026: la charla se cortaba en seco al terminar la conversación): entran en un tercio de segundo y salen en uno (`sfx.gd::loop_at()`, `stop_loop()`, `FADE_IN`/`FADE_OUT`). Vale para la charla, el jadeo del perro, el columpio y los niños; el motor del zoom se para en seco porque acaba con su propio clic. Los sonidos de un disparo ya terminan en silencio por su recorte.
+
 **Sin enganchar todavía**: `aleteo_paloma`, `paso_grava` y `paraguas` (no hay todavía un momento del juego que los pida), y `hojas_viento` (sin toma válida).
 
 **Los sonidos colocados en el parque no se oían** (ni los pájaros ni la fuente, desde que existen): el visor es un `SubViewport` y no tenía activado su propio oyente (`audio_listener_enable_3d`). Solo sonaban la cámara y la interfaz. Corregido en `main.gd` al crear el visor; comprobado grabando con `--write-movie` y midiendo con `ffmpeg -af volumedetect` (de −91 dB, silencio, a −34 dB de media de día).
