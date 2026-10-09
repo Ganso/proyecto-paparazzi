@@ -3135,6 +3135,37 @@ func build_darkroom() -> void:
 	curtain.z_index = 30
 	ui.add_child(curtain)
 
+# While the shutter is open the frames are not seen, only their average: what antialiases is the
+# average itself (each frame is shifted a fraction of a pixel), so MSAA and FXAA are switched off,
+# and whatever a custom profile sets above Ultra comes down to Ultra (docs/SIMULACION §9.7).
+# Nothing here rebuilds the lighting (the SDFGI cascades stay as they are).
+static var darkroom_light = true
+var darkroom_kept = {}
+func darkroom_quality(on: bool) -> void:
+	if not ParkScene.forward_plus() or not darkroom_light: return
+	var g = Graphics.settings(graphics_preset)
+	var ultra = Graphics.PRESETS["Ultra"]
+	if on:
+		darkroom_kept = {"msaa":viewport.msaa_3d,"aa":viewport.screen_space_aa,"scale":viewport.scaling_3d_scale}
+		viewport.msaa_3d = Viewport.MSAA_DISABLED
+		viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
+		if viewport.scaling_3d_scale > 1.0: viewport.scaling_3d_scale = 1.0
+	else:
+		if darkroom_kept.is_empty(): return
+		viewport.msaa_3d = darkroom_kept.msaa
+		viewport.screen_space_aa = darkroom_kept.aa
+		viewport.scaling_3d_scale = darkroom_kept.scale
+		darkroom_kept = {}
+	if not Graphics.is_custom(graphics_preset): return
+	var top = func(key: String) -> int: return int(ultra[key]) if on and int(g[key]) > int(ultra[key]) else int(g[key])
+	var rays = top.call("sdfgi_rays")
+	var ssao = top.call("ssao")
+	var filter = top.call("shadow_filter")
+	RenderingServer.environment_set_sdfgi_ray_count(rays if rays >= 0 else int(ProjectSettings.get_setting("rendering/global_illumination/sdfgi/probe_ray_count",1)))
+	RenderingServer.environment_set_ssao_quality(maxi(ssao,0) if ssao >= 0 else 2,true,.5,2,50.0,300.0)
+	RenderingServer.directional_soft_shadow_filter_set_quality(filter if filter >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality",2)))
+	RenderingServer.positional_soft_shadow_filter_set_quality(filter if filter >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality",2)))
+
 # The world, a slice of the exposure on (what _process() does for it while searching).
 func advance_world(dt: float) -> void:
 	if (sandbox and sandbox_paused) or (academy and academy.active and academy.paused): return
@@ -3206,6 +3237,7 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 	var tone = env.tonemap_exposure
 	var stops = clampf(float(result.get("delta",0.0))+float(e.get("ev_shift",0.0)),-7.0,7.0)
 	env.tonemap_exposure = tone*pow(2.0,-stops)
+	darkroom_quality(true)
 	await get_tree().process_frame      # (the accumulator's own canvas, laid out)
 	acc_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	lap("preparar")
@@ -3254,6 +3286,7 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 	pitch = base_pitch
 	update_camera()
 	env.tonemap_exposure = tone
+	darkroom_quality(false)
 	acc_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	res_view.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
