@@ -50,8 +50,10 @@ const LEVELS = [
 	{"scenario":"clasico","time":"blue","body":3,"lens":0,"auto":false,"iso":4,"pace":.6,"shots":1,"limit":60,"min":75,"cond":{"ojos":true,"aislado":true}},
 	# Block 6 · mastery: back to the SLR with everything learned: the pan ("barrido"), the trail
 	# ("estela"), the portrait, two subjects at once and the night.
-	{"scenario":"clasico","time":"day","body":2,"lens":0,"auto":"S","target":"runner","shots":4,"limit":150,"min":65,"cond":{"barrido":true}},
-	{"scenario":"clasico","time":"day","body":2,"lens":0,"auto":"S","target":"runner","shots":4,"limit":150,"min":65,"cond":{"estela":true}},
+	# (Slow shutters need little light: in full sun, at f/22 and ISO 100, anything slower than
+	# 1/60 s burns the photo and there is nothing left to close. Hence the golden and the blue hour.)
+	{"scenario":"clasico","time":"golden","body":2,"lens":0,"auto":"S","target":"runner","shots":4,"limit":150,"min":65,"cond":{"barrido":true}},
+	{"scenario":"clasico","time":"blue","body":2,"lens":0,"auto":"S","target":"runner","shots":4,"limit":150,"min":65,"cond":{"estela":true}},
 	{"scenario":"clasico","time":"golden","body":2,"lens":4,"auto":"A","shots":3,"limit":120,"min":70,"cond":{"fondo":true,"aurea":true}},
 	{"scenario":"grande","time":"day","body":2,"lens":0,"auto":false,"pace":.7,"target":"dog","shots":3,"limit":180,"min":70,"cond":{"perro":true,"grande":.4}},
 	{"scenario":"clasico","time":"night","body":2,"lens":2,"auto":false,"focus":"AF puntual","pace":.6,"shots":2,"limit":90,"min":80,"cond":{"ojos":true,"aislado":true,"grande":.5}},

@@ -131,8 +131,8 @@ El arcade pedía nueve cosas y varios niveles se resolvían igual. Ahora **cada 
 | 19 | **La silueta** (nuevo) | Dorada · réflex · M · `toward: sol` | `silueta` |
 | 20 | Noche en el quiosco | Noche · telemétrica · M | `aislado`, `ojos` |
 | 21–25 | **La TLR** (los antiguos 16–20) | | —, `aurea`, `ojos`+`fondo`+`grande`, `congelado`, `ojos`+`aislado` |
-| 26 | El barrido | Día · S | `barrido` |
-| 27 | **La estela** (nuevo) | Día · S | `estela` |
+| 26 | El barrido | Hora dorada · S | `barrido` |
+| 27 | **La estela** (nuevo) | Hora azul · S | `estela` |
 | 28 | Retrato de autor | Dorada · 105 f/1,8 · A | `fondo`, `aurea` |
 | 29 | **Paseando al perro** (nuevo) | Parque grande, día · M · `target: dog` | `perro`, `grande` 40 % |
 | 30 | Nocturno | Noche · 50 f/1,8 · M | `ojos`, `aislado`, `grande` 50 % |
@@ -171,3 +171,7 @@ En el nivel 30 (50 mm fijo, «medio encuadre») podía tocar un niño en el terc
 - El sujeto de un encargo no cambia a un camino donde su foto ya no cabría (`try_change_lane()`).
 
 Vale también para el modo libre con encargo, con el objetivo que lleve el jugador. Lo comprueba `tests/test_game.gd` (cada nivel del parque clásico, seis veces) y los 30 niveles se resuelven con `tools/arcade_solver.gd`, que ahora pone el punto de enfoque sobre el sujeto antes de disparar.
+
+## Velocidades lentas, con poca luz (10-10-2026, usuario)
+
+A pleno sol (EV 14,7), con el diafragma cerrado del todo (f/22) e ISO 100, la velocidad más lenta que no quema la foto es 1/60 s: a 1/30 s sobra casi un paso y a 1/15 s casi dos, y en prioridad de velocidad la cámara ya no tiene nada que cerrar. La estela del nivel 27 pide a menudo 1/30 s o menos (con un angular, 1/15 s), así que de día la foto salía siempre sobreexpuesta. El barrido (26) pasa a la **hora dorada**, donde 1/30 s cabe justo, y la estela (27) a la **hora azul**, donde caben de 1/60 s a 1/8 s. No hay filtros de densidad neutra en el juego; si se añaden, estos niveles podrían volver al día.

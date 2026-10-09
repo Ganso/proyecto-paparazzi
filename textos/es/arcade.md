@@ -666,7 +666,7 @@ La estela
 
 ### arcade_nivel_27_texto · encargo
 > máximo 220 caracteres
-Lo contrario del barrido: La cámara quieta y una velocidad lenta, 1/30 s o 1/60 s. Suelta las teclas de giro (con ellas la cámara lo seguiría): El parque sale nítido y el corredor, hecho una estela.
+Lo contrario del barrido: Cámara quieta y velocidad lenta, de 1/30 s a 1/8 s (a esta hora no queman la foto). Suelta las teclas de giro: El parque sale nítido y el corredor, hecho una estela.
 
 ## Nivel 28 · Retrato de autor
 

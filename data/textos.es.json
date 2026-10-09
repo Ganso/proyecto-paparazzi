@@ -552,7 +552,7 @@
   "arcade_nivel_26_titulo": "El barrido",
   "arcade_nivel_26_texto": "El barrido: Pon 1/30 s, mantén {girar} hacia donde corre y espera. La cámara se adapta a su paso («Siguiendo al sujeto»): Dispara sin soltar. Él sale nítido y el fondo, arrastrado. Con ratón o mando, el pulso es tuyo.",
   "arcade_nivel_27_titulo": "La estela",
-  "arcade_nivel_27_texto": "Lo contrario del barrido: La cámara quieta y una velocidad lenta, 1/30 s o 1/60 s. Suelta las teclas de giro (con ellas la cámara lo seguiría): El parque sale nítido y el corredor, hecho una estela.",
+  "arcade_nivel_27_texto": "Lo contrario del barrido: Cámara quieta y velocidad lenta, de 1/30 s a 1/8 s (a esta hora no queman la foto). Suelta las teclas de giro: El parque sale nítido y el corredor, hecho una estela.",
   "arcade_nivel_28_titulo": "Retrato de autor",
   "arcade_nivel_28_texto": "Con el 105 mm: Fondo desenfocado y la persona en la proporción áurea.",
   "arcade_nivel_29_titulo": "Paseando al perro",
