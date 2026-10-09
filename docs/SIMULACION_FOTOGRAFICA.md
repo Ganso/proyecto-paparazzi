@@ -196,3 +196,20 @@ Evidencias en `docs/evidencias/foto/`.
 ### 9.6 Pendiente
 
 Balance de blancos (película de luz día bajo farolas) · «ojo de gato» del desenfoque en las esquinas · un fundido entre muestras para los desenfoques muy grandes, donde 24 fotogramas todavía se adivinan.
+
+### 9.7 Cuánto tarda el revelado y en qué (medido el 09-10-2026)
+
+`PAPARAZZI_PHOTO_PROFILE=1` hace que cada foto imprima `PHOTO_PROFILE` con los milisegundos de cada etapa (`main.gd::lap()`) y el tiempo de GPU y CPU de cada viewport. Medido en la RX 6700 XT a 3840 × 2160, de día, parque clásico, 64 fotogramas:
+
+| Etapa | Ultra | Qué es |
+|---|---:|---|
+| Renderizar los fotogramas (GPU, escena 3D) | ≈ 1.010 ms (16 ms cada uno) | El parque dibujado 64 veces |
+| Avanzar el mundo (CPU) | ≈ 290 ms (4,5 ms cada uno) | Viandantes 180, figurantes 85, palomas 20, patos y perro 3 |
+| Leer la imagen de la GPU | ≈ 50 ms | `get_image()` a 4K |
+| Evidencia y nota, resolver, textura, cámara | ≈ 90 ms | — |
+| Acumular e interfaz (GPU) | ≈ 30 ms | — |
+| **Total** | **≈ 1,47 s** | |
+
+Por perfil (mismo plano, 64 fotogramas forzados): Bajo 0,68 s · Medio 0,70 s · Alto 0,73 s · Ultra 1,47 s · el personalizado del usuario (MSAA 8×, SDFGI 8 cascadas y 6 rayos, SSAO 4) 2,39 s. Quitando a Ultra un solo efecto: SDFGI −175 ms, SSIL −155 ms, MSAA 4× → sin MSAA −185 ms (→ 2×: −45 ms), SSR −35 ms, SSAO −20 ms; volumétrica, resplandor, penumbra, hierba y profundidad de campo del visor, nada apreciable. Media resolución interna: 0,82 s.
+
+Dos cosas que la medida deja a la vista: a 4K **casi cualquier foto pide el máximo de fotogramas** (`photo_samples()` cuenta en píxeles, y hasta una foto nítida a f/8 y 1/500 s llega al tope), y el avance del mundo cuesta lo mismo por fotograma aunque la exposición dure 1/4000 s.

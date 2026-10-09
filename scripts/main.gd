@@ -3056,6 +3056,17 @@ var res_view: SubViewport
 var res_rect: TextureRect
 var curtain: ColorRect
 
+# Where the time of a photo goes (PAPARAZZI_PHOTO_PROFILE=1 prints it after each one; see
+# docs/SIMULACION_FOTOGRAFICA.md §9.7): milliseconds by stage, and the GPU's own per frame.
+var photo_profile = {}
+var profile_tick = 0
+static var profiling = OS.has_environment("PAPARAZZI_PHOTO_PROFILE")
+func lap(stage: String) -> void:
+	if not profiling: return
+	var now = Time.get_ticks_usec()
+	photo_profile[stage] = float(photo_profile.get(stage,0.0))+(now-profile_tick)/1000.0
+	profile_tick = now
+
 # Most frames a photo may take here: fewer where every frame waits for the screen.
 func photo_samples_cap() -> int:
 	if legacy: return 1
@@ -3197,6 +3208,9 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 	env.tonemap_exposure = tone*pow(2.0,-stops)
 	await get_tree().process_frame      # (the accumulator's own canvas, laid out)
 	acc_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	lap("preparar")
+	if profiling:
+		for v in [viewport,acc_view,get_viewport()]: RenderingServer.viewport_set_measure_render_time(v.get_viewport_rid(),true)
 	var near = camera.near
 	var far = camera.far
 	var width = near*36.0/focal
@@ -3212,6 +3226,7 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 	for k in samples:
 		var u = (k+.5)/samples
 		advance_world(e.t/samples)
+		lap("mundo")
 		# The pan goes on, and the hand wanders (two slow waves each way, by the shot's seed).
 		angle = base_angle+turn*e.t*u+tremble*(sin(TAU*(.8*u+wander*.37))+.5*sin(TAU*(2.1*u+wander*.11)))/1.5*.5
 		pitch = base_pitch+tremble*(sin(TAU*(.6*u+wander*.73))+.5*sin(TAU*(1.7*u+wander*.29)))/1.5*.5
@@ -3224,8 +3239,15 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 		camera.set_frustum(width,-lens*near/focus+jitter,near,far)
 		camera.position = base+camera.basis.x*lens.x+camera.basis.y*lens.y
 		material.set_shader_parameter("weight",1.0/(k+1))
+		lap("camara")
 		await RenderingServer.frame_post_draw
 		camera.position = base
+		lap("fotogramas")
+		if profiling:
+			for pair in [["gpu_escena",viewport],["gpu_acumular",acc_view],["gpu_interfaz",get_viewport()]]:
+				var rid = pair[1].get_viewport_rid()
+				photo_profile[pair[0]] = float(photo_profile.get(pair[0],0.0))+RenderingServer.viewport_get_measured_render_time_gpu(rid)
+				photo_profile[pair[0].replace("gpu","cpu")] = float(photo_profile.get(pair[0].replace("gpu","cpu"),0.0))+RenderingServer.viewport_get_measured_render_time_cpu(rid)
 	camera.set_perspective(camera.fov,near,far)
 	camera.keep_aspect = Camera3D.KEEP_WIDTH
 	angle = base_angle+turn*e.t
@@ -3235,7 +3257,9 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 	acc_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	res_view.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
+	lap("resolver")
 	var image = res_view.get_texture().get_image()
+	lap("leer_imagen")
 	if not OS.has_feature("web") and not OS.has_feature("mobile"):
 		DisplayServer.window_set_vsync_mode(vsync)
 		Engine.max_fps = fps_cap
@@ -3256,6 +3280,7 @@ func expose_photo(e: Dictionary, result: Dictionary, omega: float, samples: int)
 		image = viewport.get_texture().get_image()
 	exposing = false
 	curtain.visible = false
+	lap("comprobar")
 	return image
 
 # The compact's zoom motor: it whirrs while the focal length changes and stops with a tick.
@@ -3939,6 +3964,9 @@ func take_photo() -> void:
 	if equipment.auto_exposure and not exposure_locked: auto_expose()
 	release_lock()
 	shooting = true
+	photo_profile = {}
+	profile_tick = Time.get_ticks_usec()
+	var profile_start = profile_tick
 	rumble(.2,.75,.09)
 	# The turn of the camera at the instant of the shot (0 in the guided demonstrations, where the
 	# tutor's own tracking must not freeze the runner it is showing blurred).
@@ -3972,6 +4000,7 @@ func take_photo() -> void:
 	if badges_count() and not sandbox and not (academy and academy.active and academy.phase == "demo"):
 		for id in Badges.register(current_result,{"night":time_of_day == "night","first_shot":shot_serial == 1,"manual":equipment.exposure_mode() == "M"}): announce_badge(id)
 	if not sandbox: shots -= 1
+	lap("evidencia_y_nota")
 	var clean_image: Image
 	var samples = photo_samples(evidence,current_result)
 	if samples > 1:
@@ -3985,12 +4014,14 @@ func take_photo() -> void:
 		var side = clean_image.get_height()
 		clean_image = clean_image.get_region(Rect2i((clean_image.get_width()-side)/2,0,side,side))
 	current_photo = ImageTexture.create_from_image(clean_image)
+	lap("textura")
 	# The good ones go to the album (only in the real game: tests and capture tools never write there).
 	if badges_count() and not sandbox and not current_result.rejected and current_result.score >= Album.MIN_SCORE:
 		save_to_album(current_photo,current_result)
 	if not sandbox and (best.is_empty() or current_result.score > best.score):
 		best = current_result.duplicate(true)
 		best["photo"] = clean_image
+	lap("album_y_mejor")
 	update_dof_pass()
 	if samples <= 1: shutter_sound()
 	if is_instance_valid(camera_body): camera_body.blackout(1.0/shutter_denominator())
@@ -4003,6 +4034,11 @@ func take_photo() -> void:
 	if tutorial and tutorial.active: current_result["tutorial_note"] = tutorial.on_photo(current_result)
 	mode = "RESULT"
 	show_results()
+	if profiling:
+		lap("pantalla_resultado")
+		var parts = []
+		for stage in photo_profile: parts.append("%s %.1f" % [stage,photo_profile[stage]])
+		print("PHOTO_PROFILE total %.1f ms · %d fotogramas · %s" % [(Time.get_ticks_usec()-profile_start)/1000.0,samples," · ".join(parts)])
 
 # Vignetting and lateral chromatic aberration grow with wide angles (the same strengths develop the
 # photo). Depth of field follows focal length, aperture and focus distance exactly.
