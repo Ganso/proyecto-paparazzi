@@ -8,7 +8,7 @@ extends RefCounted
 #   acompanado  exactly N other noticeable people in the frame
 #   grande      the subject fills at least that fraction of the frame height
 #   focal_min   focal length at least that (35 mm equivalent)
-#   aurea       the subject's chest on a golden-section line (x = 0.382 or 0.618, ± 0.045)
+#   aurea       the subject's face on a golden-section line (x = 0.382 or 0.618, ± 0.045)
 #   fondo       background blurred: a point 10 m behind the subject has a CoC ≥ 0.07 mm (more than
 #               twice the sharpness limit)
 #   congelado   the subject moves (≥ 1.5 m/s across the view) and its drag stays within the CoC
@@ -90,9 +90,10 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				ok = e.f >= float(cond[key])-.5
 				text_value = Texts.get_text("cond_focal_min") % [float(cond[key]),e.f]
 			"aurea":
-				var gap = minf(absf(e.chest.x-GOLDEN[0]),absf(e.chest.x-GOLDEN[1]))
+				var face_x: float = e.get("eyes",e.chest).x
+				var gap = minf(absf(face_x-GOLDEN[0]),absf(face_x-GOLDEN[1]))
 				ok = gap <= .045
-				text_value = Texts.get_text("cond_aurea") % roundi(e.chest.x*100)
+				text_value = Texts.get_text("cond_aurea") % roundi(face_x*100)
 			"fondo":
 				var blur = Photo.coc(e.f,e.n,e.d+10.0,e.s)
 				ok = blur >= .07

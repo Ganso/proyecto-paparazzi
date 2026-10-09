@@ -32,7 +32,7 @@ Obligatorias: una condición fallida **rechaza la foto** con su motivo, como el 
 | `acompanado` | Acompañado de N | exactamente N personas así |
 | `grande` | Sujeto grande | altura en la foto ≥ el umbral |
 | `focal_min` | Focal mínima | focal ≥ el valor |
-| `aurea` | Proporción áurea | pecho en x = 0,382 o 0,618 (± 0,045) |
+| `aurea` | Proporción áurea | cara en x = 0,382 o 0,618 (± 0,045) |
 | `fondo` | Fondo desenfocado | CoC de un punto 10 m detrás del sujeto ≥ 0,07 mm |
 | `congelado` | Movimiento congelado | sujeto a ≥ 1,5 m/s y arrastre ≤ 0,030 mm |
 

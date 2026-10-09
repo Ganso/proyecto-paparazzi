@@ -57,6 +57,21 @@ func _initialize() -> void:
 	check(near(Photo.evaluate(e).framing,.6),"Cropped frame penalty")
 	e.chest.x = .333
 	check(near(Photo.evaluate(e).framing,.75),"Thirds bonus")
+	# The face is what the photo asks for (the chest does not fit beside it with a telephoto).
+	e = fixture()
+	e.head.y = .05
+	e.eyes = Vector2(.5,.2)
+	e.chest.y = 1.3
+	e.feet.y = 2.6
+	var close = Photo.evaluate(e)
+	check(not close.rejected and near(close.framing,1.0),"A portrait with the chest out of the frame is a good framing")
+	e.head.y = -.1
+	check(near(Photo.evaluate(e).framing,.6),"A portrait with the head cut is penalised")
+	e.eyes.y = -.05
+	check(Photo.evaluate(e).rejected,"Face out of frame rejects")
+	e = fixture()
+	e.eyes = Vector2(.333,.25)
+	check(near(Photo.evaluate(e).framing,1.0),"Thirds are measured on the face")
 	var casting = Cast.new()
 	var all_traits: Array = []
 	var signatures = {}

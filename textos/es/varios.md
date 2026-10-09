@@ -184,7 +184,7 @@ Presupuesto por viandante
 Presupuesto de escena
 
 ### el_objetivo_esta_fuera_del_encuadre_su_pecho_debe_verse_dentro_d
-El objetivo está fuera del encuadre: Su pecho debe verse dentro de la imagen.
+El objetivo está fuera del encuadre: Su cara debe verse dentro de la imagen.
 
 ### el_objetivo_esta_tapado_en_d_de_los_5_puntos_de_control
 El objetivo está tapado en %d de los 5 puntos de control.
@@ -228,11 +228,14 @@ Obstáculos: \
 ### cuerpo_entero
 Cuerpo entero. \
 
+### retrato
+Retrato: La cara entra entera. \
+
 ### bonificacion_de_tercios
 Bonificación de tercios.
 
 ### situa_el_pecho_cerca_de_una_linea_de_tercios
-Sitúa el pecho cerca de una línea de tercios.
+Sitúa la cara cerca de una línea de tercios.
 
 ### el_suelo
 el suelo

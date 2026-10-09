@@ -140,7 +140,7 @@ Focal · al menos %.0f mm (%.0f mm)
 
 ### cond_aurea
 > máximo 100 caracteres
-Proporción áurea · el pecho sobre una de las guías (38 o 62 %%, está en %d %%)
+Proporción áurea · la cara sobre una de las guías (38 o 62 %%, está en %d %%)
 
 ### cond_fondo
 > máximo 100 caracteres
@@ -446,7 +446,7 @@ Proporción áurea
 
 ### arcade_nivel_5_texto · encargo
 > máximo 220 caracteres
-Sitúa su pecho en una línea áurea, no en el centro.
+Sitúa su cara en una línea áurea, no en el centro.
 
 ## Nivel 6 · Teleobjetivo
 

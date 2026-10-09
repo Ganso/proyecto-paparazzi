@@ -11,6 +11,9 @@ Cabeza, pecho, cadera y ambas rodillas visibles.
 ### cabeza_o_pies_recortados
 Cabeza o pies recortados. \
 
+### cabeza_recortada
+Cabeza recortada. \
+
 ### un_arbol
 un árbol
 

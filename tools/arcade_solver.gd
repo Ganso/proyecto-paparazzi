@@ -94,6 +94,12 @@ func solve(n: int) -> String:
 		if level.cond.has("focal_max"): want_f = minf(want_f,float(level.cond.focal_max))
 		game.focal = clampf(want_f,game.equipment.lens().min,game.equipment.lens().max)
 		game.update_camera()
+		# A tight framing (a telephoto on someone near) is a portrait: what has to be in is the face,
+		# so the camera tilts up until the head sits near the top of the frame.
+		var tight = game.capture_evidence()
+		if absf(tight.feet.y-tight.head.y) > .85:
+			game.pitch += (tight.head.y-.1)*-rad_to_deg(2*atan(20.25/(2.0*game.focal)))
+			game.update_camera()
 		# Golden section: turn so the chest sits on the 38 % line (on the square for the TLR).
 		if level.cond.has("aurea"):
 			var e0 = game.capture_evidence()
@@ -156,7 +162,8 @@ func solve(n: int) -> String:
 		# The shot autofocuses on the active AF point: take the one nearest to the chest, as a
 		# player does when the subject is off-centre (golden section, lead room).
 		if game.equipment.focus_mode != "MF":
-			var face = game.view_rect.position+Vector2(e.chest.x,e.chest.y)*game.view_rect.size
+			var on: Vector2 = e.chest if Photo.inside(e.chest) else e.get("eyes",e.chest)
+			var face = game.view_rect.position+on*game.view_rect.size
 			var points: Array = game.finder.points()
 			var nearest = 4
 			for i in points.size():

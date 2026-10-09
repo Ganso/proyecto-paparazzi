@@ -114,15 +114,17 @@ Al disparar, `main.gd` construye un diccionario de evidencia (`evidence`) con to
 | **Encuadre** | $\text{clamp}(\text{tamaño} \cdot \text{recorte} + \text{tercios})$ | ver abajo | — |
 
 **Encuadre**, con $h$ = altura cabeza–pies en pantalla (fracción de la altura del visor):
-- *tamaño* = 1 si $h \in [0.45, 0.85]$; baja linealmente hasta 0 en $h = 0.15$ y en $h = 1.15$.
-- *recorte* = 1 si cabeza y pies están dentro del encuadre; 0.6 en caso contrario.
-- *tercios* = +0.15 si el pecho está a menos de 0.05 (horizontal) de una línea de tercios.
+- *tamaño* = 1 si $h \geq 0.45$; baja linealmente hasta 0 en $h = 0.15$. **Un plano cerrado no penaliza** (09-10-2026): por encima de $h = 0.85$ es un retrato, tan válido como el cuerpo entero.
+- *recorte* = 1 si cabeza y pies están dentro del encuadre (en un retrato, $h > 0.85$, basta la cabeza); 0.6 en caso contrario.
+- *tercios* = +0.15 si la cara está a menos de 0.05 (horizontal) de una línea de tercios.
+
+**Lo que se pide al jugador es siempre la cara** (los ojos de la evidencia, `e.eyes`; sin ellos, el pecho, como en las pruebas): enfoque, rechazo, tercios y proporción áurea se miden ahí. Con un teleobjetivo la cara y el pecho no caben a la vez, y exigir el pecho contradecía al encuadre. El pecho queda solo para lo que no se le pide a nadie: la lectura del fotómetro, el seguimiento, «aire» y la cuenta de los demás viandantes.
 
 ### 5.2 Oclusión física
 Se lanzan **5 rayos** desde la cámara hacia los puntos de control del objetivo (`person.control_points()`): **cabeza, tórax, caderas, pierna izquierda y pierna derecha**. Un rayo cuenta como bloqueado si choca antes con cualquier cosa que no sea el propio objetivo (farolas, bancos, árboles, otros viandantes…); la etiqueta del obstáculo se muestra en el informe.
 
 ### 5.3 Rechazo, nota, estrellas y créditos
-- **Rechazada** (nota 0, 0 estrellas) si el objetivo está detrás de la cámara, si su pecho queda fuera del encuadre o si **4 o más** de los 5 puntos están tapados.
+- **Rechazada** (nota 0, 0 estrellas) si el objetivo está detrás de la cámara, si su cara queda fuera del encuadre o si **4 o más** de los 5 puntos están tapados.
 - **Nota**:
 $$\text{nota} = \text{round}\big(100 \cdot (0.28\,\text{foco} + 0.24\,\text{exposición} + 0.18\,\text{movimiento} + 0.15\,\text{oclusión} + 0.15\,\text{encuadre})\big)$$
 - **Estrellas**: ≥ 90 → 5 · ≥ 75 → 4 · ≥ 60 → 3 · ≥ 40 → 2 · resto → 1.

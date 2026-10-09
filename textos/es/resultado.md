@@ -20,7 +20,7 @@ Oclusión · %d %%
 
 ### encuadre_d_altura_0f_ideal_4585_s_s
 Encuadre · %d %%
-Altura %s %% (ideal 45–85 %%). %s%s
+Altura %s %% (ideal: 45 %% o más). %s%s
 
 ### mov_ok
 Nítido: 1/%d s basta a %d mm.
