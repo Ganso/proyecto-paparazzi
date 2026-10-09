@@ -160,3 +160,14 @@ Desaparecen dos niveles que repetían combinación («Sola y de cerca» y «Barr
 - **Progreso**: `user://arcade.cfg` lleva `formato = 2`. Un fichero de los 25 niveles se migra al cargar (`Arcade.FROM_25`, `migrate()`): cada resultado va a donde está ahora su nivel y los de los dos niveles retirados se descartan. Un nivel ya superado sigue abierto aunque el anterior sea nuevo (`unlocked()`).
 - **Pantalla de niveles**: seis filas de tarjetas de 62 px.
 - **Pruebas**: `tests/test_arcade.gd` (183: datos de los niveles, migración, que cada condición la pida algún nivel y los casos de cada condición nueva), `tests/test_game.gd` (el sujeto de «Lo que hace» va a un banco, los datos nuevos de la foto, la medición puntual del contraluz) y `tools/arcade_solver.gd` (30 de 30; `SOLVER_SHOTS=<carpeta>` guarda la pantalla de resultado de cada nivel), que aprende a dejar aire, encuadrar el quiosco, exponer por tercios y compensar el contraluz.
+
+## El sujeto siempre se puede encuadrar con el objetivo del nivel (10-10-2026, usuario)
+
+En el nivel 30 (50 mm fijo, «medio encuadre») podía tocar un niño en el tercer camino: a 7,6 m y con 1,15 m de altura llena un 37 % de la foto, haga lo que haga el jugador, y la foto se rechazaba. Ahora `main.gd::new_assignment()` solo elige a quien el objetivo del nivel puede encuadrar como se pide:
+
+- `subject_reach(p, lane)`: la altura máxima que puede ocupar en la foto, desde el centro del parque clásico, en el borde lejano de su camino y con la focal más larga que permite el encargo (la del objetivo, o `focal_max` si el nivel la limita).
+- `subject_fits(p, lane)`: esa altura llega a lo que pide `grande` más un 5 %, o al 40 % si el nivel no pide tamaño (por debajo del 45 % el encuadre ya baja la nota). En el parque grande siempre vale: el fotógrafo se acerca andando.
+- Si nadie cumple (los corredores del nivel 24, todos lejos para la TLR), se elige a quien sale más grande.
+- El sujeto de un encargo no cambia a un camino donde su foto ya no cabría (`try_change_lane()`).
+
+Vale también para el modo libre con encargo, con el objetivo que lleve el jugador. Lo comprueba `tests/test_game.gd` (cada nivel del parque clásico, seis veces) y los 30 niveles se resuelven con `tools/arcade_solver.gd`, que ahora pone el punto de enfoque sobre el sujeto antes de disparar.

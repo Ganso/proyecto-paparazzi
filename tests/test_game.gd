@@ -314,6 +314,19 @@ func run() -> void:
 	game.start_level(9)
 	check(game.target.runner and game.equipment.exposure_mode() == "S" and game.equipment.body == 2,"Level 10 sets a running subject and the SLR in shutter priority")
 	check(game.briefing.text.contains("congelado"),"The search line lists the level's conditions")
+	# No level picks someone its lens cannot frame as it asks (a child far away with a 50 mm).
+	var unfit = []
+	for n in Arcade.LEVELS.size():
+		if Arcade.LEVELS[n].scenario != "clasico": continue
+		for k in 6:
+			game.start_level(n)
+			# (level 24's runners are all far for the TLR: there the one who comes out tallest)
+			var others = game.people.filter(func(p): return p.runner == game.target.runner and p.visible and (p.runner or p.lane in [1,2]) and game.subject_fits(p,p.lane))
+			if not game.subject_fits(game.target,game.target.lane) and not others.is_empty(): unfit.append("%d (%.2f m, path %d)" % [n+1,game.target.height,game.target.lane])
+	check(unfit.is_empty(),"Every level's subject can be framed with the level's lens: %s" % str(unfit))
+	game.start_level(29)
+	var small = game.people.filter(func(p): return p.height < 1.3)
+	check(not small.is_empty() and not game.subject_fits(small[0],2) and game.subject_fits(small[0],1),"Level 30 (50 mm, half the frame): a child fits on the bench path, not on the third one")
 	# Levels about what people do, where they are and the light (06-10-2026).
 	game.start_level(12)
 	check(game.target.lane == 1 and game.target.bench_goal >= 0 and game.activity_on_duty(game.target),"«Lo que hace»: the subject heads for a bench to do something")

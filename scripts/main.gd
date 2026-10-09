@@ -1350,6 +1350,23 @@ func start_session(time_mode = "day", free_play = false) -> void:
 		resume_search()
 	else: new_assignment()
 
+# How tall someone can come out in the photo (fraction of its height) from the middle of the
+# classic park: at the far edge of a path, with the longest focal length the assignment allows.
+func subject_reach(p, lane: int) -> float:
+	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
+	var longest: float = equipment.lens().max
+	if level.get("cond",{}).has("focal_max"): longest = minf(longest,float(level.cond.focal_max))
+	return p.height*longest/(20.25*LANE_LINES[lane].y)
+
+# Whether the photo asked for can be taken of this person on that path: as tall as the level asks
+# («grande», with some room), and never so small that the framing is marked down. A child on the
+# third path with a 50 mm lens fills a third of the frame, whatever the photographer does.
+func subject_fits(p, lane: int) -> bool:
+	if crowd: return true      # (in the big park the photographer walks up to them)
+	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
+	var need = float(level.cond.grande)+.05 if level.get("cond",{}).has("grande") else .4
+	return subject_reach(p,lane) >= need
+
 func new_assignment() -> void:
 	if is_instance_valid(target): target.protected_target = false
 	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
@@ -1377,6 +1394,13 @@ func new_assignment() -> void:
 			runners = runners.filter(func(p): return p.lane == best_lane)
 		if not runners.is_empty(): candidates = runners
 	if candidates.is_empty(): candidates = people.filter(func(p): return p.visible)
+	# Only someone the level's lens can frame as it asks (subject_fits()); failing that, whoever
+	# comes out tallest.
+	var fitting = candidates.filter(func(p): return subject_fits(p,p.lane))
+	if fitting.is_empty() and not crowd:
+		var tallest = candidates.map(func(p): return subject_reach(p,p.lane)).max()
+		fitting = candidates.filter(func(p): return subject_reach(p,p.lane) >= tallest-.001)
+	if not fitting.is_empty(): candidates = fitting
 	var kind = str(level.get("target",""))
 	# The dog's owner; someone who can sit down on a bench (classic park: lane of the benches).
 	if kind == "dog" and dog and is_instance_valid(dog.walker): candidates = [dog.walker]
@@ -4920,7 +4944,7 @@ func override_path() -> String:
 # changed the default graphics (then the player is advised to reset the graphics options)].
 # Two or three points per version, only what a player notices. A new release adds its row here
 # and its texts in textos/es/menu.md.
-const VERSION_NOTES = [["0.5.1",2,false],["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+const VERSION_NOTES = [["0.5.2",1,false],["0.5.1",2,false],["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
 static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice
@@ -5574,6 +5598,8 @@ func try_change_lane(p: Pedestrian) -> bool:
 	choices.sort_custom(func(a,b): return absf(LANES[a]-p.radius) < absf(LANES[b]-p.radius))
 	for lane in choices:
 		if lane == p.lane or is_equal_approx(LANES[lane],p.radius): continue
+		# The subject of an assignment does not move to a path where its photo cannot be taken.
+		if p.protected_target and not sandbox and not subject_fits(p,lane): continue
 		var in_lane = 0
 		for other in people:
 			if (other.lane == lane or other.destination_lane == lane) and other.visible: in_lane += 1

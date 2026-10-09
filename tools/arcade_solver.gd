@@ -169,10 +169,19 @@ func solve(n: int) -> String:
 			for i in points.size():
 				if points[i].distance_to(face) < points[nearest].distance_to(face): nearest = i
 			game.finder.active = nearest
+			# …and put it on the subject, as a player does (aim_at() leads a walker by a hand's width,
+			# enough for the point to slip past a chest seven metres away). Not where the level
+			# places the subject in the frame itself.
+			if not (level.cond.has("aurea") or level.cond.has("aire") or level.cond.has("lugar")) and not pans:
+				var at: Vector2 = (points[nearest]-game.view_rect.position)/game.view_rect.size
+				game.angle += (on.x-at.x)*rad_to_deg(2*atan(36.0/(2.0*game.focal)))*(9.0/16.0 if game.equipment.tlr() else 1.0)
+				game.update_camera()
 		if OS.has_environment("SOLVER_DEBUG"): print("  before: locks %s %s · point %d · t 1/%d n %s iso %d · meter %s" % [str(game.exposure_locked),str(game.focus_locked),game.finder.active,game.shutter_denominator(),str(game.aperture_value()),game.iso_value(),str(game.measured_ev)])
 		await game.take_photo()
 		if OS.has_environment("SOLVER_DEBUG"):
 			var cr: Dictionary = game.current_result
+			var ce: Dictionary = cr.evidence
+			print("  subject: %.2f m tall, path %d · d %.2f eyes %.2f focus %.2f · head %.2f feet %.2f chest %s · pitch %.1f" % [target.height,target.lane,ce.d,ce.get("d_eyes",0.0),ce.s,ce.head.y,ce.feet.y,str(ce.chest),game.pitch])
 			print("  shot: expected %d, got %d · %s · %s" % [best.score,cr.score,cr.get("reason",""),"foco %s expo %s mov %s ocl %s enc %s delta %s" % [str(cr.focus),str(cr.exposure),str(cr.movement),str(cr.occlusion),str(cr.framing),str(cr.delta)]])
 	# SOLVER_SHOTS=<folder>: the result screen of each level, as evidence.
 	if game.mode == "RESULT" and OS.has_environment("SOLVER_SHOTS"):
