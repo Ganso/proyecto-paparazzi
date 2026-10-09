@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.5.0 · EN DESARROLLO
+VERSIÓN ALFA 0.5.1 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -370,6 +370,14 @@ Mantén la tecla de giro hacia donde va alguien: La cámara lo espera, se adapta
 ### novedades_0_5_0_3 · Novedades de la versión 0.5.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 El objetivo también cuenta: El sol vela la foto, las farolas hacen estrella al cerrar el diafragma y a f/22 se pierde nitidez.
+
+### novedades_0_5_1_1 · Novedades de la versión 0.5.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Lo que cuenta es la cara: Un primer plano con teleobjetivo ya es un buen encuadre, aunque no entre el cuerpo.
+
+### novedades_0_5_1_2 · Novedades de la versión 0.5.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+La foto se revela antes, sobre todo con los gráficos por encima de Ultra.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres
