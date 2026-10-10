@@ -4035,6 +4035,7 @@ func take_photo() -> void:
 	if equipment.auto_exposure and not exposure_locked: auto_expose()
 	release_lock()
 	shooting = true
+	set_aid_optics(false)
 	photo_profile = {}
 	profile_tick = Time.get_ticks_usec()
 	var profile_start = profile_tick
@@ -5332,8 +5333,10 @@ func update_focus_aid(dt: float) -> void:
 	if equipment.focus_mode != "MF" or mode != "SEARCH" or not eye_ready():
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
+		set_aid_optics(false)
 		return
 	focus_aid.visible = not tlr_loupe
+	set_aid_optics(not tlr_loupe)
 	var center_pixel = view_rect.get_center()
 	# What the zone is looking at: what most of it shows (the middle one of its five readings, the
 	# sky counting as far away). It used to be the nearest person touching any of the five, or the
@@ -5350,10 +5353,24 @@ func update_focus_aid(dt: float) -> void:
 	var target_error = (0.0 if is_inf(focus_distance) else 1.0/focus_distance) - (0.0 if is_inf(patch_distance) else 1.0/patch_distance)
 	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
 	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
-	focus_aid.material.set_shader_parameter("offset", smoothed_focus_aid_offset)
+	# (where the 3D pass draws the aid, pixel by pixel, the zone is not shifted again here)
+	focus_aid.material.set_shader_parameter("offset", 0.0 if is_instance_valid(dof_pass) and dof_pass.visible else smoothed_focus_aid_offset)
 	var depth = Photo.dof(focal, aperture_value(), focus_distance)
 	var in_dof = patch_distance >= depth.x and (is_inf(depth.y) or patch_distance <= depth.y)
 	finder.mf_coincidence = in_dof or absf(smoothed_focus_aid_offset) < 0.003
+
+# The double image and the split image are optics (user, 11-10-2026: «la controla el jugador y
+# representa la realidad de lo que hay detrás»): the 3D pass of the finder displaces every pixel of
+# the zone by its own distance from the focus plane (shaders/viewfinder_dof.gdshader). What the
+# player focused on stays lined up whoever walks past in front; only the passer-by is split.
+# Never in the photo: take_photo() switches it off before the frame it keeps.
+func set_aid_optics(on: bool) -> void:
+	if not is_instance_valid(dof_pass): return
+	var material: ShaderMaterial = dof_pass.material_override
+	material.set_shader_parameter("aid",(1 if equipment.body == 1 else 2) if on else 0)
+	if not on: return
+	material.set_shader_parameter("aid_scale",focal*.006)
+	material.set_shader_parameter("focus_m",-1.0 if is_inf(focus_distance) else focus_distance)
 
 func point_hit(point: Vector2) -> Dictionary:
 	var pixel = image_position(point)
