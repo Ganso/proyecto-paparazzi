@@ -1,11 +1,43 @@
 # 28 · Enfoque manual: la imagen partida se mueve sola (problema abierto)
 
-> **Estado: ABIERTO, sin solución aceptada.** El 11-10-2026 se probaron cuatro arreglos y el usuario
-> rechazó los cuatro («de ninguna de las maneras que hemos probado es aceptable»). **El código está
-> exactamente como en la versión 0.5.3** (`scripts/main.gd`, `shaders/focus_aid.gdshader` y
-> `shaders/viewfinder_dof.gdshader` son los del commit `c9930b8`). Este documento recoge lo que se
-> sabe, lo que se probó y por qué falló, para analizarlo a fondo en la siguiente sesión
-> **antes de tocar nada**.
+> **Estado: ABIERTO, sin solución aceptada, pero con el requisito ya aclarado (§0).** El 11-10-2026
+> se probaron cuatro arreglos y el usuario rechazó los cuatro («de ninguna de las maneras que hemos
+> probado es aceptable»). **El código está exactamente como en la versión 0.5.3**
+> (`scripts/main.gd`, `shaders/focus_aid.gdshader` y `shaders/viewfinder_dof.gdshader` son los del
+> commit `c9930b8`). Este documento recoge lo que se pide, lo que se sabe, lo que se probó y por
+> qué falló, para retomarlo en la siguiente sesión **antes de tocar nada**.
+
+---
+
+## 0. Lo que se pide (aclarado por el usuario al cerrar la sesión)
+
+> «Quiero que funcione **como en una cámara de verdad**: al cambiar la distancia de enfoque cambias
+> el visionado, pero **el visionado solo representa el mundo real partido por la mitad**. **Jamás
+> debe ocurrir que al pasar alguien por delante el fondo cambie en la pantalla partida: solo cambia
+> la parte de la imagen partida a la que afecta ese objeto.** Vamos, COMO EN UNA CÁMARA DE VERDAD.
+> Ahora mismo si pasa un corredor delante, aunque ocupe solo el 10 % de un lateral, el resto de la
+> visualización de la imagen partida pega un salto y muestra una imagen distinta, y debería estar
+> **completamente inalterado**.»
+
+Dicho con mis palabras, para comprobar que lo he entendido:
+
+1. La imagen partida **no es un indicador, es una vista del mundo**: lo que hay en la zona, cortado por la mitad, con cada mitad desplazada hacia un lado.
+2. **Lo único que el jugador controla es la distancia de enfoque** (el anillo). Al girarlo cambia cuánto se desplaza cada cosa: lo que está a la distancia enfocada casa; lo que está más cerca o más lejos queda partido, tanto más cuanto más lejos esté de esa distancia.
+3. **Cada cosa se desplaza según su propia distancia, no según la de otra.** Si un corredor entra por un lateral y ocupa un 10 % de la zona, cambia ese 10 %: se ve al corredor, partido. **El otro 90 % (el fondo) sigue exactamente igual que el fotograma anterior**, píxel a píxel.
+4. Por tanto no existe una «distancia de la zona» ni nada que elegir: ni prioridad a las personas, ni lo más cercano, ni la mediana, ni lecturas que se congelan. Todo eso era el error.
+5. El «punto de enfoque» del que hablaba todo el rato es esto: **dónde casa la imagen partida**. Si él no toca el anillo, lo que casaba tiene que seguir casando.
+
+**El fallo de hoy, en una frase:** el juego calcula *un solo desplazamiento para toda la zona* a partir de «lo que hay debajo»; en cuanto algo entra en la zona, ese número cambia y **toda** la zona, fondo incluido, salta.
+
+**Consecuencia para los cuatro intentos:** el concepto correcto era el del tercero (cada píxel con su desplazamiento, sacado de la profundidad). Se rechazó porque **se veía horrible**, no porque la idea fuera mala: lo pendiente es dibujarlo bien. Los otros tres (1, 2 y 4) seguían eligiendo o congelando un único número y no pueden cumplirlo nunca.
+
+### Criterios de aceptación (para no volver a decir «corregido» sin serlo)
+
+- **A. Fondo inalterado.** Cámara quieta, foco fijo en el fondo. Entra alguien por un lateral de la zona. Los píxeles de la zona que esa persona no ocupa (ni ella ni su imagen desplazada) son **idénticos** a los del fotograma anterior.
+- **B. Igual que la 0.5.3 cuando toca.** Con toda la zona a una misma distancia (una pared, el seto), la imagen es **indistinguible** de la de la 0.5.3, enfocada o desenfocada, y al girar el anillo las dos mitades se deslizan igual de suaves. Ese es el aspecto que «era PERFECTO».
+- **C. Solo el anillo mueve lo que casa.** Sin tocar el anillo, lo que estaba alineado sigue alineado aunque se mueva la cámara o pase gente.
+- **D. La doble imagen de la telemétrica** cumple lo mismo: el fantasma de cada cosa se separa según su distancia; el del fondo enfocado no se mueve cuando alguien cruza.
+- **E. Se enseña antes de darlo por bueno**: capturas lado a lado (0.5.3 / nuevo) de los casos A y B, y que el usuario lo vea.
 
 ---
 
@@ -25,10 +57,12 @@
 - R1. En MF **nada mueve el punto de enfoque salvo el jugador** (anillo de enfoque; y la cámara, que es suya).
 - R2. La imagen partida y la doble imagen **representan la realidad** de lo que hay en la zona y **las controla el jugador**.
 - R3. El **aspecto** de la imagen partida de la 0.5.3 es el bueno: no se rediseña.
-- R4. La imagen partida debe **calcularse en cada fotograma** (no quedarse con una lectura vieja).
+- R4. La imagen partida debe **calcularse en cada fotograma** (no quedarse con una lectura vieja): es una vista del mundo, y el mundo se mueve.
 - R5. Se conserva todo lo que hay del enfoque manual (imagen partida, doble imagen, etiqueta «foco alineado», lupa).
 
-**No está aclarado qué es exactamente «el punto de enfoque» en pantalla para el usuario.** Es la primera cosa que hay que resolver (§6): mis cuatro intentos partieron de suponerlo.
+Durante la sesión no supe qué era «el punto de enfoque» en pantalla para el usuario y lo supuse cuatro veces. Quedó aclarado al final (§0, punto 9 de esta lista): es **dónde casa la imagen partida**.
+
+9. La aclaración final, que es la que manda: «Quiero que funcione como en una cámara de verdad […] Jamás debe ocurrir que al pasar alguien por delante el fondo cambie en la pantalla partida: solo cambia la parte de la imagen partida a la que afecta ese objeto. […] Es que ya no sé cómo explicártelo.» (entera en el §0)
 
 ---
 
@@ -74,16 +108,24 @@ Propuse además un quinto (en vivo, pero un cambio no provocado por el jugador s
 
 ### La contradicción de fondo
 
-Con **un solo desplazamiento para toda la zona** (el aspecto que gusta, R3), «en vivo» (R4) implica que cuando alguien entra en la zona se mueve también el fondo enfocado, que es justo lo que el usuario percibe como «se mueve el punto de enfoque» (R1). Las salidas conocidas son tres y las tres están rechazadas: congelar la lectura (4), que cada punto tenga su desplazamiento (3) o elegir mejor a quién se mira (1 y 2). **O falta una cuarta que no he visto, o no he entendido qué ve el usuario.**
+Con **un solo desplazamiento para toda la zona**, «en vivo» (R4) implica que cuando alguien entra en la zona se mueve también el fondo enfocado, que es justo lo que el usuario llama «se mueve el punto de enfoque» (R1). Elegir mejor a quién se mira (1 y 2) o congelar la lectura (4) no lo resuelven: sigue habiendo un único número.
+
+**La salida es la del intento 3** (cada punto con su propio desplazamiento), y el usuario lo confirmó sin saberlo cuando dijo que con él «no se mueve el punto de enfoque». Lo que falló fue el dibujo. No era que yo no viera una cuarta vía: era que la tercera estaba mal hecha y, al rechazarla por su aspecto, la abandoné en vez de arreglarla.
 
 ---
 
 ## 5. Hipótesis sin probar
 
-1. **Que «el punto de enfoque» no sea la imagen partida.** Solo comprobé variables; no vi nunca la pantalla del usuario (4K, perfil con MSAA 8×, SDFGI 8). Puede haber algo visual que salte y que no esté en lo que registré: el desenfoque del visor con MSAA, la etiqueta «foco alineado» y el círculo que cambian de color, la marca del seguimiento con teclas, el paralaje. **Hay que verlo con él** (una grabación de pantalla o describirlo sobre una captura) antes de cualquier otra cosa.
-2. **Que el intento 3 fuera la idea correcta mal dibujada.** El usuario dijo que con él «no se mueve el punto de enfoque». Si lo «horrible» eran los artefactos (escalones, huecos, bordes) y no el concepto, cabe rehacerlo bien: desplazamiento continuo, sin límite a la zona, con el mismo suavizado y el mismo aspecto que el original cuando toda la zona está a una distancia. **Preguntar primero qué era lo horrible, con capturas de antes y después lado a lado.**
-3. **Que la referencia deba ser el foco del jugador y no la escena.** Por ejemplo, un desplazamiento que dependa solo de cuánto falta para alinear *lo que el jugador estaba alineando* (la última distancia que dejó alineada), en vez de «lo que hay debajo ahora». No está pensado a fondo.
-4. **Los rayos miden mal la zona** (±24 px en un círculo de 56 px de radio, y contra cápsulas). Aunque no sea la causa, cualquier solución basada en rayos hereda ese defecto.
+1. ~~Que «el punto de enfoque» no sea la imagen partida.~~ **Resuelto por la aclaración del §0:** sí es la imagen partida (dónde casa).
+2. **Que el intento 3 fuera la idea correcta mal dibujada: confirmado como el camino.** Falta saber **qué** se veía horrible. Sospechas, por orden de probabilidad:
+   - *Los bordes de la zona sin desplazar.* Limité las fuentes al interior de la zona, así que al girar el anillo con todo desenfocado se desplazaba el centro y los bordes se quedaban quietos: media zona partida y media no. La 0.5.3 trae imagen de fuera de la zona, y en una cámara real también entra.
+   - *Escalones.* La búsqueda probaba 32 desplazamientos (uno cada ~5 px a 1280 de ancho): los contornos salían dentados.
+   - *Huecos.* Donde algo cercano se desplaza y deja su sitio, puse la imagen sin desplazar: se ve el objeto dos veces.
+   - *Sin el suavizado* de la 0.5.3 (que amortigua el desplazamiento al girar el anillo).
+   - *Sin el desenfoque del visor dentro de la zona* y con la zona dibujada antes del tono y el resplandor.
+   Hay que **verlo con capturas lado a lado** y preguntárselo, no adivinarlo.
+3. ~~Que la referencia deba ser el foco del jugador y no la escena.~~ Descartada: no hay referencia que elegir (§0, punto 4).
+4. **Los rayos no sirven para esto** (±24 px en un círculo de 56 px de radio, y contra cápsulas, no contra la silueta que se ve). La distancia tiene que salir de la profundidad de cada píxel, como en el intento 3. En OpenGL (Android y web) ese pase 3D no existe hoy: habrá que ver cómo darle profundidad a la zona allí, o aceptar una aproximación y decirlo.
 
 Hallazgo aparte, también revertido y pendiente de decidir: en las cámaras sin autofoco el **punto de enfoque activo** (`finder.active`) no se dibuja, pero el exposímetro y el seguimiento con teclas lo usan, y puede haberse quedado fuera del centro de un nivel anterior con autofoco. No tiene que ver con la imagen partida.
 
@@ -91,9 +133,12 @@ Hallazgo aparte, también revertido y pendiente de decidir: en las cámaras sin 
 
 ## 6. Plan para la siguiente sesión
 
-1. **Aclarar con el usuario, sobre una captura o una grabación suya, qué es «el punto de enfoque» que ve moverse** y qué debería pasar exactamente en estos tres casos: (a) cámara quieta, foco al fondo, alguien cruza la zona; (b) cámara quieta, foco al fondo, alguien se para en la zona; (c) girando la cámara, la zona pasa de un sujeto enfocado al fondo.
-2. Enseñarle lado a lado la 0.5.3 y el intento 3 en esos tres casos y preguntar **qué** es lo horrible.
-3. Solo entonces proponer **una** solución, con capturas, y esperar su visto bueno antes de programarla.
+El qué ya está claro (§0). Queda el cómo, y enseñarlo antes de darlo por hecho:
+
+1. Recuperar el intento 3 (commit `78d15e8`: `viewfinder_dof.gdshader` con `aid`/`aid_scale` y `main.gd::set_aid_optics()`) en una rama o copia, **sin subirlo**.
+2. Sacar capturas lado a lado, 0.5.3 frente a ese intento, de: zona uniforme enfocada, zona uniforme desenfocada (varias posiciones del anillo), alguien entrando por un lateral, alguien ocupando media zona. Enseñárselas al usuario y preguntar **qué** es lo horrible.
+3. Rehacer el dibujo hasta cumplir el criterio **B** (indistinguible de la 0.5.3 con la zona a una distancia) y el **A** (fondo inalterado), comprobándolos con diferencia de imágenes, no a ojo.
+4. Enseñar el resultado (criterio **E**) y esperar su visto bueno antes de subirlo.
 
 Para reproducir: sesión libre, TLR (`equipment.preset(3)`), `sandbox_paused = true` para parar a la gente, `set_manual_focus(d)`, y mover la cámara con eventos de ratón (botón izquierdo y arrastre). Registrar `smoothed_focus_aid_offset` y capturar el centro de la pantalla.
 
@@ -105,9 +150,12 @@ Para reproducir: sesión libre, TLR (`equipment.preset(3)`), `sandbox_paused = t
 2. **Dar por hecha la causa a la primera coincidencia.** Vi «farola a 2,6 m» en el registro y lo di por bueno; era solo uno de los casos. *Una causa no está confirmada hasta que el arreglo hace desaparecer el síntoma en la reproducción del usuario.*
 3. **Arreglar el comportamiento cambiando el aspecto.** Me pidió que algo no se moviera y le rediseñé la imagen partida dos veces (intentos 1 y 3). *Si algo «visualmente es perfecto», el arreglo no toca sombreadores; y cualquier cambio visual se enseña y se pregunta antes.*
 4. **Entregar arreglos parciales uno tras otro como si fueran el definitivo.** Cuatro veces dije «corregido». *Cuando el primero falla, parar: el modelo mental es incorrecto. Volver a preguntar qué ve, no probar otra variante.*
-5. **No preguntar lo esencial.** Nunca le pedí que señalara en una captura qué se movía. Interpreté «zona de enfoque», «punto de enfoque» y «ayuda» por mi cuenta, y «no quiero ninguna ayuda» estuve a punto de entenderlo como «quita la imagen partida». *Con términos ambiguos, una captura anotada y una pregunta concreta antes de programar.*
+5. **No preguntar lo esencial, y no escuchar lo que ya me había dicho.** En su quinto mensaje lo dijo entero: «la doble imagen la controla el jugador y representa la realidad de lo que hay detrás». Era la definición de una imagen partida de verdad y la leí como una queja sobre mi redacción. Tuvo que repetirlo, con un «es que ya no sé cómo explicártelo», para que lo entendiera. *Cuando el usuario describe cómo funciona el objeto real, eso es la especificación: construir eso, no una aproximación con atajos.* Además, nunca le pedí que señalara en una captura qué se movía. Interpreté «zona de enfoque», «punto de enfoque» y «ayuda» por mi cuenta, y «no quiero ninguna ayuda» estuve a punto de entenderlo como «quita la imagen partida». *Con términos ambiguos, una captura anotada y una pregunta concreta antes de programar.*
 6. **Confundir «lo físicamente correcto» con «lo que quiere».** El intento 3 era óptica fiel y lo rechazó por su aspecto. *La regla del proyecto es que se entienda y se disfrute, y quien decide el aspecto es él.*
 7. **Comprobar durante media hora.** Encadené baterías de pruebas y perseguí un fallo intermitente de la Academia que no tenía que ver; me lo reprochó dos veces. *Solo las pruebas afectadas, y una captura del caso reportado vale más que diez suites.*
 8. **Dejar el repositorio a medias al cortar una comprobación.** Hice `git stash` para comparar, maté los procesos con un `pkill` que se llevó mi propia orden y los cambios se quedaron apartados sin que lo notara hasta mirar. *No usar `git stash` para comparar (mejor `git worktree` o una copia), y tras interrumpir algo, comprobar `git stash list` y `git status` antes de seguir.*
 9. **Medir el tiempo con el reloj real** en herramientas que corren con la ventana tapada (el compositor frena los fotogramas): di por buenos unos datos de «sujeto inmóvil» que eran un artefacto. *Usar el reloj del juego (`total_time`).*
 10. **Añadir «de paso» arreglos que nadie pidió** (el punto activo central en MF) dentro del mismo cambio: hubo que revertirlo con todo lo demás. *Un hallazgo lateral se anota y se propone aparte.*
+11. **Abandonar la idea correcta al primer rechazo.** El intento 3 hacía lo que pedía y lo tiré entero porque se veía mal, para volver a un único desplazamiento que no podía cumplirlo. *Si rechaza el aspecto de algo que hace lo que pide, se arregla el aspecto; no se cambia de idea.*
+12. **Pensar en «una lectura» donde había «una imagen».** Todo el código existente trata la imagen partida como un indicador (¿está enfocado lo que hay debajo?) y heredé ese marco sin cuestionarlo; por eso mis arreglos discutían *qué* leer. *Antes de arreglar, preguntarse qué representa la cosa en el mundo real y si el código la modela así.*
+
