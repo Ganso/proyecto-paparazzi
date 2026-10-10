@@ -4,8 +4,8 @@ extends SceneTree
 # tries every aperture, shutter and ISO on the live evidence: it only shoots when a combination
 # passes the conditions and the pass mark, then applies it and takes the real photo through the
 # game. In the big park it starts a few metres from the subject (walking there is not the test).
-#   ~/bin/godot-4-fp --path . --disable-vsync --script tools/arcade_solver.gd [-- --only=1,16]
-# SOLVER_DEBUG=1 prints every try; SOLVER_SHOTS=<folder> saves each level's result screen.
+#   ~/bin/godot-4-fp --path . --disable-vsync --script tools/arcade_solver.gd [-- --only=1,16 --repeat=3]
+# SOLVER_DEBUG=1 prints every try; SOLVER_SHOTS=<folder> saves each level's briefing and result screens.
 # Prints «LEVEL n: PASS score/min» or «LEVEL n: FAIL …» and ARCADE SOLVER: passed/total.
 const Main = preload("res://main.tscn")
 const MainScript = preload("res://scripts/main.gd")
@@ -56,6 +56,10 @@ func solve(n: int) -> String:
 	game.exposure_thirds = level.cond.has("exposicion")
 	game.start_level(n)
 	await frames(3)
+	if OS.has_environment("SOLVER_SHOTS"):
+		await frames(6)
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(OS.get_environment("SOLVER_SHOTS").path_join("encargo_%02d.png" % (n+1)))
 	game.begin_assignment()
 	var target = game.target
 	if game.crowd:
@@ -119,6 +123,16 @@ func solve(n: int) -> String:
 			game.update_camera()
 		await physics_frame
 		var e = game.capture_evidence()
+		# An exposure nailed to the meter is judged against the meter: read it as the photo will,
+		# with the middle point on the subject.
+		if level.cond.has("exposicion"):
+			game.finder.active = 4
+			game.angle += (e.chest.x-.5)*rad_to_deg(2*atan(36.0/(2.0*game.focal)))
+			game.update_camera()
+			await physics_frame
+			e = game.capture_evidence()
+			game.update_meter()
+			e["metered"] = game.measured_ev
 		game.focus_distance = e.get("d_eyes",e.d)
 		e.s = game.focus_distance
 		tries += 1
@@ -188,26 +202,32 @@ func solve(n: int) -> String:
 		await frames(6)
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png(OS.get_environment("SOLVER_SHOTS").path_join("nivel_%02d.png" % (n+1)))
+	var clock = " · %d s de %d" % [roundi(elapsed*Engine.time_scale),int(level.limit)] if int(level.limit) > 0 else ""
+	var spent = " · %d de %d disparos" % [int(level.get("shots",3))-game.shots,int(level.get("shots",3))]
 	if game.mode == "RESULT": game.end_level()
 	elif game.mode == "SEARCH": game.end_level()
 	var passed = not game.best.is_empty() and not game.best.rejected and game.best.score >= level.min
-	if passed: return "PASS %d/%d" % [game.best.score,level.min]
+	if passed: return "PASS %d/%d%s%s" % [game.best.score,level.min,clock,spent]
 	return "FAIL %s (best %s, %d tries)" % [game.best.get("reason","") if not game.best.is_empty() else "no photo",str(game.best.get("score","-")),tries]
 
 func run() -> void:
 	Arcade.SAVE = "user://arcade_solver.cfg"
+	var repeat = 1
 	var only = []
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--only="): only = Array(arg.trim_prefix("--only=").split(",")).map(func(x): return int(x)-1)
+		# --repeat=N: each level N times over (another subject, another moment each time).
+		if arg.begins_with("--repeat="): repeat = int(arg.trim_prefix("--repeat="))
 	Engine.time_scale = 2.0
 	var passed = 0
 	var total = 0
 	for n in Arcade.LEVELS.size():
 		if not only.is_empty() and not n in only: continue
-		var verdict = await solve(n)
-		total += 1
-		if verdict.begins_with("PASS"): passed += 1
-		print("LEVEL %d: %s" % [n+1,verdict])
+		for again in repeat:
+			var verdict = await solve(n)
+			total += 1
+			if verdict.begins_with("PASS"): passed += 1
+			print("LEVEL %d: %s" % [n+1,verdict])
 	print("ARCADE SOLVER: %d/%d" % [passed,total])
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(Arcade.SAVE))
 	quit(0 if passed == total else 1)

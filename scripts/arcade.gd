@@ -44,8 +44,10 @@ const LEVELS = [
 	{"scenario":"clasico","time":"night","body":1,"lens":1,"auto":false,"pace":.6,"shots":2,"limit":120,"min":70,"cond":{"aislado":true,"ojos":true}},
 	# Block 5 · the TLR: waist level, mirrored ground glass, square frame, film, all manual.
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":1,"pace":.5,"shots":3,"limit":0,"min":70,"cond":{}},
-	{"scenario":"clasico","time":"golden","body":3,"lens":0,"auto":false,"iso":2,"pace":.6,"shots":3,"limit":120,"min":70,"cond":{"aurea":true}},
-	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":1,"pace":.6,"shots":2,"limit":120,"min":70,"cond":{"ojos":true,"fondo":true,"grande":.5}},
+	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":2,"pace":.6,"shots":3,"limit":120,"min":70,"cond":{"aurea":true}},
+	# (The portrait at the golden hour and on ISO 100 film: at midday, with 1/1000 s at most, the
+	# TLR cannot open the diaphragm enough to blur the background without burning the photo.)
+	{"scenario":"clasico","time":"golden","body":3,"lens":0,"auto":false,"iso":0,"pace":.6,"shots":2,"limit":120,"min":70,"cond":{"ojos":true,"fondo":true,"grande":.5}},
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":3,"target":"runner","shots":2,"limit":90,"min":70,"cond":{"congelado":true}},
 	{"scenario":"clasico","time":"blue","body":3,"lens":0,"auto":false,"iso":4,"pace":.6,"shots":1,"limit":60,"min":75,"cond":{"ojos":true,"aislado":true}},
 	# Block 6 · mastery: back to the SLR with everything learned: the pan ("barrido"), the trail

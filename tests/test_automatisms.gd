@@ -124,6 +124,47 @@ func run() -> void:
 	game.toggle_lock()
 	game.toggle_lock()
 	check(not game.exposure_locked,"The key again releases it")
+	# The matrix follows the subject of its zone (10-10-2026): a point that falls just beside a slim
+	# figure reads that person, not the hedge behind; on a camera without autofocus, whoever is in
+	# focus, wherever in the frame. And the matrix AF finds someone between two of its points.
+	game.equipment.metering = "matricial"
+	game.equipment.focus_mode = "AF puntual"
+	game.finder.active = 4
+	game.focal = 50.0
+	var slim = game.people.filter(func(p): return p.lane == 1 and p.visible and p.state == "CAMINANDO" and not p.runner)[0]
+	game.aim_at(slim,1.0)
+	await physics_frame
+	var slim_missed = false
+	for i in 40:
+		var slim_under = game.point_hit(game.finder.points()[4])
+		if slim_under.is_empty() or not slim_under.collider.has_meta("person"):
+			slim_missed = true
+			break
+		game.angle += .15
+		game.update_camera()
+	var slim_light = game.park.illumination_ev(slim.control_points()[1],game.time_of_day,slim)
+	game.update_meter()
+	check(slim_missed and game.person_near(game.finder.points()[4],game.finder.view.size*.1) == slim,"With the point just beside someone, the matrix still finds that person in its zone")
+	check(absf(game.measured_ev-slim_light) <= .6,"…and reads their light (%.1f for %.1f)" % [game.measured_ev,slim_light])
+	game.equipment.focus_mode = "AF matricial"
+	game.autofocus()
+	var slim_under_a_point = game.finder.points().any(func(pt): var h = game.point_hit(pt); return not h.is_empty() and h.collider.has_meta("person"))
+	check(slim_under_a_point or (game.af_person == slim and absf(game.focus_distance-game.camera.global_position.distance_to(slim.control_points()[1])) < .05),"The matrix AF focuses on someone between two of its points (%s)" % ("someone else under a point" if slim_under_a_point else "nobody under them"))
+	check(game.af_person != null,"…a person, in any case, not the scenery behind")
+	game.equipment.preset(1)
+	game.apply_equipment()
+	game.focal = 35.0
+	game.aim_at(slim,1.0)
+	game.focus_distance = game.camera.global_position.distance_to(slim.control_points()[1])
+	game.angle += 14.0
+	game.update_camera()
+	await physics_frame
+	slim_light = game.park.illumination_ev(slim.control_points()[1],game.time_of_day,slim)
+	game.update_meter()
+	check(game.focused_person() == slim,"Without autofocus the matrix goes by the focus: the person in focus, off-centre")
+	check(absf(game.measured_ev-slim_light) <= .6,"…whose light it reads after recomposing (%.1f for %.1f)" % [game.measured_ev,slim_light])
+	game.equipment.preset(2)
+	game.apply_equipment()
 	for key in ["fotometria_puntual","fotometria_ponderada","fotometria_matricial","ayuda_fotometria","ayuda_bloqueo","bloqueo_puesto","bloqueo_suelto"]:
 		check(preload("res://scripts/texts.gd").get_text(key) != key,"Text %s" % key)
 	# --- AF-C (docs/futuro/12 §4.2): the lens follows what is under the active point by itself ---

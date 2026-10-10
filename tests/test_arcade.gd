@@ -102,6 +102,10 @@ func _initialize() -> void:
 	var compensated = Conditions.judge(evidence(sun.merged({"t":1.0/60},true)),{"contraluz":true})
 	check(not compensated.rejected and compensated.exposure > .99,"Backlit and two stops over: the face is right, and the photo is judged on it")
 	check(Conditions.judge(evidence(sun.merged({"backlight":.1,"t":1.0/60},true)),{"contraluz":true}).rejected and Conditions.judge(evidence(sun.merged({"sunlit":false,"t":1.0/60},true)),{"contraluz":true}).rejected,"Without the sun behind there is no backlight")
+	var shaded = Conditions.judge(evidence(sun.merged({"sunlit":false,"t":1.0/60},true)),{"contraluz":true})
+	check(shaded.reason.contains("sombra") and not Conditions.judge(evidence(sun.merged({"backlight":.1,"t":1.0/60},true)),{"contraluz":true}).reason.contains("sombra"),"Facing the sun with the subject in the shade says so, not «the sun is not behind»")
+	# «Exposición clavada» is judged against what the meter read (10-10-2026).
+	check(Conditions.check(evidence({"scene_ev":14.5,"metered":14.0,"n":8.0,"t":1.0/250,"iso":100}),{"exposicion":true})[0].ok and not Conditions.check(evidence({"scene_ev":14.0,"metered":14.5,"n":8.0,"t":1.0/250,"iso":100}),{"exposicion":true})[0].ok,"The exposure to a quarter of a stop is measured from the meter's zero")
 	var dark = Conditions.judge(evidence(sun.merged({"t":1.0/1000},true)),{"silueta":true})
 	check(not dark.rejected and dark.exposure > .9,"Silhouette: two stops under the meter")
 	check(Conditions.judge(evidence(sun.merged({"t":1.0/60},true)),{"silueta":true}).rejected and Conditions.judge(evidence(sun),{"silueta":true}).rejected,"…not at the meter's reading, nor over it")

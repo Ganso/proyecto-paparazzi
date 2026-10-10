@@ -327,6 +327,15 @@ func run() -> void:
 	game.start_level(29)
 	var small = game.people.filter(func(p): return p.height < 1.3)
 	check(not small.is_empty() and not game.subject_fits(small[0],2) and game.subject_fits(small[0],1),"Level 30 (50 mm, half the frame): a child fits on the bench path, not on the third one")
+	var thirds_option = game.exposure_thirds
+	game.exposure_thirds = false
+	game.start_level(16)
+	check(game.thirds_on() and not game.exposure_thirds,"Level 17 (an exposure to the quarter of a stop) is played in thirds, whatever the option says")
+	game.start_level(22)
+	check(game.target.lane == 1 and str(game.time_of_day) == "golden" and game.equipment.film_iso_index == 0,"Level 23: the TLR's portrait at the golden hour, on ISO 100 film, of someone on the bench path (where its lens can blur the background)")
+	game.start_level(0)
+	check(not game.thirds_on(),"…and the other levels follow the option")
+	game.exposure_thirds = thirds_option
 	# Levels about what people do, where they are and the light (06-10-2026).
 	game.start_level(12)
 	check(game.target.lane == 1 and game.target.bench_goal >= 0 and game.activity_on_duty(game.target),"«Lo que hace»: the subject heads for a bench to do something")

@@ -194,3 +194,18 @@ Medido nivel a nivel (24 fotos automáticas por nivel, apuntando al sujeto): en 
 | **El obturador acababa en 1/1000 s**: con el 105 mm a f/1,8 a la hora dorada (nivel «Fondo desenfocado») la foto salía 2,3 pasos quemada, se hiciera lo que se hiciera | `Photo.DENOMINATORS` empieza en **1/4000 s** y 1/2000 s. Solo los tienen la réflex y la telemétrica (`main.gd::fastest_index()`); la compacta, la TLR y la Academia siguen en 1/1000 s |
 
 Tras el cambio: 0 o 1 de 24 fotos fuera de medio paso en casi todos los niveles; las que quedan son fotos con el punto de enfoque fuera del sujeto o con alguien cruzándose. Con un objetivo muy luminoso a pleno sol (f/1,4 a mediodía) ni 1/4000 s basta: es lo que pasa en una cámara real.
+
+## 10. La matricial sigue al sujeto de su zona (10-10-2026, auditoría del arcade)
+
+`tools/arcade_audit.gd` midió, nivel a nivel, lo que lee el exposímetro frente a la luz con la que se juzga la foto. Con el sujeto encuadrado, la lectura se iba **tres o cuatro pasos** en una de cada cinco o seis fotos, por tres causas:
+
+| Causa | Arreglo |
+|---|---|
+| El punto de enfoque caía **justo al lado** de una figura delgada (a 7 m una persona es más estrecha que la separación entre puntos) y la zona que más pesa leía el seto de detrás, al sol o a la sombra | La zona del punto activo lee a **quien esté dentro de esa zona** aunque el punto no lo toque (`main.gd::key_reading()`, `person_near()`): cualquier persona, sin saber quién es el objetivo (§2.1) |
+| En las cámaras **sin autofoco** (telemétrica, TLR) no hay punto de enfoque que seguir: al reencuadrar con el sujeto fuera del centro, la lectura pasaba al fondo | Sin autofoco la matricial se guía por **el enfoque**, como la medición evaluativa de una cámara real: lee a quien esté en el encuadre a la distancia enfocada (`focused_person()`) |
+| Las zonas mucho más luminosas que el resto (el cielo) cuentan un cuarto, **también la del sujeto**: una persona al sol con el parque en sombra, o bajo una farola de noche, se leía paso y medio oscura | La rebaja no se aplica a la zona del punto de enfoque |
+
+El **AF matricial** (la compacta) hace lo mismo al enfocar: si ninguno de sus nueve puntos toca a nadie pero hay alguien dentro del área que cubren, enfoca a esa persona (`select_matrix_point()`, `matrix_person`). No es el seguimiento de sujetos descartado en el §4.4: no sale de su área, no persigue a nadie y no conoce al objetivo.
+
+La medición **puntual** y la **ponderada** no cambian (leen lo que hay, sin interpretar), y la Academia conserva la lectura simple que explica su lección de medición. Tras el cambio el exposímetro queda a menos de 0,6 pasos del sujeto en todas las muestras de los 30 niveles. Pruebas en `tests/test_automatisms.gd`.
+

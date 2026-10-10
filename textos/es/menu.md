@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.5.2 · EN DESARROLLO
+VERSIÓN ALFA 0.5.3 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -382,6 +382,18 @@ La foto se revela antes, sobre todo con los gráficos por encima de Ultra.
 ### novedades_0_5_2_1 · Novedades de la versión 0.5.2 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 Los encargos ya no piden a nadie que el objetivo del nivel no pueda encuadrar (un niño lejos con un 50 mm).
+
+### novedades_0_5_3_1 · Novedades de la versión 0.5.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+El exposímetro ya no se despista: La medición matricial sigue a quien encuadras o enfocas, aunque el punto caiga justo al lado.
+
+### novedades_0_5_3_2 · Novedades de la versión 0.5.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Arcade repasado nivel a nivel: Ningún encargo pide lo que su cámara, su luz o su película no dejan hacer.
+
+### novedades_0_5_3_3 · Novedades de la versión 0.5.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+El barrido pasa a la hora dorada, la estela a la hora azul y el retrato con la TLR al atardecer: Cada foto, con su luz.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres

@@ -972,7 +972,9 @@ func change_parameter(parameter: String, direction: int) -> void:
 
 # Thirds of a stop (docs/EQUIPAMIENTO_Y_OPTICAS.md §8). The Academy teaches with whole stops.
 func thirds_on() -> bool:
-	return exposure_thirds and not (academy and academy.active)
+	# (the level about an exposure to the quarter of a stop is played in thirds, whatever the option)
+	var asked = arcade_level >= 0 and not sandbox and Arcade.LEVELS[arcade_level].cond.has("exposicion")
+	return (exposure_thirds or asked) and not (academy and academy.active)
 
 # The fastest shutter of the camera in hand: 1/4000 s on the SLR and the rangefinder, 1/1000 s on
 # the compact and the TLR, and in the Academy, whose lessons are written for 1/1000 s.
@@ -1365,7 +1367,14 @@ func subject_fits(p, lane: int) -> bool:
 	if crowd: return true      # (in the big park the photographer walks up to them)
 	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
 	var need = float(level.cond.grande)+.05 if level.get("cond",{}).has("grande") else .4
-	return subject_reach(p,lane) >= need
+	if subject_reach(p,lane) < need: return false
+	# A blurred background has to be possible there one stop down from wide open (wide open the
+	# light often does not let it): the TLR's 50 mm cannot do it beyond the bench path.
+	if level.get("cond",{}).has("fondo"):
+		var far: float = LANE_LINES[lane].y
+		var lens: Dictionary = equipment.lens()
+		if Photo.coc(lens.max,float(lens.long)*1.4142,far+10.0,far) < .07: return false
+	return true
 
 func new_assignment() -> void:
 	if is_instance_valid(target): target.protected_target = false
@@ -3540,8 +3549,13 @@ func autofocus() -> void:
 	finder.flash = .15
 	finder.success = not hit.is_empty()
 	af_person = hit.collider.get_meta("person") if not hit.is_empty() and hit.collider.has_meta("person") else null
-	if not hit.is_empty():
-		focus_distance = maxf(.8,camera.global_position.distance_to(hit.position))
+	# Matrix AF found someone beside its points (select_matrix_point()): that person is the focus.
+	var snapped = equipment.focus_mode == "AF matricial" and af_person == null and is_instance_valid(matrix_person)
+	if snapped:
+		af_person = matrix_person
+		finder.success = true
+	if not hit.is_empty() or snapped:
+		focus_distance = maxf(.8,camera.global_position.distance_to(matrix_person.control_points()[1] if snapped else hit.position))
 		refresh()
 		# The scripted camera of the evidence video refocuses twice a second: silently.
 		if not demo.has("af"):
@@ -4045,6 +4059,7 @@ func take_photo() -> void:
 	evidence["ca"] = float(equipment.lens().get("ca",.5))
 	evidence["stops"] = 2.0*log(aperture_value()/equipment.apertures(focal)[0])/log(2.0)
 	lens_evidence(evidence)
+	evidence["metered"] = measured_ev     # (what the meter said: «exposicion» is judged against it)
 	if arcade_level >= 0 and not sandbox: current_result = Conditions.judge(evidence,Arcade.LEVELS[arcade_level].cond)
 	else: current_result = Photo.evaluate(evidence)
 	current_result["evidence"] = evidence
@@ -4944,7 +4959,7 @@ func override_path() -> String:
 # changed the default graphics (then the player is advised to reset the graphics options)].
 # Two or three points per version, only what a player notices. A new release adds its row here
 # and its texts in textos/es/menu.md.
-const VERSION_NOTES = [["0.5.2",1,false],["0.5.1",2,false],["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+const VERSION_NOTES = [["0.5.3",3,false],["0.5.2",1,false],["0.5.1",2,false],["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
 static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice
@@ -5371,12 +5386,73 @@ func select_matrix_point() -> void:
 		elif distance < nearest_scenery_dist:
 			nearest_scenery_dist = distance
 			best_scenery_idx = i
+	matrix_person = null
 	if best_person_idx != -1:
 		finder.active = best_person_idx
+		return
+	# Nobody exactly under a point, but someone inside the area the points cover (a slim figure
+	# between two of them): the camera finds that person, as a compact's face detection does,
+	# instead of focusing and metering on the hedge behind.
+	var area = Vector2(view_rect.size.x*.17,view_rect.size.y*.2)
+	var found = person_near(centre,area) if not (academy and academy.active) else null
+	if found != null:
+		var at = finder_position(found.control_points()[1])
+		var nearest = 4
+		for i in pts.size():
+			if pts[i].distance_to(at) < pts[nearest].distance_to(at): nearest = i
+		finder.active = nearest
+		matrix_person = found
 	elif best_scenery_idx != -1:
 		finder.active = best_scenery_idx
 	else:
 		finder.active = 4
+
+# viewport pixel → ui point of the finder (the inverse of image_position()).
+func finder_position(world: Vector3) -> Vector2:
+	var local = camera.unproject_position(world)/Vector2(viewport.size)
+	if equipment.tlr(): local.x = 1.0-local.x
+	return local*view_rect.size+view_rect.position+view_shift
+
+# Someone whose chest shows within `reach` (half a rectangle, in finder pixels) of a point of the
+# finder, with nothing in front: the nearest to the point. Anybody, never the assignment's subject
+# as such (docs/futuro/12 §2.1).
+var matrix_person = null
+func person_near(point: Vector2, reach: Vector2):
+	var best_person = null
+	var best_gap = INF
+	for p in people:
+		if not is_instance_valid(p) or not p.visible or p.state == "RETIRADO": continue
+		var chest: Vector3 = p.control_points()[1]
+		if camera.is_position_behind(chest): continue
+		var gap: Vector2 = (finder_position(chest)-point).abs()
+		if gap.x > reach.x or gap.y > reach.y or gap.length() >= best_gap: continue
+		var hit = ray_to(chest)
+		if hit.is_empty() or not hit.collider.has_meta("person") or hit.collider.get_meta("person") != p: continue
+		best_gap = gap.length()
+		best_person = p
+	return best_person
+
+# On a camera without autofocus the matrix has no focus point to go by: it goes by the focus
+# itself, as evaluative metering does. Whoever is in the frame at the distance the lens is focused
+# at (the nearest to the middle, if several) is what the reading is about.
+func focused_person():
+	if is_inf(focus_distance): return null
+	var best_person = null
+	var best_gap = INF
+	var middle = view_rect.get_center()
+	for p in people:
+		if not is_instance_valid(p) or not p.visible or p.state == "RETIRADO": continue
+		var chest: Vector3 = p.control_points()[1]
+		if camera.is_position_behind(chest): continue
+		var away = camera.global_position.distance_to(chest)
+		if absf(away-focus_distance) > maxf(.35,.07*focus_distance): continue
+		var at = finder_position(chest)
+		if not view_rect.grow(-view_rect.size.x*.03).has_point(at) or at.distance_to(middle) >= best_gap: continue
+		var hit = ray_to(chest)
+		if hit.is_empty() or not hit.collider.has_meta("person") or hit.collider.get_meta("person") != p: continue
+		best_gap = at.distance_to(middle)
+		best_person = p
+	return best_person
 
 # Light (EV) of whatever is under a point of the viewfinder: never the assignment's subject as
 # such (docs/futuro/12 §2.1), only what the ray finds there, or the sky.
@@ -5422,13 +5498,16 @@ func update_meter() -> void:
 					var cell = Rect2(finder.view.position+finder.view.size*Vector2(col/5.0,row/5.0),finder.view.size/5.0)
 					# The zone of the focus point is read at the point itself: its centre could fall
 					# beside a subject that is narrower than the zone, and read the background.
-					readings.append(ev_under(active if cell.has_point(active) else at))
+					readings.append(key_reading(active,cell) if cell.has_point(active) else ev_under(at))
 					weights.append((MATRIX_SUBJECT_ACADEMY if academy and academy.active else MATRIX_SUBJECT) if cell.has_point(active) else 1.0)
 					mean += readings[-1]/25.0
 			var total = 0.0
 			var weight_sum = 0.0
 			for k in readings.size():
-				var w: float = weights[k]*(.25 if readings[k] > mean+3.0 else 1.0)
+				# (zones far brighter than the rest, the sky, count a quarter; never the focus point's
+				# own: a subject in the sun against a park in the shade was being read a stop and a half
+				# too dark, and one under a lamp at night too)
+				var w: float = weights[k]*(.25 if readings[k] > mean+3.0 and (weights[k] <= 1.0 or (academy and academy.active)) else 1.0)
 				total += readings[k]*w
 				weight_sum += w
 			measured_ev = total/weight_sum
@@ -5437,6 +5516,20 @@ func update_meter() -> void:
 
 func view_point(fraction: Vector2) -> Vector2:
 	return finder.view.position+finder.view.size*fraction
+
+# What the matrix reads in the zone that counts most, the focus point's: the point itself if it is
+# on someone; otherwise whoever shows inside that zone (the point may fall just beside a slim
+# figure and read the hedge behind, three or four stops away), or, on a camera without autofocus,
+# whoever is in focus anywhere in the frame (focused_person()); failing all that, the point.
+# The Academy keeps the plain reading its lesson on metering explains.
+func key_reading(active: Vector2, cell: Rect2) -> float:
+	if academy and academy.active: return ev_under(active)
+	var hit = point_hit(active)
+	if not hit.is_empty() and hit.collider.has_meta("person"): return ev_under(active)
+	var who = person_near(active,cell.size*.5)
+	if who == null and equipment.focus_mode == "MF": who = focused_person()
+	if who != null: return park.illumination_ev(who.control_points()[1],time_of_day,who)
+	return ev_under(active)
 
 # AF-L / AE-L (docs/futuro/12 §4.1): focus and meter on what is under the active point, then keep
 # both while recomposing; the next photo (or the key again) releases them.
@@ -5692,7 +5785,7 @@ func show_level_briefing(root: Control) -> void:
 	var conds = []
 	for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]))
 	if Arcade.clouds(arcade_level): conds.append(Texts.get_text("arcade_aviso_nubes"))
-	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append(Texts.get_text("arcade_aviso_tercios"))
+	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append(Texts.get_text("arcade_aviso_tercios_nivel" if thirds_on() else "arcade_aviso_tercios"))
 	if level.cond.has("barrido") and not Glyphs.pad() and Glyphs.device != "tactil": conds.append(Texts.get_text("arcade_aviso_barrido"))
 	rich_label(root,dotted(conds) if not conds.is_empty() else plain_bb(Texts.get_text("arcade_sin_condiciones")),Rect2(565,468,640,140),18)
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)

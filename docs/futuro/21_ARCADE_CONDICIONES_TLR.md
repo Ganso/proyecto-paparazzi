@@ -130,7 +130,7 @@ El arcade pedía nueve cosas y varios niveles se resolvían igual. Ahora **cada 
 | 18 | **A contraluz** (nuevo) | Dorada · réflex · A, medición puntual · `toward: sol` | `contraluz` |
 | 19 | **La silueta** (nuevo) | Dorada · réflex · M · `toward: sol` | `silueta` |
 | 20 | Noche en el quiosco | Noche · telemétrica · M | `aislado`, `ojos` |
-| 21–25 | **La TLR** (los antiguos 16–20) | | —, `aurea`, `ojos`+`fondo`+`grande`, `congelado`, `ojos`+`aislado` |
+| 21–25 | **La TLR** (los antiguos 16–20) | Día ISO 200 · día ISO 400 · **hora dorada ISO 100** · día ISO 800 · hora azul ISO 1600 | —, `aurea`, `ojos`+`fondo`+`grande`, `congelado`, `ojos`+`aislado` |
 | 26 | El barrido | Hora dorada · S | `barrido` |
 | 27 | **La estela** (nuevo) | Hora azul · S | `estela` |
 | 28 | Retrato de autor | Dorada · 105 f/1,8 · A | `fondo`, `aurea` |
@@ -175,3 +175,32 @@ Vale también para el modo libre con encargo, con el objetivo que lleve el jugad
 ## Velocidades lentas, con poca luz (10-10-2026, usuario)
 
 A pleno sol (EV 14,7), con el diafragma cerrado del todo (f/22) e ISO 100, la velocidad más lenta que no quema la foto es 1/60 s: a 1/30 s sobra casi un paso y a 1/15 s casi dos, y en prioridad de velocidad la cámara ya no tiene nada que cerrar. La estela del nivel 27 pide a menudo 1/30 s o menos (con un angular, 1/15 s), así que de día la foto salía siempre sobreexpuesta. El barrido (26) pasa a la **hora dorada**, donde 1/30 s cabe justo, y la estela (27) a la **hora azul**, donde caben de 1/60 s a 1/8 s. No hay filtros de densidad neutra en el juego; si se añaden, estos niveles podrían volver al día.
+
+## Auditoría de los 30 niveles: lo que se pide tiene que poder hacerse (10-10-2026, usuario)
+
+Tras dos niveles imposibles en dos días (un niño que no llenaba el encuadre del nivel 30, una estela que a pleno sol solo podía salir quemada), el usuario pidió repasar **uno por uno** todo lo que cada nivel exige y cómo lo consigue el jugador. Se hizo con dos herramientas: `tools/arcade_audit.gd` (nueva: por nivel, 20 situaciones reales; mide la altura que alcanza el sujeto, lo que lee el exposímetro frente a la luz que se juzga y la mejor nota **al alcance del jugador**, que no es la mejor posible) y `tools/arcade_solver.gd --repeat=3` (90 partidas).
+
+### Lo que estaba mal y cómo quedó
+
+| Dónde | Qué pasaba | Arreglo |
+|---|---|---|
+| **Todos los niveles** (medición matricial) | Con el sujeto encuadrado, el exposímetro se iba 3 o 4 pasos en una de cada cinco o seis fotos: el punto caía al lado de una figura delgada, o el sujeto quedaba fuera del centro en una cámara sin autofoco, o era lo más luminoso del encuadre y su zona se rebajaba como si fuera cielo | La matricial sigue al sujeto de su zona, o al que está enfocado en las cámaras sin autofoco, y nunca rebaja su zona ([12 §10](12_MODOS_FOTOMETRIA_Y_AUTOFOCUS.md)). El exposímetro queda a menos de 0,6 pasos del sujeto en todas las muestras |
+| **1–5** (compacta) | El AF matricial enfocaba el seto si ninguno de sus nueve puntos tocaba al sujeto | Enfoca a quien esté dentro del área de sus puntos |
+| **5, 22, 28** (proporción áurea) | La condición decía «Pecho en una línea áurea», pero ya se mide la cara | «Cara en una línea áurea» |
+| **6** Teleobjetivo | A 135 mm no cabe el cuerpo; el encargo no decía qué encuadrar | «Con tanto tele no cabe entero: Encuadra la cara» |
+| **10** Congela al corredor | El encargo decía 1/500 s; con el 70–200 sobre un corredor a 7 m hace falta 1/2000 s (1/4000 s desde unos 125 mm) | El encargo dice 1/2000 s o más rápido, y más cuanto más zoom |
+| **17** Exposición clavada | Con pasos enteros era «cuestión de suerte» (a veces imposible), y el error se medía contra la luz del sujeto, no contra el exposímetro que el jugador deja en cero: clavarlo podía no bastar | El nivel se juega **siempre en tercios** (`thirds_on()`), y la condición mide la distancia al cero del exposímetro (`evidence.metered`); lo acertada que fuera la lectura ya lo puntúa la exposición |
+| **18, 19** A contraluz, silueta | De cara al sol pero con el sujeto a la sombra de un árbol, el aviso era «el sol no está detrás» | Aviso propio: «tu objetivo está a la sombra: Espera a que le dé el sol». Medido: el sujeto está a contraluz entre 25 y 45 s de los 180, en 4–6 ratos, y la primera vez antes del minuto |
+| **19** La silueta | Siguiendo el encargo (uno o dos pasos bajo el exposímetro) fallaba una de cada seis combinaciones, porque la matricial leía al sujeto paso y medio oscuro | Con la medición corregida, 0 de 829 |
+| **23** Retrato 6×6 | A pleno sol y con película ISO 200, el exposímetro en cero pedía f/8: imposible desenfocar el fondo sin quemar la foto (la TLR acaba en 1/1000 s). Y en el tercer camino ni a f/2,8 se desenfocaba | **Hora dorada y película ISO 100** (f/4 y 1/1000 s al sol), y el sujeto solo se elige donde el objetivo puede desenfocar el fondo un paso por debajo de su máxima abertura (`subject_fits()`). El nivel 22 pasa a ser de día, para no repetir luz |
+| **24** Corredor al espejo | El encargo decía «1/500 s o más rápido»; a 7 m con el 50 mm hace falta 1/1000 s | El encargo dice 1/1000 s, la más rápida de la TLR |
+| **26, 27** Barrido, estela | A pleno sol las velocidades lentas quemaban la foto | Hora dorada y hora azul (apartado anterior) |
+| **30** y los demás con `grande` | El sujeto podía no llenar el encuadre con el objetivo del nivel | `subject_fits()` (apartado anterior) |
+| Textos de resultado | «Espera a verla caminar», «la pillaste en ello», «fotografíala»: en femenino para cualquier sujeto | Formas neutras |
+
+### Lo que se revisó y está bien
+
+Luz y exposición de cada nivel (EV del sujeto en sus caminos: 14,8 al sol y 11 a la sombra de día, 14,0 y 9,5 a la hora dorada, 8,1–8,6 a la hora azul, 4,4–7,3 de noche junto a las farolas): en todos hay combinación con el exposímetro en cero que cumple las condiciones, también de noche con el 50 mm f/1,4 y f/1,8 a 1/250 s e ISO 3200. Tamaño del sujeto: siempre alcanza lo pedido. Tiempos: el sujeto de «Lo que hace» está sentado antes de 25 s y se queda; el quiosco entra en la foto antes de 50 s; los corredores no paran a estirar durante su nivel. Nivel 24: el corredor más cercano es un niño que llena el 37–42 % de la altura con el 50 mm; cuesta 2–4 puntos de encuadre, sin rechazo. Nivel 20 y 30: la nota no depende de esperar bajo una farola.
+
+Resultado: en las 30 auditorías, **todas las muestras válidas quedan al alcance del jugador por encima del mínimo** (mediana 100 en 29 niveles), y el solucionador supera 90 de 90 partidas.
+

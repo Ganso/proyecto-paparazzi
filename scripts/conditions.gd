@@ -14,7 +14,8 @@ extends RefCounted
 #   congelado   the subject moves (≥ 1.5 m/s across the view) and its drag stays within the CoC
 #   focal_max   focal length at most that (a wide angle, close)
 #   aire        room ahead: the subject crosses the frame and has the wider side in front of it
-#   exposicion  exposure within a quarter of a stop (thirds of a stop get there every time)
+#   exposicion  exposure within a quarter of a stop of what the meter reads (the level is played
+#               in thirds of a stop, which get there every time)
 #   nitido      everything sharp: a point 10 m behind the subject within the sharpness limit
 #   lugar       a landmark of the park (its key: "quiosco", "estanque") shows in the frame
 #   actividad   the subject is doing something (seated or standing: reading, phone, coffee, crumbs)
@@ -107,7 +108,9 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				ok = crossing and ((side > 0 and e.chest.x <= .45) or (side < 0 and e.chest.x >= .55))
 				text_value = Texts.get_text("cond_aire") % Texts.get_text("cond_aire_ok" if ok else ("cond_aire_falta" if crossing else "cond_aire_quieto"))
 			"exposicion":
-				var delta: float = Photo.ev(e.n,e.t,e.iso,e.scene_ev)
+				# Against what the meter read (the level is about leaving it at zero); how right the
+				# reading was is the exposure's own mark.
+				var delta: float = Photo.ev(e.n,e.t,e.iso,float(e.get("metered",e.scene_ev)))
 				ok = absf(delta) <= .25
 				text_value = Texts.get_text("cond_exposicion") % delta
 			"nitido":
@@ -133,7 +136,8 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				var margin = .75 if key == "contraluz" else 1.0
 				ok = backlit(e) and absf(delta) <= margin
 				var why = "cond_luz_ok"
-				if not backlit(e): why = "cond_luz_no"
+				# (facing the sun but with the subject in the shade of a tree is another matter)
+				if not backlit(e): why = "cond_luz_sombra" if float(e.get("backlight",0.0)) >= BACKLIGHT else "cond_luz_no"
 				elif delta > margin: why = "cond_luz_oscura" if key == "contraluz" else "cond_silueta_negra"
 				elif delta < -margin: why = "cond_luz_clara" if key == "contraluz" else "cond_silueta_clara"
 				text_value = Texts.get_text("cond_"+key) % Texts.get_text(why)

@@ -58,6 +58,10 @@ Cuidado con las nubes, que oscurecen la zona cuando pasan.
 > máximo 70 caracteres
 Consejo: Activa los tercios de paso en Opciones para afinar.
 
+### arcade_aviso_tercios_nivel · Encargo del nivel de la exposición clavada si los tercios están desactivados (una línea, unos 70 caracteres)
+> máximo 70 caracteres
+En este nivel los diales van por tercios de paso.
+
 ### arcade_aviso_barrido · Encargo de los niveles de barrido, con teclado (una línea, unos 70 caracteres)
 > máximo 70 caracteres
 Mantén la tecla de giro hacia donde corre y dispara sin soltar.
@@ -176,7 +180,7 @@ A %.0f mm o más
 
 ### cond_corta_aurea
 > máximo 100 caracteres
-Pecho en una línea áurea
+Cara en una línea áurea
 
 ### cond_corta_fondo
 > máximo 100 caracteres
@@ -196,7 +200,7 @@ a %d mm hace falta 1/%d s o más rápido. Usaste 1/%d s
 
 ### cond_congelado_imposible
 > máximo 100 caracteres
-a %d mm y esta distancia ni 1/4000 s basta: Usa menos focal o fotografíala cuando venga hacia ti
+a %d mm y esta distancia ni 1/4000 s basta: Usa menos focal o dispara cuando venga hacia ti
 
 ### cond_congelado_quieto
 > máximo 100 caracteres
@@ -248,7 +252,7 @@ el espacio queda a su espalda: Déjalo en el lado hacia el que camina
 
 ### cond_aire_quieto
 > máximo 100 caracteres
-no cruza el encuadre: Espera a verla caminar de lado
+no cruza el encuadre: Espera a que camine de lado
 
 ### cond_corta_aire
 > máximo 100 caracteres
@@ -256,7 +260,7 @@ Espacio por delante de su paso
 
 ### cond_exposicion
 > máximo 100 caracteres
-Exposición clavada · error de %+.2f EV (hasta ±0,25)
+Exposición clavada · a %+.2f EV del cero del exposímetro (hasta ±0,25)
 
 ### cond_corta_exposicion
 > máximo 100 caracteres
@@ -300,7 +304,7 @@ Haciendo algo · %s
 
 ### cond_actividad_ok
 > máximo 100 caracteres
-la pillaste en ello
+está en ello
 
 ### cond_actividad_no
 > máximo 100 caracteres
@@ -345,6 +349,9 @@ conseguido
 ### cond_luz_no
 > máximo 100 caracteres
 el sol no está detrás: Ponte de cara al sol, con tu objetivo en medio
+
+### cond_luz_sombra
+tu objetivo está a la sombra: Espera a que le dé el sol
 
 ### cond_luz_oscura
 > máximo 100 caracteres
@@ -456,7 +463,7 @@ Teleobjetivo
 
 ### arcade_nivel_6_texto · encargo
 > máximo 220 caracteres
-Dispara a 135 mm o más.
+Dispara a 135 mm o más. Con tanto tele no cabe entero: Encuadra la cara.
 
 ## Nivel 7 · Con aire por delante
 
@@ -496,7 +503,7 @@ Congela al corredor
 
 ### arcade_nivel_10_texto · encargo
 > máximo 220 caracteres
-Prioridad a la velocidad: Tú eliges el tiempo ({velocidad}) y la cámara el resto. A un corredor con tele hace falta 1/500 s o más rápido.
+Prioridad a la velocidad: Tú eliges el tiempo ({velocidad}) y la cámara el resto. A un corredor con tele hace falta 1/2000 s o más rápido; cuanto más zoom, más rápido.
 
 ## Nivel 11 · Enfoque manual
 
@@ -516,7 +523,7 @@ Parque grande
 
 ### arcade_nivel_12_texto · encargo
 > máximo 220 caracteres
-Encuéntrala paseando, y sola en la foto.
+Encuentra a tu objetivo paseando, y que salga sin nadie más en la foto.
 
 ## Nivel 13 · Lo que hace
 
@@ -566,7 +573,7 @@ Exposición clavada
 
 ### arcade_nivel_17_texto · encargo
 > máximo 220 caracteres
-Todo manual y con nubes: Deja el exposímetro en cero con un error de un cuarto de paso. Con pasos enteros es cuestión de suerte; con tercios, de pulso.
+Todo manual y con nubes: Deja el exposímetro en cero, con un error de un cuarto de paso como mucho. Aquí los diales van por tercios: Con pasos enteros sería cuestión de suerte.
 
 ## Nivel 18 · A contraluz
 
@@ -596,7 +603,7 @@ Noche en el quiosco
 
 ### arcade_nivel_20_texto · encargo
 > máximo 220 caracteres
-De noche, sola en la foto y con la cara nítida.
+De noche, con la cara nítida y sin nadie más en la foto.
 
 ## Nivel 21 · A la cintura
 
@@ -626,7 +633,7 @@ Retrato 6×6
 
 ### arcade_nivel_23_texto · encargo
 > máximo 220 caracteres
-Cara nítida (con la lupa comprobarás que ojos no hay), fondo desenfocado y el sujeto grande.
+Retrato al atardecer: Cara nítida (con la lupa verás que ojos no hay), fondo desenfocado y el sujeto grande. Abre el diafragma y compensa con la velocidad.
 
 ## Nivel 24 · Corredor al espejo
 
@@ -636,7 +643,7 @@ Corredor al espejo
 
 ### arcade_nivel_24_texto · encargo
 > máximo 220 caracteres
-Congela a un corredor con la TLR: 1/500 s o más rápido.
+Congela a un corredor con la TLR: Hace falta 1/1000 s, su velocidad más rápida.
 
 ## Nivel 25 · Última luz
 
