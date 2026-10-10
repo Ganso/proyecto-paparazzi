@@ -149,11 +149,12 @@ Pendiente: la aberración **longitudinal** (halos magenta y verde delante y detr
 - **Ruido del LCD de la compacta (02-10-2026)**: el ruido con poca luz dibujaba una trama diagonal (el hash de seno sobre coordenadas de píxel). Ahora usa un hash sin patrón (`hash3` en `shaders/viewfinder_lens.gdshader`), sobre todo de luminancia con algo de color, renovado 24 veces por segundo. Solo es del visor: no toca la foto ni la nota.
 - **Aberración cromática longitudinal (02-10-2026)**: en el desenfoque del visor y de la foto (`shaders/viewfinder_dof.gdshader`, uniforme `loca`), lo que queda borroso por delante del plano de enfoque se ribetea de magenta y lo de detrás, de verde, porque el verde se extiende un poco más o un poco menos que el rojo y el azul. La fuerza sale del objetivo y del diafragma (`lens_strengths()`), es máxima a plena apertura y desaparece con la opción «Carácter del objetivo» desactivada. Lo nítido no cambia y no afecta a la nota. Es un efecto sutil.
 
-## La ayuda de enfoque ya no salta (11-10-2026, usuario)
+## En enfoque manual nada decide por el jugador (11-10-2026, usuario)
 
-En enfoque manual, al mover la cámara la zona central «pegaba un salto y volvía», como si la cámara enfocara sola (también en la TLR, que no tiene autofoco). La distancia de enfoque no cambiaba: era la **ayuda** (la imagen partida del vidrio esmerilado y la doble imagen de la telemétrica), que desplazaba toda la zona con un único valor, tomado de lo más cercano que rozara cualquiera de sus cinco puntos de medida. Una farola o alguien cruzando por delante lo cambiaba un instante.
+Regla del usuario: **en MF el juego no ayuda nunca moviendo el enfoque por el jugador; solo reacciona a lo que él mueve** (el anillo de enfoque y la cámara).
 
-- `main.gd::update_focus_aid()` mide ahora **once franjas** a lo ancho de la zona y `shaders/focus_aid.gdshader` parte o duplica cada una según la distancia de lo que hay en ella: lo enfocado sigue alineado y solo se parte lo que está a otra distancia, como en un visor real.
-- La etiqueta «foco alineado» se guía por la persona que haya en la zona o, si no hay nadie, por el decorado que más ocupa (la mediana de las muestras, no la más cercana).
+Lo que lo incumplía: al mover la cámara, la imagen partida del centro (y la doble imagen de la telemétrica) «pegaba un salto y volvía», como si la cámara enfocara sola, también en la TLR. La distancia de enfoque no cambiaba; era la referencia de la imagen partida, que daba **prioridad a cualquier persona** que tocara uno de sus cinco puntos de medida y, sin personas, a lo más cercano. Un brazo pasando junto al borde de la zona, o una farola rozándola, se llevaba toda la imagen partida a su distancia un instante.
+
+- `main.gd::update_focus_aid()`: la zona se guía por **lo que ocupa la mayor parte de ella** (la mediana de sus cinco lecturas, con el cielo como lejano), sin prioridad para nadie.
 - En las cámaras sin autofoco el **punto activo es siempre el central** (fuera de la Academia, que lo coloca ella): no se dibuja, pero el exposímetro y el seguimiento con las teclas lo usan, y podía haberse quedado fuera del centro de un nivel anterior con autofoco.
-
+- Un intento intermedio de partir la zona por franjas, cada una con su distancia, se descartó: los objetos de detrás hacían efectos extraños.
