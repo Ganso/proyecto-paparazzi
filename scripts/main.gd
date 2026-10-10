@@ -5324,39 +5324,32 @@ func adjust_focus_delta(delta_diopters: float) -> void:
 func adjust_focus(step: int) -> void:
 	adjust_focus_delta(-step * 0.004)
 
-var aid_view = []            # what the player had set when the zone was last read
-var aid_distance = INF       # …and how far what it showed was
 func update_focus_aid(dt: float) -> void:
-	# Without autofocus there is no focus point to choose: the middle one is what the meter and the
-	# key-held follow go by (the points are not even drawn, and one left off-centre by a level
-	# played before with autofocus kept deciding both, unseen). The Academy places it itself.
-	if equipment.focus_mode == "MF" and is_instance_valid(finder) and finder.active != 4 and not (academy and academy.active): finder.active = 4
 	if equipment.focus_mode != "MF" or mode != "SEARCH" or not eye_ready():
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
-		aid_view = []
 		return
 	focus_aid.visible = not tlr_loupe
 	var center_pixel = view_rect.get_center()
-	# In manual focus nothing moves unless the player moves it (user, 11-10-2026): what the zone
-	# is compared with is read again only when the player turns or tilts the camera, zooms, walks
-	# or turns the focusing ring. With the camera still, whoever walks past in front changes
-	# nothing: it used to take the whole split image to its own distance and back, as if the camera
-	# were focusing by itself.
-	# And when it is read, it is what most of the zone shows (the middle one of its five readings,
-	# the sky counting as far away), not the nearest person or thing touching any of the five: an
-	# arm passing by the rim made it jump while panning.
-	var view_now = [snappedf(angle,.002),snappedf(pitch,.002),snappedf(focal,.01),focus_distance,(player.position if crowd else Vector3.ZERO).snapped(Vector3.ONE*.002),equipment.body,equipment.lens_index]
-	if view_now != aid_view:
-		aid_view = view_now
-		var readings = []
-		for p in [center_pixel,center_pixel+Vector2(-24,0),center_pixel+Vector2(24,0),center_pixel+Vector2(0,-16),center_pixel+Vector2(0,16)]:
-			var hit = point_hit(p)
-			var d = INF if hit.is_empty() else camera.global_position.distance_to(hit.position)
-			if d >= 0.8: readings.append(d)
-		readings.sort()
-		aid_distance = readings[readings.size()/2] if not readings.is_empty() else INF
-	var patch_distance: float = aid_distance
+	var best_dist = INF
+	var person_dist = INF
+	var patch_samples = [
+		center_pixel,
+		center_pixel + Vector2(-24, 0),
+		center_pixel + Vector2(24, 0),
+		center_pixel + Vector2(0, -16),
+		center_pixel + Vector2(0, 16)
+	]
+	for p in patch_samples:
+		var hit = point_hit(p)
+		if hit.is_empty(): continue
+		var d = camera.global_position.distance_to(hit.position)
+		if d < 0.8: continue
+		if hit.collider.has_meta("person"):
+			if d < person_dist: person_dist = d
+		elif d < best_dist:
+			best_dist = d
+	var patch_distance = person_dist if person_dist < INF else best_dist
 	var target_error = (0.0 if is_inf(focus_distance) else 1.0/focus_distance) - (0.0 if is_inf(patch_distance) else 1.0/patch_distance)
 	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
 	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
