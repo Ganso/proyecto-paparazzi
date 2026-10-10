@@ -21,15 +21,6 @@ uniform bool enabled = true;
 // blurred behind it fringes green. Sharp areas are untouched.
 uniform float loca = 0.0;
 
-// The focusing aid of manual focus, in the middle of the frame: the rangefinder's double image
-// (1) or the ground glass's split image (2). It is optics, not a reading: every point of the
-// scene is displaced by its own distance from the focus plane (aid_scale: fraction of the width
-// per dioptre), so what is at the focused distance always lines up and only what is nearer or
-// farther is doubled or split. Somebody walking past in front is split; the background the
-// player focused on, behind and around them, stays where it was.
-uniform int aid = 0;
-uniform float aid_scale = 0.0;
-
 const int TAPS = 64;
 
 void vertex() {
@@ -78,49 +69,10 @@ vec3 safe_sample(vec2 uv, float lod, vec2 size) {
 	return n > 0.0 ? sum / n : vec3(0.0);
 }
 
-float aid_shift(float z) {
-	float want = focus_m < 0.0 ? 0.0 : 1.0 / focus_m;
-	return clamp((want - 1.0 / max(z, 0.05)) * aid_scale, -0.06, 0.06);
-}
-
-bool in_zone(vec2 uv, vec2 size) {
-	vec2 p = (uv - vec2(0.5)) * vec2(size.x / size.y, 1.0);
-	return aid == 1 ? (abs(p.x) < 0.095 && abs(p.y) < 0.048) : length(p) < 0.078;
-}
-
-// What shows at this pixel of the zone: the point of the scene whose own shift brings it here
-// (shown at x = its place − its shift); of several, the nearest one, which hides the others.
-// Only what is inside the zone is displaced: a lamp post beside it does not slide in.
-vec3 aid_image(vec2 uv, float side, mat4 inv_projection, vec2 size) {
-	const int STEPS = 32;
-	float step_size = 0.12 / float(STEPS);
-	float best_z = 1e9;
-	vec2 best_uv = uv;
-	bool found = false;
-	for (int i = 0; i <= STEPS; i++) {
-		float o = -0.06 + step_size * float(i);
-		if (!in_zone(uv + vec2(o, 0.0), size)) continue;
-		float z = linear_depth(uv + vec2(o, 0.0), inv_projection);
-		float real = aid_shift(z) * side;
-		if (abs(real - o) <= step_size * 0.75 && z < best_z) {
-			best_z = z;
-			best_uv = uv + vec2(real, 0.0);
-			found = true;
-		}
-	}
-	// (where something displaced has left its place and nothing lands: what is there, as it is)
-	return safe_sample(best_uv, 0.0, size);
-}
-
 void fragment() {
 	vec2 size = VIEWPORT_SIZE;
 	vec3 base = safe_sample(SCREEN_UV, 0.0, size);
-	vec2 zone = (SCREEN_UV - vec2(0.5)) * vec2(size.x / size.y, 1.0);
-	bool in_aid = aid > 0 && in_zone(SCREEN_UV, size);
-	if (in_aid) {
-		if (aid == 1) ALBEDO = mix(base, aid_image(SCREEN_UV, 1.0, INV_PROJECTION_MATRIX, size), 0.5);
-		else ALBEDO = aid_image(SCREEN_UV, zone.y > 0.0 ? 1.0 : -1.0, INV_PROJECTION_MATRIX, size);
-	} else if (!enabled) {
+	if (!enabled) {
 		ALBEDO = base;
 	} else {
 		float z0 = linear_depth(SCREEN_UV, INV_PROJECTION_MATRIX);

@@ -4035,7 +4035,6 @@ func take_photo() -> void:
 	if equipment.auto_exposure and not exposure_locked: auto_expose()
 	release_lock()
 	shooting = true
-	set_aid_optics(false)
 	photo_profile = {}
 	profile_tick = Time.get_ticks_usec()
 	var profile_start = profile_tick
@@ -5325,6 +5324,8 @@ func adjust_focus_delta(delta_diopters: float) -> void:
 func adjust_focus(step: int) -> void:
 	adjust_focus_delta(-step * 0.004)
 
+var aid_view = []            # what the player had set when the zone was last read
+var aid_distance = INF       # …and how far what it showed was
 func update_focus_aid(dt: float) -> void:
 	# Without autofocus there is no focus point to choose: the middle one is what the meter and the
 	# key-held follow go by (the points are not even drawn, and one left off-centre by a level
@@ -5333,44 +5334,36 @@ func update_focus_aid(dt: float) -> void:
 	if equipment.focus_mode != "MF" or mode != "SEARCH" or not eye_ready():
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
-		set_aid_optics(false)
+		aid_view = []
 		return
 	focus_aid.visible = not tlr_loupe
-	set_aid_optics(not tlr_loupe)
 	var center_pixel = view_rect.get_center()
-	# What the zone is looking at: what most of it shows (the middle one of its five readings, the
-	# sky counting as far away). It used to be the nearest person touching any of the five, or the
-	# nearest scenery: an arm passing close by the rim of the zone, or a lamp post grazing it, took
-	# the whole split image to its own distance for an instant, and it looked like the camera was
-	# focusing by itself.
-	var readings = []
-	for p in [center_pixel,center_pixel+Vector2(-24,0),center_pixel+Vector2(24,0),center_pixel+Vector2(0,-16),center_pixel+Vector2(0,16)]:
-		var hit = point_hit(p)
-		var d = INF if hit.is_empty() else camera.global_position.distance_to(hit.position)
-		if d >= 0.8: readings.append(d)
-	readings.sort()
-	var patch_distance: float = readings[readings.size()/2] if not readings.is_empty() else INF
+	# In manual focus nothing moves unless the player moves it (user, 11-10-2026): what the zone
+	# is compared with is read again only when the player turns or tilts the camera, zooms, walks
+	# or turns the focusing ring. With the camera still, whoever walks past in front changes
+	# nothing: it used to take the whole split image to its own distance and back, as if the camera
+	# were focusing by itself.
+	# And when it is read, it is what most of the zone shows (the middle one of its five readings,
+	# the sky counting as far away), not the nearest person or thing touching any of the five: an
+	# arm passing by the rim made it jump while panning.
+	var view_now = [snappedf(angle,.002),snappedf(pitch,.002),snappedf(focal,.01),focus_distance,(player.position if crowd else Vector3.ZERO).snapped(Vector3.ONE*.002),equipment.body,equipment.lens_index]
+	if view_now != aid_view:
+		aid_view = view_now
+		var readings = []
+		for p in [center_pixel,center_pixel+Vector2(-24,0),center_pixel+Vector2(24,0),center_pixel+Vector2(0,-16),center_pixel+Vector2(0,16)]:
+			var hit = point_hit(p)
+			var d = INF if hit.is_empty() else camera.global_position.distance_to(hit.position)
+			if d >= 0.8: readings.append(d)
+		readings.sort()
+		aid_distance = readings[readings.size()/2] if not readings.is_empty() else INF
+	var patch_distance: float = aid_distance
 	var target_error = (0.0 if is_inf(focus_distance) else 1.0/focus_distance) - (0.0 if is_inf(patch_distance) else 1.0/patch_distance)
 	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
 	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
-	# (where the 3D pass draws the aid, pixel by pixel, the zone is not shifted again here)
-	focus_aid.material.set_shader_parameter("offset", 0.0 if is_instance_valid(dof_pass) and dof_pass.visible else smoothed_focus_aid_offset)
+	focus_aid.material.set_shader_parameter("offset", smoothed_focus_aid_offset)
 	var depth = Photo.dof(focal, aperture_value(), focus_distance)
 	var in_dof = patch_distance >= depth.x and (is_inf(depth.y) or patch_distance <= depth.y)
 	finder.mf_coincidence = in_dof or absf(smoothed_focus_aid_offset) < 0.003
-
-# The double image and the split image are optics (user, 11-10-2026: «la controla el jugador y
-# representa la realidad de lo que hay detrás»): the 3D pass of the finder displaces every pixel of
-# the zone by its own distance from the focus plane (shaders/viewfinder_dof.gdshader). What the
-# player focused on stays lined up whoever walks past in front; only the passer-by is split.
-# Never in the photo: take_photo() switches it off before the frame it keeps.
-func set_aid_optics(on: bool) -> void:
-	if not is_instance_valid(dof_pass): return
-	var material: ShaderMaterial = dof_pass.material_override
-	material.set_shader_parameter("aid",(1 if equipment.body == 1 else 2) if on else 0)
-	if not on: return
-	material.set_shader_parameter("aid_scale",focal*.006)
-	material.set_shader_parameter("focus_m",-1.0 if is_inf(focus_distance) else focus_distance)
 
 func point_hit(point: Vector2) -> Dictionary:
 	var pixel = image_position(point)

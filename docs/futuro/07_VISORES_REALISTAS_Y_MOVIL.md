@@ -149,15 +149,17 @@ Pendiente: la aberración **longitudinal** (halos magenta y verde delante y detr
 - **Ruido del LCD de la compacta (02-10-2026)**: el ruido con poca luz dibujaba una trama diagonal (el hash de seno sobre coordenadas de píxel). Ahora usa un hash sin patrón (`hash3` en `shaders/viewfinder_lens.gdshader`), sobre todo de luminancia con algo de color, renovado 24 veces por segundo. Solo es del visor: no toca la foto ni la nota.
 - **Aberración cromática longitudinal (02-10-2026)**: en el desenfoque del visor y de la foto (`shaders/viewfinder_dof.gdshader`, uniforme `loca`), lo que queda borroso por delante del plano de enfoque se ribetea de magenta y lo de detrás, de verde, porque el verde se extiende un poco más o un poco menos que el rojo y el azul. La fuerza sale del objetivo y del diafragma (`lens_strengths()`), es máxima a plena apertura y desaparece con la opción «Carácter del objetivo» desactivada. Lo nítido no cambia y no afecta a la nota. Es un efecto sutil.
 
-## En enfoque manual nada decide por el jugador: la imagen partida es óptica (11-10-2026, usuario)
+## En enfoque manual nada se mueve si el jugador no lo mueve (11-10-2026, usuario)
 
-Reglas del usuario: **en MF el juego no ayuda nunca moviendo el enfoque por el jugador; solo reacciona a lo que él mueve**, y **la doble imagen «la controla el jugador y representa la realidad de lo que hay detrás»**.
+Regla del usuario: **en MF el juego no mueve nunca el enfoque por el jugador; solo reacciona a lo que él mueve.** Y el aspecto de la imagen partida y de la doble imagen **no se toca**: «visualmente era perfecto».
 
-Lo que lo incumplía: con el foco fijo en el fondo, al pasar alguien por delante la zona central «se movía», también en la TLR. La distancia de enfoque no cambiaba; era la imagen partida (y la doble imagen de la telemétrica), que se calculaba como **una lectura**: un único desplazamiento para toda la zona, según la distancia de «lo que había debajo» (primero cualquier persona, luego lo más cercano). Al cruzarse alguien, toda la zona, fondo incluido, saltaba a la distancia de esa persona.
+Lo que lo incumplía: con el foco fijo y la cámara quieta, al pasar alguien por delante la zona central se desplazaba y volvía, como si la cámara enfocara sola (también en la TLR). La distancia de enfoque no cambiaba: la imagen partida se compara con la distancia de lo que hay bajo la zona, y esa distancia se leía en cada fotograma, dando prioridad a cualquier persona que tocara uno de sus cinco puntos.
 
-Ahora es **óptica, píxel a píxel**: el pase 3D del visor (`shaders/viewfinder_dof.gdshader`, uniformes `aid` y `aid_scale`; `main.gd::set_aid_optics()`), que conoce la distancia de cada píxel, desplaza cada punto de la zona según lo lejos que esté del plano enfocado. Lo que está a la distancia enfocada queda siempre alineado; solo lo que está más cerca o más lejos se parte o se duplica. Quien pasa por delante sale partido; el fondo enfocado, detrás y alrededor, no se mueve. Solo se desplaza lo que está dentro de la zona (una farola al lado no se cuela), y nunca entra en la foto (`take_photo()` lo apaga antes del fotograma que guarda).
+Cómo queda (`main.gd::update_focus_aid()`, `aid_view`, `aid_distance`):
 
-- `shaders/focus_aid.gdshader` (la capa 2D) pone solo el tinte del telémetro y la línea de la imagen partida. En OpenGL, donde no existe ese pase 3D, sigue desplazando la zona entera con un valor: el de lo que ocupa la mayor parte de ella, sin prioridad para nadie (`update_focus_aid()`).
-- La etiqueta «foco alineado» se guía por ese mismo valor.
-- En las cámaras sin autofoco el **punto activo es siempre el central** (fuera de la Academia, que lo coloca ella): no se dibuja, pero el exposímetro y el seguimiento con las teclas lo usan, y podía haberse quedado fuera del centro de un nivel anterior con autofoco.
-- Dos intentos descartados por el camino: partir la zona en once franjas con rayos (los objetos de detrás hacían efectos extraños) y la mediana de cinco lecturas en todos los renderizadores (seguía moviendo el fondo enfocado cuando alguien ocupaba la zona).
+- La distancia con la que se compara la zona **solo se vuelve a leer cuando el jugador mueve algo**: gira o inclina la cámara, cambia la focal, anda o gira el anillo de enfoque. Con la cámara quieta no cambia nada, pase quien pase (medido: 120 s con gente cruzando el centro, desplazamiento constante).
+- Cuando se lee, es **lo que ocupa la mayor parte de la zona** (la mediana de sus cinco lecturas, con el cielo como lejano), sin prioridad para las personas ni para lo más cercano: un brazo junto al borde ya no la hace saltar al mover la cámara.
+- En las cámaras sin autofoco el **punto activo es siempre el central** (fuera de la Academia): no se dibuja, pero el exposímetro y el seguimiento con las teclas lo usan.
+- Los sombreadores (`shaders/focus_aid.gdshader`, `shaders/viewfinder_dof.gdshader`) son los de la versión 0.5.3, sin cambios.
+
+Descartado por el camino, para no repetirlo: partir la zona en franjas con rayos y dibujar la imagen partida píxel a píxel con la profundidad. Las dos dejaban quieto lo enfocado, pero el usuario las rechazó por su aspecto.

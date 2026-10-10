@@ -1,8 +1,4 @@
 shader_type canvas_item;
-// The zone of the manual-focus aid over the finder: its tint (rangefinder) and the line across
-// the split image. Where the 3D pass can do it (Forward+: viewfinder_dof.gdshader, which knows the
-// distance of every pixel) the doubling or splitting is already in the image and `offset` is 0;
-// otherwise (OpenGL) the whole zone is shifted here by one offset.
 uniform float offset = 0.0;
 uniform int body = 2;
 uniform bool mirror = false;   // TLR: the ground glass is seen mirrored
