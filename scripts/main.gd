@@ -5324,7 +5324,13 @@ func adjust_focus_delta(delta_diopters: float) -> void:
 func adjust_focus(step: int) -> void:
 	adjust_focus_delta(-step * 0.004)
 
+const AID_COLUMNS = 11
+var aid_columns = PackedFloat32Array()
 func update_focus_aid(dt: float) -> void:
+	# Without autofocus there is no focus point to choose: the middle one is what the meter and the
+	# key-held follow go by (the points are not even drawn, and one left off-centre by a level
+	# played before with autofocus kept deciding both, unseen). The Academy places it itself.
+	if equipment.focus_mode == "MF" and is_instance_valid(finder) and finder.active != 4 and not (academy and academy.active): finder.active = 4
 	if equipment.focus_mode != "MF" or mode != "SEARCH" or not eye_ready():
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
@@ -5333,6 +5339,7 @@ func update_focus_aid(dt: float) -> void:
 	var center_pixel = view_rect.get_center()
 	var best_dist = INF
 	var person_dist = INF
+	var scenery = []
 	var patch_samples = [
 		center_pixel,
 		center_pixel + Vector2(-24, 0),
@@ -5347,13 +5354,29 @@ func update_focus_aid(dt: float) -> void:
 		if d < 0.8: continue
 		if hit.collider.has_meta("person"):
 			if d < person_dist: person_dist = d
-		elif d < best_dist:
-			best_dist = d
+		else: scenery.append(d)
+	# A person in the zone is what it is about; otherwise the scenery most of it shows (the middle
+	# one of what the samples find, not the nearest: a lamp post grazing one of them took the
+	# reading, and the label, for an instant).
+	scenery.sort()
+	if not scenery.is_empty(): best_dist = scenery[scenery.size()/2]
 	var patch_distance = person_dist if person_dist < INF else best_dist
 	var target_error = (0.0 if is_inf(focus_distance) else 1.0/focus_distance) - (0.0 if is_inf(patch_distance) else 1.0/patch_distance)
 	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
 	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
 	focus_aid.material.set_shader_parameter("offset", smoothed_focus_aid_offset)
+	# What the zone shows, column by column: each strip is split (or doubled) by the distance of
+	# what is in it, so that something thin and near crossing the zone (a lamp post, a passer-by)
+	# splits only itself. With one offset for the whole zone, everything in it jumped and came back.
+	var half = (.095 if equipment.body == 1 else .078)/1.777778*view_rect.size.x
+	var focus_diopters = 0.0 if is_inf(focus_distance) else 1.0/focus_distance
+	if aid_columns.size() != AID_COLUMNS: aid_columns.resize(AID_COLUMNS)
+	for k in AID_COLUMNS:
+		var hit = point_hit(center_pixel+Vector2((float(k)/(AID_COLUMNS-1)*2.0-1.0)*half*.95,0))
+		var d = INF if hit.is_empty() else maxf(.8,camera.global_position.distance_to(hit.position))
+		var wanted = clampf((focus_diopters-(0.0 if is_inf(d) else 1.0/d))*focal*.006,-.06,.06)
+		aid_columns[k] = lerpf(aid_columns[k],wanted,1.0-exp(-dt*22.0))
+	focus_aid.material.set_shader_parameter("offsets",aid_columns)
 	var depth = Photo.dof(focal, aperture_value(), focus_distance)
 	var in_dof = patch_distance >= depth.x and (is_inf(depth.y) or patch_distance <= depth.y)
 	finder.mf_coincidence = in_dof or absf(smoothed_focus_aid_offset) < 0.003
