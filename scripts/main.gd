@@ -5328,6 +5328,7 @@ func update_focus_aid(dt: float) -> void:
 	if equipment.focus_mode != "MF" or mode != "SEARCH" or not eye_ready():
 		focus_aid.visible = false
 		if is_instance_valid(finder): finder.mf_coincidence = false
+		update_aid_optics(dt,false)
 		return
 	focus_aid.visible = not tlr_loupe
 	var center_pixel = view_rect.get_center()
@@ -5354,9 +5355,93 @@ func update_focus_aid(dt: float) -> void:
 	var raw_offset = clampf(target_error * focal * 0.006, -0.06, 0.06)
 	smoothed_focus_aid_offset = lerpf(smoothed_focus_aid_offset, raw_offset, 1.0 - exp(-dt * 22.0))
 	focus_aid.material.set_shader_parameter("offset", smoothed_focus_aid_offset)
+	update_aid_optics(dt,focus_aid.visible)
 	var depth = Photo.dof(focal, aperture_value(), focus_distance)
 	var in_dof = patch_distance >= depth.x and (is_inf(depth.y) or patch_distance <= depth.y)
 	finder.mf_coincidence = in_dof or absf(smoothed_focus_aid_offset) < 0.003
+
+# ---- The split image and the double image, as the optics make them (docs/futuro/28) ----
+# A real split image does not measure anything: its halves look at the scene through opposite
+# sides of the lens, so what is at the focused distance falls in the same place in both and
+# everything else is displaced, each thing by its own distance from the focus plane. That is what
+# is drawn (shaders/focus_aid.gdshader): somebody walking past in front is split; the background
+# the player focused on, behind and around them, is exactly as it was. Only the ring moves what
+# coincides. (Until 13-10-2026 the whole zone was shifted by one number, read from whatever five
+# rays found under it: one ray touching a passer-by took the focused background with it.)
+# What it needs is how far every pixel of the zone is: a small view of the middle of the frame,
+# from the camera's own place, that writes distances instead of colours
+# (shaders/aid_depth.gdshader). The colours are the finder's own image, as always.
+const AID_GAIN = .006             # of the width per dioptre and millimetre of focal length: the aid's scale since the first day
+const AID_REACH = .2              # the displacement eases off towards this much of the zone's radius (in a real one it never passes a tenth)
+const AID_SOFTNESS = 0.0          # blur of what is off focus (fraction of its displacement): none, the halves are sharp as in a real prism
+const AID_MARGIN = 1.6
+const AID_LAYER = 1 << 2          # the distance pass of the zone's own view
+const FINDER_LAYER = 1 << 1       # the finder's blur pass (not drawn in that view)
+static var aid_flat = false       # (tools: the old single offset, to compare)
+var aid_depth: SubViewport
+var aid_eye: Camera3D
+var aid_dioptres = -1.0
+func aid_optics() -> bool:
+	return not aid_flat and not legacy and not OS.has_feature("mobile") and not OS.has_feature("web")
+
+func build_aid_depth() -> void:
+	if is_instance_valid(dof_pass): dof_pass.layers = FINDER_LAYER
+	camera.cull_mask = 0xFFFFF & ~AID_LAYER
+	aid_depth = SubViewport.new()
+	aid_depth.world_3d = viewport.world_3d
+	aid_depth.use_hdr_2d = true                     # distances, not colours: no 8 bits, no sRGB
+	aid_depth.debug_draw = Viewport.DEBUG_DRAW_UNSHADED
+	aid_depth.msaa_3d = Viewport.MSAA_DISABLED
+	aid_depth.positional_shadow_atlas_size = 0
+	aid_depth.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(aid_depth)
+	aid_eye = Camera3D.new()
+	aid_eye.keep_aspect = Camera3D.KEEP_WIDTH
+	aid_eye.cull_mask = 0xFFFFF & ~FINDER_LAYER
+	var plain = Environment.new()
+	plain.background_mode = Environment.BG_COLOR
+	plain.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	aid_eye.environment = plain
+	aid_depth.add_child(aid_eye)
+	aid_eye.current = true
+	var quad = MeshInstance3D.new()
+	var mesh = QuadMesh.new()
+	mesh.size = Vector2(2,2)
+	quad.mesh = mesh
+	quad.extra_cull_margin = 16384
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	quad.layers = AID_LAYER
+	var material = ShaderMaterial.new()
+	material.shader = preload("res://shaders/aid_depth.gdshader")
+	material.render_priority = 127
+	quad.material_override = material
+	aid_eye.add_child(quad)
+
+func update_aid_optics(dt: float, on: bool) -> void:
+	on = on and aid_optics()
+	if not on:
+		if is_instance_valid(aid_depth): aid_depth.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		if is_instance_valid(focus_aid): focus_aid.material.set_shader_parameter("optics",false)
+		aid_dioptres = -1.0
+		return
+	if not is_instance_valid(aid_depth): build_aid_depth()
+	# The ring is followed with the same ease the split image always had.
+	var wanted = 0.0 if is_inf(focus_distance) else 1.0/focus_distance
+	aid_dioptres = wanted if aid_dioptres < 0.0 else lerpf(aid_dioptres,wanted,1.0-exp(-dt*22.0))
+	var zone = Vector2(.095,.048) if equipment.body == 1 else Vector2(.078,.078)   # half sizes, in heights of the frame
+	var share = Vector2(2.0*zone.x*9.0/16.0,2.0*zone.y)*AID_MARGIN                 # of the width and of the height
+	aid_depth.size = Vector2i(maxi(16,ceili(share.x*viewport.size.x)),maxi(16,ceili(share.y*viewport.size.y)))
+	aid_depth.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	aid_eye.global_transform = camera.global_transform
+	aid_eye.set_frustum(camera.near*36.0/focal*share.x,Vector2.ZERO,camera.near,camera.far)
+	var material: ShaderMaterial = focus_aid.material
+	material.set_shader_parameter("optics",true)
+	material.set_shader_parameter("depth_view",aid_depth.get_texture())
+	material.set_shader_parameter("margin",AID_MARGIN)
+	material.set_shader_parameter("focus_dioptres",aid_dioptres)
+	material.set_shader_parameter("gain",AID_GAIN*focal)
+	material.set_shader_parameter("reach",AID_REACH*.078*9.0/16.0)
+	material.set_shader_parameter("softness",AID_SOFTNESS)
 
 func point_hit(point: Vector2) -> Dictionary:
 	var pixel = image_position(point)

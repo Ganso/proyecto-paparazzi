@@ -207,6 +207,37 @@ func run() -> void:
 		light[1] /= cells
 	check(same_size and light[1] > .08 and absf(light[1]-light[0]) < .06 and apart < .08,"A still, well exposed scene comes out as the single frame did (light %.3f against %.3f, %.3f apart)" % [light[1],light[0],apart])
 	MainScript.photo_samples_override = -1
+	# The split image is optics, not a reading (docs/futuro/28): in manual focus it is drawn from
+	# the distance of every pixel of the zone, not from one number for the whole of it. (What it
+	# looks like when somebody walks past in front is checked by eye, on the recording of
+	# tools/capture_split_image.gd: a figure's outline and pose change from run to run.)
+	game.set_interface("camara")
+	game.intro()
+	game.start_session("day",true)
+	game.equipment.preset(3)
+	game.apply_equipment()
+	game.resume_search()
+	game.set_manual_focus(6.0)
+	for i in 20: await process_frame
+	var aid: ShaderMaterial = game.focus_aid.material
+	check(is_instance_valid(game.aid_depth) and bool(aid.get_shader_parameter("optics")),"In manual focus the split image is drawn from the distance of every pixel of the zone")
+	check(game.aid_depth.render_target_update_mode == SubViewport.UPDATE_ALWAYS and game.aid_depth.size.x >= 16 and game.aid_depth.size.x < game.viewport.size.x/4,"…a small view of the middle of the frame (%s)" % str(game.aid_depth.size))
+	check(is_equal_approx(float(aid.get_shader_parameter("focus_dioptres")),1.0/6.0) and float(aid.get_shader_parameter("softness")) == 0.0,"…that follows the focusing ring, with sharp halves")
+	var middle_far: float = (game.aid_depth.get_texture().get_image().get_pixel(game.aid_depth.size.x/2,game.aid_depth.size.y/2).r)*100.0
+	var middle_hit = game.point_hit(game.view_rect.get_center())
+	check(middle_hit.is_empty() or absf(middle_far-game.camera.global_position.distance_to(middle_hit.position)) < maxf(.6,.08*middle_far),"…and holds real distances (%.1f m in the middle)" % middle_far)
+	game.equipment.focus_mode = "AF puntual" if "AF puntual" in game.equipment.focus_modes() else game.equipment.focus_mode
+	game.equipment.preset(2)
+	game.apply_equipment()
+	for i in 6: await process_frame
+	check(game.aid_depth.render_target_update_mode == SubViewport.UPDATE_DISABLED and not bool(aid.get_shader_parameter("optics")),"With autofocus that view is not even rendered")
+	game.equipment.preset(3)
+	game.apply_equipment()
+	for i in 6: await process_frame
+	MainScript.aid_flat = true
+	for i in 6: await process_frame
+	check(not bool(game.focus_aid.material.get_shader_parameter("optics")),"(tools can still ask for the old single offset, to compare)")
+	MainScript.aid_flat = false
 	game.sandbox_paused = false
 	game.set_interface("clasica")
 	# Leave the player's own choice as it was.

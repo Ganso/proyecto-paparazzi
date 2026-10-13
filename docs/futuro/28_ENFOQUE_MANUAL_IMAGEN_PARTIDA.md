@@ -1,11 +1,9 @@
 # 28 · Enfoque manual: la imagen partida se mueve sola (problema abierto)
 
-> **Estado: ABIERTO, sin solución aceptada, pero con el requisito ya aclarado (§0).** El 11-10-2026
-> se probaron cuatro arreglos y el usuario rechazó los cuatro («de ninguna de las maneras que hemos
-> probado es aceptable»). **El código está exactamente como en la versión 0.5.3**
-> (`scripts/main.gd`, `shaders/focus_aid.gdshader` y `shaders/viewfinder_dof.gdshader` son los del
-> commit `c9930b8`). Este documento recoge lo que se pide, lo que se sabe, lo que se probó y por
-> qué falló, para retomarlo en la siguiente sesión **antes de tocar nada**.
+> **Estado: RESUELTO el 13-10-2026 (§9), con el visto bueno del usuario al aspecto.** La imagen
+> partida y la doble imagen se dibujan ahora como óptica: cada punto de la zona se desplaza según
+> su propia distancia al plano enfocado. Los apartados 1 a 8 cuentan cómo se llegó: cuatro arreglos
+> rechazados el 11-10, la aclaración del usuario (§0), la escena de análisis (§8) y las trampas (§7).
 
 ---
 
@@ -197,4 +195,48 @@ Buscando el punto exacto donde «el desplazamiento de lo que hay ahí» iguala �
 3. **Deformando una sola imagen no se llega a un resultado limpio**: los huecos son inevitables. Una imagen partida de verdad no deforma nada: **cada mitad mira la escena desde un lado distinto del objetivo**, y por eso lo enfocado coincide y lo demás no. El camino limpio es ese: **dibujar la zona dos veces, desde dos puntos de vista ligeramente separados que convergen en la distancia enfocada**. No hay huecos (cada vista ve de verdad lo que hay detrás), el aspecto es el del propio juego, y con toda la zona a una distancia el resultado es el desplazamiento uniforme de la 0.5.3.
 4. Pendiente de decidir con el usuario antes de programarlo: **qué se hace con lo muy desenfocado y cercano** (la farola a 2,6 m). Opciones: reducir la escala para que nada se desplace más que el radio de la zona; o atenuar lo que esté muy lejos del plano enfocado, como pasa en una cámara real, donde eso se ve como una mancha y no como un objeto nítido.
 5. Coste a medir: dos vistas extra de una zona muy pequeña (unos 100 px de lado a 810 de alto), solo en enfoque manual y con la cámara en el ojo. Hay que comprobar que la luz indirecta (SDFGI) no encarece esas vistas ni les cambia el tono respecto al resto del visor.
+
+---
+
+## 9. La solución (13-10-2026)
+
+El usuario eligió «la opción que dé un resultado lo más fidedigno posible a la realidad». Se probaron tres maneras de dibujarlo, sobre la escena del §8:
+
+| Manera | Resultado |
+|---|---|
+| **Dos vistas reales** de la zona, desde dos puntos a cada lado del eje del objetivo que convergen en la distancia enfocada (como un prisma de verdad) | Sin huecos y con el aspecto del juego, pero **inservible con la escala del juego**: para que un desenfoque se vea en pantalla la separación equivale a 21,6 cm por lado (una lente real da unos milímetros), y con eso una farola a 2,6 m tapa media zona aunque esté lejos del círculo |
+| Deformar la imagen según la profundidad, con el desplazamiento lineal de siempre (hasta 0,06 del ancho) | Lo cercano cruza el círculo entero; huecos grandes |
+| **Deformar la imagen según la profundidad, con el desplazamiento frenado** | La elegida |
+
+### Cómo funciona
+
+- **La distancia de cada píxel.** `main.gd::update_aid_optics()` mantiene una vista pequeña del centro del encuadre (la zona y un margen), desde el sitio de la cámara, que en vez de colores escribe distancias (`shaders/aid_depth.gdshader`; `aid_depth`, sin sombreado ni sombras, en coma flotante). Solo se dibuja en enfoque manual con la cámara en el ojo. Ya no se usan rayos para dibujar la zona: chocan con cápsulas, no con la silueta que se ve.
+- **El dibujo.** `shaders/focus_aid.gdshader` busca, para cada píxel de cada mitad, el punto de la escena cuyo propio desplazamiento lo trae hasta ahí: recorre el alcance del desplazamiento en 64 pasos y halla el sitio exacto donde «el desplazamiento de lo que hay ahí» iguala «lo lejos que está», entre dos muestras de la misma superficie. De varias, gana la superficie más cercana, que tapa a las otras.
+- **Los colores son la imagen del visor de siempre** (con su desenfoque y su tono): con toda la zona a una distancia el resultado es la imagen de antes, desplazada entera.
+- **El desplazamiento se frena.** La escala es la de siempre cerca del foco (`AID_GAIN`: 0,006 × focal del ancho por dioptría) y se va aplanando hacia `AID_REACH` (el 20 % del radio de la zona). Una lente real nunca desplaza nada más de una décima del círculo; lo que el juego exagera es la sensibilidad cerca del foco, no el recorrido. Así lo muy desenfocado se ve partido «del todo» sin cruzar la zona.
+- **Mitades nítidas** (`AID_SOFTNESS = 0`). Se probó a difuminar lo desenfocado en proporción a su desplazamiento, que es lo que hace un prisma con abertura finita; el usuario lo vio como «un difuminado de movimiento en el objeto de primer plano» y se quitó.
+- **Los huecos.** Donde algo desplazado deja al descubierto lo que tenía detrás, esa imagen no existe: se continúa el fondo de al lado (tan lejos del borde como el hueco está de él), algo suavizado. Es el único defecto que queda, y es pequeño porque el desplazamiento máximo lo es.
+- **Los contornos** se desplazan con la figura (se toma la distancia más cercana de cada píxel y sus cuatro vecinos), para que no quede una orla.
+- El anillo se sigue con la misma suavidad de siempre (`aid_dioptres`).
+- **La telemétrica** usa lo mismo para su doble imagen: el fantasma de cada cosa se separa según su distancia.
+- **OpenGL**: funciona igual (probado en escritorio). En Android y web queda desactivado hasta probarlo en el dispositivo (`aid_optics()`); allí sigue el desplazamiento único.
+- Nada de esto entra en la foto: es una capa 2D sobre el visor y una vista aparte.
+- La etiqueta «foco alineado» sigue guiándose por los cinco rayos antiguos (`smoothed_focus_aid_offset`); no se ha tocado.
+
+### Comprobado
+
+- **Criterio A** (fondo inalterado): en la escena del §8, la parte de la zona que ocupa el sujeto enfocado cambia 0,0015 entre «nadie» y «alguien rozando el borde» (ruido de vídeo), frente a 0,12 antes.
+- **Coste**: entre 0 y 0,3 ms por fotograma a 4K en Ultra.
+- `tests/test_finders.gd`: la vista de distancias existe, es pequeña, sigue al anillo, guarda distancias reales y no se dibuja con autofoco. El aspecto se revisa a ojo con `tools/capture_split_image.gd` (`PARTIDA_CUERPO=1` telemétrica, `PARTIDA_ANILLO=1` girando el anillo, `PARTIDA_PLANA=1` el método antiguo).
+- Evidencias: [`cruce_tlr_antes_y_ahora.mp4`](../evidencias/imagen_partida/cruce_tlr_antes_y_ahora.mp4) y [`.jpg`](../evidencias/imagen_partida/cruce_tlr_antes_y_ahora.jpg).
+
+### Lo que cambia respecto a antes
+
+Al girar el anillo con algo muy desenfocado, las mitades ya no enseñan trozos de escena distintos: enseñan lo mismo, partido como mucho un quinto del radio. Es más fiel y menos aparatoso. Si se quiere más recorrido, es `AID_REACH`.
+
+### Lecciones de este tramo
+
+- **«Lo más fiel a la realidad» no es copiar la geometría con la escala exagerada.** Las dos vistas reales eran la física exacta de un prisma… con una lente de 43 cm. Lo fiel es el *aspecto*: qué se mueve, cuánto respecto al círculo y qué no cambia.
+- **Probar la idea barata antes de la cara** habría ahorrado una vuelta, pero la cara enseñó por qué hacía falta frenar el desplazamiento.
+- **No escribir una prueba automática sobre la silueta de un personaje**: su postura cambia de una ejecución a otra y la prueba falla una de cada tres veces. Me enredé con ella y el usuario pensó que el problema era el arreglo.
 
