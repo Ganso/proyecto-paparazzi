@@ -185,7 +185,7 @@ Lo que el objetivo y el soporte hacen con la imagen, en el revelado (`shaders/de
 | Efecto | Cuándo | Cómo |
 |---|---|---|
 | **Velo y resplandor del sol** | De día y a la hora dorada, con el sol dentro del encuadre o cerca y sin nada que lo tape | Una capa de su propia luz sobre toda la foto (menos contraste, sombras levantadas), más fuerte hacia él, y su resplandor donde está; se apaga al salir del encuadre. Más fuerte a la hora dorada |
-| **Estrellas en las farolas** | Desde f/11, largas a f/22 | Seis puntas en cada luz puntual visible (`lights`, hasta 12) |
+| **Estrellas en las luces** | Desde f/8, media estrella a f/11, largas a f/22 (`Photo.star()`: por pasos desde f/5,6; hasta el 13-10-2026 empezaba en f/8 y a f/11 apenas se veía) | Seis puntas en cada luz puntual visible (`lights`, hasta 20): las farolas, las de detrás del estanque y **las bombillas de la guirnalda del quiosco** (`park.bandstand_bulbs`, las más cercanas a la cámara) |
 | **Forma del desenfoque** | Al cerrar el diafragma un paso o más | El muestreo de la abertura del obturador virtual pasa de círculo a polígono de siete láminas (`blade_reach()`) |
 | **Difracción** | Por encima de f/11 | Una ligera pérdida de nitidez general (algo más de un píxel a f/22) |
 | **Distorsión** | Según la focal | Barril en angular (máxima a 24 mm), un poco de cojín en tele |

@@ -72,6 +72,7 @@ func _initialize() -> void:
 	e = fixture()
 	e.eyes = Vector2(.333,.25)
 	check(near(Photo.evaluate(e).framing,1.0),"Thirds are measured on the face")
+	check(Photo.star(5.6) == 0.0 and near(Photo.star(22.0),1.0) and Photo.star(11.0) > .45 and Photo.star(11.0) < .55 and Photo.star(8.0) > 0.0,"The star a closed diaphragm makes of a light: none at f/5.6, half at f/11, whole at f/22")
 	var casting = Cast.new()
 	var all_traits: Array = []
 	var signatures = {}

@@ -1376,6 +1376,19 @@ func subject_fits(p, lane: int) -> bool:
 		if Photo.coc(lens.max,float(lens.long)*1.4142,far+10.0,far) < .07: return false
 	return true
 
+# A level without a subject of its own (target "anyone"): whoever the player frames is the photo's.
+func anyone_level() -> bool:
+	return arcade_level >= 0 and not sandbox and str(Arcade.LEVELS[arcade_level].get("target","")) == "anyone"
+
+# Who the camera is on: the person under the focus point or, failing that, the one nearest to the
+# middle of the frame.
+func framed_person():
+	var hit = point_hit(finder.points()[finder.active])
+	if not hit.is_empty() and hit.collider.has_meta("person"):
+		var who = hit.collider.get_meta("person")
+		if is_instance_valid(who) and who in people: return who
+	return person_near(view_rect.get_center()+view_shift,view_rect.size*.46)
+
 func new_assignment() -> void:
 	if is_instance_valid(target): target.protected_target = false
 	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
@@ -1438,7 +1451,8 @@ func new_assignment() -> void:
 	if runner_on_duty(target):
 		target.pending_stop = {}
 		if target.state == "DETENIDO": resume_walk(target)
-	briefing.text = Texts.get_text("busca")+", ".join(predicates)+"."
+	# (a level about anybody gives no description: the photo is of whoever the player frames)
+	briefing.text = Texts.get_text("busca")+(Texts.get_text("arcade_cualquiera") if kind == "anyone" else ", ".join(predicates))+"."
 	shots = int(level.get("shots",3))
 	# Framing guides: the golden section where the level asks for it, thirds otherwise (G hides them).
 	finder.golden = not level.is_empty() and level.cond.has("aurea")
@@ -3210,6 +3224,7 @@ func advance_world(dt: float) -> void:
 
 # What the glass will make of the lights in front of it (only for the developed image, never for
 # the score): where the sun is and whether it reaches the lens, and the lamps that are lit.
+const LIGHTS = 20
 func lens_evidence(e: Dictionary) -> void:
 	var size = Vector2(viewport.size)
 	var wide = size.x/size.y
@@ -3225,15 +3240,25 @@ func lens_evidence(e: Dictionary) -> void:
 		var toward: Vector3 = park.sun.global_basis.z
 		var far = eye+toward*500.0
 		if not camera.is_position_behind(far): e["sun"] = {"pos":to_frame.call(far),"seen":park.light_visible(eye,eye+toward*80.0,null)}
+	# The points of light in the frame: the lamp posts and the lamps by the pond, and the bulbs of
+	# the bandstand's garland (the nearest ones, while there is room: the shader takes LIGHTS).
 	var lit = []
-	for lamp in park.lamps:
-		if lit.size() >= 12: break
-		if not lamp.visible or lamp.light_energy < .05: continue
-		var bulb: Vector3 = lamp.global_position
+	var sources: Array = []
+	for lamp in park.lamps+park.meadow_lights.slice(2):
+		if lamp.visible and lamp.light_energy >= .05: sources.append([lamp.global_position,true])
+	if not park.meadow_lights.is_empty() and park.meadow_lights[0].visible:
+		var bulbs: Array = Array(park.bandstand_bulbs)
+		bulbs.sort_custom(func(a,b): return eye.distance_squared_to(a) < eye.distance_squared_to(b))
+		for bulb in bulbs: sources.append([bulb,false])
+	for source in sources:
+		if lit.size() >= LIGHTS: break
+		var bulb: Vector3 = source[0]
 		if camera.is_position_behind(bulb): continue
 		var at: Vector2 = to_frame.call(bulb)
 		if at.x < -.05 or at.x > 1.05 or at.y < -.05 or at.y > 1.05: continue
-		if park.light_visible(eye,bulb,null): lit.append(at)
+		# (a lamp post may be behind a tree; the garland hangs from the bandstand's own roof, and
+		# the nearest bulbs are the ones on this side of it)
+		if not source[1] or park.light_visible(eye,bulb,null): lit.append(at)
 	e["lights"] = lit
 
 # The shape of the aperture: a circle wide open, a polygon of seven blades once it is closed a stop
@@ -4053,6 +4078,15 @@ func take_photo() -> void:
 	if dof_allowed() and not dof_blur: set_dof_blur(true)   # rangefinder: blur only in the photo
 	# Freeze first, then wait for physics and the render to represent precisely this state.
 	await get_tree().physics_frame
+	# A level about anybody: the photo is of whoever is framed at this instant.
+	var nobody = false
+	if anyone_level():
+		var framed = framed_person()
+		nobody = framed == null
+		if framed != null and framed != target:
+			target.protected_target = false
+			target = framed
+			target.protected_target = true
 	var evidence = capture_sandbox_evidence() if sandbox else capture_evidence()
 	evidence["camera_omega"] = shot_omega
 	evidence["rendered_dof"] = dof_active()
@@ -4062,6 +4096,12 @@ func take_photo() -> void:
 	evidence["metered"] = measured_ev     # (what the meter said: «exposicion» is judged against it)
 	if arcade_level >= 0 and not sandbox: current_result = Conditions.judge(evidence,Arcade.LEVELS[arcade_level].cond)
 	else: current_result = Photo.evaluate(evidence)
+	if nobody:
+		current_result.rejected = true
+		current_result.score = 0
+		current_result.stars = 0
+		current_result.credits = 0
+		current_result.reason = Texts.get_text("arcade_nadie")
 	current_result["evidence"] = evidence
 	if equipment.tlr() and sandbox:
 		tlr_frames -= 1
@@ -4200,12 +4240,12 @@ func photo_material(result: Dictionary) -> ShaderMaterial:
 	mat.set_shader_parameter("sun_veil",veil)
 	# Stars on the lamps once the aperture is small (from f/11; long at f/22).
 	var lights: Array = evidence.get("lights",[])
-	var star = clampf((float(evidence.n)-8.0)/14.0,0.0,1.0) if not lights.is_empty() else 0.0
+	var star = Photo.star(float(evidence.n)) if not lights.is_empty() else 0.0
 	mat.set_shader_parameter("star",star)
 	mat.set_shader_parameter("light_count",lights.size() if star > 0.0 else 0)
 	if star > 0.0:
 		var spots = PackedVector2Array(lights)
-		spots.resize(12)
+		spots.resize(LIGHTS)
 		mat.set_shader_parameter("lights",spots)
 	mat.set_shader_parameter("shot_seed",float(evidence.seed))
 	return mat
@@ -5511,11 +5551,18 @@ func person_near(point: Vector2, reach: Vector2):
 		if camera.is_position_behind(chest): continue
 		var gap: Vector2 = (finder_position(chest)-point).abs()
 		if gap.x > reach.x or gap.y > reach.y or gap.length() >= best_gap: continue
-		var hit = ray_to(chest)
-		if hit.is_empty() or not hit.collider.has_meta("person") or hit.collider.get_meta("person") != p: continue
+		if not person_in_sight(p): continue
 		best_gap = gap.length()
 		best_person = p
 	return best_person
+
+# Whether the camera sees someone: the chest or, with the chest hidden (seated with the back to the
+# camera, behind the back of the bench), the head.
+func person_in_sight(p) -> bool:
+	for k in [1,0]:
+		var hit = ray_to(p.control_points()[k])
+		if not hit.is_empty() and hit.collider.has_meta("person") and hit.collider.get_meta("person") == p: return true
+	return false
 
 # On a camera without autofocus the matrix has no focus point to go by: it goes by the focus
 # itself, as evaluative metering does. Whoever is in the frame at the distance the lens is focused
@@ -5533,8 +5580,7 @@ func focused_person():
 		if absf(away-focus_distance) > maxf(.35,.07*focus_distance): continue
 		var at = finder_position(chest)
 		if not view_rect.grow(-view_rect.size.x*.03).has_point(at) or at.distance_to(middle) >= best_gap: continue
-		var hit = ray_to(chest)
-		if hit.is_empty() or not hit.collider.has_meta("person") or hit.collider.get_meta("person") != p: continue
+		if not person_in_sight(p): continue
 		best_gap = at.distance_to(middle)
 		best_person = p
 	return best_person
@@ -5851,6 +5897,13 @@ func show_assignment() -> void:
 	portrait_camera.position = Vector3(0,brief_preview.height*.53,-4)
 	portrait_camera.look_at(Vector3(0,brief_preview.height*.53,0))
 	portrait_camera.current = true
+	if anyone_level():
+		# Nobody to describe: the portrait gives way to a card.
+		container.visible = false
+		panel(root,Rect2(65,170,450,465),Color(.075,.115,.085,.9))
+		var card = label(root,Texts.get_text("arcade_cualquiera_cartel"),Rect2(95,330,390,140),40,Color("b8d78c"))
+		card.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		card.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if arcade_level >= 0:
 		show_level_briefing(root)
 		return
@@ -5862,7 +5915,7 @@ func show_assignment() -> void:
 # Arcade briefing: who, then the level's rules (camera, shots, time, pass mark, conditions).
 func show_level_briefing(root: Control) -> void:
 	var level: Dictionary = Arcade.LEVELS[arcade_level]
-	rich_label(root,plain_bb(Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1)))+"\n[font_size=8] [/font_size]\n"+dotted(Array(casting.descriptors(target.traits))),Rect2(565,160,640,220),18)
+	rich_label(root,plain_bb(Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1)))+"\n[font_size=8] [/font_size]\n"+dotted([Texts.get_text("arcade_cualquiera")] if anyone_level() else Array(casting.descriptors(target.traits))),Rect2(565,160,640,220),18)
 	var rules = [Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],
 		(Texts.get_text("arcade_un_disparo") if level.shots == 1 else Texts.get_text("arcade_disparos_d") % level.shots)+" · "+(Texts.get_text("arcade_tiempo_d") % level.limit if level.limit > 0 else Texts.get_text("arcade_sin_tiempo"))+" · "+Texts.get_text("arcade_nota_minima_d") % level.min]
 	label(root,"\n".join(rules),Rect2(565,385,640,50),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

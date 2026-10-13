@@ -19,7 +19,7 @@ const MainScript = preload("res://scripts/main.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Photo = preload("res://scripts/photography.gd")
-const SETTINGS = ["ojos","grande","focal_min","focal_max","fondo","congelado","exposicion","nitido","estela","barrido","contraluz","silueta"]
+const SETTINGS = ["ojos","grande","focal_min","focal_max","fondo","congelado","exposicion","nitido","estela","barrido","contraluz","silueta","estrella","pulso","quieto"]
 var game
 var draws = 6
 var samples = 5
@@ -94,6 +94,7 @@ func frame_subject(level: Dictionary, target) -> Dictionary:
 		game.update_camera()
 		await physics_frame
 		e = game.capture_evidence()
+	game.lens_evidence(e)       # (the lights in the frame: «estrella»)
 	e.s = e.get("d_eyes",e.d)
 	game.focus_distance = e.s
 	return e
@@ -137,6 +138,21 @@ func audit(n: int) -> void:
 				elif waited-t0 < 6.0: continue
 				break
 			if not is_instance_valid(target) or game.mode != "SEARCH": break
+			# A level about anybody: whoever is still (the best lit one), as the solver takes.
+			if game.anyone_level():
+				var still = null
+				var light = -INF
+				for p in game.people:
+					if not p.visible or p.state == "RETIRADO" or not p.lane in [1,2] or p.actual_velocity.length() > .05: continue
+					var ev: float = game.park.illumination_ev(p.control_points()[1],game.time_of_day,p)
+					if ev > light:
+						light = ev
+						still = p
+				if still == null: continue
+				game.target.protected_target = false
+				game.target = still
+				still.protected_target = true
+				target = still
 			if s == 0: waits.append(waited)
 			var e = await frame_subject(level,target)
 			# (someone or something in front: that moment is not the level's fault)

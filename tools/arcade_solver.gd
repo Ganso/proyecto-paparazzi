@@ -50,6 +50,18 @@ func best_settings(e: Dictionary, level: Dictionary) -> Dictionary:
 					best = {"score":r.score,"n":n,"t":at[0],"t_fine":at[1],"iso":iso}
 	return best
 
+# A level about anybody (target "anyone"): the best lit of those who are still.
+func still_person():
+	var best_person = null
+	var best_light = -INF
+	for p in game.people:
+		if not p.visible or p.state == "RETIRADO" or not p.lane in [1,2] or p.actual_velocity.length() > .05: continue
+		var light: float = game.park.illumination_ev(p.control_points()[1],game.time_of_day,p)
+		if light > best_light:
+			best_light = light
+			best_person = p
+	return best_person
+
 func solve(n: int) -> String:
 	var level: Dictionary = Arcade.LEVELS[n]
 	if MainScript.scenario != level.scenario or not is_instance_valid(game): await make_game(level.scenario)
@@ -87,6 +99,14 @@ func solve(n: int) -> String:
 			else: break
 		await frames(15)
 		elapsed += .25
+		if game.anyone_level() and game.mode == "SEARCH":
+			var still = still_person()
+			if still == null: continue
+			if still != game.target:
+				game.target.protected_target = false
+				game.target = still
+				still.protected_target = true
+			target = still
 		if not is_instance_valid(target) or game.mode != "SEARCH": continue
 		if game.crowd and game.player.position.distance_to(target.global_position) > 9.0:
 			game.player.position = target.global_position+Vector3(4.5,0,3.0)
@@ -133,6 +153,7 @@ func solve(n: int) -> String:
 			e = game.capture_evidence()
 			game.update_meter()
 			e["metered"] = game.measured_ev
+		game.lens_evidence(e)       # (the lights in the frame: «estrella»)
 		game.focus_distance = e.get("d_eyes",e.d)
 		e.s = game.focus_distance
 		tries += 1
@@ -196,6 +217,7 @@ func solve(n: int) -> String:
 			var cr: Dictionary = game.current_result
 			var ce: Dictionary = cr.evidence
 			print("  subject: %.2f m tall, path %d · d %.2f eyes %.2f focus %.2f · head %.2f feet %.2f chest %s · pitch %.1f" % [target.height,target.lane,ce.d,ce.get("d_eyes",0.0),ce.s,ce.head.y,ce.feet.y,str(ce.chest),game.pitch])
+			print("  meter at the shot %.1f for a subject at EV %.1f" % [float(ce.get("metered",-9.0)),float(ce.scene_ev)])
 			print("  shot: expected %d, got %d · %s · %s" % [best.score,cr.score,cr.get("reason",""),"foco %s expo %s mov %s ocl %s enc %s delta %s" % [str(cr.focus),str(cr.exposure),str(cr.movement),str(cr.occlusion),str(cr.framing),str(cr.delta)]])
 	# SOLVER_SHOTS=<folder>: the result screen of each level, as evidence.
 	if game.mode == "RESULT" and OS.has_environment("SOLVER_SHOTS"):

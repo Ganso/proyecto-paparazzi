@@ -129,7 +129,7 @@ El arcade pedía nueve cosas y varios niveles se resolvían igual. Ahora **cada 
 | 17 | **Exposición clavada** (nuevo) | Día con nubes · réflex · M | `exposicion` |
 | 18 | **A contraluz** (nuevo) | Dorada · réflex · A, medición puntual · `toward: sol` | `contraluz` |
 | 19 | **La silueta** (nuevo) | Dorada · réflex · M · `toward: sol` | `silueta` |
-| 20 | Noche en el quiosco | Noche · telemétrica · M | `aislado`, `ojos` |
+| 20 | **Noche de estrellas** (rehecho el 13-10-2026) | Noche · telemétrica 50 · M · `target: anyone` · sin límite | `estrella`, `pulso` 30, `quieto`, `ojos` |
 | 21–25 | **La TLR** (los antiguos 16–20) | Día ISO 200 · día ISO 400 · **hora dorada ISO 100** · día ISO 800 · hora azul ISO 1600 | —, `aurea`, `ojos`+`fondo`+`grande`, `congelado`, `ojos`+`aislado` |
 | 26 | El barrido | Hora dorada · S | `barrido` |
 | 27 | **La estela** (nuevo) | Hora azul · S | `estela` |
@@ -203,4 +203,19 @@ Tras dos niveles imposibles en dos días (un niño que no llenaba el encuadre de
 Luz y exposición de cada nivel (EV del sujeto en sus caminos: 14,8 al sol y 11 a la sombra de día, 14,0 y 9,5 a la hora dorada, 8,1–8,6 a la hora azul, 4,4–7,3 de noche junto a las farolas): en todos hay combinación con el exposímetro en cero que cumple las condiciones, también de noche con el 50 mm f/1,4 y f/1,8 a 1/250 s e ISO 3200. Tamaño del sujeto: siempre alcanza lo pedido. Tiempos: el sujeto de «Lo que hace» está sentado antes de 25 s y se queda; el quiosco entra en la foto antes de 50 s; los corredores no paran a estirar durante su nivel. Nivel 24: el corredor más cercano es un niño que llena el 37–42 % de la altura con el 50 mm; cuesta 2–4 puntos de encuadre, sin rechazo. Nivel 20 y 30: la nota no depende de esperar bajo una farola.
 
 Resultado: en las 30 auditorías, **todas las muestras válidas quedan al alcance del jugador por encima del mínimo** (mediana 100 en 29 niveles), y el solucionador supera 90 de 90 partidas.
+
+## Nivel 20, «Noche de estrellas»: la noche como desafío (13-10-2026, usuario)
+
+Encargo del usuario: una foto nocturna a **f/11**, «con la excusa de la estrella»; obliga a subir a **ISO 3200** y se valida con **1/30 s como muy lento**, algo más allá de lo que aguanta un 50 mm a pulso («dile que contenga la respiración»). Vale **cualquier persona**, con tal de que salga nítida; **sin límite de tiempo**, porque hay que encontrar a alguien quieto.
+
+- **Sin sujeto asignado** (`target: "anyone"`, `main.gd::anyone_level()`): el encargo no describe a nadie (el retrato deja sitio a un cartel, «Tú eliges a quién») y la foto es de quien esté encuadrado al disparar (`framed_person()`: la persona bajo el punto de enfoque o la más cercana al centro). Sin nadie en el encuadre, se rechaza («No hay nadie en la foto»).
+- **Tres condiciones nuevas** (`conditions.gd`, 22 en total):
+  - `estrella`: f/11 o más cerrado y al menos una luz puntual en el encuadre (`evidence.lights`).
+  - `pulso` N: 1/N s o más rápido; a partir de ahí **el pulso se da por bueno** aunque la focal pida más (`prepare()` pone `steady`, que `Photo.evaluate()` respeta). El informe dice «A pulso: 1/30 s con un 50 mm, conteniendo la respiración».
+  - `quieto`: la persona no sale movida (arrastre dentro del límite de nitidez). A 1/30 s, quien camina no pasa.
+  - Más `ojos` (cara enfocada).
+- **Lo que se midió antes de montarlo** (apuntando al quiosco, f/11 · 1/30 s · ISO 3200, que expone para EV 6,8): junto al quiosco la gente tiene entre EV 6,0 y 6,7. Alguien quieto en el banco de delante sale clavado (nota 94 antes de perdonar el pulso, 100 después); alguien pasando por el tercer camino queda 1,3 pasos oscuro y movido (arrastre 0,09 mm), en el límite del 70. De ahí que el nivel pida a alguien quieto.
+- **Lo que hubo que arreglar por el camino**: la estrella a f/11 no se veía y las bombillas del quiosco no la hacían ([SIMULACION §9.5](../SIMULACION_FOTOGRAFICA.md)); y el exposímetro leía el fondo cuando el sujeto estaba sentado de espaldas tras el respaldo del banco (marcaba EV 2,1 con el sujeto a 6,7): ahora basta con que la cámara le vea el pecho **o la cabeza** (`person_in_sight()`).
+- En los sitios menos iluminados (EV 5,5–6) la combinación queda un paso oscura y no hay con qué compensar: es la gracia del desafío, y la nota sigue por encima de 90.
+- Pruebas: `tests/test_arcade.gd` (las tres condiciones y el nivel), `tests/test_photography.gd` (`Photo.star()`); el solucionador elige a la persona quieta mejor iluminada y lo supera con 100. Evidencia: [`nivel_20_noche_de_estrellas.jpg`](../evidencias/interfaz/nivel_20_noche_de_estrellas.jpg).
 

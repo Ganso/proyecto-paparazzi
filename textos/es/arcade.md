@@ -397,6 +397,69 @@ apenas se mueve (%.1f mm a 1/%d s): Usa una velocidad más lenta
 > máximo 100 caracteres
 Corredor en estela, fondo nítido
 
+### cond_corta_estrella
+> máximo 100 caracteres
+Luces en estrella: f/11 o más cerrado
+
+### cond_corta_pulso
+> máximo 100 caracteres
+A 1/%d s o más rápido
+
+### cond_corta_quieto
+> máximo 100 caracteres
+Alguien que no salga movido
+
+### cond_estrella
+> máximo 100 caracteres
+Estrellas · %s
+
+### cond_estrella_ok
+> máximo 100 caracteres
+f/%s con %d luces en el encuadre
+
+### cond_estrella_abierto
+> máximo 100 caracteres
+a f/%s las luces no hacen estrella: Cierra a f/11 o más
+
+### cond_estrella_sin_luz
+> máximo 100 caracteres
+no hay ninguna luz en el encuadre: Incluye una farola o el quiosco
+
+### cond_pulso
+> máximo 100 caracteres
+A pulso · %s
+
+### cond_pulso_ok
+> máximo 100 caracteres
+1/%d s, conteniendo la respiración
+
+### cond_pulso_lento
+> máximo 100 caracteres
+a 1/%d s la foto tiembla: No bajes de 1/%d s
+
+### cond_quieto
+> máximo 100 caracteres
+Sin moverse · %s
+
+### cond_quieto_ok
+> máximo 100 caracteres
+la persona sale nítida
+
+### cond_quieto_movido
+> máximo 100 caracteres
+la persona sale movida a 1/%d s: Busca a alguien que esté quieto
+
+### arcade_cualquiera
+> máximo 100 caracteres
+A quien tú quieras, con tal de que esté quieto
+
+### arcade_cualquiera_cartel
+Tú eliges a quién
+
+### arcade_nadie
+> máximo 100 caracteres
+No hay nadie en la foto: Encuadra a una persona.
+
 ### seguimiento_siguiendo · Marca del visor mientras la cámara acompaña a alguien (parpadea)
 > máximo 30 caracteres
 ● SIGUIENDO AL SUJETO
@@ -599,11 +662,11 @@ El mismo sol y la intención contraria: Que tu objetivo quede en negro contra el
 
 ### arcade_nivel_20_titulo · título
 > máximo 22 caracteres
-Noche en el quiosco
+Noche de estrellas
 
 ### arcade_nivel_20_texto · encargo
 > máximo 220 caracteres
-De noche, con la cara nítida y sin nadie más en la foto.
+Cierra a f/11 y las luces del parque se vuelven estrellas. De noche eso pide ISO 3200 y 1/30 s: Más lento de lo que aguanta un 50 mm, así que contén la respiración. Y busca a alguien quieto: Quien camina sale movido.
 
 ## Nivel 21 · A la cintura
 

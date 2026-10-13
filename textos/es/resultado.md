@@ -25,6 +25,9 @@ Altura %s %% (ideal: 45 %% o más). %s%s
 ### mov_ok
 Nítido: 1/%d s basta a %d mm.
 
+### mov_contenido
+A pulso: 1/%d s con un %d mm, conteniendo la respiración.
+
 ### mov_pulso
 Tu pulso tiembla a 1/%d s con %d mm: Usa 1/%d s o más rápido (regla práctica: 1/focal).
 

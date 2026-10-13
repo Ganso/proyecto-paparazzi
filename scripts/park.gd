@@ -25,6 +25,7 @@ var windows_material: ShaderMaterial
 # Lights of the meadow (bandstand and pond): lit at golden hour and night. They are not in
 # `lamps`, so the exposure meter ignores them; they stand 20 m away from the lanes anyway.
 var meadow_lights: Array[OmniLight3D] = []
+var bandstand_bulbs: Array[Vector3] = []
 
 func init_lantern_materials() -> void:
 	if glass_material == null:
@@ -633,6 +634,15 @@ func build_meadow(rng: RandomNumberGenerator) -> void:
 	# Ripples and falling streaks are centred on the fountain axis.
 	water_material.set_shader_parameter("center",Vector2(pond.x,pond.z))
 	spray_material.set_shader_parameter("center",Vector2(pond.x,pond.z))
+	# Where the garland's bulbs hang (as tools/blender/build_park_assets.py puts them: four a side,
+	# under the eaves): the points of light the closed diaphragm makes stars of (main.gd::lens_evidence()).
+	var stand = Transform3D(Basis(Vector3.UP,facing_center(bandstand)),bandstand)
+	for i in 8:
+		var a = Vector3(sin(PI/8+i*TAU/8),0,cos(PI/8+i*TAU/8))*2.05
+		var c = Vector3(sin(PI/8+(i+1)*TAU/8),0,cos(PI/8+(i+1)*TAU/8))*2.05
+		for k in [1,3,5,7]:
+			var along = a.lerp(c,k/8.0)*1.08
+			bandstand_bulbs.append(stand*Vector3(along.x,3.25-.16*sin(PI*k/8.0),along.z))
 	# Bandstand: central lantern and garland under the eaves.
 	meadow_light(bandstand+Vector3.UP*2.8,3.0,7.0)
 	meadow_light(bandstand+Vector3.UP*3.3+(Vector3.ZERO-bandstand).normalized()*1.6,1.2,5.0)

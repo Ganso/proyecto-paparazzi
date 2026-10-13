@@ -20,6 +20,12 @@ const PAN_SUBJECT_SPEED = .4
 # 0.030 mm the turn had to match the runner within 1°/s; with 0.075 mm, within some 10 %.
 const PAN_TOLERANCE = .075
 
+# How long the star is that the diaphragm makes of a point of light (0…1): none up to f/5.6, plain
+# at f/11 (half), longest at f/22. By stops, as the blades close: until 13-10-2026 it began at
+# f/8 and at f/11 it was a fifth, too small to see in the photo.
+static func star(n: float) -> float:
+	return clampf(log(n/5.6)/log(22.0/5.6),0.0,1.0)
+
 static func ev(n: float, t: float, iso: float, scene_ev: float) -> float:
 	return log(n*n/t)/log(2.0) - log(iso/100.0)/log(2.0) - scene_ev
 
@@ -63,6 +69,10 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	var exposure = clampf(1-maxf(0, abs(delta)-0.5)/2.5, 0, 1)
 	# A good pan is a deliberate slow shutter: the hand rule does not count against it.
 	var shake = 1.0 if panning else clampf(1-(ratio-1)/2, 0, 1)
+	# A level may take the hand as steady from a shutter speed on (conditions.gd «pulso»: its
+	# briefing asks to hold one's breath a little past what the focal length allows).
+	var held: bool = float(e.get("steady",0.0)) > 0.0 and 1.0/e.t >= float(e.steady)-.5 and ratio > 1.0
+	if held: shake = 1.0
 	var subject = 1.0 if panning else clampf((3*C-drag)/(2*C), 0, 1)
 	# A trail asked for (conditions.gd «estela»): a runner dragged on purpose with the camera still
 	# is what the photo is about, and the slow shutter is braced.
@@ -102,6 +112,7 @@ static func evaluate(e: Dictionary) -> Dictionary:
 		movement_text = Texts.get_text("mov_imposible") % roundi(e.f) if subject_needed < 0 else Texts.get_text("mov_sujeto") % [used, roundi(e.f), maxi(subject_needed, hand_needed)]
 	elif shake < 1:
 		movement_text = Texts.get_text("mov_pulso") % [used, roundi(e.f), hand_needed]
+	if held and subject >= 1: movement_text = Texts.get_text("mov_contenido") % [used, roundi(e.f)]
 	if panning: movement_text = Texts.get_text("mov_barrido") % [used, background]
 	elif trail: movement_text = Texts.get_text("mov_estela") % [used, drag]
 	elif subject < 1 and background > C and e.v < PAN_SUBJECT_SPEED: movement_text = Texts.get_text("mov_camara") % used

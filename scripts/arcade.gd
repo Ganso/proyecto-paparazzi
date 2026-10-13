@@ -13,7 +13,8 @@ extends RefCounted
 static var SAVE = OS.get_environment("PAPARAZZI_ARCADE_CFG") if OS.has_environment("PAPARAZZI_ARCADE_CFG") else "user://arcade.cfg"   # tests and capture tools point it elsewhere
 const BLOCKS = ["arcade_bloque_1","arcade_bloque_2","arcade_bloque_3","arcade_bloque_4","arcade_bloque_5","arcade_bloque_6"]
 #   target: "runner" picks someone running, "activity" someone who sits down to do something,
-#           "dog" the dog's owner · toward: "quiosco" or "sol", whoever gets there first
+#           "dog" the dog's owner, "anyone" whoever the player frames (no subject is given)
+#           · toward: "quiosco" or "sol", whoever gets there first
 #   focus, metering: the focus mode and the metering, if not the body's own
 const LEVELS = [
 	# Block 1 · first steps: automatic compact, classic park.
@@ -41,7 +42,10 @@ const LEVELS = [
 	{"scenario":"clasico","time":"day","body":2,"lens":0,"auto":false,"pace":.7,"shots":3,"limit":120,"min":65,"cond":{"exposicion":true}},
 	{"scenario":"clasico","time":"golden","body":2,"lens":0,"auto":"A","metering":"puntual","pace":.7,"toward":"sol","shots":3,"limit":180,"min":65,"cond":{"contraluz":true}},
 	{"scenario":"clasico","time":"golden","body":2,"lens":0,"auto":false,"pace":.7,"toward":"sol","shots":3,"limit":180,"min":65,"cond":{"silueta":true}},
-	{"scenario":"clasico","time":"night","body":1,"lens":1,"auto":false,"pace":.6,"shots":2,"limit":120,"min":70,"cond":{"aislado":true,"ojos":true}},
+	# (The night as a challenge: f/11 for the lights to turn into stars, which asks for ISO 3200 and
+	# 1/30 s, a little past what a 50 mm allows by hand. Anybody will do, as long as they are
+	# still: whoever walks comes out moved. No clock: the player has to find that person.)
+	{"scenario":"clasico","time":"night","body":1,"lens":1,"auto":false,"pace":.6,"target":"anyone","shots":3,"limit":0,"min":70,"cond":{"estrella":true,"pulso":30,"quieto":true,"ojos":true}},
 	# Block 5 · the TLR: waist level, mirrored ground glass, square frame, film, all manual.
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":1,"pace":.5,"shots":3,"limit":0,"min":70,"cond":{}},
 	{"scenario":"clasico","time":"day","body":3,"lens":0,"auto":false,"iso":2,"pace":.6,"shots":3,"limit":120,"min":70,"cond":{"aurea":true}},

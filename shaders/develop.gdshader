@@ -38,7 +38,7 @@ uniform vec3 sun_color : source_color = vec3(1.0, 0.86, 0.62);
 // Film halation: the red glow round what burns (0 on a sensor).
 uniform float halation = 0.0;
 // Point lights in the frame (the lamps at night) and how long their stars are (0 until f/11).
-uniform vec2 lights[12];
+uniform vec2 lights[20];
 uniform int light_count = 0;
 uniform float star = 0.0;
 uniform float aspect = 1.7778;

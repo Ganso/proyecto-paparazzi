@@ -24,6 +24,11 @@ extends RefCounted
 #               two stops over what the meter says (prepare() moves the photo's target there)
 #   silueta     the same light, exposed the other way: 0.7 to 2.7 stops under the meter
 #   estela      a runner blurred on purpose with the camera still: drag ≥ 0.5 mm, sharp background
+#   estrella    the lights of the park as stars: f/11 or smaller, with a light in the frame
+#   pulso       the shutter at 1/N s or faster (N its value); from there on the hand counts as
+#               steady (prepare()), though the focal length would ask for more
+#   quieto      the person does not come out moved (drag within the sharpness limit): at a slow
+#               shutter, somebody who is not walking
 const Photo = preload("res://scripts/photography.gd")
 const Texts = preload("res://scripts/texts.gd")
 const NOTICEABLE = .10
@@ -50,6 +55,7 @@ static func prepare(e: Dictionary, cond: Dictionary) -> void:
 		e["scene_ev"] = e.scene_ev+SILHOUETTE
 		e["ev_shift"] = SILHOUETTE
 	if cond.has("estela"): e["trail"] = true
+	if cond.has("pulso"): e["steady"] = float(cond.pulso)
 
 # The whole verdict of a level's photo.
 static func judge(e: Dictionary, cond: Dictionary) -> Dictionary:
@@ -153,6 +159,23 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				elif ground > Photo.C: why = Texts.get_text("cond_estela_camara")
 				elif trail < Photo.TRAIL: why = Texts.get_text("cond_estela_corta") % [trail,roundi(1.0/e.t)]
 				text_value = Texts.get_text("cond_estela") % why
+			"estrella":
+				var points: int = e.get("lights",[]).size()
+				ok = e.n >= 10.9 and points > 0
+				var why = Texts.get_text("cond_estrella_ok") % [star_number(e.n),points]
+				if points == 0: why = Texts.get_text("cond_estrella_sin_luz")
+				elif e.n < 10.9: why = Texts.get_text("cond_estrella_abierto") % star_number(e.n)
+				text_value = Texts.get_text("cond_estrella") % why
+			"pulso":
+				var slowest = int(cond[key])
+				ok = 1.0/e.t >= slowest-.5
+				text_value = Texts.get_text("cond_pulso") % (Texts.get_text("cond_pulso_ok") % roundi(1.0/e.t) if ok else Texts.get_text("cond_pulso_lento") % [roundi(1.0/e.t),slowest])
+			"quieto":
+				var side: float = e.get("motion_sign",1.0)
+				if side == 0.0: side = 1.0
+				var moved: float = absf(e.v*side-e.get("camera_omega",0.0)*e.d)*e.t*e.f/e.d
+				ok = moved <= Photo.C
+				text_value = Texts.get_text("cond_quieto") % (Texts.get_text("cond_quieto_ok") if ok else Texts.get_text("cond_quieto_movido") % roundi(1.0/e.t))
 			"barrido":
 				# A pan (docs/futuro/11 §1): the camera follows a runner, who stays sharp while the
 				# background streaks. Same thresholds as Photography.evaluate().
@@ -184,9 +207,13 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 		out.append({"key":key,"ok":ok,"text":text_value})
 	return out
 
+static func star_number(n: float) -> String:
+	return ("%.0f" % n) if is_equal_approx(n,roundf(n)) else str(n)
+
 # Short label of a condition for the briefing and the HUD list.
 static func describe(key: String, value) -> String:
 	match key:
+		"pulso": return Texts.get_text("cond_corta_pulso") % int(value)
 		"acompanado": return Texts.get_text("cond_corta_acompanado") % int(value)
 		"grande": return Texts.get_text("cond_corta_grande") % roundi(float(value)*100)
 		"focal_min": return Texts.get_text("cond_corta_focal_min") % float(value)

@@ -76,7 +76,7 @@ func _initialize() -> void:
 	var asked = {}
 	for l in Arcade.LEVELS:
 		for key in l.cond: asked[key] = true
-	for key in ["ojos","aislado","acompanado","grande","focal_min","focal_max","aire","aurea","fondo","nitido","congelado","barrido","estela","exposicion","contraluz","silueta","lugar","actividad","perro"]:
+	for key in ["ojos","aislado","acompanado","grande","focal_min","focal_max","aire","aurea","fondo","nitido","congelado","barrido","estela","exposicion","contraluz","silueta","lugar","actividad","perro","estrella","pulso","quieto"]:
 		check(asked.has(key),"Some level asks for «%s»" % key)
 	# Conditions.
 	# The new ones (06-10-2026).
@@ -106,6 +106,15 @@ func _initialize() -> void:
 	check(shaded.reason.contains("sombra") and not Conditions.judge(evidence(sun.merged({"backlight":.1,"t":1.0/60},true)),{"contraluz":true}).reason.contains("sombra"),"Facing the sun with the subject in the shade says so, not «the sun is not behind»")
 	# «Exposición clavada» is judged against what the meter read (10-10-2026).
 	check(Conditions.check(evidence({"scene_ev":14.5,"metered":14.0,"n":8.0,"t":1.0/250,"iso":100}),{"exposicion":true})[0].ok and not Conditions.check(evidence({"scene_ev":14.0,"metered":14.5,"n":8.0,"t":1.0/250,"iso":100}),{"exposicion":true})[0].ok,"The exposure to a quarter of a stop is measured from the meter's zero")
+	# The night as a challenge (13-10-2026): the lights as stars at f/11, the hand taken as steady
+	# from 1/30 s, and a person who does not come out moved.
+	var night = {"f":50.0,"n":11.0,"t":1.0/30,"iso":3200,"scene_ev":6.8,"v":0.0,"lights":[Vector2(.6,.3)]}
+	var starry = Conditions.judge(evidence(night),{"estrella":true,"pulso":30,"quieto":true})
+	check(not starry.rejected and is_equal_approx(starry.movement,1.0),"A still person at f/11 and 1/30 s with a light in the frame: accepted, and the hand counts as steady (%s)" % str(starry.get("reason","")))
+	check(Conditions.judge(evidence(night.merged({"n":8.0},true)),{"estrella":true}).rejected and Conditions.judge(evidence(night.merged({"lights":[]},true)),{"estrella":true}).rejected,"No star wider than f/11, nor without a light in the frame")
+	check(Conditions.judge(evidence(night.merged({"t":1.0/15},true)),{"pulso":30}).rejected and preload("res://scripts/photography.gd").evaluate(evidence(night)).movement < 1.0,"Slower than 1/30 s is rejected; without the level's leave, 1/30 s at 50 mm costs marks")
+	check(Conditions.judge(evidence(night.merged({"v":.45,"d":6.0},true)),{"quieto":true}).rejected and not Conditions.judge(evidence(night.merged({"v":.45,"d":6.0,"t":1.0/500},true)),{"quieto":true}).rejected,"Somebody walking comes out moved at 1/30 s (and would not at 1/500 s)")
+	check(Arcade.LEVELS[19].get("target","") == "anyone" and int(Arcade.LEVELS[19].limit) == 0 and Arcade.LEVELS[19].cond.has("estrella") and not Arcade.LEVELS[19].cond.has("aislado"),"Level 20 is that challenge: anybody, no clock")
 	var dark = Conditions.judge(evidence(sun.merged({"t":1.0/1000},true)),{"silueta":true})
 	check(not dark.rejected and dark.exposure > .9,"Silhouette: two stops under the meter")
 	check(Conditions.judge(evidence(sun.merged({"t":1.0/60},true)),{"silueta":true}).rejected and Conditions.judge(evidence(sun),{"silueta":true}).rejected,"…not at the meter's reading, nor over it")

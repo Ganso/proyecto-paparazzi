@@ -197,7 +197,7 @@ func draw_compression() -> void:
 func draw_stars() -> void:
 	var m = academy.main
 	var n: float = m.aperture_value()
-	var now = clampf((n-8.0)/14.0,0.0,1.0)
+	var now = Photo.star(n)
 	var f_number = func(value: float) -> String: return ("%.0f" % value) if is_equal_approx(value,roundf(value)) else str(value)
 	txt(Vector2(8,16),Texts.get_text("esquema_estrellas") % [f_number.call(n),Texts.get_text("esquema_estrellas_si" if now > 0.0 else "esquema_estrellas_no")],11,ink)
 	var sky = Rect2(8,24,size.x-16,size.y-30)
@@ -209,7 +209,7 @@ func draw_stars() -> void:
 	var cell = sky.size.x/stops.size()
 	for k in stops.size():
 		var centre = Vector2(sky.position.x+cell*(k+.5),sky.position.y+sky.size.y*.42)
-		var star = clampf((stops[k]-8.0)/14.0,0.0,1.0)
+		var star = Photo.star(stops[k])
 		# The post, and the lamp's glow: wide and soft when open, tight once closed.
 		draw_line(centre+Vector2(0,6),Vector2(centre.x,sky.end.y-14),Color(.25,.32,.4),2)
 		var halo = lerpf(17.0,7.0,star)
