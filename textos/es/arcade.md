@@ -666,7 +666,7 @@ Noche de estrellas
 
 ### arcade_nivel_20_texto · encargo
 > máximo 220 caracteres
-Cierra a f/11 y las luces del parque se vuelven estrellas. De noche eso pide ISO 3200 y 1/30 s: Más lento de lo que aguanta un 50 mm, así que contén la respiración. Y busca a alguien quieto: Quien camina sale movido.
+Cierra a f/11 o más y las luces serán estrellas. Consigue 1/30 s o más rápido: Tendrás que jugar con el parámetro que te sobra. Es más lento de lo que aguanta un 50 mm: Contén la respiración y busca a alguien quieto.
 
 ## Nivel 21 · A la cintura
 

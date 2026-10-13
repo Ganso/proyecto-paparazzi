@@ -208,6 +208,7 @@ Resultado: en las 30 auditorías, **todas las muestras válidas quedan al alcanc
 
 Encargo del usuario: una foto nocturna a **f/11**, «con la excusa de la estrella»; obliga a subir a **ISO 3200** y se valida con **1/30 s como muy lento**, algo más allá de lo que aguanta un 50 mm a pulso («dile que contenga la respiración»). Vale **cualquier persona**, con tal de que salga nítida; **sin límite de tiempo**, porque hay que encontrar a alguien quieto.
 
+- **El encargo no dice qué ISO hace falta** (usuario, 13-10-2026): pide f/11 o más cerrado y 1/30 s o más rápido, «así que tendrás que jugar con el parámetro que te sobra». Que hay que subir a ISO 3200 lo descubre el jugador.
 - **Sin sujeto asignado** (`target: "anyone"`, `main.gd::anyone_level()`): el encargo no describe a nadie (el retrato deja sitio a un cartel, «Tú eliges a quién») y la foto es de quien esté encuadrado al disparar (`framed_person()`: la persona bajo el punto de enfoque o la más cercana al centro). Sin nadie en el encuadre, se rechaza («No hay nadie en la foto»).
 - **Tres condiciones nuevas** (`conditions.gd`, 22 en total):
   - `estrella`: f/11 o más cerrado y al menos una luz puntual en el encuadre (`evidence.lights`).
