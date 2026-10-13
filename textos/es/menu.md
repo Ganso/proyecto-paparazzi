@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.5.3 · EN DESARROLLO
+VERSIÓN ALFA 0.5.4 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -394,6 +394,10 @@ Arcade repasado nivel a nivel: Ningún encargo pide lo que su cámara, su luz o 
 ### novedades_0_5_3_3 · Novedades de la versión 0.5.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 El barrido pasa a la hora dorada, la estela a la hora azul y el retrato con la TLR al atardecer: Cada foto, con su luz.
+
+### novedades_0_5_4_1 · Novedades de la versión 0.5.4 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Enfoque manual como en una cámara de verdad: Quien cruza por delante sale partido en el visor y lo que tenías enfocado no cambia.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres
