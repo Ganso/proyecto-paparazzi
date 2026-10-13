@@ -159,3 +159,42 @@ Para reproducir: sesión libre, TLR (`equipment.preset(3)`), `sandbox_paused = t
 11. **Abandonar la idea correcta al primer rechazo.** El intento 3 hacía lo que pedía y lo tiré entero porque se veía mal, para volver a un único desplazamiento que no podía cumplirlo. *Si rechaza el aspecto de algo que hace lo que pide, se arregla el aspecto; no se cambia de idea.*
 12. **Pensar en «una lectura» donde había «una imagen».** Todo el código existente trata la imagen partida como un indicador (¿está enfocado lo que hay debajo?) y heredé ese marco sin cuestionarlo; por eso mis arreglos discutían *qué* leer. *Antes de arreglar, preguntarse qué representa la cosa en el mundo real y si el código la modela así.*
 
+---
+
+## 8. La escena de análisis (13-10-2026)
+
+A petición del usuario se montó una escena fija y se grabó: TLR, todos quietos, foco en una persona del fondo (10,8 m), y otra que cruza por delante a 7 m, de derecha a izquierda de la pantalla. Herramienta: `tools/capture_split_image.gd` (graba con `--write-movie`). Evidencias: [`cruce_tlr_comparacion.mp4`](../evidencias/imagen_partida/cruce_tlr_comparacion.mp4) y [`.jpg`](../evidencias/imagen_partida/cruce_tlr_comparacion.jpg) (tres filas, cinco momentos).
+
+### Lo que se ve con el juego actual (fila 1)
+
+- Antes de que entre nadie, el sujeto del fondo está alineado (desplazamiento −0,0003).
+- **En cuanto quien cruza roza el borde derecho del círculo** (su pecho aún a 39 px del centro, con la zona de ±45 px), uno de los cinco rayos la toca, manda «la persona más cercana» y el desplazamiento pasa a −0,016 en una décima de segundo: **el sujeto del fondo sale partido** aunque nadie ha tocado el anillo.
+- Sigue partido durante los 90 fotogramas (1,5 s) que tarda en cruzar, y vuelve a alinearse cuando el último rayo deja de tocarla.
+- La etiqueta dice «foco alineado» todo el rato (10,8 m cae dentro de la profundidad de campo a f/8), con la imagen partida diciendo lo contrario.
+
+Es, fotograma a fotograma, la queja del usuario.
+
+### Por qué el intento por píxel se veía «horrible» (fila 2)
+
+El sujeto del fondo **sí se queda alineado** durante todo el cruce: la idea funciona. Lo feo era el dibujo:
+
+1. **Motas** blancas y oscuras en todos los bordes: la búsqueda probaba 32 desplazamientos y aceptaba el que «casi» casaba; en los saltos de profundidad cada píxel elegía una cosa distinta.
+2. **Cosas duplicadas** (dos manos, el brazo dos veces): donde lo desplazado deja su sitio se pintaba la imagen sin desplazar, así que el objeto salía en su sitio y además desplazado.
+3. **Astillas de la farola**: hay una farola a 2,6 m rozando el círculo por la derecha. Su trocito de dentro se desplaza el máximo (0,06 del ancho, 86 px, más que el radio de la zona) y aparece como una raya vertical oscura en mitad del círculo.
+4. Contornos dentados.
+
+### La misma idea con el dibujo rehecho (fila 3, prueba en una copia aparte, no está en el juego)
+
+Buscando el punto exacto donde «el desplazamiento de lo que hay ahí» iguala «lo lejos que está» (con 128 muestras e interpolación), eligiendo la superficie más cercana y rellenando los huecos con el fondo contiguo: desaparecen las motas y los duplicados; el sujeto sigue alineado y quien cruza sale partida. **Quedan dos defectos que no son de programación sino de fondo:**
+
+- **Huecos.** Al desplazarse quien cruza deja al descubierto lo que tenía detrás, y eso no está en la imagen: se rellena estirando el fondo, y salen rayas verticales. Deformar una sola imagen no puede inventar lo que no se ve.
+- **Lo muy cercano.** Con la escala del juego (0,006 × focal por dioptría) algo a 2,6 m con el foco a 10,8 m se desplaza más que el tamaño de la zona. Si se deja entrar lo de fuera, media zona queda tapada por la farola; si no, queda su astilla.
+
+### Conclusiones
+
+1. El fallo está confirmado y medido: un rayo de cinco decide el desplazamiento de toda la zona.
+2. La idea por píxel es la correcta (cumple «el fondo no cambia»), y lo «horrible» tiene causas concretas, tres de ellas corregibles.
+3. **Deformando una sola imagen no se llega a un resultado limpio**: los huecos son inevitables. Una imagen partida de verdad no deforma nada: **cada mitad mira la escena desde un lado distinto del objetivo**, y por eso lo enfocado coincide y lo demás no. El camino limpio es ese: **dibujar la zona dos veces, desde dos puntos de vista ligeramente separados que convergen en la distancia enfocada**. No hay huecos (cada vista ve de verdad lo que hay detrás), el aspecto es el del propio juego, y con toda la zona a una distancia el resultado es el desplazamiento uniforme de la 0.5.3.
+4. Pendiente de decidir con el usuario antes de programarlo: **qué se hace con lo muy desenfocado y cercano** (la farola a 2,6 m). Opciones: reducir la escala para que nada se desplace más que el radio de la zona; o atenuar lo que esté muy lejos del plano enfocado, como pasa en una cámara real, donde eso se ve como una mancha y no como un objeto nítido.
+5. Coste a medir: dos vistas extra de una zona muy pequeña (unos 100 px de lado a 810 de alto), solo en enfoque manual y con la cámara en el ojo. Hay que comprobar que la luz indirecta (SDFGI) no encarece esas vistas ni les cambia el tono respecto al resto del visor.
+
