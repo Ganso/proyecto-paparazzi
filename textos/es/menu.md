@@ -118,7 +118,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.5.4 · EN DESARROLLO
+VERSIÓN ALFA 0.5.5 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -398,6 +398,18 @@ El barrido pasa a la hora dorada, la estela a la hora azul y el retrato con la T
 ### novedades_0_5_4_1 · Novedades de la versión 0.5.4 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
 Enfoque manual como en una cámara de verdad: Quien cruza por delante sale partido en el visor y lo que tenías enfocado no cambia.
+
+### novedades_0_5_5_1 · Novedades de la versión 0.5.5 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Estrellas de noche: Cierra el diafragma a f/11 o más y las farolas y las bombillas del quiosco salen como estrellas en la foto.
+
+### novedades_0_5_5_2 · Novedades de la versión 0.5.5 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Arcade: El nivel 20 es ahora «Noche de estrellas», un desafío nocturno a pulso en el que tú eliges a quién fotografiar.
+
+### novedades_0_5_5_3 · Novedades de la versión 0.5.5 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Academia: La lección de la profundidad de campo termina con una página sobre las estrellas de las farolas.
 
 ### menu_version_nueva · Botón del menú cuando itch.io tiene una versión posterior (326 px a 15 px: unos 36 caracteres con la versión)
 > máximo 40 caracteres
