@@ -43,7 +43,7 @@ const SETUP = {
 		"pages":["triangulo","pasos_n","pasos_t","pasos_iso","pasos","pasos"],"practice_diagram":"pasos"},
 	# Aperture priority: the lesson is the aperture, the camera keeps the light right.
 	"dof": {"time":"day","cover":1.0,"body":2,"lens":4,"focal":105.0,"auto":true,"mode":"A","focus":"AF puntual","angle":118.0,"pitch":-2.0,"n":1.8,
-		"pages":["dof","dof","dof","dof"],"practice_diagram":"dof"},
+		"pages":["dof","dof","dof","dof","estrellas"],"practice_diagram":"dof","page_do":["volver","volver","volver","volver","estrellas"]},
 	# Shutter priority, and the camera keeps the runner in focus: the lesson is the shutter speed.
 	"movimiento": {"time":"day","cover":0.5,"body":2,"lens":0,"focal":50.0,"auto":true,"mode":"S","focus":"AF puntual","angle":70.0,"pitch":-4.0,"t":250,
 		"pages":["movimiento","movimiento","movimiento","pasos","movimiento"],"practice_diagram":"movimiento"},
@@ -58,7 +58,7 @@ const SETUP = {
 		"pages":["","","","","",""],"practice_diagram":"","page_do":["body:0","body:0","body:1","body:2","body:3","body:0"]},
 }
 const SPOT_LESSONS = {"exposicion":"puntual"}
-const THEORY_PAGES = {"composicion":5, "enfoque":4, "focal":4, "exposicion":6, "dof":4, "movimiento":5, "medicion":5, "modos":5, "objetivos":4, "camaras":6}
+const THEORY_PAGES = {"composicion":5, "enfoque":4, "focal":4, "exposicion":6, "dof":5, "movimiento":5, "medicion":5, "modos":5, "objetivos":4, "camaras":6}
 # Lessons whose practice and exam put choices on the panel (lenses, bodies, metering, modes).
 const CHOICES = {
 	"focal": [["academia_op_28","lens:3:28"],["academia_op_135","lens:5:135"]],
@@ -457,7 +457,7 @@ func go_back() -> void:
 func theory_highlight() -> String:
 	match kind:
 		"exposicion": return ["exposimetro","diafragma","velocidad","iso","",""][page]
-		"dof": return ["nitidez","diafragma","zoom","nitidez"][page]
+		"dof": return ["nitidez","diafragma","zoom","nitidez","diafragma"][page]
 		"movimiento": return ["velocidad","","velocidad","diafragma","velocidad"][page]
 		"objetivos": return ["zoom","zoom","diafragma","velocidad"][page]
 		"modos": return ["","","diafragma","velocidad","exposimetro"][page]
@@ -825,6 +825,24 @@ func do_action(action: String, _from_page = false) -> void:
 			if subject: frame_goal = {"who":subject,"x":lead_x(subject),"y":1.0/3.0,"lead":true}
 		"t_set":
 			set_shutter(int(parts[1]))
+		"volver":
+			# Back from a page that changed the lens or the light: the lesson's own setup again.
+			if main.equipment.lens_index != SETUP[kind].lens or main.time_of_day != SETUP[kind].time:
+				var here = page_applied
+				apply_setup()
+				page_applied = here
+		"estrellas":
+			# The diaphragm's other trick (last theory page of the lesson on depth of field): at
+			# night, with two lamps in the frame and the aperture closed, each lamp is a star.
+			main.preview_time("night")
+			set_lens(0,35.0)
+			main.angle = 66.0
+			main.pitch = 7.0
+			main.n_index = maxi(0,main.apertures().find(16.0))
+			main.update_camera()
+			main.update_meter()
+			if main.equipment.auto_exposure: main.auto_expose()
+			main.refresh()
 		"noche":
 			# When to overrule the meter: a night scene, compensated down so it stays dark.
 			main.preview_time("night")

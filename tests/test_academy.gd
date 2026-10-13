@@ -367,6 +367,19 @@ func run() -> void:
 	exam_buttons = game.modal.find_children("*","Button",true,false).filter(func(b): return b.text == Texts.get_text("academia_examen_boton"))
 	check(exam_buttons.filter(func(b): return not b.disabled).size() == 1,"…and it opens once the theory has been read")
 	check(game.modal.find_children("*","Button",true,false).filter(func(l): return l.text == Texts.get_text("academia_proximamente")).size() == 5 and not game.modal.find_children("*","ScrollContainer",true,false).is_empty(),"Five lessons to come close the list, which scrolls")
+	# The last theory page of the lesson on depth of field: the stars the closed diaphragm makes of
+	# the lamps at night. It changes the light and the lens, and going back restores the lesson's.
+	academy.begin(L.call("dof"),"teoria")
+	for i in 3: await process_frame
+	for i in 4: academy.go_next()
+	for i in 3: await process_frame
+	check(academy.THEORY_PAGES["dof"] == 5 and academy.page == 4 and academy.diagram.kind == "estrellas","The lesson on depth of field ends its theory with the page on the lamps' stars")
+	check(str(game.time_of_day) == "night" and game.aperture_value() == 16.0 and game.equipment.lens_index == 0,"…at night, with the diaphragm closed to f/16 (%s, f/%s)" % [str(game.time_of_day),str(game.aperture_value())])
+	check(Texts.get_text("academia_dof_t5_titulo") != "academia_dof_t5_titulo" and Texts.get_text("esquema_estrellas_si") != "esquema_estrellas_si","…with its texts")
+	academy.go_back()
+	for i in 3: await process_frame
+	check(str(game.time_of_day) == str(academy.SETUP["dof"].time) and game.equipment.lens_index == academy.SETUP["dof"].lens and game.aperture_value() == 1.8,"Going back a page restores the lesson's light, lens and aperture")
+	academy.stop()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_PROGRESS))
 	print("ACADEMY TESTS: %d checks, %d failures" % [checks,failures])
 	quit(0 if failures == 0 else 1)

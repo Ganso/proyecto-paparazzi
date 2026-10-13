@@ -187,6 +187,18 @@ f/%s · %.0f mm · zona nítida: %s
 ### esquema_infinito
 hasta el infinito
 
+### esquema_estrellas
+f/%s · %s
+
+### esquema_estrellas_no
+La farola es una mancha redonda
+
+### esquema_estrellas_si
+La farola es una estrella
+
+### esquema_estrellas_paso
+f/%s
+
 ### esquema_corredor
 Corredor a %.1f m/s, a %.0f m · 1/%d s
 
@@ -874,6 +886,14 @@ Tiene dos cómplices: La focal y la distancia. Un teleobjetivo a 4 m aísla a un
 ### academia_dof_t4_texto · teoría 4 · texto
 > máximo 240 caracteres
 Aquí hay truco: Nítido del todo solo hay un plano. Lo demás son puntos que se van agrandando. Mientras midan menos de 0,03 mm en el negativo, el ojo se lo traga. Ese límite es el círculo de confusión, y con él se calcula la franja.
+
+### academia_dof_t5_titulo · teoría 5 · título
+> máximo 30 caracteres
+Las estrellas de las farolas
+
+### academia_dof_t5_texto · teoría 5 · texto
+> máximo 240 caracteres
+De noche el diafragma hace otro truco. Abierto, cada farola es una mancha redonda. Cerrado (f/11, f/16), sus láminas la convierten en una estrella, más larga cuanto más cierras. Sale en la foto: El visor mira con el diafragma abierto.
 
 ### academia_dof_d1 · demostración · subtítulo 1
 > máximo 110 caracteres

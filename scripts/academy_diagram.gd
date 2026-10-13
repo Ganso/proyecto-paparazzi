@@ -7,6 +7,7 @@ extends Control
 #   movimiento the trail a runner leaves in the photo at the current shutter speed
 #   tercios    frame with the thirds, crossings and lead room
 #   compresion side view: what a 28 mm near and a 135 mm far see behind the subject
+#   estrellas  a lamp at night at three apertures: a round glow wide open, a star once closed
 const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
 var academy
@@ -41,6 +42,7 @@ func _draw() -> void:
 		"movimiento": draw_motion()
 		"tercios": draw_thirds()
 		"compresion": draw_compression()
+		"estrellas": draw_stars()
 
 func needle_color(delta: float) -> Color:
 	return green if absf(delta) <= .34 else amber
@@ -189,3 +191,38 @@ func draw_compression() -> void:
 	var d_tree = (tree_x-cam_x)/20.0
 	txt(Vector2(8,14),Texts.get_text("esquema_arbol") % [m.focal,(4.0/d_tree)/(1.7/d_subject) if d_tree > 0 else 0.0],10,ink)
 	txt(Vector2(8,28),Texts.get_text("esquema_tele") if tele else Texts.get_text("esquema_angular"),11,green)
+
+# A lamp at night as the photo shows it at f/2.8, f/11 and f/22 (the star grows as the developed
+# photo's does: main.gd::photo_material()), with the one nearest to the aperture in hand framed.
+func draw_stars() -> void:
+	var m = academy.main
+	var n: float = m.aperture_value()
+	var now = clampf((n-8.0)/14.0,0.0,1.0)
+	var f_number = func(value: float) -> String: return ("%.0f" % value) if is_equal_approx(value,roundf(value)) else str(value)
+	txt(Vector2(8,16),Texts.get_text("esquema_estrellas") % [f_number.call(n),Texts.get_text("esquema_estrellas_si" if now > 0.0 else "esquema_estrellas_no")],11,ink)
+	var sky = Rect2(8,24,size.x-16,size.y-30)
+	draw_rect(sky,Color("0c1724"))
+	var stops = [2.8,11.0,22.0]
+	var nearest = 0
+	for k in stops.size():
+		if absf(log(n/stops[k])) < absf(log(n/stops[nearest])): nearest = k
+	var cell = sky.size.x/stops.size()
+	for k in stops.size():
+		var centre = Vector2(sky.position.x+cell*(k+.5),sky.position.y+sky.size.y*.42)
+		var star = clampf((stops[k]-8.0)/14.0,0.0,1.0)
+		# The post, and the lamp's glow: wide and soft when open, tight once closed.
+		draw_line(centre+Vector2(0,6),Vector2(centre.x,sky.end.y-14),Color(.25,.32,.4),2)
+		var halo = lerpf(17.0,7.0,star)
+		for ring in 6:
+			draw_circle(centre,halo*(1.0-ring/6.0),Color(1.0,.86,.55,.10+.05*ring))
+		draw_circle(centre,3.0,Color(1.0,.97,.86))
+		# Six points: three lines through the light, by the edges of the diaphragm's blades.
+		for line in 3:
+			var along = Vector2.from_angle(.26+line*PI/3.0)
+			var reach = 34.0*star
+			if reach > 0.5:
+				draw_line(centre-along*reach,centre+along*reach,Color(1.0,.9,.7,.35),2.4)
+				draw_line(centre-along*reach*.6,centre+along*reach*.6,Color(1.0,.95,.82,.9),1.2)
+		txt(Vector2(centre.x-16,sky.end.y-3),Texts.get_text("esquema_estrellas_paso") % f_number.call(stops[k]),10,Color(.85,.9,.95))
+		if k == nearest: draw_rect(Rect2(sky.position.x+cell*k+3,sky.position.y+3,cell-6,sky.size.y-6),Color(.35,.75,1.0,.9),false,1.5)
+

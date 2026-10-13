@@ -221,3 +221,14 @@ Las cinco lecciones se reescribieron para **enseñar fotografía como Jaime Alto
 - **Páginas nuevas**: «Cómo funciona la Academia» (primera de la primera lección), «Luego romperemos las normas» (exposición), «Cuándo llevarle la contraria» (medición: escena nocturna compensada a −1,3 EV, acción `noche`) e «Y hay muchas más» (cámaras: móviles y CSC).
 - **Menú**: lista con desplazamiento; primero «Empezar/Repasar» y luego «Examinarme», que no se activa hasta haber leído la teoría; cinco lecciones «Próximamente» (macro, retrato, naturaleza, urbana, otras normas de composición) y «Y mucho más…».
 - **Informe del tutor** del examen: en blanco sobre un marco celeste.
+
+## Las estrellas de las farolas: una página más en la teoría de la apertura (13-10-2026, usuario)
+
+La lección 5 («La profundidad de campo», la de la apertura) termina su teoría con una **quinta página, «Las estrellas de las farolas»**: de noche, abierto, cada farola es una mancha redonda; cerrado (f/11, f/16), las láminas del diafragma la convierten en una estrella, más larga cuanto más se cierra. Es el efecto que el revelado ya hacía desde la 0.5.0 ([SIMULACION_FOTOGRAFICA §9.5](../SIMULACION_FOTOGRAFICA.md)) y que ninguna lección contaba.
+
+- **La página pone la escena**: acción `estrellas` (`academy.gd::do_action()`): noche, el zoom a 35 mm mirando a una farola (66°) y el diafragma a f/16. Las cuatro páginas anteriores llevan la acción `volver`, que restaura la luz, el objetivo y la abertura de la lección si se vuelve atrás.
+- **El esquema `estrellas`** (`academy_diagram.gd::draw_stars()`): la misma farola a f/2,8, f/11 y f/22, con la estrella creciendo como en la foto revelada (misma fórmula que `main.gd::photo_material()`), y enmarcada la más cercana al diafragma que el jugador lleva puesto. Al girar el diafragma cambian el marco y el rótulo («La farola es una mancha redonda» / «La farola es una estrella»).
+- **El texto avisa de que sale en la foto y no en el visor**: una réflex mira con el diafragma abierto, y así es también en el juego.
+- No se examina ni se pide en la práctica: es teoría que invita a probarlo. Queda como idea para un nivel o un desafío ([05](05_DESAFIOS_Y_MODOS_JUEGO.md)).
+- Textos `academia_dof_t5_titulo`, `academia_dof_t5_texto` y `esquema_estrellas*` en `textos/es/academia.md`. Pruebas: `tests/test_academy.gd` (la página, su escena y la vuelta atrás) y la lección jugada entera (`tests/test_academy_play.gd -- --only=5`). Evidencia: [`dof_teoria_5_estrellas.jpg`](../evidencias/academia/dof_teoria_5_estrellas.jpg).
+
