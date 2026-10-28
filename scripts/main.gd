@@ -426,6 +426,8 @@ func _ready() -> void:
 		equipment.preset(int(parts[0]))
 		equipment.lens_index = int(parts[1]) if parts.size() > 1 else 0
 		if "--manual" in OS.get_cmdline_user_args(): equipment.auto_exposure = false
+		# Capture helper: manual focus on a body that has autofocus (the SLR's split image on video).
+		if "--mf" in OS.get_cmdline_user_args(): equipment.focus_mode = "MF"
 	if smoke or screenshot_path != "" or run_metrics or not demo.is_empty() or not photo_walk.is_empty():
 		# With --level the level already set scenario, light and equipment: just enter it.
 		if arcade_level < 0: start_session(start_time_of_day,bool(pending_start.get("sandbox_demo",false)))

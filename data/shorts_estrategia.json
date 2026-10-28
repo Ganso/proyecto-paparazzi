@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "photohacks",
-  "last_updated": "2026-10-27T14:22:13.582307+00:00",
+  "last_updated": "2026-10-28",
   "next_episode": 2,
   "episodes": [
     {
@@ -33,17 +33,17 @@
     },
     {
       "id": 2,
-      "slug": "congelar_barrido",
-      "status": "pendiente",
+      "slug": "barrido",
+      "status": "listo",
       "youtube_url": null,
-      "video_file": "/home/ganso/codigo/afotando/build/video/short_congelar_barrido.mp4",
-      "title": "Congelar movimiento vs Barrido de velocidad en 15s #shorts #fotografia",
-      "preview_text": "1/1000s vs 1/15s",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_barrido.mp4",
+      "title": "El barrido: el corredor nítido y el fondo en movimiento #shorts #fotografia",
+      "preview_text": "1/30 s + giro",
       "related_video": "PhotoHacks - v0.3.0 alfa",
       "related_video_id": "NrxNwn-OvMU",
       "tag_pill": "[ // VELOCIDAD DE OBTURACIÓN // ]",
-      "headline": "CONGELAR VS BARRIDO DE ACCIÓN",
-      "subline": "1/1000s en el aire vs 1/15s con estelas de velocidad",
+      "headline": "EL BARRIDO: SIGUE AL CORREDOR",
+      "subline": "1/30 s y la cámara acompañando su paso",
       "primary_neon": [
         0,
         210,
@@ -54,25 +54,82 @@
         119,
         0
       ],
-      "tags": "shorts, fotografia, deportes, velocidad, barrido, camara, photohacks, trucos, tutorial",
-      "description": "¿Cómo capturar la velocidad sin que la foto salga borrosa?\n\nDos técnicas opuestas explicadas en 15 segundos:\n1. 1/1000s: Congela al corredor suspendido en el aire con nitidez absoluta.\n2. 1/15s con seguimiento (barrido): La cámara acompaña al sujeto; el fondo se estira en líneas de velocidad mientras el corredor queda nítido.\n\nPractica con cámara réflex y controles manuales en PhotoHacks:\nWeb: https://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #deportes #barrido #camara #photohacks"
+      "tags": "shorts, fotografia, barrido, velocidad de obturacion, fotografia deportiva, aprender fotografia, camara, photohacks, juego",
+      "description": "¿Cómo se consigue una foto con el corredor nítido y el fondo convertido en rayas de velocidad?\n\nEs el barrido:\n- Una velocidad lenta, como 1/30 s.\n- Giras la cámara siguiendo a quien corre, también mientras disparas.\n- Él sale nítido porque se mueve con la cámara; el fondo, arrastrado.\n\nPhotoHacks es un juego gratuito para aprender fotografía haciendo fotos, con óptica real:\nhttps://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #barrido",
+      "sub_color": [
+        255,
+        200,
+        0
+      ],
+      "takes": {
+        "barrido": {
+          "secs": 14,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--level=26",
+            "--interface=camara",
+            "--focal=85",
+            "--follow-target",
+            "--pan-shot",
+            "--shutter=30",
+            "--shoot-at=6"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "barrido",
+          "ss": 0.3,
+          "t": 5.6,
+          "labels": [
+            [
+              0,
+              2.8,
+              "MANTÉN EL GIRO HACIA DONDE CORRE"
+            ],
+            [
+              2.8,
+              5.6,
+              "1/30 s · LA CÁMARA LE SIGUE EL PASO"
+            ]
+          ]
+        },
+        {
+          "take": "barrido",
+          "ss": 7.0,
+          "t": 6.5,
+          "crop": "844:475:27:126",
+          "labels": [
+            [
+              0,
+              6.5,
+              "ÉL, NÍTIDO · EL FONDO, ARRASTRADO"
+            ]
+          ]
+        }
+      ],
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ]
     },
     {
       "id": 3,
       "slug": "estrellas_farolas",
-      "status": "pendiente",
+      "status": "listo",
       "youtube_url": null,
       "video_file": "/home/ganso/codigo/afotando/build/video/short_estrellas_farolas.mp4",
-      "title": "El truco para convertir farolas en estrellas de noche #shorts #fotografia",
-      "preview_text": "f/2.8 vs f/22",
+      "title": "El truco para convertir las farolas en estrellas #shorts #fotografia",
+      "preview_text": "f/2.8 vs f/16",
       "related_video": "PhotoHacks - v0.3.0 alfa",
       "related_video_id": "NrxNwn-OvMU",
       "tag_pill": "[ // DIFRACCIÓN ÓPTICA DE NOCHE // ]",
-      "headline": "CONVIERTE FAROLAS EN ESTRELLAS",
-      "subline": "Cierra a f/16 o f/22 · Física óptica real sin filtros",
+      "headline": "CONVIERTE LAS FAROLAS EN ESTRELLAS",
+      "subline": "Cierra el diafragma a f/11 o más · óptica real",
       "primary_neon": [
         255,
-        220,
+        200,
         0
       ],
       "accent_neon": [
@@ -80,22 +137,107 @@
         210,
         255
       ],
-      "tags": "shorts, fotografia, nocturna, trucos, estrellas, camara, photohacks, tutorial",
-      "description": "¿Cómo sacan los fotógrafos esas estrellas perfectas en las luces de noche?\n\nNo es un filtro de Photoshop ni una lente especial: es física óptica pura.\nAl cerrar el diafragma a f/16 o f/22, la luz se difracta en las aristas de las palas del objetivo, transformando cada farola en una estrella resplandeciente.\n\nSimulado al milímetro en PhotoHacks:\nWeb: https://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #nocturna #trucos #estrellas #camara #photohacks"
+      "tags": "shorts, fotografia, fotografia nocturna, diafragma, estrellas, farolas, aprender fotografia, photohacks, juego",
+      "description": "¿Cómo salen esas estrellas en las farolas de las fotos nocturnas?\n\nNo hace falta ningún filtro: Es el diafragma.\n- Abierto (f/2.8), cada luz es una mancha redonda.\n- Cerrado (f/11, f/16), las láminas del diafragma la convierten en una estrella, más larga cuanto más cierras.\n\nPhotoHacks es un juego gratuito para aprender fotografía haciendo fotos, con óptica real:\nhttps://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #fotografianocturna",
+      "sub_color": [
+        0,
+        210,
+        255
+      ],
+      "takes": {
+        "abierto": {
+          "secs": 6,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--sandbox",
+            "--time=night",
+            "--stage=sentado",
+            "--activity=movil",
+            "--lens=2,3",
+            "--focal=28",
+            "--angle=125",
+            "--pitch=4",
+            "--aperture-sweep",
+            "--shoot-at=0.6"
+          ]
+        },
+        "cerrando": {
+          "secs": 19,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--sandbox",
+            "--time=night",
+            "--stage=sentado",
+            "--activity=movil",
+            "--lens=2,3",
+            "--focal=28",
+            "--angle=125",
+            "--pitch=4",
+            "--aperture-sweep",
+            "--shoot-at=13"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "abierto",
+          "ss": 1.6,
+          "t": 3.6,
+          "crop": "930:523:27:135",
+          "labels": [
+            [
+              0,
+              3.6,
+              "A f/2.8 · LAS FAROLAS, REDONDAS"
+            ]
+          ]
+        },
+        {
+          "take": "cerrando",
+          "ss": 1.0,
+          "t": 10,
+          "labels": [
+            [
+              0,
+              10,
+              "CERRANDO EL DIAFRAGMA…"
+            ]
+          ]
+        },
+        {
+          "take": "cerrando",
+          "ss": 13.8,
+          "t": 5,
+          "crop": "930:523:27:135",
+          "labels": [
+            [
+              0,
+              5,
+              "A f/16 · ¡ESTRELLAS!"
+            ]
+          ]
+        }
+      ],
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ]
     },
     {
       "id": 4,
       "slug": "compresion_focal",
-      "status": "pendiente",
+      "status": "listo",
       "youtube_url": null,
       "video_file": "/home/ganso/codigo/afotando/build/video/short_compresion_focal.mp4",
-      "title": "El zoom no solo acerca: aplasta el fondo (24mm vs 200mm) #shorts #fotografia",
-      "preview_text": "24mm vs 200mm",
+      "title": "El zoom no solo acerca: cambia el fondo (28 mm vs 135 mm) #shorts #fotografia",
+      "preview_text": "28mm vs 135mm",
       "related_video": "PhotoHacks - v0.3.0 alfa",
       "related_video_id": "NrxNwn-OvMU",
-      "tag_pill": "[ // DISTANCIA FOCAL & PERSPECTIVA // ]",
-      "headline": "EL ZOOM APLASTA LA PERSPECTIVA",
-      "subline": "24mm Angular vs 200mm Teleobjetivo comprimido",
+      "tag_pill": "[ // DISTANCIA FOCAL Y PERSPECTIVA // ]",
+      "headline": "EL TELE «APLASTA» EL FONDO",
+      "subline": "28 mm de cerca vs 135 mm de lejos",
       "primary_neon": [
         255,
         0,
@@ -106,22 +248,98 @@
         119,
         0
       ],
-      "tags": "shorts, fotografia, teleobjetivo, lentes, perspectiva, zoom, photohacks",
-      "description": "¿Pensabas que el zoom solo servía para no caminar?\n\nLa distancia focal cambia la relación de tamaño entre el sujeto y el fondo:\n- 24mm: Visión amplia, fondo diminuto y lejano.\n- 200mm dando pasos atrás: El fondo se 'aplasta' y se agiganta detrás del sujeto.\n\nExperiméntalo en tiempo real en 3D con PhotoHacks:\nWeb: https://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #teleobjetivo #lentes #perspectiva #photohacks"
+      "tags": "shorts, fotografia, distancia focal, perspectiva, teleobjetivo, gran angular, compresion, aprender fotografia, photohacks",
+      "description": "¿Pensabas que el zoom solo sirve para acercar?\n\nLa misma persona, del mismo tamaño en la foto, con dos objetivos:\n- Con un 28 mm hay que arrimarse: El fondo sale pequeño y lejano.\n- Con un 135 mm hay que alejarse: Los árboles salen enormes y pegados a su espalda.\n\nEl secreto no es la focal, sino dónde te pones. Aprende fotografía haciendo fotos con PhotoHacks, gratis:\nhttps://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #objetivos",
+      "takes": {
+        "focal": {
+          "secs": 40,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--academy=3:demo"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "focal",
+          "ss": 2.0,
+          "t": 3.5,
+          "labels": [
+            [
+              0,
+              3.5,
+              "28 mm · DE CERCA"
+            ]
+          ]
+        },
+        {
+          "take": "focal",
+          "ss": 8.5,
+          "t": 3.0,
+          "labels": [
+            [
+              0,
+              3.0,
+              "EL FONDO, PEQUEÑO Y LEJANO"
+            ]
+          ]
+        },
+        {
+          "take": "focal",
+          "ss": 17.0,
+          "t": 3.5,
+          "labels": [
+            [
+              0,
+              3.5,
+              "135 mm · DE LEJOS"
+            ]
+          ]
+        },
+        {
+          "take": "focal",
+          "ss": 24.5,
+          "t": 3.5,
+          "labels": [
+            [
+              0,
+              3.5,
+              "LOS ÁRBOLES, ENORMES Y PEGADOS"
+            ]
+          ]
+        },
+        {
+          "take": "focal",
+          "ss": 32.0,
+          "t": 3.0,
+          "labels": [
+            [
+              0,
+              3.0,
+              "ESO ES LA COMPRESIÓN"
+            ]
+          ]
+        }
+      ],
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ]
     },
     {
       "id": 5,
       "slug": "enfoque_partido",
-      "status": "pendiente",
+      "status": "listo",
       "youtube_url": null,
       "video_file": "/home/ganso/codigo/afotando/build/video/short_enfoque_partido.mp4",
-      "title": "Así enfocaban tus padres antes del autofocus (Imagen partida) #shorts #vintage",
-      "preview_text": "Manual vs Auto",
+      "title": "Así se enfocaba antes del autofoco: la imagen partida #shorts #fotografia",
+      "preview_text": "Enfoque manual",
       "related_video": "PhotoHacks - v0.3.0 alfa",
       "related_video_id": "NrxNwn-OvMU",
-      "tag_pill": "[ // ENFOQUE ÓPTICO MANUAL // ]",
-      "headline": "ASÍ SE ENFOCABA EN LOS 70",
-      "subline": "Visor Telemétrico · Dos mitades ópticas que encajan",
+      "tag_pill": "[ // ENFOQUE MANUAL // ]",
+      "headline": "ASÍ SE ENFOCABA ANTES DEL AUTOFOCO",
+      "subline": "Imagen partida y doble imagen telemétrica",
       "primary_neon": [
         0,
         255,
@@ -132,22 +350,100 @@
         119,
         0
       ],
-      "tags": "shorts, retro, camara, analogico, enfoque, vintage, photohacks, fotografia",
-      "description": "Antes del autofoco por láser o inteligencia artificial, las cámaras usaban prismas ópticos.\n\nEn el centro del visor, la imagen se parte en dos mitades desplazadas. Al girar el anillo de enfoque manual, las dos mitades se alinean a la perfección indicando el punto exacto de nitidez.\n\nPrueba cámaras de telémetro clásicas en PhotoHacks:\nWeb: https://geese-bumps.itch.io/photohacks\n\n#shorts #retro #camara #analogico #enfoque #vintage #photohacks"
+      "tags": "shorts, fotografia, enfoque manual, imagen partida, telemetrica, reflex, camara analogica, aprender fotografia, photohacks",
+      "description": "Antes del autofoco, ¿cómo sabía el fotógrafo que la foto estaba enfocada?\n\n- En la réflex, el centro del visor parte la imagen en dos: Al girar el anillo, las dos mitades encajan.\n- En la telemétrica se ve doble: Al enfocar, las dos imágenes se juntan en una.\n\nEn PhotoHacks son óptica de verdad: Cada punto se desplaza según su distancia. Juégalo gratis:\nhttps://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #enfoquemanual",
+      "takes": {
+        "partida": {
+          "secs": 9,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--time=day",
+            "--stage=parado",
+            "--lens=2,2",
+            "--focal=50",
+            "--mf",
+            "--mf-rack",
+            "--angle=125",
+            "--pitch=-2"
+          ]
+        },
+        "telemetrica": {
+          "secs": 9,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--time=day",
+            "--stage=parado",
+            "--lens=1,1",
+            "--focal=50",
+            "--mf-rack",
+            "--angle=125",
+            "--pitch=-2"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "partida",
+          "ss": 0.2,
+          "t": 7.5,
+          "crop": "560:312:440:188",
+          "labels": [
+            [
+              0,
+              3,
+              "RÉFLEX · LA CARA, PARTIDA EN DOS"
+            ],
+            [
+              3,
+              5.8,
+              "GIRAS EL ANILLO DE ENFOQUE…"
+            ],
+            [
+              5.8,
+              7.5,
+              "¡ENCAJA: ENFOCADA!"
+            ]
+          ]
+        },
+        {
+          "take": "telemetrica",
+          "ss": 0.2,
+          "t": 7.0,
+          "crop": "560:312:485:261",
+          "labels": [
+            [
+              0,
+              3.5,
+              "TELEMÉTRICA · LA IMAGEN, DOBLE"
+            ],
+            [
+              3.5,
+              7,
+              "AL ENFOCAR, LAS DOS SE JUNTAN"
+            ]
+          ]
+        }
+      ],
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ]
     },
     {
       "id": 6,
-      "slug": "tlr_rolleiflex",
-      "status": "pendiente",
+      "slug": "tlr_cintura",
+      "status": "listo",
       "youtube_url": null,
-      "video_file": "/home/ganso/codigo/afotando/build/video/short_tlr_rolleiflex.mp4",
-      "title": "La legendaria cámara que se mira desde arriba (TLR 6x6) #shorts #fotografia",
-      "preview_text": "Cintura vs Ojo",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_tlr_cintura.mp4",
+      "title": "La cámara que se mira desde arriba (TLR 6×6) #shorts #fotografia",
+      "preview_text": "A la cintura",
       "related_video": "PhotoHacks - v0.3.0 alfa",
       "related_video_id": "NrxNwn-OvMU",
-      "tag_pill": "[ // CÁMARA DE CINTURA TLR 6x6 // ]",
+      "tag_pill": "[ // CÁMARA TLR 6×6 // ]",
       "headline": "LA CÁMARA QUE SE MIRA DESDE ARRIBA",
-      "subline": "Formato Medio 6x6 · Espejo Superior · Doble Lente",
+      "subline": "Dos objetivos · visor a la cintura · foto cuadrada",
       "primary_neon": [
         255,
         170,
@@ -158,8 +454,66 @@
         210,
         255
       ],
-      "tags": "shorts, rolleiflex, tlr, formatomedio, vintage, retro, photohacks, camara",
-      "description": "Una experiencia fotográfica totalmente diferente: las cámaras TLR de doble lente.\n\nSe sujetan a la altura del pecho y se mira hacia abajo sobre un cristal esmerilado que refleja la escena con la izquierda y derecha invertidas. Formato cuadrado 6x6 y carrete analógico.\n\nJuégala gratis en PhotoHacks:\nWeb: https://geese-bumps.itch.io/photohacks\n\n#shorts #rolleiflex #tlr #formatomedio #vintage #photohacks"
+      "tags": "shorts, fotografia, tlr, formato medio, fotografia analogica, camara clasica, 6x6, aprender fotografia, photohacks",
+      "description": "Una cámara con dos objetivos: Uno para la foto y otro para mirar.\n\n- Se sujeta a la altura de la cintura y se mira desde arriba, sobre un cristal esmerilado.\n- El espejo da la imagen con la izquierda y la derecha al revés.\n- Foto cuadrada de 6×6 y carrete de 12 disparos: Aquí se piensa antes de disparar.\n\nPruébala gratis en PhotoHacks, un juego para aprender fotografía haciendo fotos:\nhttps://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #fotografiaanalogica",
+      "takes": {
+        "tlr": {
+          "secs": 19,
+          "args": [
+            "--idioma=es",
+            "--hud=1",
+            "--level=21",
+            "--interface=camara",
+            "--follow-target",
+            "--mf-rack",
+            "--expose",
+            "--shoot-at=11"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "tlr",
+          "ss": 0.5,
+          "t": 4.5,
+          "labels": [
+            [
+              0,
+              4.5,
+              "SE MIRA DESDE ARRIBA, A LA CINTURA"
+            ]
+          ]
+        },
+        {
+          "take": "tlr",
+          "ss": 5.0,
+          "t": 5.5,
+          "labels": [
+            [
+              0,
+              5.5,
+              "IZQUIERDA Y DERECHA, AL REVÉS"
+            ]
+          ]
+        },
+        {
+          "take": "tlr",
+          "ss": 12.0,
+          "t": 5.0,
+          "crop": "full",
+          "labels": [
+            [
+              0,
+              5,
+              "FOTO CUADRADA 6×6 · 97/100"
+            ]
+          ]
+        }
+      ],
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ]
     }
   ]
 }

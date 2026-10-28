@@ -169,7 +169,7 @@ def create_outro_card(filename):
     tw = bb[2] - bb[0]
     dp.text(((W - tw) // 2, by + 446), pill_text, font=f_badge, fill=(255, 255, 255))
 
-    pill_text2 = "RÉFLEX · TELEMÉTRICA · TLR · ANÁLOGICA"
+    pill_text2 = "RÉFLEX · TELEMÉTRICA · TLR · ANALÓGICA"
     bb = dp.textbbox((0, 0), pill_text2, font=f_badge)
     tw = bb[2] - bb[0]
     dp.text(((W - tw) // 2, by + 535), pill_text2, font=f_badge, fill=(0, 210, 255))
@@ -555,11 +555,112 @@ def upload_via_cdp(ep):
     return short_url
 
 
+# ---- Episodes described as a recipe (data/shorts_estrategia.json: "takes" and "cuts") ----
+# A take is a recording of the game (Godot's Movie Maker, 1440×810 at 30 FPS) with its own command
+# line arguments; a cut is a stretch of a take («ss», «t»), the part of the screen it shows («crop»:
+# "w:h:x:y" of the 1440×810 frame, or "full") and the captions under it («labels»: [start, end,
+# text] in seconds of the cut). The game's own sound (shutter, dials, park) stays under the music.
+def record_take(name, take, force=False):
+    raw = os.path.join(RAW_DIR, f"take_{name}.avi")
+    if os.path.exists(raw) and not force:
+        return raw
+    godot_bin = os.path.expanduser("~/bin/godot-4-fp")
+    print(f"[TAKE] {name}: {' '.join(take['args'])}")
+    subprocess.run([godot_bin, "--path", ROOT, "--disable-vsync", "--rendering-method", "forward_plus",
+                    "--resolution", "1920x1080", "--write-movie", raw, "--fixed-fps", "30",
+                    "--quit-after", str(int(take["secs"] * 30)), "--"] + take["args"],
+                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if not os.path.exists(raw):
+        raise SystemExit(f"La toma {name} no se ha grabado.")
+    return raw
+
+
+def render_cut(ep, k, cut, raw, badge):
+    """One cut: the game framed in the middle of a 1080×1920 canvas over its own blurred image, the
+    episode's badge in the top safe zone and the captions in a plate under the game."""
+    out = os.path.join(OUT_DIR, f"ep{ep['id']}_cut{k}.mp4")
+    crop = cut.get("crop", "1120:624:160:32")
+    crop_f = "null" if crop == "full" else f"crop={crop}"
+    labels = []
+    for n, (start, end, text) in enumerate(cut.get("labels", [])):
+        tf = os.path.join(OUT_DIR, f"ep{ep['id']}_cut{k}_l{n}.txt")
+        open(tf, "w", encoding="utf-8").write(text)
+        labels.append((start, end, tf))
+    accent = "0x%02x%02x%02x" % tuple(ep.get("primary_neon", [255, 119, 0]))
+    draw = ",".join(
+        f"drawbox=x=80:y=1290:w=920:h=78:color=0x0a0e16@0.92:t=fill:enable='between(t,{a},{b})',"
+        f"drawbox=x=80:y=1290:w=920:h=78:color={accent}:t=3:enable='between(t,{a},{b})',"
+        f"drawtext=fontfile={FONT_BOLD}:textfile={tf}:expansion=none:x=(w-text_w)/2:y=1314:fontsize=32:"
+        f"fontcolor=white:enable='between(t,{a},{b})'" for a, b, tf in labels) or "null"
+    graph = (
+        f"[0:v]split=2[bg_src][gm_src];"
+        f"[bg_src]scale=-2:1920,crop=1080:1920,setsar=1,gblur=sigma=32,eq=brightness=-0.35[bg];"
+        f"[gm_src]{crop_f},scale=1080:-2:flags=lanczos,setsar=1[game];"
+        f"[bg][game]overlay=0:(H-h)/2-30[framed];"
+        f"[framed]drawbox=x=0:y=(ih-608)/2-32:w=1080:h=612:color={accent}:t=4[framed2];"
+        f"[1:v]format=rgba[b1];"
+        f"[framed2][b1]overlay=60:230:eof_action=repeat[v1];"
+        f"[v1]{draw},fade=t=in:st=0:d=0.25,fade=t=out:st={cut['t'] - 0.25}:d=0.25,setsar=1[outv];"
+        f"[0:a]afade=t=in:st=0:d=0.25,afade=t=out:st={cut['t'] - 0.25}:d=0.25,aresample=48000[outa]"
+    )
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(cut["ss"]), "-t", str(cut["t"]), "-i", raw,
+                    "-loop", "1", "-framerate", "30", "-i", badge, "-filter_complex", graph,
+                    "-map", "[outv]", "-map", "[outa]", "-t", str(cut["t"]), "-aspect", "9:16",
+                    "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30",
+                    "-c:a", "pcm_s16le", out], check=True)
+    return out
+
+
+def render_recipe(ep, force=False):
+    os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(RAW_DIR, exist_ok=True)
+    raws = {name: record_take(name, take, force) for name, take in ep["takes"].items()}
+    badge = create_shorts_badge(ep["tag_pill"], ep["headline"], ep["subline"], f"badge_ep_{ep['id']}.png",
+                                primary_neon=ep.get("primary_neon", [255, 119, 0]),
+                                accent_neon=ep.get("accent_neon", [255, 200, 0]),
+                                sub_color=ep.get("sub_color", [0, 210, 255]))
+    clips = [render_cut(ep, k, cut, raws[cut["take"]], badge) for k, cut in enumerate(ep["cuts"])]
+    # The closing card over the blurred last frame of the last take, in silence (the music goes on).
+    outro = create_outro_card(f"outro_ep_{ep['id']}.png")
+    last = ep["cuts"][-1]
+    c_out = os.path.join(OUT_DIR, f"ep{ep['id']}_outro.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(last["ss"]), "-t", "4", "-i", raws[last["take"]],
+                    "-loop", "1", "-framerate", "30", "-i", outro, "-f", "lavfi", "-t", "4", "-i", "anullsrc=r=48000:cl=stereo",
+                    "-filter_complex", "[0:v]scale=-2:1920,crop=1080:1920,setsar=1,gblur=sigma=36,eq=brightness=-0.45[bg];"
+                    "[1:v]format=rgba,fade=in:st=0.0:d=0.3:alpha=1[card];[bg][card]overlay=0:0:eof_action=repeat,setsar=1[outv]",
+                    "-map", "[outv]", "-map", "2:a", "-t", "4", "-aspect", "9:16", "-c:v", "libx264", "-preset", "fast",
+                    "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "pcm_s16le", c_out], check=True)
+    clips.append(c_out)
+    lst = os.path.join(OUT_DIR, f"ep{ep['id']}_list.txt")
+    open(lst, "w").write("".join(f"file '{c}'\n" for c in clips))
+    joined = os.path.join(OUT_DIR, f"ep{ep['id']}_joined.mkv")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", joined], check=True)
+    total = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", joined],
+                                 capture_output=True, text=True).stdout)
+    # Music under the game's sound, then -14 LUFS with the peak under -1 dBFS (two passes).
+    music = os.path.join(AUDIO, "musica_videos.mp3")
+    mix = (f"[1:a]volume=0.32,afade=t=in:st=0:d=1,afade=t=out:st={total - 2}:d=2[m];[0:a]volume=1.4[g];"
+           f"[m][g]amix=inputs=2:duration=first:normalize=0")
+    measure = subprocess.run(["ffmpeg", "-hide_banner", "-i", joined, "-i", music, "-filter_complex",
+                              mix + ",loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
+                             capture_output=True, text=True).stderr
+    m = json.loads(measure[measure.rindex("{"):measure.rindex("}") + 1])
+    norm = (f"loudnorm=I=-14:TP=-1.5:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
+            f"measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true")
+    out_file = ep["video_file"]
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", joined, "-i", music, "-filter_complex", mix + "," + norm + ",aresample=48000[a]",
+                    "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-aspect", "9:16", "-c:a", "aac", "-b:a", "192k",
+                    "-movflags", "+faststart", "-shortest", out_file], check=True)
+    print(f"[VIDEO BUILD] Complete: {out_file} ({total:.1f} s, {os.path.getsize(out_file) // 1024} KB)")
+    return out_file
+
+
 def main():
     parser = argparse.ArgumentParser(description="Publicador de Shorts de PhotoHacks")
     parser.add_argument("--id", type=int, default=None, help="ID específico del episodio a publicar")
     parser.add_argument("--solo-video", action="store_true", help="Solo generar el vídeo sin subirlo")
     parser.add_argument("--skip-render", action="store_true", help="Omitir el render si el vídeo ya existe")
+    parser.add_argument("--regrabar", action="store_true", help="Volver a grabar las tomas del juego aunque existan")
     args = parser.parse_args()
 
     with open(JSON_PATH, "r", encoding="utf-8") as f:
@@ -580,7 +681,7 @@ def main():
         print(f"\n[SKIP-RENDER] Utilizando vídeo ya generado: {ep['video_file']}")
         video_file = ep["video_file"]
     else:
-        video_file = render_short_video(ep)
+        video_file = render_recipe(ep, args.regrabar) if ep.get("cuts") else render_short_video(ep)
 
     if args.solo_video:
         print(f"\n[OK] Vídeo generado: {video_file}")
