@@ -955,7 +955,7 @@ func build_layout() -> void:
 	for i in 12:
 		var pos = polar(i*30+16,5.55)
 		collider_only = ParkAssets.available("papelera")
-		cylinder(.25,.7,pos+Vector3.UP*.35,Color("425d57"),"una papelera")
+		cylinder(.25,.7,pos+Vector3.UP*.35,Color("425d57"),Texts.get_text("una_papelera"))
 		if collider_only: visual("papelera","",self,Transform3D(Basis.IDENTITY,pos))
 		var planter = polar(i*30+25,9.7)
 		collider_only = ParkAssets.available("jardinera")

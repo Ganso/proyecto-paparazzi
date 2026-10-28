@@ -1,0 +1,38 @@
+# Tráiler largo en inglés: «Learn Photography by Playing» (guion: docs/evidencias/video/GUION_TRAILER_LARGO.md,
+# adaptado el 28-10-2026). Se graba con:
+#   ./tools/capture_video.sh --style trailer --game-args "--idioma=en" --sequences tools/videos/trailer_largo_en.txt --out build/video/trailer_largo_en.mp4
+# Una línea por plano: «rótulo // segunda línea|segundos|[@lead=N] argumentos del juego»; «@card:» es una cartela.
+
+# 1. Three sides of PhotoHacks
+Have you always wanted to learn photography?|8|--sandbox --time=golden --stage=perro --lens=0,0 --pitch=-6 --focal=35 --hud=0
+PhotoHacks is three things at once:|12|@lead=6 --scenario=grande --time=golden --lens=2,0 --photo-walk
+1. A real camera simulator|8|--time=day --interface=camara --lens=2,0 --manual --strip-demo --angle=243 --pitch=-3 --focal=50
+2. A hands-on academy|8|--academy=4:demo
+3. And a game full of challenges|8|--level=1 --interface=camara --follow-target --af --shoot-at=3
+
+# 2. At your own pace
+You can play it with no rush at all:|10|--sandbox --time=golden --lens=2,1 --angle=240 --pitch=-2 --focal=70 --pan=3 --af
+Stroll around the park and photograph whatever you like.|12|--sandbox --time=day --stage=palomas --lens=0,0 --angle=125 --pitch=-10 --focal=40 --af
+Or go the whole way:|10|--academy=1:demo
+Learn at the Academy and test yourself in the Arcade.|6|--arcade --cheat=niveles
+
+# 3. What you'll learn to control
+You'll learn to control the aperture:|6|--time=day --stage=sentado --lens=2,5 --focal=135 --angle=125 --pitch=-2
+Wide open to blur the background, // stopped down to get everything sharp.|12|@lead=2 --time=day --stage=sentado --lens=2,5 --focal=135 --angle=125 --pitch=-2 --aperture-sweep
+A fast shutter speed freezes motion, // or a slow one shows it.|20|--academy=6:demo
+Your subject sharp, the background in motion.|12|@lead=5 --level=26 --interface=camara --focal=85 --follow-target --pan-shot --shutter=30 --shoot-at=6
+
+# 4. Optics: zoom, ISO and difficult light
+You'll understand what zoom really does: // It doesn't just bring things closer: It changes the perspective.|14|--academy=3:demo
+You'll control ISO sensitivity // to keep shooting when the light fades.|8|--academy=4:teoria:4
+At night, stopping down turns the streetlights into stars. // Real optics, no Photoshop filters.|10|@lead=2 --sandbox --time=night --stage=sentado --activity=movil --lens=2,0 --focal=35 --angle=125 --pitch=4 --aperture-sweep --shoot-at=11
+You'll see your photos just as a real camera would take them.|10|@lead=13 --sandbox --time=night --stage=sentado --activity=movil --lens=2,0 --focal=35 --angle=125 --pitch=4 --aperture-sweep --shoot-at=11
+
+# 5. The joy of classic cameras
+You'll also learn to work by hand,|10|--time=day --lens=1,2 --focal=90 --follow-target --mf-rack --expose
+with classic cameras // like rangefinders and twin-lens reflexes.|12|@lead=6 --level=21 --interface=camara --follow-target --mf-rack --expose --shoot-at=13
+Everything you learn here will help you // when you hold a real camera in your hands.|8|--screen=album
+
+# 6. Closing
+100% free|8|@card:No ads · No microtransactions · No accounts // No permissions needed · Plays offline
+PhotoHacks|10|@card:Download it free for PC: Windows · Linux · macOS // geese-bumps.itch.io/photohacks

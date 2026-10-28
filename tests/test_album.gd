@@ -46,7 +46,7 @@ func run() -> void:
 	check(int(photos[0].score) == game.current_result.score and is_equal_approx(float(photos[0].f),game.current_result.evidence.f) and game.album_where(photos[0]) == Texts.get_text("album_nivel") % 1,"…with its score, its settings and where it was taken")
 	# Where it was taken is kept as a text key, so the album speaks the language in use; photos saved
 	# before that kept the words themselves.
-	check(photos[0].get("lugar",[]) == ["album_nivel",1] and game.album_where({"where":"Nivel 3"}) == "Nivel 3","…as a text key (and the old photos keep theirs)")
+	check(photos[0].get("lugar",[]) == ["album_nivel",1] and game.album_where({"where":"Nivel 3"}) == Texts.get_text("album_nivel") % 3,"…as a text key (and the old photos, saved in Spanish, are shown in the language in use)")
 	var image = Album.load_image(file)
 	check(image != null and image.get_width() == 1280 and image.get_height() == 720,"It is a 1280 × 720 picture")
 	var lit = 0

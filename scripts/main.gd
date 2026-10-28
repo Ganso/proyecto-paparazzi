@@ -1486,7 +1486,11 @@ func badges_count() -> bool:
 # Where a photo was taken: saved as a text key (photos from before 0.6 kept the Spanish words).
 func album_where(photo: Dictionary) -> String:
 	var where = photo.get("lugar",[])
-	if not (where is Array) or where.size() < 2: return str(photo.get("where",""))
+	if not (where is Array) or where.size() < 2:
+		# The words of before (Spanish): «Nivel 20», «Academia», «Tutorial», shown in the language in use.
+		var old = str(photo.get("where",""))
+		if old.begins_with("Nivel ") and old.trim_prefix("Nivel ").is_valid_int(): return Texts.get_text("album_nivel") % int(old.trim_prefix("Nivel "))
+		return {"Academia":Texts.get_text("academia"),"Tutorial":Texts.get_text("album_tutorial")}.get(old,old)
 	return Texts.get_text(str(where[0])) % int(where[1]) if "%d" in Texts.get_text(str(where[0])) else Texts.get_text(str(where[0]))
 
 # Develops the photo off screen (the same material the result screen uses) and saves it.
@@ -1806,7 +1810,8 @@ var slow_time = 0.0
 var slow_frames = 0
 var slow_told = false
 func watch_speed(dt: float) -> void:
-	if slow_told or not fps_limited or mode != "SEARCH" or not ParkScene.forward_plus() or graphics_preset == "Bajo": return
+	# (Not while recording a video: Godot's Movie Maker renders at fixed steps, never in real time.)
+	if slow_told or not fps_limited or mode != "SEARCH" or not ParkScene.forward_plus() or graphics_preset == "Bajo" or OS.has_feature("movie"): return
 	slow_time += dt
 	slow_frames += 1
 	if slow_time < SLOW_SECONDS: return

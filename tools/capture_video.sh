@@ -12,6 +12,12 @@
 #
 #   ./tools/capture_video.sh [--only 1,3] [--res 1920x1080] [--out build/video/evidencias.mp4]
 #                            [--sequences <fichero>]   (otras secuencias: una por línea, «título|segundos|argumentos»)
+#                            [--style trailer] [--game-args "--idioma=en"]
+#
+# --style trailer: rótulos grandes y centrados abajo, durante todo el plano, con una segunda línea
+# tras « // » (el tráiler largo, docs/evidencias/video/GUION_TRAILER_LARGO.md). Un plano puede
+# empezar a grabar en otro segundo con «@lead=N » delante de sus argumentos (por defecto, 4).
+# --game-args se añade a los argumentos de todos los planos (el idioma, p. ej.).
 #
 # Necesita un Godot con Vulkan (GODOT_FP o ~/bin/godot-4-fp) y ffmpeg con libx264. El MP4 va a
 # build/video/ (ignorado por git). Tarda unos 15 min. Lleva de fondo la música del proyecto
@@ -25,12 +31,16 @@ RES="1920x1080"
 OUT="$PROJECT_DIR/build/video/evidencias_$(date +%Y%m%d_%H%M).mp4"
 ONLY=""
 SEQ_FILE=""
+STYLE=""
+GAME_ARGS=""
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--only) ONLY="$2"; shift 2 ;;
 		--res) RES="$2"; shift 2 ;;
 		--out) OUT="$2"; shift 2 ;;
 		--sequences) SEQ_FILE="$2"; shift 2 ;;
+		--style) STYLE="$2"; shift 2 ;;
+		--game-args) GAME_ARGS="$2"; shift 2 ;;
 		*) echo "Opción desconocida: $1"; exit 1 ;;
 	esac
 done
@@ -46,6 +56,8 @@ export PAPARAZZI_ARCADE_CFG="$WORK/arcade.cfg"
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$(dirname "$OUT")"
 FONT="$(fc-match -f '%{file}' 'sans:bold')"
+TITLE_FONT="$PROJECT_DIR/assets/fuentes/RussoOne-Regular.ttf"
+CAPTION_FONT="$PROJECT_DIR/assets/fuentes/Roboto-Medium.ttf"
 MUSIC="${MUSIC:-$PROJECT_DIR/assets/audio/musica_videos.mp3}"
 
 # título | segundos | argumentos del juego (tras --); sin argumentos de demo arranca el menú.
@@ -101,7 +113,9 @@ for entry in "${SEQUENCES[@]}"; do
 	rest="${entry#*|}"
 	LENGTH="${rest%%|*}"
 	args="${rest#*|}"
-	frames=$(( (LEAD + LENGTH) * FPS ))
+	lead=$LEAD
+	if [[ "$args" == @lead=* ]]; then lead="${args%% *}"; lead="${lead#@lead=}"; args="${args#* }"; fi
+	frames=$(( (lead + LENGTH) * FPS ))
 	echo "=== [$index/${#SEQUENCES[@]}] $title"
 	raw="$WORK/raw_$index.avi"
 	card=""
@@ -118,18 +132,42 @@ for entry in "${SEQUENCES[@]}"; do
 	else
 	# shellcheck disable=SC2086
 	"$GODOT" --path "$PROJECT_DIR" --disable-vsync --rendering-method forward_plus --resolution "$RES" \
-		--write-movie "$raw" --fixed-fps "$FPS" --quit-after "$frames" -- $args > "$WORK/log_$index.txt" 2>&1 || true
+		--write-movie "$raw" --fixed-fps "$FPS" --quit-after "$frames" -- $args $GAME_ARGS > "$WORK/log_$index.txt" 2>&1 || true
 	fi
 	if [ ! -s "$raw" ]; then
 		echo "    sin vídeo (ver $WORK/log_$index.txt)"; tail -5 "$WORK/log_$index.txt"; continue
 	fi
 	clip="$WORK/clip_$index.mp4"
 	safe_title="${title//:/\\:}"
+	if [ -n "$card" ] && [ "$STYLE" = trailer ]; then
+		# Cartela del tráiler: título grande y hasta dos líneas debajo (separadas por « // »), en
+		# ficheros de texto para que los apóstrofos y los dos puntos no rompan el filtro.
+		printf '%s' "$title" > "$WORK/t_$index.txt"
+		IFS='|' read -r line1 line2 <<< "${card// \/\/ /|}"
+		printf '%s' "$line1" > "$WORK/a_$index.txt"; printf '%s' "${line2:-}" > "$WORK/b_$index.txt"
+		ffmpeg -loglevel error -y -ss "$lead" -t "$LENGTH" -i "$raw" \
+			-vf "drawtext=fontfile=$TITLE_FONT:textfile=$WORK/t_$index.txt:expansion=none:x=(w-text_w)/2:y=h/2-150:fontsize=110:fontcolor=0xF07D28,drawtext=fontfile=$CAPTION_FONT:textfile=$WORK/a_$index.txt:expansion=none:x=(w-text_w)/2:y=h/2+10:fontsize=46:fontcolor=white,drawtext=fontfile=$CAPTION_FONT:textfile=$WORK/b_$index.txt:expansion=none:x=(w-text_w)/2:y=h/2+80:fontsize=40:fontcolor=white@0.85,fade=t=in:st=0:d=0.5,fade=t=out:st=$((LENGTH - 1)).5:d=0.5" \
+			-c:a aac -b:a 192k -ar 48000 -ac 2 -r "$FPS" -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p "$clip"
+		echo "file '$clip'" >> "$list"
+		continue
+	fi
 	if [ -n "$card" ]; then
 		safe_card="${card//:/\\:}"
 		ffmpeg -loglevel error -y -ss "$LEAD" -t "$LENGTH" -i "$raw" \
 			-vf "drawtext=fontfile=$FONT:text='$safe_title':x=(w-text_w)/2:y=h/2-110:fontsize=104:fontcolor=white,drawtext=fontfile=$FONT:text='$safe_card':x=(w-text_w)/2:y=h/2+40:fontsize=40:fontcolor=white@0.85,fade=t=in:st=0:d=0.3,fade=t=out:st=$((LENGTH - 1)).7:d=0.3" \
 			-c:a aac -b:a 192k -ar 48000 -ac 2 -r "$FPS" -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p "$clip"
+		echo "file '$clip'" >> "$list"
+		continue
+	fi
+	if [ "$STYLE" = trailer ]; then
+		# Rótulo del tráiler: grande, centrado sobre una franja oscura, durante todo el plano.
+		IFS='|' read -r line1 line2 <<< "${title// \/\/ /|}"
+		printf '%s' "$line1" > "$WORK/a_$index.txt"; printf '%s' "${line2:-}" > "$WORK/b_$index.txt"
+		if [ -n "${line2:-}" ]; then y1="h-178"; else y1="h-128"; fi
+		ffmpeg -loglevel error -y -ss "$lead" -t "$LENGTH" -i "$raw" \
+			-vf "scale=${RES%x*}:${RES#*x}:flags=lanczos,drawbox=x=0:y=ih-230:w=iw:h=230:color=black@0.5:t=fill,drawtext=fontfile=$CAPTION_FONT:textfile=$WORK/a_$index.txt:expansion=none:x=(w-text_w)/2:y=$y1:fontsize=54:fontcolor=white:alpha='min(1,max(0,(t-0.3)/0.5))',drawtext=fontfile=$CAPTION_FONT:textfile=$WORK/b_$index.txt:expansion=none:x=(w-text_w)/2:y=h-102:fontsize=40:fontcolor=0xFFD7B0:alpha='min(1,max(0,(t-0.6)/0.5))',fade=t=in:st=0:d=0.5,fade=t=out:st=$((LENGTH - 1)).5:d=0.5" \
+			-af "afade=t=in:st=0:d=0.5,afade=t=out:st=$((LENGTH - 1)).5:d=0.5" -c:a aac -b:a 192k -ar 48000 -ac 2 \
+			-r "$FPS" -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p "$clip"
 		echo "file '$clip'" >> "$list"
 		continue
 	fi
@@ -148,6 +186,12 @@ duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$silent")
 # audio del juego (ambiente del parque y clic del obturador), algo más bajo.
 if [ -s "$MUSIC" ]; then
 	fade_start=$(awk -v d="$duration" 'BEGIN { printf "%.2f", (d > 10 ? d - 10 : 0) }')
+	# Si el vídeo dura más que la música, la música se encadena consigo misma con 6 s de fundido.
+	music_len=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$MUSIC")
+	if awk -v d="$duration" -v m="$music_len" 'BEGIN { exit !(d > m - 1) }'; then
+		ffmpeg -loglevel error -y -i "$MUSIC" -i "$MUSIC" -filter_complex "[0:a][1:a]acrossfade=d=6:c1=tri:c2=tri[a]" -map "[a]" -c:a pcm_s16le "$WORK/music_long.wav"
+		MUSIC="$WORK/music_long.wav"
+	fi
 	ffmpeg -loglevel error -y -i "$silent" -i "$MUSIC" -map 0:v -c:v copy \
 		-filter_complex "[1:a]afade=t=in:st=0:d=1,afade=t=out:st=$fade_start:d=10,volume=0.8[m];[0:a]volume=1.6[g];[m][g]amix=inputs=2:duration=shortest:normalize=0[a]" \
 		-map "[a]" -c:a aac -b:a 192k -movflags +faststart "$OUT"

@@ -5,6 +5,14 @@
 **Plataforma mencionada:** Únicamente PC (Windows · Linux · macOS).  
 **Duración estimada:** ≈ 4:00 minutos.
 
+> **Versión inglesa grabada (28-10-2026, 3:42, pendiente de validar por el usuario):** `tools/videos/trailer_largo_en.txt` con
+> `./tools/capture_video.sh --style trailer --game-args "--idioma=en" --sequences tools/videos/trailer_largo_en.txt --out build/video/trailer_largo_en.mp4`.
+> Adaptaciones frente a esta tabla, porque el juego no tiene esos planos: el amanecer es la hora dorada; los patos del
+> estanque, un plano del estanque a la hora dorada; la «pista de atletismo», el barrido del nivel 26 (corredor del
+> paseo); el columpio congelado, la demostración de la lección del movimiento (corredor a 1/30 y a 1/1000); el ISO, la
+> página «La sensibilidad: El volumen»; el zoom, la demostración de la lección de la focal; la telemétrica, un enfoque
+> manual en directo; la TLR, el nivel 21; la foto nocturna con estrellas, en el Sandbox (sin nota que la rechace).
+
 ---
 
 ## 1. El Arranque: Las tres caras de PhotoHacks (0:00 – 0:42)
