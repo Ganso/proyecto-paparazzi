@@ -60,14 +60,20 @@ fail=()
 export_desktop() {
 	local plat="$1" preset="$2" out="$3"
 	if [ ! -f "$TEMPLATES/${NEED[$plat]}" ]; then fail+=("$plat: sin plantilla"); return; fi
+	# La carpeta solo guarda esta exportación: un resto (el ProyectoPaparazzi.exe de antes del cambio
+	# de nombre) se coló en todos los zip de Windows y Linux de la 0.3.0 a la 0.6.0.
+	rm -rf "$(dirname "$PROJECT_DIR/$out")"
 	mkdir -p "$(dirname "$PROJECT_DIR/$out")"
-	rm -f "$PROJECT_DIR/$out"
 	echo "==> Exportando $preset → $out"
 	if "$GODOT" --headless --path "$PROJECT_DIR" "$MODE" "$preset" "$out" > "$PROJECT_DIR/build/export_$plat.log" 2>&1 && [ -s "$PROJECT_DIR/$out" ]; then
 		local zip="$PROJECT_DIR/build/dist/PhotoHacks-$GAME_VERSION-$plat.zip"
 		rm -f "$zip"
 		if [ "$plat" = "macos" ]; then cp "$PROJECT_DIR/$out" "$zip"
-		else (cd "$(dirname "$PROJECT_DIR/$out")" && zip -q -9 -r "$zip" .)
+		else (cd "$(dirname "$PROJECT_DIR/$out")" && zip -q -9 "$zip" "$(basename "$out")")
+		fi
+		# (Y el zip lleva exactamente el juego: un solo fichero.)
+		if [ "$plat" != "macos" ] && [ "$(unzip -Z1 "$zip")" != "$(basename "$out")" ]; then
+			fail+=("$plat: el zip lleva algo más que $(basename "$out")"); return
 		fi
 		ok+=("$plat: $out ($(du -h "$PROJECT_DIR/$out" | cut -f1)) · $(basename "$zip") ($(du -h "$zip" | cut -f1))")
 	else

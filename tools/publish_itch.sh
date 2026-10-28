@@ -5,8 +5,8 @@
 #   ./tools/publish_itch.sh [--only windows,linux,mac,html5,android-experimental] [--dry-run]
 #
 # Un canal por plataforma (el nombre le dice a itch qué es cada fichero):
-#   windows  build/dist/PhotoHacks-<versión>-windows.zip
-#   linux    build/dist/PhotoHacks-<versión>-linux.zip
+#   windows  build/dist/PhotoHacks-<versión>-windows.zip   (su ejecutable y un README.txt)
+#   linux    build/dist/PhotoHacks-<versión>-linux.zip     (ídem)
 #   mac      build/dist/PhotoHacks-<versión>-macos.zip
 #   android-experimental  build/dist/PhotoHacks-<versión>-android-EXPERIMENTAL.apk
 #            (desde la 0.3.2; el nombre del canal y del fichero dicen que es experimental)
@@ -53,7 +53,17 @@ for channel in windows linux mac html5 android-experimental; do
 	[ "$DRY" = 1 ] && continue
 	# (--if-changed tropieza al comparar el zip de macOS con la versión anterior, por la carpeta
 	# de la firma: si falla, se sube sin comparar.)
-	"$BUTLER" push --if-changed "$file" "$TARGET:$channel" --userversion "$VERSION" || "$BUTLER" push "$file" "$TARGET:$channel" --userversion "$VERSION" || failed=1
+	# Windows y Linux: butler descomprime el zip, y con un solo ejecutable dentro itch lo ofrecería
+	# suelto (en Linux, sin permiso de ejecución al bajarlo con el navegador). Va con un README.txt
+	# de cómo arrancarlo (tools/itch/README-<canal>.txt): con dos ficheros, itch sirve un zip.
+	push_path="$file"
+	if [ "$channel" = windows ] || [ "$channel" = linux ]; then
+		push_path="build/itch/$channel"
+		rm -rf "$push_path" && mkdir -p "$push_path"
+		unzip -q "$file" -d "$push_path"
+		sed "s/{VERSION}/$VERSION/" "tools/itch/README-$channel.txt" > "$push_path/README.txt"
+	fi
+	"$BUTLER" push --if-changed "$push_path" "$TARGET:$channel" --userversion "$VERSION" || "$BUTLER" push "$push_path" "$TARGET:$channel" --userversion "$VERSION" || failed=1
 done
 [ "$DRY" = 1 ] && echo "(simulación: no se ha subido nada)" || "$BUTLER" status "$TARGET" || true
 exit $failed

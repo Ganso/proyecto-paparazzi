@@ -81,4 +81,4 @@
 | Tiempo | Lo que se ve en pantalla | Rótulo en pantalla |
 |---|---|---|
 | `4:00 – 4:08` | Tarjeta limpia con los principios del proyecto. | **100% Gratis · Sin anuncios · Sin micropagos**<br>*Sin cuentas · No te pide permisos · Juega sin conexión* |
-| `4:08 – 4:18` | Logotipo de PhotoHacks y llamada a la acción para PC. | **PhotoHacks**<br>*Descárgalo gratis para PC (Windows · Linux · macOS)*<br>**geesebumps.itch.io/photohacks** |
+| `4:08 – 4:18` | Logotipo de PhotoHacks y llamada a la acción para PC. | **PhotoHacks**<br>*Descárgalo gratis para PC (Windows · Linux · macOS)*<br>**geese-bumps.itch.io/photohacks** |

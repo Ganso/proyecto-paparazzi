@@ -6,6 +6,8 @@
 
 ---
 
+> **Cómo se publica** (subida, visibilidad, metadatos, lista de reproducción, verificación): [`~/codigo/automatizaciones/PUBLICAR_VIDEOS.md`](/home/ganso/codigo/automatizaciones/PUBLICAR_VIDEOS.md), común a todos los proyectos y por encima de lo que diga aquí sobre la subida. Reglas clave: un vídeo por orden (si hay varios, se pregunta el calendario), privado por defecto y cada vídeo en la lista de su juego («PhotoHacks»).
+
 ## 1. Filosofía de Contenido: El Enfoque Jaime Altozano
 
 PhotoHacks nació con una vocación divulgativa clara: **«Enseñar fotografía como Jaime Altozano enseña la música»**.
@@ -37,7 +39,7 @@ El mensaje final de cada Short es siempre el mismo:
 
 | Ep. | Eje Didáctico | Gancho en Pantalla | Vista Previa | Demostración Visual | Audio / SFX | Estado |
 |---|---|---|---|---|---|---|
-| **#1** | **El Secreto del Bokeh** | *«¿POR QUÉ TUS RETRATOS NO TIENEN ESTE DESENFOQUE?»* | *f/1.8 vs f/16* | De f/1.8 a f/16 con teleobjetivo 135mm: desenfoque cremoso a plena apertura que se vuelve nítido al cerrar. Sujeto sentado en banco. | Clics de rueda con cada paso + Sonido de obturador réflex + Música alegre | **Publicado (Público)**: [`nVvqfVOqyB4`](https://youtube.com/shorts/nVvqfVOqyB4) |
+| **#1** | **El Secreto del Bokeh** | *«¿POR QUÉ TUS RETRATOS NO TIENEN ESTE DESENFOQUE?»* | *f/1.8 vs f/16* | De f/1.8 a f/16 con teleobjetivo 135mm: desenfoque cremoso a plena apertura que se vuelve nítido al cerrar. Sujeto sentado en banco. | Clics de rueda con cada paso + Sonido de obturador réflex + Música alegre | **Publicado (Público)**: [`nVvqfVOqyB4`](https://youtube.com/shorts/nVvqfVOqyB4) Enlace de Itch.io de la descripción corregido el 28-10-2026 (`geesebumps.itch.io` daba 404 → `geese-bumps.itch.io/photohacks`); en lista «PhotoHacks». |
 | **#2** | **Congelar vs Barrido** | *«CÓMO FOTOGRAFIAR MOVIMIENTO: 1/1000s VS BARRIDO»* | *1/1000s vs 1/15s* | Corredor en el parque: 1/1000s congelado en el aire vs 1/15s con barrido de cámara y estelas de velocidad. | Pasos acelerados + Clic de alta velocidad + Música rítmica | *Pendiente* |
 | **#3** | **Estrellas de Noche** | *«EL TRUCO PARA CONVERTIR FAROLAS EN ESTRELLAS»* | *f/2.8 vs f/22* | Parque nocturno: a f/2.8 bombillas normales; al cerrar a f/16–f/22 la difracción genera estrellas de 14 puntas. | Sonido de noche + Clic de diafragma + Música mágica | *Pendiente* |
 | **#4** | **Compresión Focal** | *«EL ZOOM NO SOLO ACERCA: APLASTA EL FONDO»* | *24mm vs 200mm* | Comparación entre 24 mm angular (fondo lejano) y 200 mm teleobjetivo (fondo pegado al sujeto). | Clic de zoom mecánico + Música divulgativa | *Pendiente* |
