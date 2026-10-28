@@ -5,3 +5,5 @@ build/*
 *.log
 Godot*.exe
 override.cfg
+__pycache__/
+.claude/

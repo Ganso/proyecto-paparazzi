@@ -53,7 +53,7 @@ func draw_triangle() -> void:
 	var pts = [c+Vector2(0,-44),c+Vector2(-70,36),c+Vector2(70,36)]
 	draw_polyline(PackedVector2Array(pts+[pts[0]]),dim,2)
 	var labels = ["f/%s" % str(m.aperture_value()),"1/%d s" % m.shutter_denominator(),"ISO %d" % m.iso_value()]
-	var names = ["Diafragma","Velocidad","ISO"]
+	var names = [Texts.get_text("esquema_diafragma"),Texts.get_text("esquema_velocidad"),"ISO"]
 	for i in 3:
 		draw_circle(pts[i],6,green)
 		var off = Vector2(14,-10) if i == 0 else (Vector2(-72,6) if i == 1 else Vector2(10,6))

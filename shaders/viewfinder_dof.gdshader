@@ -14,7 +14,7 @@ uniform float aperture = 5.6;
 // Focus distance in metres; a negative value means infinity.
 uniform float focus_m = 4.0;
 // Largest blur radius in pixels of a 2560 px wide view (scaled to the real width).
-uniform float max_radius = 34.0;
+uniform float max_radius = 120.0;
 uniform bool enabled = true;
 // Longitudinal chromatic aberration (0…1, by lens and aperture): green focuses a little behind
 // red and blue, so what is blurred in front of the focus plane fringes magenta and what is

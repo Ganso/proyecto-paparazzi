@@ -2,12 +2,13 @@
 # Imágenes de la marca que usa el juego (assets/marca/), a partir del logotipo de Blender:
 #   camara.png  512 × 512, la cámara de bloques sin fondo (cabecera del menú)
 #   icono.png   256 × 256, la cámara sobre el azul: icono de la ventana y de los ejecutables
-#   carga.png   1280 × 720, lo que enseña el motor al arrancar (boot splash): cámara, nombre en
-#               naranja y «Cargando el parque…». scripts/boot_loader.gd dibuja lo mismo encima
-#               y hace girar la cámara, así que las posiciones de aquí y de allí son las mismas.
+#   carga.png   1280 × 720, lo que enseña el motor al arrancar (boot splash): cámara y nombre en
+#               naranja. scripts/boot_loader.gd dibuja lo mismo encima, hace girar la cámara y
+#               añade «Cargando el parque…» en el idioma del jugador, así que las posiciones de
+#               aquí y de allí son las mismas.
 #   giro.png    hoja de 9 × 5 fotogramas de 256 px con la vuelta de 360° (45 fotogramas)
-# El texto de carga.png va dentro de la imagen (el motor la muestra antes de cargar los textos):
-# si cambia el nombre del juego o `cargando_parque`, se regenera.
+# El nombre va dentro de la imagen (el motor la muestra antes de cargar los textos): si cambia, se
+# regenera. La frase de carga no va en ella: el motor no sabe aún el idioma del jugador.
 # Uso: GIRO=1 ./tools/build_logo.sh && bash tools/build_branding.sh
 #      (el primero modela y dibuja en Blender: build/marca/icono.png y build/marca/giro/)
 set -euo pipefail
@@ -34,7 +35,7 @@ icon.save(OUT + "icono.png")
 splash = Image.new("RGBA", (1280, 720), BLUE)
 splash.alpha_composite(first.resize((440, 440), Image.LANCZOS), (420, 40))
 draw = ImageDraw.Draw(splash)
-for text, path, size, y, colour in ((texts["nombre_juego"], "RussoOne-Regular", 92, 470, ORANGE), (texts["cargando_parque"], "Roboto-Light", 28, 600, (214, 236, 251, 255))):
+for text, path, size, y, colour in ((texts["nombre_juego"], "RussoOne-Regular", 92, 470, ORANGE),):
     font = ImageFont.truetype("assets/fuentes/%s.ttf" % path, size)
     # (línea base donde la pone boot_loader.gd: y + 0,8 × tamaño)
     draw.text(((1280 - draw.textlength(text, font=font)) / 2, y + size * .8), text, font=font, fill=colour, anchor="ls")

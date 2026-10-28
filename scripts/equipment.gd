@@ -2,7 +2,19 @@ extends RefCounted
 # Focal lengths are 35 mm equivalents, matching the simulator's reference sensor.
 # "ca": lateral chromatic aberration of the lens (0…1): the compact's zoom shows most, the primes
 # least (main.gd::lens_strengths(), docs/futuro/07 §6).
+# Identifiers: the names on screen come from the texts (camera_name(), lens_name(), focus_name()).
 const CAMERAS = ["Compacta", "Telemétrica", "Réflex", "TLR 6×6"]
+const Texts = preload("res://scripts/texts.gd")
+const CAMERA_KEYS = ["compacta","telemetrica","reflex","tlr"]
+static func camera_name(index: int) -> String:
+	return Texts.get_text("equipo_cuerpo_"+CAMERA_KEYS[index])
+# «Fijo 50 · f/1.8» → the word for a prime lens in the language in use; the rest is numbers.
+static func lens_name(l: Dictionary) -> String:
+	var name: String = l.name
+	return Texts.get_text("equipo_fijo")+name.substr(4) if name.begins_with("Fijo ") else name
+const FOCUS_KEYS = {"AF matricial":"matricial","AF puntual":"puntual","AF continuo":"continuo","AF automático":"automatico","MF":"mf"}
+static func focus_name(mode: String) -> String:
+	return Texts.get_text("equipo_af_"+FOCUS_KEYS.get(mode,"mf"))
 const LENSES = [
 	[{"name":"Zoom 24–120 · f/2.8–5.6", "ca":1.0, "min":24.0,"max":120.0,"wide":2.8,"long":5.6,"stop":8.0},
 	 {"name":"Fijo 35 · f/2.8", "ca":0.55, "min":35.0,"max":35.0,"wide":2.8,"long":2.8,"stop":8.0}],
@@ -15,7 +27,8 @@ const LENSES = [
 	 # Added for the Academy (docs/futuro/06): wide-angle perspective, portrait bokeh, compression.
 	 {"name":"Fijo 28 · f/2.8", "ca":0.45, "min":28.0,"max":28.0,"wide":2.8,"long":2.8,"stop":22.0},
 	 {"name":"Fijo 105 · f/1.8", "ca":0.4, "min":105.0,"max":105.0,"wide":1.8,"long":1.8,"stop":22.0},
-	 {"name":"Fijo 135 · f/2", "ca":0.35, "min":135.0,"max":135.0,"wide":2.0,"long":2.0,"stop":22.0}],
+	 {"name":"Fijo 135 · f/1.8", "ca":0.35, "min":135.0,"max":135.0,"wide":1.8,"long":1.8,"stop":22.0},
+	 {"name":"Fijo 70 · f/1.8", "ca":0.35, "min":70.0,"max":70.0,"wide":1.8,"long":1.8,"stop":22.0}],
 	# TLR (docs/futuro/21 §3): 80 mm f/2.8 on 6×6. Its 56 mm square frame spans the field of a 50 mm
 	# on the 36 mm reference width, so it is a 50 mm equivalent here.
 	[{"name":"Planar 80 · f/2.8 (6×6)", "ca":0.5, "min":50.0,"max":50.0,"wide":2.8,"long":2.8,"stop":22.0}]

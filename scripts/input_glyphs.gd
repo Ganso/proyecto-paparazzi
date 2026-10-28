@@ -9,6 +9,7 @@ static var device = "teclado"           # "teclado", "mando" or "tactil"
 # is picked up; keyboard and mouse never take over.
 static var touch = false
 static var family = "xbox"              # "xbox", "ps" or "nintendo"
+const Texts = preload("res://scripts/texts.gd")
 
 # Control → [keyboard and mouse, Xbox, PlayStation, Nintendo]. Xbox names are the generic ones.
 # Keys are marked ⟦…⟧ (drawn as a keycap) and pad buttons ⦅…⦆ (drawn round) by
@@ -71,6 +72,65 @@ const TOUCH = {
 	"agacharse": "«Agacharse»", "mirar_paseo": "arrastrando un dedo", "sacar": "«Cámara»",
 }
 
+# The same in English (scripts/texts.gd decides the language). Every control of CONTROLS and TOUCH
+# must be here too (tests/test_texts.gd).
+const CONTROLS_EN = {
+	"mirar": ["Mouse · ⟦←⟧⟦→⟧⟦↑⟧⟦↓⟧","Left stick","Left stick","Left stick"],
+	"girar": ["⟦←⟧⟦→⟧ or ⟦A⟧⟦D⟧","the left stick","the left stick","the left stick"],
+	"zoom": ["Wheel · ⟦W⟧⟦S⟧","Right stick ↕","Right stick ↕","Right stick ↕"],
+	"enfoque_mf": ["Wheel · ⟦R⟧⟦T⟧","Right stick ↔","Right stick ↔","Right stick ↔"],
+	"enfoque_mf_zoom": ["⟦Shift⟧+wheel · ⟦R⟧⟦T⟧","Right stick ↔","Right stick ↔","Right stick ↔"],
+	"af": ["Click · ⟦F⟧","⦅RT⦆ half-press","⦅R2⦆ half-press","⦅ZR⦆ half-press"],
+	"disparar": ["⟦Space⟧","⦅RT⦆","⦅R2⦆","⦅ZR⦆"],
+	"diafragma": ["⟦Q⟧⟦E⟧","D-pad","D-pad","D-pad"],
+	"velocidad": ["⟦Z⟧⟦X⟧","D-pad","D-pad","D-pad"],
+	"iso": ["⟦C⟧⟦V⟧","D-pad","D-pad","D-pad"],
+	"compensacion": ["⟦[⟧⟦]⟧","D-pad","D-pad","D-pad"],
+	"diafragma_y": ["⟦Q⟧ and ⟦E⟧","the D-pad ↑↓","the D-pad ↑↓","the D-pad ↑↓"],
+	"velocidad_y": ["⟦Z⟧ and ⟦X⟧","the D-pad ↑↓","the D-pad ↑↓","the D-pad ↑↓"],
+	"iso_y": ["⟦C⟧ and ⟦V⟧","the D-pad ↑↓","the D-pad ↑↓","the D-pad ↑↓"],
+	"elegir_tab": ["⟦Tab⟧","the D-pad ←→","the D-pad ←→","the D-pad ←→"],
+	"cambiar_pag": ["⟦PgUp⟧ and ⟦PgDn⟧","the D-pad ↑↓","the D-pad ↑↓","the D-pad ↑↓"],
+	"elegir_control": ["click · ⟦Tab⟧","D-pad ←→","D-pad ←→","D-pad ←→"],
+	"cambiar_control": ["wheel · ⟦PgUp⟧⟦PgDn⟧","D-pad ↑↓","D-pad ↑↓","D-pad ↑↓"],
+	"parametro": ["⟦Q⟧⟦E⟧ · ⟦Z⟧⟦X⟧ · ⟦C⟧⟦V⟧","D-pad ←→ picks · ↑↓ changes","D-pad ←→ picks · ↑↓ changes","D-pad ←→ picks · ↑↓ changes"],
+	"punto_enfoque": ["⟦1⟧–⟦9⟧ · click","⦅LB⦆ ⦅RB⦆","⦅L1⦆ ⦅R1⦆","⦅L⦆ ⦅R⦆"],
+	"tercios": ["⟦G⟧","⦅R3⦆","⦅R3⦆","⦅R3⦆"],
+	"fotometria": ["⟦M⟧","—","—","—"],
+	"bloqueo": ["⟦B⟧","⦅RT⦆ half-press","⦅R2⦆ half-press","⦅ZR⦆ half-press"],
+	"lupa": ["⟦L⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
+	"manivela": ["⟦K⟧","⦅X⦆","⦅▢⦆","⦅Y⦆"],
+	"bajar": ["⟦Y⟧","⦅Y⦆","⦅△⦆","⦅X⦆"],
+	"paso_entero": ["⟦Shift⟧ held","the D-pad held","the D-pad held","the D-pad held"],
+	"ayuda_pantalla": ["⟦I⟧","⦅X⦆","⦅▢⦆","⦅Y⦆"],
+	"controles": ["⟦Tab⟧","⦅View⦆","⦅Share⦆","⦅−⦆"],
+	"ayuda": ["⟦H⟧","⦅B⦆","⦅◯⦆","⦅A⦆"],
+	"pausa": ["⟦Esc⟧","⦅Menu⦆","⦅Options⦆","⦅+⦆"],
+	"atras": ["⟦Esc⟧","⦅B⦆","⦅◯⦆","⦅A⦆"],
+	"aceptar": ["⟦Enter⟧","⦅A⦆","⦅✕⦆","⦅B⦆"],
+	"elegir_opcion": ["⟦↑⟧⟦↓⟧","D-pad ↑↓","D-pad ↑↓","D-pad ↑↓"],
+	"cambiar_modo": ["⟦←⟧⟦→⟧","D-pad ←→ · ⦅LB⦆ ⦅RB⦆","D-pad ←→ · ⦅L1⦆ ⦅R1⦆","D-pad ←→ · ⦅L⦆ ⦅R⦆"],
+	"andar": ["⟦W⟧⟦A⟧⟦S⟧⟦D⟧","Left stick","Left stick","Left stick"],
+	"correr": ["⟦Shift⟧","⦅L3⦆","⦅L3⦆","⦅L3⦆"],
+	"agacharse": ["⟦Ctrl⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
+	"mirar_paseo": ["Mouse","Right stick","Right stick","Right stick"],
+	"sacar": ["⟦Y⟧ · right-click","⦅Y⦆","⦅△⦆","⦅X⦆"],
+}
+
+const TOUCH_EN = {
+	"mirar": "dragging a finger across the picture", "girar": "your finger on the picture", "zoom": "pinching with two fingers", "enfoque_mf": "Focus on the strip and − +",
+	"enfoque_mf_zoom": "Focus on the strip and − +", "af": "a tap on them or “AF”", "disparar": "●",
+	"diafragma": "tap it on the strip and use − +", "velocidad": "tap it on the strip and use − +", "iso": "tap it on the strip and use − +",
+	"compensacion": "tap it on the strip and use − +", "diafragma_y": "− and +, after tapping it on the strip", "velocidad_y": "− and +, after tapping it on the strip",
+	"iso_y": "− and +, after tapping it on the strip", "elegir_tab": "a tap on the strip", "cambiar_pag": "− and +",
+	"elegir_control": "a tap on the strip", "cambiar_control": "− and +", "parametro": "the strip below and − +",
+	"punto_enfoque": "a tap on the picture", "tercios": "“Thirds”", "fotometria": "the metering button", "bloqueo": "“Lock”",
+	"lupa": "“Loupe”", "manivela": "“Crank”", "bajar": "“Camera”", "ayuda_pantalla": "—", "paso_entero": "− or + held", "controles": "the strip",
+	"ayuda": "“Help”", "pausa": "“Pause”", "atras": "“Back”", "aceptar": "a tap", "elegir_opcion": "a tap",
+	"cambiar_modo": "‹ › or swiping", "andar": "the stick on the left", "correr": "“Run”",
+	"agacharse": "“Crouch”", "mirar_paseo": "dragging a finger", "sacar": "“Camera”",
+}
+
 const MOUSE_SWITCH = 60.0        # pixels the mouse must travel within 0.4 s to take over
 static var mouse_travel = 0.0
 static var mouse_since = 0
@@ -103,8 +163,9 @@ static func kp(control: String) -> String:
 	return plain(k(control))
 
 static func k(control: String) -> String:
-	var row: Array = CONTROLS.get(control,[control,control,control,control])
-	if device == "tactil": return TOUCH.get(control,row[0])
+	var english = Texts.current() == "en"
+	var row: Array = (CONTROLS_EN if english else CONTROLS).get(control,[control,control,control,control])
+	if device == "tactil": return (TOUCH_EN if english else TOUCH).get(control,row[0])
 	if device == "teclado": return row[0]
 	return row[{"xbox":1,"ps":2,"nintendo":3}[family]]
 

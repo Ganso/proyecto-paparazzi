@@ -29,6 +29,18 @@ Ventana a pantalla completa
 ### gfx_completa
 Pantalla completa
 
+### gfx_nombre_Bajo · Nombre de cada perfil (botones de la pantalla de gráficos, equipo, menú)
+Bajo
+
+### gfx_nombre_Medio
+Medio
+
+### gfx_nombre_Alto
+Alto
+
+### gfx_nombre_Ultra
+Ultra
+
 ### gfx_personalizado
 Personalizado
 

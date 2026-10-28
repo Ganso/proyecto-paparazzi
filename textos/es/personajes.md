@@ -32,6 +32,9 @@ un banco
 ### un_perro
 un perro
 
+### un_viandante_en_primer_plano · Lo que tapa la foto cuando se cruza alguien muy cerca
+un viandante en primer plano
+
 ### un_arbusto
 un arbusto
 

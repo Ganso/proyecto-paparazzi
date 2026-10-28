@@ -20,6 +20,8 @@ func evidence(extra = {}) -> Dictionary:
 	return e
 
 func _initialize() -> void:
+	# (Some checks read the Spanish wording of a reason: the player's language must not matter.)
+	Texts.set_language("es",false)
 	# Level data: 20 levels in 4 blocks, the curve tightens.
 	check(Arcade.LEVELS.size() == 30 and Arcade.BLOCKS.size() == 6,"30 levels in 6 blocks")
 	# Passing clouds only where the exposure is the player's and there is a sun to cover.

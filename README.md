@@ -1,4 +1,4 @@
-# PhotoHacks (v0.5.5-alpha)
+# PhotoHacks (v0.6.0-alpha)
 
 > Antes «Proyecto Paparazzi» (nombre de trabajo; sigue en el repositorio, el identificador del paquete y parte de la documentación). El nombre definitivo **PhotoHacks** es un homenaje explícito al proyecto **MusicHacks** de Jaime Altozano.
 
@@ -17,6 +17,7 @@ El visor toma como referencia compositiva [`docs/futuro/referencia.jpg`](docs/fu
 - Renderizador: **Compatibility** (`gl_compatibility`), con mallas de superficie única y colores de vértice.
 - Proporción de aspecto bloqueada a **16:9** (resolución nativa `1280x720`, override `1440x810`).
 - No requiere conexión a internet ni dependencias externas.
+- **Idiomas**: español e inglés. El primer arranque pregunta el idioma; después se cambia en Opciones ([docs/futuro/25](docs/futuro/25_TEXTOS_Y_MULTIIDIOMA.md)).
 
 ### Comandos de Ejecución
 
@@ -117,7 +118,7 @@ godot-4 --path . -- --smoke-test
 - **[docs/origen/](docs/origen/)**: Documento de diseño original de 2012 e imágenes.
 - **`scripts/`**: Lógica de juego, generación procedural de personajes y parque, cinemática y visor.
 - **`shaders/`**: Shaders de revelado fotográfico (`develop.gdshader`), ayuda de prisma (`focus_aid.gdshader`) y maniquí toon con contorno de tinta (`cel_shading.gdshader`, `cel_outline.gdshader`).
-- **`data/`**: Catálogo paramétrico de piezas (`catalogo.json`, `data/piezas/`) y textos en español (`textos.es.json`).
+- **`data/`**: Catálogo paramétrico de piezas (`catalogo.json`, `data/piezas/`, con los nombres de prendas y colores en español e inglés) y textos generados del juego en español e inglés (`textos.es.json`, `textos.en.json`; se editan en `textos/es/` y `textos/en/`).
 - **`tools/`**: Generación de geometría (`build_catalog.py`), visualizadores (`preview_gait.gd`, `preview_people.gd`) y suite de evidencias (`run_evidence.sh`, `capture_evidence.gd`, `build_sheets.py`).
 
 ---

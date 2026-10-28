@@ -119,7 +119,7 @@ func _process(_dt: float) -> void:
 	place("tercios",Rect2(lx,130,lw,74),left)
 	place("bloqueo",Rect2(lx,212,lw,74),left)
 	place("medicion",Rect2(lx,294,lw,74),left and not lesson)
-	buttons.medicion.text = Texts.get_text("fotometria_"+main.equipment.metering)
+	buttons.medicion.text = Texts.get_text("fotometria_corta_"+main.equipment.metering)
 	place("lupa",Rect2(lx,376,lw,74),left and main.equipment.tlr())
 	place("manivela",Rect2(lx,458,lw,74),left and main.equipment.tlr() and main.sandbox and not lesson and (not main.tlr_wound or main.tlr_frames <= 0))
 	var park_walk: bool = main.crowd != null and not hands_off

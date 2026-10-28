@@ -63,8 +63,10 @@ func _ready() -> void:
 	glass.material = mat
 	add_child(glass)
 	build()
+	# The first launch asks for the language, before anything else (scripts/texts.gd).
+	if main.badges_count() and not Texts.chosen(): call_deferred("show_language_choice")
 	# After an update: what is new, once. Then (in a browser) the notice of the web version.
-	if not main.news.is_empty(): call_deferred("show_news")
+	elif not main.news.is_empty(): call_deferred("show_news")
 	elif OS.has_feature("web") and not web_notice_shown:
 		web_notice_shown = true
 		call_deferred("show_web_notice")
@@ -264,8 +266,9 @@ func build_sandbox() -> void:
 		c.add_theme_stylebox_override("focus",box(Color.TRANSPARENT,14,SKY,3))
 		c.pressed.connect(func(): select_scenario(which))
 		card.add_child(c)
-		text(c,Texts.get_text("escenario_"+which).capitalize(),Vector2(16,10),18,INK,body_medium)
-		text(c,Texts.get_text("menu_"+which+"_detalle"),Vector2(16,38),12,SOFT,light_font,230)
+		# (Two lines of detail fit with a margin under them: the descenders touched the border.)
+		text(c,Texts.get_text("escenario_"+which).capitalize(),Vector2(16,7),18,INK,body_medium)
+		text(c,Texts.get_text("menu_"+which+"_detalle"),Vector2(16,32),12,SOFT,light_font,230)
 		cards[which] = c
 	var times = [["day","intro_dia"],["golden","intro_dorada"],["blue","intro_azul"],["night","intro_noche"]]
 	for k in times.size():
@@ -296,14 +299,18 @@ func build_sandbox() -> void:
 
 func build_options() -> void:
 	enter_callback = Callable()
-	# Two wide buttons and three rows of two (the on-screen help is switched while playing).
+	# One wide button and four rows of two, by pairs: language and theme, the camera (sandbox
+	# equipment, exposure steps), the controls (look, vibration) and the progress (album, badges).
+	# (The on-screen help is switched while playing.)
+	var next_language = Texts.LANGUAGES[(Texts.LANGUAGES.find(Texts.current())+1) % Texts.LANGUAGES.size()]
 	var rows = [
 		[Texts.get_text("menu_graficos"),main.show_graphics_settings,true],
-		[Texts.get_text("opcion_equipo_sandbox"),main.show_equipment,true],
+		[Texts.get_text("opcion_idioma") % Texts.get_text("idioma_"+Texts.current()),func(): main.set_language(next_language)],
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
+		[Texts.get_text("opcion_equipo_sandbox"),main.show_equipment],
+		[Texts.get_text("opcion_pasos") % Texts.get_text("pasos_tercios" if main.exposure_thirds else "pasos_enteros"),func(): main.set_exposure_thirds(not main.exposure_thirds); build_card()],
 		[Texts.get_text("opcion_invertir") % Texts.get_text("invertir_"+main.look_invert),func(): main.set_look_invert(main.INVERT_CHOICES[(main.INVERT_CHOICES.find(main.look_invert)+1)%4]); build_card()],
 		[Texts.get_text("opcion_vibracion_tactil" if Glyphs.touch and OS.has_feature("mobile") else "opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
-		[Texts.get_text("opcion_pasos") % Texts.get_text("pasos_tercios" if main.exposure_thirds else "pasos_enteros"),func(): main.set_exposure_thirds(not main.exposure_thirds); build_card()],
 		[Texts.get_text("menu_album"),func(): main.show_album()],
 		[Texts.get_text("menu_insignias"),main.show_badges],
 	]
@@ -320,6 +327,8 @@ func build_options() -> void:
 # button would take the arrows for focus navigation before _unhandled_input ever saw them.
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or main.mode != "INTRO": return
+	# The choice of language: its two buttons take the arrows and Enter / A themselves.
+	if language_open: return
 	if is_instance_valid(web_notice_modal) and web_notice_modal.visible:
 		if event is InputEventKey and event.pressed and not event.echo:
 			if event.physical_keycode in [KEY_ENTER,KEY_KP_ENTER,KEY_SPACE,KEY_ESCAPE]:
@@ -489,6 +498,65 @@ func show_news() -> void:
 	news_open = true
 
 var news_open = false
+
+# ---- Language (scripts/texts.gd) ----
+# The first launch asks for it before anything else, written in every language at once, with the
+# system's language in focus; afterwards it is changed in Options. Another language than the one
+# on show reloads the game in it (main.gd::set_language()).
+var language_open = false
+func show_language_choice() -> void:
+	if is_instance_valid(web_notice_modal): web_notice_modal.queue_free()
+	var overlay = Control.new()
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var backdrop = ColorRect.new()
+	backdrop.position = main.full_rect().position
+	backdrop.size = main.full_rect().size
+	backdrop.color = Color(0,0,0,.55)
+	overlay.add_child(backdrop)
+	var pw = 640.0
+	var ph = 262.0
+	var panel = Panel.new()
+	panel.size = Vector2(pw,ph)
+	panel.position = Vector2((1280-pw)*.5,(720-ph)*.5)
+	if Glyphs.touch:
+		panel.scale = Vector2(FINGER,FINGER)
+		panel.position = Vector2((1280-pw*FINGER)*.5,(720-ph*FINGER)*.5)
+	panel.add_theme_stylebox_override("panel",box(UiStyle.surf(.97),18,UiStyle.SKY,2,24))
+	overlay.add_child(panel)
+	var title = text(panel,Texts.get_text("idioma_titulo"),Vector2(0,28),30,UiStyle.BRAND,title_font,pw)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var buttons = []
+	for k in Texts.LANGUAGES.size():
+		var code: String = Texts.LANGUAGES[k]
+		var b = flat_button(panel,Texts.get_text("idioma_"+code),Rect2(60+k*270,92,250,72),func(): choose_language(code))
+		b.add_theme_font_size_override("font_size",24)
+		b.focus_mode = Control.FOCUS_ALL
+		buttons.append(b)
+	for k in buttons.size():
+		buttons[k].focus_neighbor_left = buttons[k].get_path_to(buttons[posmod(k-1,buttons.size())])
+		buttons[k].focus_neighbor_right = buttons[k].get_path_to(buttons[posmod(k+1,buttons.size())])
+	buttons[maxi(0,Texts.LANGUAGES.find(Texts.system_language()))].call_deferred("grab_focus")
+	var note = text(panel,Texts.get_text("idioma_nota"),Vector2(0,196),15,SOFT,body_font,pw)
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(overlay)
+	web_notice_modal = overlay
+	language_open = true
+
+func choose_language(code: String) -> void:
+	language_open = false
+	if is_instance_valid(web_notice_modal):
+		web_notice_modal.queue_free()
+		web_notice_modal = null
+	if code != Texts.current():
+		main.set_language(code)   # (the game comes back in it, and then shows the news if any)
+		return
+	Texts.set_language(code,main.badges_count())
+	if not main.news.is_empty(): show_news()
+	elif OS.has_feature("web") and not web_notice_shown:
+		web_notice_shown = true
+		show_web_notice()
+	else: change_mode(0)
 func dismiss_news() -> void:
 	news_open = false
 	main.mark_version_seen()

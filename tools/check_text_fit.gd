@@ -3,7 +3,8 @@ extends SceneTree
 # label and RichTextLabel must stay inside the panel that holds it (or the 1280×720 screen) and
 # must not run over another text. Saves a capture of every screen with a problem, the offending
 # texts framed in red.
-#   ~/bin/godot-4-fp --path . --disable-vsync --rendering-method forward_plus --resolution 1280x720 --script tools/check_text_fit.gd [-- --out=<dir>] [--all-shots]
+#   ~/bin/godot-4-fp --path . --disable-vsync --rendering-method forward_plus --resolution 1280x720 --script tools/check_text_fit.gd [-- --out=<dir>] [--all-shots] [--idioma=es|en]
+# --idioma picks the language of the run (scripts/texts.gd; the player's choice is not touched).
 const Main = preload("res://main.tscn")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
@@ -76,14 +77,17 @@ func frame_of(c: Control) -> Rect2:
 		p = p.get_parent()
 	return Rect2(0,0,1280,720)
 
-func collect(node: Node, out: Array) -> void:
+func collect(node: Node, out: Array, boxes = []) -> void:
 	if node is CanvasItem and not node.visible: return
 	if node is Control and node != marks:
 		var r = text_rect(node)
 		r = clipped(node,r)
 		if r.size.x > 1 and r.size.y > 1 and node.modulate.a > .05 and node.self_modulate.a > .05: out.append([node,r])
+		# Buttons and drop-downs, whole: a text must not run under one that is not its own.
+		if node is BaseButton and node.size.x > 8 and node.size.y > 8 and node.modulate.a > .05:
+			boxes.append([node,clipped(node,Rect2(node.get_global_transform().origin,node.size*node.get_global_transform().get_scale()))])
 	if node is SubViewport: return
-	for child in node.get_children(): collect(child,out)
+	for child in node.get_children(): collect(child,out,boxes)
 
 func related(a: Node, b: Node) -> bool:
 	return a.is_ancestor_of(b) or b.is_ancestor_of(a)
@@ -93,8 +97,12 @@ func check(name: String) -> void:
 	screens += 1
 	var items = []
 	# A full-screen menu hides the camera interface behind it: only what is on top counts.
-	if is_instance_valid(game.modal) and game.modal.is_visible_in_tree(): collect(game.modal,items)
-	else: collect(game,items)
+	# The same for a window over the main menu (language, news, web notice).
+	var boxes = []
+	if is_instance_valid(game.modal) and game.modal.is_visible_in_tree():
+		var top = game.modal.get("web_notice_modal")
+		collect(top if top is Control and is_instance_valid(top) else game.modal,items,boxes)
+	else: collect(game,items,boxes)
 	var found = []
 	var bad = []
 	for item in items:
@@ -121,6 +129,13 @@ func check(name: String) -> void:
 				found.append("  SE PISAN %.0f×%.0f px: %s y %s  [%s | %s]" % [x.size.x,x.size.y,label_of(a[0]),label_of(b[0]),a[0].get_path(),b[0].get_path()])
 				bad.append(a[1])
 				bad.append(b[1])
+	for item in items:
+		for box in boxes:
+			if item[0] == box[0] or related(item[0],box[0]): continue
+			var x = item[1].abs().grow(-1.5).intersection(box[1].abs())
+			if x.size.x > 2 and x.size.y > 2:
+				found.append("  SE METE BAJO UN BOTÓN %.0f×%.0f px: %s y el botón %s  [%s | %s]" % [x.size.x,x.size.y,label_of(item[0]),label_of(box[0]),item[0].get_path(),box[0].get_path()])
+				bad.append(item[1])
 	if not found.is_empty():
 		problems += found.size()
 		print("PANTALLA "+name)
@@ -181,7 +196,10 @@ func run() -> void:
 	marks.draw.connect(draw_marks)
 	layer.add_child(marks)
 	await frames(40)
-	for device in ["teclado","mando"]:
+	# With -- --touch the game builds its touch interface (scripts/touch_controls.gd): then the
+	# fingers are the device, as on a phone. Run it with --rendering-method gl_compatibility, as a
+	# phone does (its graphics screen is the light one).
+	for device in (["tactil"] if "--touch" in OS.get_cmdline_user_args() else ["teclado","mando"]):
 		Glyphs.device = device
 		game.pad_polling = false
 		var d = device+"_"
@@ -192,6 +210,32 @@ func run() -> void:
 				game.modal.current = k
 				game.modal.build_card()
 				await check(d+"menu_"+game.modal.MODES[k])
+			# What only shows once: the choice of language, the news of every version, the notice
+			# of the web version and the button of a newer version on itch.io.
+			game.intro()
+			game.modal.show_language_choice()
+			await check(d+"menu_idioma")
+			game.modal.language_open = false
+			game.intro()
+			game.news = game.VERSION_NOTES.duplicate()
+			game.modal.show_news()
+			await check(d+"menu_novedades")
+			var scroll: ScrollContainer = game.modal.web_notice_modal.find_children("*","ScrollContainer",true,false)[0]
+			var pages = 1
+			while scroll.scroll_vertical < scroll.get_v_scroll_bar().max_value-scroll.size.y-1 and pages < 12:
+				scroll.scroll_vertical += int(scroll.size.y*.8)
+				pages += 1
+				await check(d+"menu_novedades_%d" % pages)
+			game.news = []
+			game.modal.news_open = false
+			game.intro()
+			game.modal.show_web_notice()
+			await check(d+"menu_aviso_web")
+			game.intro()
+			game.newer_version = "9.9.9"
+			game.modal.show_update()
+			await check(d+"menu_version_nueva")
+			game.newer_version = ""
 			for body in 4:
 				game.intro()
 				game.equipment.preset(body)
@@ -201,6 +245,11 @@ func run() -> void:
 			game.intro()
 			game.show_graphics_settings()
 			await check(d+"graficos")
+			var profile_before = game.graphics_preset
+			game.graphics_preset = preload("res://scripts/graphics.gd").CUSTOM
+			game.show_graphics_settings()
+			await check(d+"graficos_personalizado")
+			game.graphics_preset = profile_before
 			game.intro()
 			game.show_badges()
 			await check(d+"insignias")
@@ -219,7 +268,8 @@ func run() -> void:
 			for body in 4:
 				game.equipment.preset(body)
 				game.apply_equipment()
-				for face in ["clasica","camara"]:
+				# (On a phone there is only the camera interface: the classic one is forced in tests.)
+				for face in (["camara"] if device == "tactil" else ["clasica","camara"]):
 					game.intro()
 					game.start_session("day")
 					game.begin_assignment()
@@ -322,10 +372,21 @@ func run() -> void:
 					game.academy.begin(n,ph)
 					await frames(90 if ph == "demo" else 30)   # the demo: with its first caption on
 					await check(d+"academia_l%d_%s" % [n,ph])
+					if n == 1 and ph == "practica":
+						game.show_lesson_menu()
+						await check(d+"academia_l1_menu_leccion")
+						game.resume_search()
 					if ph != "demo":
 						await game.take_photo()
 						await check(d+"academia_l%d_%s_foto" % [n,ph])
 				game.academy.stop()
+		if (only == "" or only == "menu") and not preload("res://scripts/album.gd").list().is_empty():
+			# (Empty at the start: by now the run has saved its best photos.)
+			game.intro()
+			game.show_album()
+			await check(d+"album_con_fotos")
+			game.show_album_photo(0)
+			await check(d+"album_foto")
 	if not ui_file.is_empty():
 		var f = FileAccess.open("user://interfaz.cfg",FileAccess.WRITE)
 		f.store_buffer(ui_file)

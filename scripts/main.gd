@@ -309,7 +309,7 @@ func _ready() -> void:
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		for key in ["lens","pan","zoom-to","hud"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
-		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot","--strip-demo"]: demo[arg.trim_prefix("--")] = true
+		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot","--strip-demo","--aperture-sweep","--seated"]: demo[arg.trim_prefix("--")] = true
 		# Capture helper: the help texts of a device (teclado, mando) whatever is plugged in.
 		if arg.begins_with("--device="):
 			preload("res://scripts/input_glyphs.gd").device = arg.get_slice("=",1)
@@ -433,6 +433,14 @@ func _ready() -> void:
 		if not demo.is_empty():
 			apply_equipment()
 			if str(demo.get("hud","1")) == "0": ui.visible = false
+			for key in shot_view: set(key,shot_view[key])
+			if stage != "": stage_scene(stage)
+			if demo.has("aperture-sweep"):
+				equipment.priority = "A"
+				camera_raised = true
+				raise_anim = 1.0
+			update_camera()
+			update_dof_pass()
 	if stress:
 		for i in people.size():
 			people[i].theta = 96.0+48.0*i/(people.size()-1)
@@ -794,11 +802,11 @@ func build_ui() -> void:
 	shutter_button = button(ui,"",Rect2(205,13,116,50),func(): parameter_click("t"))
 	aperture_button = button(ui,"",Rect2(332,13,111,50),func(): parameter_click("n"))
 	iso_button = button(ui,"",Rect2(804,13,128,50),func(): parameter_click("iso"))
-	exposure_button = button(ui,"AUTO",Rect2(1095,13,165,50),func(): parameter_click("ev_comp"))
+	exposure_button = button(ui,Texts.get_text("ayuda_auto"),Rect2(1095,13,165,50),func(): parameter_click("ev_comp"))
 	exposure_label = exposure_button
 	for entry in [[shutter_button,"t"],[aperture_button,"n"],[iso_button,"iso"],[exposure_button,"ev_comp"]]:
 		entry[0].gui_input.connect(func(event): parameter_input(event,entry[1]))
-	equipment_label = button(ui,"Equipo",Rect2(950,18,135,38),show_equipment)
+	equipment_label = button(ui,Texts.get_text("menu_equipo"),Rect2(950,18,135,38),show_equipment)
 	var job_panel = panel(ui,Rect2(25,96,1230,68),Color(.075,.115,.085,.91))
 	sandbox_button = button(job_panel,Texts.get_text("sandbox_boton_escena"),Rect2(16,4,200,26),show_sandbox_controls)
 	# (The graphics are changed from the main menu's options, not during a phase.)
@@ -1125,7 +1133,7 @@ func refresh() -> void:
 	lens_slider.editable = equipment.zoom()
 	focus_slider.editable = equipment.focus_mode == "MF"
 	af_button.disabled = equipment.focus_mode == "MF"
-	equipment_label.text = equipment.CAMERAS[equipment.body]
+	equipment_label.text = equipment.camera_name(equipment.body)
 	if equipment.auto_exposure:
 		var ev_c = equipment.exposure_compensation()
 		var tag = {"A":"A","S":"S"}.get(equipment.priority,"AUTO")
@@ -1161,7 +1169,7 @@ func refresh() -> void:
 	counter_label.visible = not sandbox
 	sandbox_button.visible = sandbox and not (academy and academy.active) and not (tutorial and tutorial.active)
 	var tod_tag = Texts.get_text("estado_noche") if night else (Texts.get_text("estado_dorada") if time_of_day == "golden" else (Texts.get_text("estado_azul") if time_of_day == "blue" else (Texts.get_text("estado_nubes") if park.cloud_cover > .4 else Texts.get_text("estado_sol"))))
-	var frames_text = Texts.get_text("estado_sin_limite") if sandbox else Texts.get_text("estado_disparos_d") % shots
+	var frames_text = Texts.get_text("estado_sin_limite") if sandbox else (Texts.get_text("arcade_un_disparo") if shots == 1 else Texts.get_text("estado_disparos_d") % shots)
 	if sandbox and equipment.tlr(): frames_text = "%d / 12" % tlr_frames
 	status_label.text = tod_tag + " · EV %.1f · " % measured_ev + frames_text + (" · "+clock_text() if arcade_level >= 0 and level_limit() > 0 and not sandbox else "")
 
@@ -1475,6 +1483,12 @@ func badges_count() -> bool:
 	return get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty()
 
 # ---- Photo album (scripts/album.gd) ----
+# Where a photo was taken: saved as a text key (photos from before 0.6 kept the Spanish words).
+func album_where(photo: Dictionary) -> String:
+	var where = photo.get("lugar",[])
+	if not (where is Array) or where.size() < 2: return str(photo.get("where",""))
+	return Texts.get_text(str(where[0])) % int(where[1]) if "%d" in Texts.get_text(str(where[0])) else Texts.get_text(str(where[0]))
+
 # Develops the photo off screen (the same material the result screen uses) and saves it.
 func save_to_album(texture: Texture2D, result: Dictionary) -> String:
 	var size = Vector2i(1280,roundi(1280.0*texture.get_height()/maxf(1.0,texture.get_width())))
@@ -1494,9 +1508,10 @@ func save_to_album(texture: Texture2D, result: Dictionary) -> String:
 	var image = darkroom.get_texture().get_image()
 	darkroom.queue_free()
 	var e: Dictionary = result.evidence
-	var where = Texts.get_text("album_nivel") % (arcade_level+1) if arcade_level >= 0 else (Texts.get_text("academia") if academy and academy.active else Texts.get_text("album_tutorial"))
+	# Where it was taken, as a text key (and the level), so the album shows it in the language in use.
+	var where = ["album_nivel",arcade_level+1] if arcade_level >= 0 else (["academia",0] if academy and academy.active else ["album_tutorial",0])
 	play_sfx("album",-6.0)
-	return Album.add(image,{"score":result.score,"stars":result.stars,"f":e.f,"n":e.n,"t":e.t,"iso":e.iso,"date":Time.get_datetime_string_from_system(false,true).substr(0,16),"where":where,"panning":result.get("panning",false)})
+	return Album.add(image,{"score":result.score,"stars":result.stars,"f":e.f,"n":e.n,"t":e.t,"iso":e.iso,"date":Time.get_datetime_string_from_system(false,true).substr(0,16),"lugar":where,"panning":result.get("panning",false)})
 
 var album_page = 0
 var album_viewing = false
@@ -1534,7 +1549,7 @@ func show_album(page = 0) -> void:
 			thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card.add_child(thumb)
 		label(card,album_caption(photo),Rect2(10,182,256,22),14)
-		label(card,"%s · %s" % [photo.get("where",""),photo.get("date","")],Rect2(10,206,256,20),12,Color("a9b8a0"))
+		label(card,"%s · %s" % [album_where(photo),photo.get("date","")],Rect2(10,206,256,20),12,Color("a9b8a0"))
 	if pages > 1:
 		label(root,Texts.get_text("album_pagina") % [album_page+1,pages],Rect2(540,652,200,30),16,Color("b7c5ad"))
 		if album_page > 0: button(root,"‹",Rect2(470,640,60,52),func(): show_album(album_page-1))
@@ -1563,7 +1578,7 @@ func show_album_photo(index: int) -> void:
 		view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		root.add_child(view)
-	label(root,"%s · ISO %d · %s · %s" % [album_caption(photo),int(photo.get("iso",100)),photo.get("where",""),photo.get("date","")],Rect2(340,652,560,30),15,Color("b7c5ad"))
+	label(root,"%s · ISO %d · %s · %s" % [album_caption(photo),int(photo.get("iso",100)),album_where(photo),photo.get("date","")],Rect2(340,652,560,30),15,Color("b7c5ad"))
 	button(root,Texts.get_text("album_volver"),Rect2(65,640,260,52),func(): show_album(album_page))
 	button(root,Texts.get_text("album_borrar"),Rect2(955,640,260,52),func(): Album.remove(photo.file); show_album(album_page))
 
@@ -2324,8 +2339,75 @@ func reset_walker(q: Pedestrian, lane: int, theta: float, direction: float) -> v
 	q.heading_ready = true
 	q.face_target = NAN
 
+var stage_done = false
+
 func stage_scene(name: String) -> void:
+	if stage_done: return
+	stage_done = true
 	match name:
+		"sentado", "banco_sentado":
+			var bench_i = 0
+			for i in park.benches.size():
+				if absf(angle_difference(deg_to_rad(park.benches[i].theta),deg_to_rad(angle))) < absf(angle_difference(deg_to_rad(park.benches[bench_i].theta),deg_to_rad(angle))): bench_i = i
+			var bench = park.benches[bench_i]
+			set_seat(bench,0,null)
+			set_seat(bench,1,null)
+			var p = pick(func(q): return q.lane == 1 and not q.runner and q.traits.profile != 3)
+			if p == null: p = pick(func(q): return not q.runner and q.traits.profile != 3)
+			for q in people:
+				if q != p and (q.lane == 0 or q.lane == 1 or q.bench_index == bench_i or q.bench_goal == bench_i):
+					q.set_hidden(true)
+			p.set_hidden(false)
+			p.state = "SENTADO"
+			p.seat = 1.0
+			p.seat_kind = "banco"
+			p.bench_index = bench_i
+			p.bench_slot = 0
+			p.sit_from = Vector2(seat_theta(bench,0),bench_seat(bench,p))
+			p.theta = seat_theta(bench,0)
+			p.radius = bench_seat(bench,p)
+			p.position = park.polar(p.theta,p.radius)
+			p.heading = PI-deg_to_rad(bench.theta)
+			p.rotation.y = p.heading
+			p.heading_ready = true
+			p.activity = "mirar"
+			p.act_time = 0.0
+			p.state_time = 999.0
+			p.place()
+			set_seat(bench,0,p)
+			demo_follow = p
+			camera_raised = true
+			raise_anim = 1.0
+			var head = p.control_points()[0]
+			var to = head - camera.global_position
+			angle = rad_to_deg(atan2(to.x, -to.z))
+			pitch = rad_to_deg(atan2(to.y, Vector2(to.x, to.z).length()))
+			focus_distance = to.length()
+			update_camera()
+			update_dof_pass()
+		"parado":
+			var p = pick(func(q): return q.lane == 1 and not q.runner)
+			if p == null: p = pick(func(q): return not q.runner)
+			for q in people:
+				if q != p and (q.lane == 0 or q.lane == 1):
+					q.set_hidden(true)
+			p.set_hidden(false)
+			p.theta = angle
+			p.radius = 3.6
+			p.state = "DETENIDO"
+			p.state_time = 999.0
+			p.activity = "mirar"
+			p.act_time = 0.0
+			p.heading = -deg_to_rad(angle)
+			p.face_target = -deg_to_rad(angle)
+			p.heading_ready = true
+			p.place()
+			demo_follow = p
+			camera_raised = true
+			raise_anim = 1.0
+			focus_distance = camera.global_position.distance_to(p.control_points()[0])
+			update_camera()
+			update_dof_pass()
 		"banco", "palomas":
 			var bench_i = 0
 			for i in park.benches.size():
@@ -3406,13 +3488,14 @@ func update_dof_pass() -> void:
 	# The pass always runs in Forward+: besides the blur, it repairs non-finite pixels before the
 	# glow (otherwise each one flares into a white blob). Only the blur depends on profile and body.
 	dof_pass.visible = not ("dof" in debug_off)
-	set_dof_blur(dof_allowed() and eye_ready() and not (interface_mode == "camara" and equipment.body == 1))
+	set_dof_blur(demo.has("aperture-sweep") or (dof_allowed() and eye_ready() and not (interface_mode == "camara" and equipment.body == 1)))
 
 func set_dof_blur(value: bool) -> void:
 	dof_blur = value
 	if is_instance_valid(dof_pass): (dof_pass.material_override as ShaderMaterial).set_shader_parameter("enabled",value)
 
 func dof_allowed() -> bool:
+	if demo.has("aperture-sweep"): return true
 	return is_instance_valid(dof_pass) and bool(Graphics.settings(graphics_preset).dof) and not ("dof" in debug_off)
 
 func update_finder_shader() -> void:
@@ -3495,6 +3578,13 @@ func set_theme(dark: bool) -> void:
 	config.save("user://interfaz.cfg")
 	UiStyle.set_dark(dark)
 	get_tree().call_deferred("reload_current_scene")
+
+# The language (scripts/texts.gd): like the theme, the interface is built once, so changing it
+# reloads the game. Only from the menu (Options, or the choice of the first launch).
+func set_language(code: String) -> void:
+	var before = Texts.current()
+	Texts.set_language(code,badges_count())
+	if code != before: get_tree().call_deferred("reload_current_scene")
 
 func load_interface() -> void:
 	var config = ConfigFile.new()
@@ -4295,7 +4385,7 @@ func show_results() -> void:
 	label(root,Texts.get_text("d_creditos") % r.credits,Rect2(598,557,180,32),18,Color("b7c5a9"))
 	var evidence: Dictionary = r.evidence
 	label(root,Texts.get_text("0f_mm_1f_1_d_s_iso_d_foco_s") % [evidence.f,evidence.n,roundi(1/evidence.t),evidence.iso,Texts.get_text("infinito") if is_inf(evidence.s) else Texts.get_text("2f_m") % evidence.s],Rect2(25,606,760,26),15,Color("b5c5a8"))
-	label(root,Texts.get_text("mejor_del_encargo_d_100_quedan_d_disparos") % [best.score,shots]+(" · %s" % clock_text() if arcade_level >= 0 and level_limit() > 0 else ""),Rect2(25,646,745,30),16)
+	label(root,Texts.get_text("mejor_del_encargo_d_100_queda_1_disparo" if shots == 1 else "mejor_del_encargo_d_100_quedan_d_disparos") % ([best.score] if shots == 1 else [best.score,shots])+(" · %s" % clock_text() if arcade_level >= 0 and level_limit() > 0 else ""),Rect2(25,646,745,30),16)
 	var scroll = ScrollContainer.new()
 	scroll.position = Vector2(803,105)
 	scroll.size = Vector2(453,509)
@@ -4829,13 +4919,17 @@ func update_demo(dt: float) -> void:
 	if demo.has("zoom-to"):
 		focal = lerpf(demo_focal_start,float(demo["zoom-to"]),smoothstep(0.0,12.0,demo_time))
 	if is_instance_valid(demo_follow):
-		# Keep the pedestrian's chest centred (measured in camera space) and in focus, like AF-C.
-		var chest = demo_follow.global_position+Vector3.UP*demo_follow.height*.7
-		var local = camera.global_transform.affine_inverse()*chest
-		var gain = minf(1.0,dt*4.0)
-		angle = fposmod(angle+rad_to_deg(atan2(local.x,-local.z))*gain,360)
-		pitch += rad_to_deg(atan2(local.y,-local.z))*gain
-		var subject_distance = camera.global_position.distance_to(chest)
+		var look_pt = demo_follow.control_points()[0] if demo_follow.state in ["SENTADO","DETENIDO"] else demo_follow.global_position+Vector3.UP*demo_follow.height*.7
+		if demo_follow.state in ["SENTADO","DETENIDO"]:
+			var to = look_pt - camera.global_position
+			angle = rad_to_deg(atan2(to.x, -to.z))
+			pitch = rad_to_deg(atan2(to.y, Vector2(to.x, to.z).length()))
+		else:
+			var local = camera.global_transform.affine_inverse()*look_pt
+			var gain = minf(1.0,dt*4.0)
+			angle = fposmod(angle+rad_to_deg(atan2(local.x,-local.z))*gain,360)
+			pitch += rad_to_deg(atan2(local.y,-local.z))*gain
+		var subject_distance = camera.global_position.distance_to(look_pt)
 		if demo.has("mf-rack"):
 			# Manual focus: turn the ring from 1.2 m to the subject over 5 s (the split-image aid shows it).
 			focus_distance = lerpf(1.2,subject_distance,smoothstep(1.0,6.0,demo_time))
@@ -4843,7 +4937,32 @@ func update_demo(dt: float) -> void:
 			focus_distance = subject_distance
 		if demo.has("expose") and fmod(demo_time,.5) < dt:
 			# Meter the subject itself, as a photographer with a hand meter would.
-			expose_for(park.illumination_ev(chest,time_of_day,demo_follow))
+			expose_for(park.illumination_ev(look_pt,time_of_day,demo_follow))
+	if demo.has("aperture-sweep"):
+		camera_raised = true
+		raise_anim = 1.0
+		equipment.priority = "A"
+		var stops = apertures()
+		var start_idx = 0
+		var max_idx = stops.find(16.0)
+		if max_idx < 0: max_idx = stops.size() - 1
+		var progress = clampf((demo_time - 1.0) / 9.0, 0.0, 1.0)
+		var want_idx = clampi(roundi(lerpf(start_idx, max_idx, progress)), start_idx, max_idx)
+		if want_idx != n_index or demo_time < 0.1:
+			var changed = want_idx != n_index
+			n_index = want_idx
+			auto_expose()
+			update_camera()
+			refresh()
+			if sfx and changed: sfx.play("dial_1")
+		if is_instance_valid(dof_pass):
+			set_dof_blur(true)
+			var dof_mat: ShaderMaterial = dof_pass.material_override
+			dof_mat.set_shader_parameter("enabled", true)
+			dof_mat.set_shader_parameter("focal_mm", focal)
+			dof_mat.set_shader_parameter("aperture", aperture_value())
+			dof_mat.set_shader_parameter("focus_m", focus_distance)
+			dof_mat.set_shader_parameter("max_radius", 120.0)
 	if demo.has("scare-at") and demo_time >= demo["scare-at"] and not demo.has("scared") and pigeons and not pigeons.flocks.is_empty():
 		# A dog or a runner gets too close: the flock nearest the camera's line flies to the trees.
 		demo["scared"] = true
@@ -4951,19 +5070,19 @@ func show_equipment() -> void:
 	if arcade_level >= 0 and not sandbox:
 		# The arcade level fixes the camera: only the interface and the graphics can change.
 		label(root,Texts.get_text("arcade_equipo_fijo"),Rect2(75,100,1100,30),18,Color("b8d78c"))
-		label(root,Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],Rect2(75,150,1100,30),20)
-		if equipment_return == "INTRO": button(root,Texts.get_text("equipo_graficos_s") % graphics_preset,Rect2(75,630,340,55),show_graphics_settings)
+		label(root,Texts.get_text("arcade_camara_d") % [equipment.camera_name(equipment.body),equipment.lens_name(equipment.lens())],Rect2(75,150,1100,30),20)
+		if equipment_return == "INTRO": button(root,Texts.get_text("equipo_graficos_s") % profile_name(graphics_preset),Rect2(75,630,340,55),show_graphics_settings)
 		button(root,Texts.get_text("equipo_volver"),Rect2(880,630,320,55),restore_equipment_screen,true)
 		return
 	for i in 4:
 		button(root,Texts.get_text("equipo_preajuste_%d" % (i+1)),Rect2(75+i*285,95,270,52),func(): equipment.preset(i); apply_equipment(); show_equipment())
 	label(root,Texts.get_text("equipo_manual"),Rect2(75,166,1100,35),24)
 	label(root,Texts.get_text("equipo_camara"),Rect2(75,225,200,35),20)
-	option(root,equipment.CAMERAS,equipment.body,Rect2(330,220,700,45),func(i): equipment.body = i; equipment.lens_index = 0; equipment.film = equipment.film or i == 3; apply_equipment(); show_equipment())
+	option(root,range(4).map(func(i): return equipment.camera_name(i)),equipment.body,Rect2(330,220,700,45),func(i): equipment.body = i; equipment.lens_index = 0; equipment.film = equipment.film or i == 3; apply_equipment(); show_equipment())
 	label(root,Texts.get_text("equipo_objetivo"),Rect2(75,285,250,35),20)
-	option(root,equipment.LENSES[equipment.body].map(func(l): return l.name),equipment.lens_index,Rect2(330,280,700,45),func(i): equipment.lens_index = i; apply_equipment(); show_equipment())
+	option(root,equipment.LENSES[equipment.body].map(func(l): return equipment.lens_name(l)),equipment.lens_index,Rect2(330,280,700,45),func(i): equipment.lens_index = i; apply_equipment(); show_equipment())
 	label(root,Texts.get_text("equipo_enfoque"),Rect2(75,345,200,35),20)
-	option(root,equipment.focus_modes(),equipment.focus_modes().find(equipment.focus_mode),Rect2(330,340,700,45),func(i): equipment.focus_mode = equipment.focus_modes()[i]; apply_equipment(); show_equipment())
+	option(root,equipment.focus_modes().map(func(m): return equipment.focus_name(m)),equipment.focus_modes().find(equipment.focus_mode),Rect2(330,340,700,45),func(i): equipment.focus_mode = equipment.focus_modes()[i]; apply_equipment(); show_equipment())
 	label(root,Texts.get_text("equipo_exposicion"),Rect2(75,405,250,35),20)
 	option(root,["M","P","A","S"].map(func(m): return Texts.get_text("equipo_modo_"+m.to_lower())),["M","P","A","S"].find(equipment.exposure_mode()),Rect2(330,400,700,45),func(i): equipment.set_exposure_mode(["M","P","A","S"][i]); apply_equipment(); show_equipment())
 	label(root,Texts.get_text("equipo_soporte"),Rect2(75,465,200,35),20)
@@ -4971,7 +5090,7 @@ func show_equipment() -> void:
 	if equipment.film:
 		label(root,Texts.get_text("equipo_pelicula"),Rect2(75,525,250,35),20)
 		option(root,Photo.ISOS.map(func(iso): return "ISO %d" % iso),equipment.film_iso_index,Rect2(330,520,700,45),func(i): equipment.film_iso_index = i; apply_equipment(); show_equipment())
-	if equipment_return == "INTRO": button(root,Texts.get_text("equipo_graficos_s") % graphics_preset,Rect2(75,630,340,55),show_graphics_settings)
+	if equipment_return == "INTRO": button(root,Texts.get_text("equipo_graficos_s") % profile_name(graphics_preset),Rect2(75,630,340,55),show_graphics_settings)
 	button(root,Texts.get_text("equipo_usar"),Rect2(880,630,320,55),restore_equipment_screen,true)
 
 
@@ -4998,8 +5117,8 @@ func override_path() -> String:
 # Newest first: [version, how many points its text has (novedades_<version>_<k>), whether it
 # changed the default graphics (then the player is advised to reset the graphics options)].
 # Two or three points per version, only what a player notices. A new release adds its row here
-# and its texts in textos/es/menu.md.
-const VERSION_NOTES = [["0.5.5",3,false],["0.5.4",1,false],["0.5.3",3,false],["0.5.2",1,false],["0.5.1",2,false],["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
+# and its texts in textos/es/menu.md and textos/en/menu.md.
+const VERSION_NOTES = [["0.6.0",3,false],["0.5.5",3,false],["0.5.4",1,false],["0.5.3",3,false],["0.5.2",1,false],["0.5.1",2,false],["0.5.0",3,false],["0.4.0",3,false],["0.3.4",3,false],["0.3.3",3,false],["0.3.2",3,false],["0.3.1",3,true],["0.3.0",3,false],["0.2.0",3,false]]
 var news: Array = []
 
 static var version_override = ""     # -- --version-as=0.3.1: to try the news and the update notice
@@ -5156,7 +5275,11 @@ func apply_graphics_preset(preset: String) -> void:
 	apply_mannequin_graphics_preset(preset)
 	pass
 	if is_instance_valid(graphics_button_intro):
-		graphics_button_intro.text = Texts.get_text("menu_graficos_s") % graphics_preset
+		graphics_button_intro.text = Texts.get_text("menu_graficos_s") % profile_name(graphics_preset)
+
+# A graphics profile as the player reads it («Bajo» is its identifier).
+func profile_name(preset: String) -> String:
+	return Texts.get_text("gfx_personalizado") if Graphics.is_custom(preset) else Texts.get_text("gfx_nombre_"+preset)
 
 func gfx_label(value: String) -> String:
 	return Texts.get_text(value.trim_prefix("@")) if value.begins_with("@") else value
@@ -5177,7 +5300,7 @@ func show_graphics_settings() -> void:
 	for i in names.size():
 		var pname: String = names[i]
 		var active = graphics_preset == pname
-		button(root,("✓ " if active else "")+(Texts.get_text("gfx_personalizado") if Graphics.is_custom(pname) else pname),Rect2(60+i*232,116,220,44),func():
+		button(root,("✓ " if active else "")+profile_name(pname),Rect2(60+i*232,116,220,44),func():
 			if Graphics.is_custom(pname) and not Graphics.has_saved_custom(): Graphics.copy_to_custom(graphics_preset if not Graphics.is_custom(graphics_preset) else "Ultra")
 			select_graphics_profile(pname)
 			show_graphics_settings()
@@ -5225,7 +5348,7 @@ func show_graphics_settings() -> void:
 		label(body,Texts.get_text("gfx_copiar"),Rect2(24,12,90,28),14)
 		for i in 4:
 			var base: String = names[i]
-			button(body,base,Rect2(114+i*96,8,88,32),func():
+			button(body,profile_name(base),Rect2(114+i*96,8,88,32),func():
 				Graphics.copy_to_custom(base)
 				select_graphics_profile(Graphics.CUSTOM)
 				show_graphics_settings())
@@ -5287,7 +5410,7 @@ func show_light_graphics(root: Control) -> void:
 	for i in names.size():
 		var pname: String = names[i]
 		var active = graphics_preset == pname
-		button(root,("✓ " if active else "")+pname,Rect2(60+i*292,180,276,76),func():
+		button(root,("✓ " if active else "")+profile_name(pname),Rect2(60+i*292,180,276,76),func():
 			select_graphics_profile(pname)
 			show_graphics_settings()
 		,active).add_theme_font_size_override("font_size",22)
@@ -5916,7 +6039,7 @@ func show_assignment() -> void:
 func show_level_briefing(root: Control) -> void:
 	var level: Dictionary = Arcade.LEVELS[arcade_level]
 	rich_label(root,plain_bb(Texts.get_text("arcade_nivel_%d_texto" % (arcade_level+1)))+"\n[font_size=8] [/font_size]\n"+dotted([Texts.get_text("arcade_cualquiera")] if anyone_level() else Array(casting.descriptors(target.traits))),Rect2(565,160,640,220),18)
-	var rules = [Texts.get_text("arcade_camara_d") % [equipment.CAMERAS[equipment.body],equipment.lens().name],
+	var rules = [Texts.get_text("arcade_camara_d") % [equipment.camera_name(equipment.body),equipment.lens_name(equipment.lens())],
 		(Texts.get_text("arcade_un_disparo") if level.shots == 1 else Texts.get_text("arcade_disparos_d") % level.shots)+" · "+(Texts.get_text("arcade_tiempo_d") % level.limit if level.limit > 0 else Texts.get_text("arcade_sin_tiempo"))+" · "+Texts.get_text("arcade_nota_minima_d") % level.min]
 	label(root,"\n".join(rules),Rect2(565,385,640,50),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,442,640,24),15,Color("b8d78c"))
@@ -5982,12 +6105,21 @@ func show_academy() -> void:
 		label(rows,"%d" % n,Rect2(13,y+6+mid,44,34),24,Color("b8d78c")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label(rows,Texts.get_text(academy.lesson_key(n,"titulo")),Rect2(65,y+2+mid*.5,440,30),title_size,Color("e6ebdb"))
 		label(rows,Texts.get_text(academy.lesson_key(n,"resumen")),Rect2(65,y+25+mid*1.5,440,22),15 if Glyphs.touch else 12,Color("a9b8a0"))
-		var columns = [515,587,699,781]
+		# The four phases share the room between the summary and the buttons (515–855) with equal
+		# gaps, measured: the words are of different lengths in every language.
 		var marks: Array = academy.PHASES+["examen"]
+		var phase_labels = []
 		for k in marks.size():
 			var ph: String = marks[k]
 			var ok = academy.done(n,ph)
-			label(rows,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(columns[k],y+12+mid,112,22),13,Color("b8d78c") if ok else Color("8f9f86"))
+			phase_labels.append(label(rows,"%s %s" % [Texts.get_text("academia_hecho") if ok else Texts.get_text("academia_pendiente"),Texts.get_text("academia_fase_"+ph)],Rect2(515,y+12+mid,112,22),13,Color("b8d78c") if ok else Color("8f9f86")))
+		var widths = phase_labels.map(func(l): return l.get_theme_font("font").get_string_size(l.text,HORIZONTAL_ALIGNMENT_LEFT,-1,13).x)
+		var gap = maxf(8.0,(340.0-widths.reduce(func(a,b): return a+b,0.0))/(widths.size()-1))
+		var x = 515.0
+		for k in phase_labels.size():
+			phase_labels[k].position.x = x
+			phase_labels[k].size.x = widths[k]+4
+			x += widths[k]+gap
 		# First the lesson, then its exam — and no exam before the theory has been read.
 		var started = academy.done(n,"teoria")
 		var first = n == 1 if academy.practices_done() == 0 and not academy.done(1,"teoria") else (not started and (n == 1 or academy.done(n-1,"teoria")))
@@ -6132,7 +6264,7 @@ func show_sandbox_result() -> void:
 		label(root,current_result.get("tutorial_note",""),Rect2(25,590,825,60),17,UiStyle.SKY_DEEP).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button(root,Texts.get_text("tutorial_continuar"),Rect2(885,620,360,75),resume_search,true)
 		return
-	label(root,"La foto conserva los ajustes del disparo. Prueba otro enfoque, exposición o equipo.",Rect2(25,584,825,50),17).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	button(root,"Menú",Rect2(25,647,165,50),intro)
-	button(root,"Cambiar equipo",Rect2(210,647,260,50),show_equipment)
+	label(root,Texts.get_text("sandbox_resultado_nota"),Rect2(25,592,825,50),17).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button(root,Texts.get_text("encargo_menu"),Rect2(25,647,165,50),intro)
+	button(root,Texts.get_text("sandbox_cambiar_equipo"),Rect2(210,647,260,50),show_equipment)
 	button(root,Texts.get_text("seguir_probando"),Rect2(885,620,360,75),resume_search,true)

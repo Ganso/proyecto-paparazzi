@@ -32,7 +32,7 @@ func generate(runner = false) -> Dictionary:
 		# …and the shoulder bag would hang inside it.
 		if catalog.piezas.accesorio[t.accessory].style in catalog.piezas.torso[t.upper].get("sin_accesorios",[]): continue
 		if catalog.piezas.cabeza[t.hair].style == "bald" and (catalog.perfiles[t.profile].id == "nino" or t.gender == "f"): continue
-		var signature = "|".join(descriptors(t))
+		var signature = "|".join(descriptors(t,"es"))
 		if not used.has(signature):
 			used[signature] = true
 			return t
@@ -54,40 +54,49 @@ func weighted(pieces: Array) -> int:
 		if roll < 0: return i
 	return pieces.size()-1
 
-func garment(piece: Dictionary, color_name: String, palette: Dictionary) -> String:
+# A garment with its colour. Spanish agrees the colour in gender and number («formas»); English puts
+# it before the noun («en»), or where the piece's pattern says («en_color»: «long %s hair»).
+func garment(piece: Dictionary, color_name: String, palette: Dictionary, language = "") -> String:
+	if (language if language != "" else Texts.current()) == "en":
+		var colour = str(palette[color_name].get("en",color_name))
+		return str(piece.get("en_color","%s "+str(piece.get("en",piece.etiqueta)))) % colour
 	var idx = ["m","f","mp","fp"].find(piece.genero)
 	# Keep the compound name intact and insert the adjective before its complement.
-	if piece.id == Texts.get_text("pantalon_de_vestir"): return Texts.get_text("pantalon_s_de_vestir") % palette[color_name].formas[idx]
+	if piece.id == "pantalón de vestir": return Texts.get_text("pantalon_s_de_vestir") % palette[color_name].formas[idx]
 	# Pieces whose name goes on after the colour («gorra roja hacia atrás») bring their own pattern.
 	if piece.has("etiqueta_color"): return str(piece.etiqueta_color) % palette[color_name].formas[idx]
 	return piece.etiqueta+" "+palette[color_name].formas[idx]
 
-func descriptors(t: Dictionary) -> PackedStringArray:
+# What tells this person apart, in the language in use. Who is told apart from whom is decided in
+# Spanish whatever the language (generate(), predicates_for()), so the cast and the assignments are
+# the same in every language.
+func descriptors(t: Dictionary, language = "") -> PackedStringArray:
 	var head: Dictionary = catalog.piezas.cabeza[t.hair]
 	return PackedStringArray([
-		garment(catalog.piezas.torso[t.upper],t.upper_color,catalog.tonos_ropa),
-		garment(catalog.piezas.piernas[t.lower],t.lower_color,catalog.tonos_ropa),
-		Texts.get_text("cabeza_calva") if head.style == "bald" else garment(head,t.lower_color if head.zona_color == "tela_b" else t.hair_color,catalog.tonos_ropa if head.zona_color == "tela_b" else catalog.tonos_pelo),
-		profile_description(t)+accessory_description(t)+(Texts.get_text("rasgo_corriendo") if t.get("runner",false) else "")
+		garment(catalog.piezas.torso[t.upper],t.upper_color,catalog.tonos_ropa,language),
+		garment(catalog.piezas.piernas[t.lower],t.lower_color,catalog.tonos_ropa,language),
+		Texts.get_text("cabeza_calva") if head.style == "bald" else garment(head,t.lower_color if head.zona_color == "tela_b" else t.hair_color,catalog.tonos_ropa if head.zona_color == "tela_b" else catalog.tonos_pelo,language),
+		profile_description(t,language)+accessory_description(t,language)+(Texts.get_text("rasgo_corriendo") if t.get("runner",false) else "")
 	])
 
 func predicates_for(target: Dictionary, all_traits: Array) -> PackedStringArray:
-	var desc = descriptors(target)
+	var desc = descriptors(target,"es")
 	for count in [3,4]:
 		var unique = true
 		for other in all_traits:
 			if other == target: continue
-			var other_desc = descriptors(other)
+			var other_desc = descriptors(other,"es")
 			var matches = true
 			for i in count:
 				if other_desc[i] != desc[i]: matches = false
 			if matches:
 				unique = false
 				break
-		if unique: return desc.slice(0,count)
+		if unique: return descriptors(target).slice(0,count)
 	return PackedStringArray()
 
-func profile_description(t: Dictionary) -> String:
+func profile_description(t: Dictionary, language = "") -> String:
+	if (language if language != "" else Texts.current()) == "en": return str(catalog.perfiles[t.profile].get("en",""))
 	var description: String = catalog.perfiles[t.profile].etiqueta
 	if t.get("gender","m") == "f":
 		description = description.replace("adulto","adulta").replace("delgado","delgada").replace("robusto","robusta").replace("niño","niña")
@@ -95,11 +104,12 @@ func profile_description(t: Dictionary) -> String:
 
 # « · con gafas de sol y mochila roja»: the glasses (their own slot, no colour of their own: the
 # frame is the same for everyone) and the accessory with its colour, whichever of the two there are.
-func accessory_description(t: Dictionary) -> String:
+func accessory_description(t: Dictionary, language = "") -> String:
+	var english = (language if language != "" else Texts.current()) == "en"
 	var worn: Array = []
 	var glasses: int = t.get("glasses",0)
-	if glasses > 0 and catalog.piezas.has("gafas"): worn.append(catalog.piezas.gafas[glasses].etiqueta)
+	if glasses > 0 and catalog.piezas.has("gafas"): worn.append(catalog.piezas.gafas[glasses].get("en","") if english else catalog.piezas.gafas[glasses].etiqueta)
 	var index: int = t.get("accessory",0)
-	if index > 0: worn.append(garment(catalog.piezas.accesorio[index],t.get("accessory_color","rojo"),catalog.tonos_ropa))
+	if index > 0: worn.append(garment(catalog.piezas.accesorio[index],t.get("accessory_color","rojo"),catalog.tonos_ropa,language))
 	if worn.is_empty(): return ""
 	return Texts.get_text("rasgo_con")+Texts.get_text("rasgo_y").join(worn)

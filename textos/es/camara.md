@@ -72,6 +72,18 @@ Ponderada al centro
 ### fotometria_matricial
 Matricial
 
+### fotometria_corta_puntual · Modo de medición en la ayuda en pantalla (columna de 66 px a 13 px)
+> máximo 9 caracteres
+Puntual
+
+### fotometria_corta_ponderada
+> máximo 9 caracteres
+Al centro
+
+### fotometria_corta_matricial
+> máximo 9 caracteres
+Matricial
+
 ### fotometria_cambiada
 Fotometría: %s
 

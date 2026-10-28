@@ -10,7 +10,7 @@ const MIN_SCORE = 80
 static func index_path() -> String:
 	return DIR+"/album.cfg"
 
-# Newest first: [{"file", "score", "stars", "f", "n", "t", "iso", "date", "where", "panning"}].
+# Newest first: [{"file", "score", "stars", "f", "n", "t", "iso", "date", "lugar" ([text key, level]), "panning"}].
 static func list() -> Array:
 	var config = ConfigFile.new()
 	var out = []

@@ -43,7 +43,10 @@ func run() -> void:
 	var file = await game.save_to_album(game.current_photo,game.current_result)
 	var photos = Album.list()
 	check(photos.size() == 1 and photos[0].file == file and FileAccess.file_exists(Album.DIR+"/"+file),"The developed photo is saved as a file")
-	check(int(photos[0].score) == game.current_result.score and is_equal_approx(float(photos[0].f),game.current_result.evidence.f) and str(photos[0].where) == Texts.get_text("album_nivel") % 1,"…with its score, its settings and where it was taken")
+	check(int(photos[0].score) == game.current_result.score and is_equal_approx(float(photos[0].f),game.current_result.evidence.f) and game.album_where(photos[0]) == Texts.get_text("album_nivel") % 1,"…with its score, its settings and where it was taken")
+	# Where it was taken is kept as a text key, so the album speaks the language in use; photos saved
+	# before that kept the words themselves.
+	check(photos[0].get("lugar",[]) == ["album_nivel",1] and game.album_where({"where":"Nivel 3"}) == "Nivel 3","…as a text key (and the old photos keep theirs)")
 	var image = Album.load_image(file)
 	check(image != null and image.get_width() == 1280 and image.get_height() == 720,"It is a 1280 × 720 picture")
 	var lit = 0

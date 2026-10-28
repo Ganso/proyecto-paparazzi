@@ -225,7 +225,7 @@ func garment_checks(casting) -> void:
 		if t.glasses > 0 and t.accessory > 0: check(text.contains(catalog.piezas.gafas[t.glasses].etiqueta+Texts.get_text("rasgo_y")),"Glasses and accessory are joined in the description («%s»)" % text)
 	check(seen.glasses > seen.people/6 and seen.glasses < seen.people/2 and seen.glasses_with_accessory > 20,"About one in three wears glasses, with any accessory (%d of %d, %d with one)" % [seen.glasses,seen.people,seen.glasses_with_accessory])
 	check(seen.umbrella > 0 and seen.umbrella < seen.people/8,"The umbrella is the rarest accessory (%d of %d)" % [seen.umbrella,seen.people])
-	check(wardrobe.garment(catalog.piezas.cabeza[styles.call("cabeza").find("cap_back")],"rojo",catalog.tonos_ropa) == "gorra roja hacia atrás","The backwards cap puts its colour in the middle")
+	check(wardrobe.garment(catalog.piezas.cabeza[styles.call("cabeza").find("cap_back")],"rojo",catalog.tonos_ropa,"es") == "gorra roja hacia atrás" and wardrobe.garment(catalog.piezas.cabeza[styles.call("cabeza").find("cap_back")],"rojo",catalog.tonos_ropa,"en") == "red cap worn backwards","The backwards cap puts its colour in the middle (and in English, where it goes)")
 	for item in [["accesorio","backpack","never_sits"],["accesorio","umbrella","hand_busy"],["torso","coat","never_sits"]]:
 		var who = Person.new()
 		var t = wardrobe.generate()

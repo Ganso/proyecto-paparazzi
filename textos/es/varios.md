@@ -120,6 +120,9 @@ RECHAZADA
 ### mejor_del_encargo_d_100_quedan_d_disparos
 Mejor del encargo: %d/100 · Quedan %d disparos
 
+### mejor_del_encargo_d_100_queda_1_disparo · Lo mismo con un solo disparo
+Mejor del encargo: %d/100 · Queda 1 disparo
+
 ### reintentar_d
 REINTENTAR (%d)
 
@@ -252,11 +255,11 @@ HORA DORADA
 ### parque_dorada
 HORA DORADA
 
-### si
-sí
+### si · Valor de una opción, tras dos puntos («Vibración del mando: Sí»)
+Sí
 
 ### no
-no
+No
 
 ### mas_de_150
 más del 150

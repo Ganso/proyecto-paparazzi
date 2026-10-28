@@ -27,6 +27,9 @@ const GROUPS = {
 	"ayuda": [Color("7a8a9a"),["H","I","Esc","Intro"]],
 }
 
+# The names written on the wide keys, in English (the rows keep the Spanish names as identifiers).
+const KEY_NAMES_EN = {"Mayús":"Shift","Intro":"Enter","Espacio":"Space"}
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	font = UiStyle.font("Roboto-Regular")
@@ -45,7 +48,8 @@ func draw_key(rect: Rect2, label: String) -> void:
 	draw_colored_polygon(PackedVector2Array([rect.position+Vector2(inset,rect.size.y-inset*2),rect.end-Vector2(inset,inset*2),rect.position+Vector2(rect.size.x-inset*2,inset),rect.position+Vector2(inset*2,inset)]),top)
 	if label != "":
 		var size = 13 if label.length() <= 2 else 11
-		draw_string(font,rect.position+Vector2(0,rect.size.y*.58),label,HORIZONTAL_ALIGNMENT_CENTER,rect.size.x,size,Color.WHITE if g != "" else UiStyle.SOFT)
+		var shown = KEY_NAMES_EN.get(label,label) if Texts.current() == "en" else label
+		draw_string(font,rect.position+Vector2(0,rect.size.y*.58),shown,HORIZONTAL_ALIGNMENT_CENTER,rect.size.x,size,Color.WHITE if g != "" else UiStyle.SOFT)
 
 func _draw() -> void:
 	var origin = Vector2(20,10)

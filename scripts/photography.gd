@@ -116,11 +116,15 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	if panning: movement_text = Texts.get_text("mov_barrido") % [used, background]
 	elif trail: movement_text = Texts.get_text("mov_estela") % [used, drag]
 	elif subject < 1 and background > C and e.v < PAN_SUBJECT_SPEED: movement_text = Texts.get_text("mov_camara") % used
+	# What is in the way, each thing named once («un árbol, un árbol, un árbol» read like a stammer).
+	var in_the_way: Array = []
+	for blocker in e.blockers:
+		if not blocker in in_the_way: in_the_way.append(blocker)
 	var lines = [
 		Texts.get_text("enfoque_d_coc_3f_mm_nitido_0_030_foco_a_s_sujeto_a_2f_m_s") % [roundi(focus*100), blur, Texts.get_text("infinito") if is_inf(e.s) else Texts.get_text("2f_m") % e.s, e.get("d_eyes", e.d), Texts.get_text("vuelve_a_enfocar_sobre_el_sujeto") if focus < 1 else Texts.get_text("el_sujeto_esta_dentro_de_la_nitidez_aceptable")],
 		Texts.get_text("exposicion_d_ev_2f_s_s") % [roundi(exposure*100), delta, Texts.get_text("subexpuesta") if delta > .5 else Texts.get_text("sobreexpuesta") if delta < -.5 else Texts.get_text("correcta"), Texts.get_text("abre_diafragma_sube_iso_o_alarga_el_tiempo") if delta > .5 else Texts.get_text("cierra_diafragma_baja_iso_o_acorta_el_tiempo") if delta < -.5 else Texts.get_text("dentro_de_la_tolerancia_de_medio_paso")],
 		Texts.get_text("movimiento_d_pulso_tf_2f_arrastre_3f_mm_s") % [roundi(movement*100), movement_text],
-		Texts.get_text("oclusion_d_d_5_puntos_libres_s") % [roundi(occlusion*100), 5-e.blockers.size(), Texts.get_text("obstaculos")+", ".join(e.blockers)+Texts.get_text("espera_a_que_despejen_la_vista") if not e.blockers.is_empty() else Texts.get_text("cabeza_pecho_cadera_y_ambas_rodillas_visibles")],
+		Texts.get_text("oclusion_d_d_5_puntos_libres_s") % [roundi(occlusion*100), 5-e.blockers.size(), Texts.get_text("obstaculos")+", ".join(in_the_way)+Texts.get_text("espera_a_que_despejen_la_vista") if not e.blockers.is_empty() else Texts.get_text("cabeza_pecho_cadera_y_ambas_rodillas_visibles")],
 		Texts.get_text("encuadre_d_altura_0f_ideal_4585_s_s") % [roundi(framing*100), ("%.0f" % (h*100)) if h <= 1.5 else Texts.get_text("mas_de_150"), Texts.get_text("cabeza_recortada" if portrait else "cabeza_o_pies_recortados") if crop < 1 else Texts.get_text("retrato" if portrait else "cuerpo_entero"), Texts.get_text("bonificacion_de_tercios") if thirds > 0 else Texts.get_text("situa_el_pecho_cerca_de_una_linea_de_tercios")]
 	]
 	return {"score":score, "stars":stars, "credits":reward, "rejected":rejected, "reason":reason, "focus":focus, "exposure":exposure, "movement":movement, "occlusion":occlusion, "framing":framing, "coc":blur, "delta":delta, "ratio":ratio, "drag":drag, "lines":lines, "panning":panning, "background":background, "drag_sign":signf(lateral)}

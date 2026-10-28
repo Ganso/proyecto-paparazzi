@@ -2,9 +2,9 @@
 """Textos del juego: se editan en Markdown (textos/<idioma>/*.md) y de ahí se genera el JSON que
 lee el juego (data/textos.<idioma>.json). El JSON no se toca a mano.
 
-    python3 tools/textos.py                 importa el español (valida y escribe el JSON)
-    python3 tools/textos.py --comprobar     valida sin escribir (sale con error si el JSON no está al día)
-    python3 tools/textos.py --idioma en     importa otro idioma (textos/en/)
+    python3 tools/textos.py                 importa todos los idiomas (valida y escribe cada JSON)
+    python3 tools/textos.py --comprobar     valida sin escribir (sale con error si algún JSON no está al día)
+    python3 tools/textos.py --idioma en     importa solo un idioma (textos/en/)
     python3 tools/textos.py --nuevo-idioma en   crea textos/en/ con el español como punto de partida
     python3 tools/textos.py --exportar      (una sola vez) crea textos/es/ a partir del JSON actual
 
@@ -54,7 +54,8 @@ LABELS = [
     (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_pista_(.*)", "pista · {0}"), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_examen", "examen · enunciado"),
     (r"arcade_nivel_\d+_titulo", "título"), (r"arcade_nivel_\d+_texto", "encargo"),
 ]
-SPEC = re.compile(r"%(?:[-+0 ]*\d*(?:\.\d+)?[sdf]|%)")
+# (Sin el indicador de espacio de printf: «60 % de la altura» no es un hueco.)
+SPEC = re.compile(r"%(?:[-+0]*\d*(?:\.\d+)?[sdf]|%)")
 CONTROL = re.compile(r"\{([a-z_0-9]+)\}")
 
 
@@ -181,11 +182,48 @@ def write_markdown(texts, folder, note_from=None):
     return len(files)
 
 
+def languages():
+    return [BASE] + sorted(p.name for p in (ROOT / "textos").iterdir() if p.is_dir() and p.name != BASE)
+
+
+def import_language(language, check_only):
+    """Valida un idioma y escribe su JSON (o comprueba que está al día). → número de errores."""
+    json_path = ROOT / "data" / ("textos.%s.json" % language)
+    base_json = ROOT / "data" / ("textos.%s.json" % BASE)
+    texts, order, errors = read_markdown(ROOT / "textos" / language)
+    if not texts:
+        print("ERROR  No hay textos en textos/%s/" % language)
+        return 1
+    base = json.loads(base_json.read_text(encoding="utf-8")) if language != BASE else None
+    previous = json.loads(json_path.read_text(encoding="utf-8")) if json_path.exists() else {}
+    found, warnings = validate(texts, base if language != BASE else previous, language)
+    errors += found
+    tag = "[%s] " % language
+    for line in warnings:
+        print("AVISO  " + tag + line)
+    for line in errors:
+        print("ERROR  " + tag + line)
+    if errors:
+        print("%s%d errores: no se ha escrito nada." % (tag, len(errors)))
+        return len(errors)
+    ordered = {key: texts[key] for _, key in order}
+    content = json.dumps(ordered, ensure_ascii=False, indent=2) + "\n"
+    changed = sorted(k for k in ordered if previous.get(k) != ordered[k]) + sorted("−" + k for k in previous if k not in ordered)
+    if check_only:
+        if previous != ordered:
+            print("ERROR  %sdata/textos.%s.json no está al día (%d cambios: %s). Ejecuta tools/textos.py." % (tag, language, len(changed), ", ".join(changed[:6])))
+            return 1
+        print("%sTextos al día: %d (%d avisos)." % (tag, len(ordered), len(warnings)))
+        return 0
+    json_path.write_text(content, encoding="utf-8")
+    print("%s%d textos → data/textos.%s.json · %d cambiados%s · %d avisos" % (tag, len(ordered), language, len(changed), (": " + ", ".join(changed[:6]) + ("…" if len(changed) > 6 else "")) if changed else "", len(warnings)))
+    return 0
+
+
 def main():
     args = sys.argv[1:]
     language = args[args.index("--idioma") + 1] if "--idioma" in args else BASE
     json_path = ROOT / "data" / ("textos.%s.json" % language)
-    base_json = ROOT / "data" / ("textos.%s.json" % BASE)
     folder = ROOT / "textos" / language
     if "--exportar" in args:
         if folder.exists():
@@ -202,29 +240,14 @@ def main():
         write_markdown(spanish, target, note_from=spanish)
         print("Creado textos/%s/ con el español de partida (cada texto lleva su original en una nota «> es:»)." % new)
         return
-    texts, order, errors = read_markdown(folder)
-    if not texts:
-        sys.exit("No hay textos en textos/%s/" % language)
-    base = texts if language == BASE else json.loads(base_json.read_text(encoding="utf-8"))
-    previous = json.loads(json_path.read_text(encoding="utf-8")) if json_path.exists() else {}
-    found, warnings = validate(texts, base if language != BASE else previous, language)
-    errors += found
-    for line in warnings:
-        print("AVISO  " + line)
-    for line in errors:
-        print("ERROR  " + line)
+    # Sin --idioma, todos: primero el español, que es la base contra la que se validan los demás.
+    errors = 0
+    for code in ([language] if "--idioma" in args else languages()):
+        errors += import_language(code, "--comprobar" in args)
+        if errors and code == BASE:
+            break
     if errors:
-        sys.exit("%d errores: no se ha escrito nada." % len(errors))
-    ordered = {key: texts[key] for _, key in order}
-    content = json.dumps(ordered, ensure_ascii=False, indent=2) + "\n"
-    changed = sorted(k for k in ordered if previous.get(k) != ordered[k]) + sorted("−" + k for k in previous if k not in ordered)
-    if "--comprobar" in args:
-        if previous != ordered:
-            sys.exit("data/textos.%s.json no está al día (%d cambios: %s). Ejecuta tools/textos.py." % (language, len(changed), ", ".join(changed[:6])))
-        print("Textos al día: %d (%d avisos)." % (len(ordered), len(warnings)))
-        return
-    json_path.write_text(content, encoding="utf-8")
-    print("%d textos → data/textos.%s.json · %d cambiados%s · %d avisos" % (len(ordered), language, len(changed), (": " + ", ".join(changed[:6]) + ("…" if len(changed) > 6 else "")) if changed else "", len(warnings)))
+        sys.exit("%d errores." % errors)
 
 
 if __name__ == "__main__":

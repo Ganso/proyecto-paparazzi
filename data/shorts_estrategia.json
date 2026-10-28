@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "project": "photohacks",
+  "last_updated": "2026-10-27T14:22:13.582307+00:00",
+  "next_episode": 2,
+  "episodes": [
+    {
+      "id": 1,
+      "slug": "bokeh_apertura",
+      "status": "publicado",
+      "youtube_url": "https://youtube.com/shorts/nVvqfVOqyB4",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_bokeh_apertura.mp4",
+      "title": "¿Por qué tus fotos no tienen este desenfoque? (Bokeh en 15s) #shorts #fotografia",
+      "preview_text": "f/1.8 vs f/16",
+      "related_video": "PhotoHacks - v0.3.0 alfa",
+      "related_video_id": "NrxNwn-OvMU",
+      "tag_pill": "[ // APRENDE FOTOGRAFÍA EN 15s // ]",
+      "headline": "¿POR QUÉ NO CONSIGUES ESTE DESENFOQUE?",
+      "subline": "Cómo la apertura afecta al bokeh: de f/1.8 a f/16",
+      "primary_neon": [
+        255,
+        119,
+        0
+      ],
+      "accent_neon": [
+        255,
+        200,
+        0
+      ],
+      "tags": "shorts, fotografia, bokeh, camara, aprende, photohacks, tipsfotografia, tutorial, gaming",
+      "description": "¿Cansado de que el modo retrato de tu móvil corte los pelos y se vea artificial?\n\nEn una cámara de verdad, el desenfoque (bokeh) se crea abriendo el diafragma (números f bajos como f/1.8 o f/2.8):\n- Mayor entrada de luz natural\n- Menor profundidad de campo física\n- El sujeto se despega del fondo con suavidad óptica\n\nPhotoHacks es un simulador y juego gratuito que te enseña fotografía jugando en PC y móvil:\nWeb / Descarga: https://geesebumps.itch.io/photohacks\n\n#shorts #fotografia #bokeh #camara #aprende #photohacks #tipsfotografia",
+      "publish_date": "2026-10-27T14:22:13.582288+00:00"
+    },
+    {
+      "id": 2,
+      "slug": "congelar_barrido",
+      "status": "pendiente",
+      "youtube_url": null,
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_congelar_barrido.mp4",
+      "title": "Congelar movimiento vs Barrido de velocidad en 15s #shorts #fotografia",
+      "preview_text": "1/1000s vs 1/15s",
+      "related_video": "PhotoHacks - v0.3.0 alfa",
+      "related_video_id": "NrxNwn-OvMU",
+      "tag_pill": "[ // VELOCIDAD DE OBTURACIÓN // ]",
+      "headline": "CONGELAR VS BARRIDO DE ACCIÓN",
+      "subline": "1/1000s en el aire vs 1/15s con estelas de velocidad",
+      "primary_neon": [
+        0,
+        210,
+        255
+      ],
+      "accent_neon": [
+        255,
+        119,
+        0
+      ],
+      "tags": "shorts, fotografia, deportes, velocidad, barrido, camara, photohacks, trucos, tutorial",
+      "description": "¿Cómo capturar la velocidad sin que la foto salga borrosa?\n\nDos técnicas opuestas explicadas en 15 segundos:\n1. 1/1000s: Congela al corredor suspendido en el aire con nitidez absoluta.\n2. 1/15s con seguimiento (barrido): La cámara acompaña al sujeto; el fondo se estira en líneas de velocidad mientras el corredor queda nítido.\n\nPractica con cámara réflex y controles manuales en PhotoHacks:\nWeb: https://geesebumps.itch.io/photohacks\n\n#shorts #fotografia #deportes #barrido #camara #photohacks"
+    },
+    {
+      "id": 3,
+      "slug": "estrellas_farolas",
+      "status": "pendiente",
+      "youtube_url": null,
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_estrellas_farolas.mp4",
+      "title": "El truco para convertir farolas en estrellas de noche #shorts #fotografia",
+      "preview_text": "f/2.8 vs f/22",
+      "related_video": "PhotoHacks - v0.3.0 alfa",
+      "related_video_id": "NrxNwn-OvMU",
+      "tag_pill": "[ // DIFRACCIÓN ÓPTICA DE NOCHE // ]",
+      "headline": "CONVIERTE FAROLAS EN ESTRELLAS",
+      "subline": "Cierra a f/16 o f/22 · Física óptica real sin filtros",
+      "primary_neon": [
+        255,
+        220,
+        0
+      ],
+      "accent_neon": [
+        0,
+        210,
+        255
+      ],
+      "tags": "shorts, fotografia, nocturna, trucos, estrellas, camara, photohacks, tutorial",
+      "description": "¿Cómo sacan los fotógrafos esas estrellas perfectas en las luces de noche?\n\nNo es un filtro de Photoshop ni una lente especial: es física óptica pura.\nAl cerrar el diafragma a f/16 o f/22, la luz se difracta en las aristas de las palas del objetivo, transformando cada farola en una estrella resplandeciente.\n\nSimulado al milímetro en PhotoHacks:\nWeb: https://geesebumps.itch.io/photohacks\n\n#shorts #fotografia #nocturna #trucos #estrellas #camara #photohacks"
+    },
+    {
+      "id": 4,
+      "slug": "compresion_focal",
+      "status": "pendiente",
+      "youtube_url": null,
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_compresion_focal.mp4",
+      "title": "El zoom no solo acerca: aplasta el fondo (24mm vs 200mm) #shorts #fotografia",
+      "preview_text": "24mm vs 200mm",
+      "related_video": "PhotoHacks - v0.3.0 alfa",
+      "related_video_id": "NrxNwn-OvMU",
+      "tag_pill": "[ // DISTANCIA FOCAL & PERSPECTIVA // ]",
+      "headline": "EL ZOOM APLASTA LA PERSPECTIVA",
+      "subline": "24mm Angular vs 200mm Teleobjetivo comprimido",
+      "primary_neon": [
+        255,
+        0,
+        128
+      ],
+      "accent_neon": [
+        255,
+        119,
+        0
+      ],
+      "tags": "shorts, fotografia, teleobjetivo, lentes, perspectiva, zoom, photohacks",
+      "description": "¿Pensabas que el zoom solo servía para no caminar?\n\nLa distancia focal cambia la relación de tamaño entre el sujeto y el fondo:\n- 24mm: Visión amplia, fondo diminuto y lejano.\n- 200mm dando pasos atrás: El fondo se 'aplasta' y se agiganta detrás del sujeto.\n\nExperiméntalo en tiempo real en 3D con PhotoHacks:\nWeb: https://geesebumps.itch.io/photohacks\n\n#shorts #fotografia #teleobjetivo #lentes #perspectiva #photohacks"
+    },
+    {
+      "id": 5,
+      "slug": "enfoque_partido",
+      "status": "pendiente",
+      "youtube_url": null,
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_enfoque_partido.mp4",
+      "title": "Así enfocaban tus padres antes del autofocus (Imagen partida) #shorts #vintage",
+      "preview_text": "Manual vs Auto",
+      "related_video": "PhotoHacks - v0.3.0 alfa",
+      "related_video_id": "NrxNwn-OvMU",
+      "tag_pill": "[ // ENFOQUE ÓPTICO MANUAL // ]",
+      "headline": "ASÍ SE ENFOCABA EN LOS 70",
+      "subline": "Visor Telemétrico · Dos mitades ópticas que encajan",
+      "primary_neon": [
+        0,
+        255,
+        154
+      ],
+      "accent_neon": [
+        255,
+        119,
+        0
+      ],
+      "tags": "shorts, retro, camara, analogico, enfoque, vintage, photohacks, fotografia",
+      "description": "Antes del autofoco por láser o inteligencia artificial, las cámaras usaban prismas ópticos.\n\nEn el centro del visor, la imagen se parte en dos mitades desplazadas. Al girar el anillo de enfoque manual, las dos mitades se alinean a la perfección indicando el punto exacto de nitidez.\n\nPrueba cámaras de telémetro clásicas en PhotoHacks:\nWeb: https://geesebumps.itch.io/photohacks\n\n#shorts #retro #camara #analogico #enfoque #vintage #photohacks"
+    },
+    {
+      "id": 6,
+      "slug": "tlr_rolleiflex",
+      "status": "pendiente",
+      "youtube_url": null,
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_tlr_rolleiflex.mp4",
+      "title": "La legendaria cámara que se mira desde arriba (TLR 6x6) #shorts #fotografia",
+      "preview_text": "Cintura vs Ojo",
+      "related_video": "PhotoHacks - v0.3.0 alfa",
+      "related_video_id": "NrxNwn-OvMU",
+      "tag_pill": "[ // CÁMARA DE CINTURA TLR 6x6 // ]",
+      "headline": "LA CÁMARA QUE SE MIRA DESDE ARRIBA",
+      "subline": "Formato Medio 6x6 · Espejo Superior · Doble Lente",
+      "primary_neon": [
+        255,
+        170,
+        0
+      ],
+      "accent_neon": [
+        0,
+        210,
+        255
+      ],
+      "tags": "shorts, rolleiflex, tlr, formatomedio, vintage, retro, photohacks, camara",
+      "description": "Una experiencia fotográfica totalmente diferente: las cámaras TLR de doble lente.\n\nSe sujetan a la altura del pecho y se mira hacia abajo sobre un cristal esmerilado que refleja la escena con la izquierda y derecha invertidas. Formato cuadrado 6x6 y carrete analógico.\n\nJuégala gratis en PhotoHacks:\nWeb: https://geesebumps.itch.io/photohacks\n\n#shorts #rolleiflex #tlr #formatomedio #vintage #photohacks"
+    }
+  ]
+}

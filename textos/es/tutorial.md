@@ -116,6 +116,10 @@ Hecha. Ahora baja la cámara para seguir caminando.
 > máximo 210 caracteres
 Bienvenido a PhotoHacks. Estás en el centro de un parque con una cámara: Tu trabajo es encontrar a la persona de cada encargo y hacerle una buena foto. Vamos paso a paso. Toca «Empezar».
 
+### tutorial_mirar_tactil
+> máximo 210 caracteres
+Mira a tu alrededor arrastrando un dedo por la imagen: A los lados, y también arriba y abajo.
+
 ### tutorial_zoom_tactil
 > máximo 210 caracteres
 Acerca la imagen pellizcando con dos dedos (o con Zoom en la tira de abajo y +) hasta más de 70 mm, y vuelve a abrirla por debajo de 40 mm.

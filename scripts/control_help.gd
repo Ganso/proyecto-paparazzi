@@ -118,7 +118,7 @@ func rows() -> Array:
 	else: out.append([pad_key("iso","iso"),"ISO",str(main.iso_value()),"manual" if m == "M" else "auto","iso"])
 	if m != "M": out.append([pad_key("compensacion","ev_comp"),Texts.get_text("ayuda_compensacion"),"%+.1f EV" % e.exposure_compensation(),"manual","ev_comp"])
 	else: out.append(["",Texts.get_text("ayuda_exposimetro"),"%+.1f EV" % main.finder.delta_ev,"meter"])
-	out.append([Glyphs.k("fotometria"),Texts.get_text("ayuda_fotometria"),Texts.get_text("fotometria_"+e.metering),"manual"])
+	out.append([Glyphs.k("fotometria"),Texts.get_text("ayuda_fotometria"),Texts.get_text("fotometria_corta_"+e.metering),"manual"])
 	out.append([Glyphs.k("bloqueo"),Texts.get_text("ayuda_bloqueo"),Texts.get_text("bloqueo_activo") if main.exposure_locked or main.focus_locked else "","manual" if main.exposure_locked or main.focus_locked else "info"])
 	if e.tlr():
 		out.append([Glyphs.k("lupa"),Texts.get_text("tlr_lupa"),"3×" if main.tlr_loupe else "","info"])
@@ -130,7 +130,14 @@ func rows() -> Array:
 # With a gamepad the D-pad changes the selected exposure setting: mark which one.
 func pad_key(control: String, param: String) -> String:
 	if not Glyphs.pad(): return Glyphs.k(control)
-	return "Cruceta ↑↓" if main.current_control() == param else ""   # only the control in hand names the D-pad
+	return Glyphs.k("cambiar_control") if main.current_control() == param else ""   # only the control in hand names the D-pad
+
+# A text of the list in its column: smaller if it would not fit (it is drawn by hand: nothing
+# would wrap or clip it, tools/check_text_fit.gd does not see it).
+func fitted(at: Vector2, value: String, width: float, color: Color) -> void:
+	var size = 13
+	while size > 10 and font.get_string_size(value,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x > width: size -= 1
+	draw_string(font,at,value,HORIZONTAL_ALIGNMENT_LEFT,width,size,color)
 
 func _draw() -> void:
 	# In the recorded videos (Godot's Movie Maker) the list would cover half of every scene.
@@ -148,7 +155,7 @@ func _draw() -> void:
 	if is_instance_valid(main.portrait) and main.portrait.visible: pos.y = main.portrait.position.y+main.portrait.size.y+10   # under the subject
 	draw_style_box(box(Color(.03,.05,.08,.62)),Rect2(pos,Vector2(w,h)))
 	panel_rect = Rect2(pos,Vector2(w,h))
-	draw_string(bold,pos+Vector2(12,21),Texts.get_text("ayuda_titulo") % main.equipment.CAMERAS[main.equipment.body],HORIZONTAL_ALIGNMENT_LEFT,w-24,13,Color(1,1,1,.92))
+	draw_string(bold,pos+Vector2(12,21),Texts.get_text("ayuda_titulo") % main.equipment.camera_name(main.equipment.body),HORIZONTAL_ALIGNMENT_LEFT,w-24,13,Color(1,1,1,.92))
 	var y = pos.y+30
 	for row in list:
 		var kind: String = row[3]
@@ -160,8 +167,9 @@ func _draw() -> void:
 		if row.size() > 4 and row[4] == main.current_control(): draw_style_box(box(Color(UiStyle_SKY.r,UiStyle_SKY.g,UiStyle_SKY.b,.45),5),Rect2(pos.x+4,y-1,w-8,line))
 		if row[0] != "":
 			GlyphLabel.draw_rich(self,font,Vector2(pos.x+10,y+1),row[0],12,Color(1,1,1,.9))
-		draw_string(font,Vector2(pos.x+150,y+15),row[1],HORIZONTAL_ALIGNMENT_LEFT,104,13,color)
-		draw_string(font,Vector2(pos.x+258,y+15),row[2],HORIZONTAL_ALIGNMENT_LEFT,66,13,color)
+		# A row with no value (Hold: Track subject) takes the value's column too.
+		fitted(Vector2(pos.x+150,y+15),row[1],104.0 if row[2] != "" else 104.0+66.0,color)
+		fitted(Vector2(pos.x+258,y+15),row[2],66.0,color)
 		if kind in ["manual","auto"]:
 			draw_string(font,Vector2(pos.x+w-46,y+15),Texts.get_text("ayuda_man") if kind == "manual" else Texts.get_text("ayuda_auto"),HORIZONTAL_ALIGNMENT_RIGHT,36,9,color)
 		y += line

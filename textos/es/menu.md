@@ -91,6 +91,36 @@ Prioridad a la apertura (A) · tú eliges el diafragma
 ### equipo_modo_s
 Prioridad a la velocidad (S) · tú eliges el tiempo
 
+### equipo_cuerpo_compacta · Nombre de la cámara (equipo, ayuda en pantalla, encargo del arcade)
+Compacta
+
+### equipo_cuerpo_telemetrica
+Telemétrica
+
+### equipo_cuerpo_reflex
+Réflex
+
+### equipo_cuerpo_tlr
+TLR 6×6
+
+### equipo_fijo · Objetivo de focal fija, delante de sus números («Fijo 50 · f/1.8»)
+Fijo
+
+### equipo_af_matricial · Modos de enfoque (pantalla de equipo)
+AF matricial
+
+### equipo_af_puntual
+AF puntual
+
+### equipo_af_continuo
+AF continuo
+
+### equipo_af_automatico
+AF automático
+
+### equipo_af_mf
+MF
+
 ## Menú principal
 
 ### escenario_clasico
@@ -118,7 +148,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.5.5 · EN DESARROLLO
+VERSIÓN ALFA 0.6.0 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -242,9 +272,26 @@ Vibración: %s
 ### opcion_invertir
 Invertir mirada: %s
 
-### opcion_equipo_sandbox · Opciones, botón a doble columna (532 px: unos 50 caracteres)
-> máximo 50 caracteres
-Equipo fotográfico para el modo Sandbox
+### opcion_equipo_sandbox · Opciones (botón de 260 px: unos 24 caracteres)
+> máximo 24 caracteres
+Equipo del Sandbox
+
+### opcion_idioma · Opciones (botón de 260 px: unos 24 caracteres). Cambia al siguiente idioma
+> máximo 24 caracteres
+Idioma: %s
+
+### idioma_es · Nombre de cada idioma, escrito en ese idioma (igual en todos los ficheros)
+Español
+
+### idioma_en
+English
+
+### idioma_titulo · Elección del idioma en el primer arranque: en todos los idiomas a la vez
+Idioma · Language
+
+### idioma_nota · Elección del idioma en el primer arranque (568 px a 15 px: una línea)
+> máximo 70 caracteres
+Se cambia en Opciones · You can change it in Options
 
 ### opcion_pasos · Opciones (botón de 260 px: unos 28 caracteres)
 > máximo 28 caracteres
@@ -322,6 +369,18 @@ Restablecer gráficos
 ### novedades_restablecido · El mismo botón, ya pulsado
 > máximo 24 caracteres
 Gráficos restablecidos
+
+### novedades_0_6_0_1 · Novedades de la versión 0.6.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+El juego, también en inglés: Todos los textos, menús y lecciones. El idioma se elige al arrancar por primera vez y se cambia en Opciones.
+
+### novedades_0_6_0_2 · Novedades de la versión 0.6.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Opciones, por parejas: Idioma y tema, equipo y pasos de exposición, mirada y vibración, álbum e insignias.
+
+### novedades_0_6_0_3 · Novedades de la versión 0.6.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Arreglos: El informe de la foto ya no repite los obstáculos, y con un disparo el contador dice «Queda 1 disparo».
 
 ### novedades_0_3_3_1 · Novedades de la versión 0.3.3 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres
@@ -529,3 +588,11 @@ Probar la cámara
 
 ### sandbox_foto_d
 Sandbox · fotografía %d
+
+### sandbox_resultado_nota · Resultado del sandbox, bajo la foto (825 px a 17 px: dos líneas)
+> máximo 120 caracteres
+La foto conserva los ajustes del disparo. Prueba otro enfoque, exposición o equipo.
+
+### sandbox_cambiar_equipo · Resultado del sandbox (botón de 260 px)
+> máximo 20 caracteres
+Cambiar equipo

@@ -534,7 +534,8 @@
           "indice": 2,
           "recurso": "res://data/piezas/estandar_gafas_2.json"
         }
-      ]
+      ],
+      "en": "adult of average build"
     },
     {
       "id": "delgado",
@@ -1070,7 +1071,8 @@
           "indice": 2,
           "recurso": "res://data/piezas/delgado_gafas_2.json"
         }
-      ]
+      ],
+      "en": "slim adult"
     },
     {
       "id": "robusto",
@@ -1606,7 +1608,8 @@
           "indice": 2,
           "recurso": "res://data/piezas/robusto_gafas_2.json"
         }
-      ]
+      ],
+      "en": "stocky adult"
     },
     {
       "id": "nino",
@@ -2142,7 +2145,8 @@
           "indice": 2,
           "recurso": "res://data/piezas/nino_gafas_2.json"
         }
-      ]
+      ],
+      "en": "child"
     }
   ],
   "piezas": {
@@ -2159,7 +2163,8 @@
         "recurso": "procedural:upper",
         "zonas": [
           "tela_a"
-        ]
+        ],
+        "en": "T-shirt"
       },
       {
         "id": "camisa",
@@ -2173,7 +2178,8 @@
         "recurso": "procedural:upper",
         "zonas": [
           "tela_a"
-        ]
+        ],
+        "en": "shirt"
       },
       {
         "id": "americana",
@@ -2190,7 +2196,8 @@
         "zonas": [
           "tela_a"
         ],
-        "solo_adultos": true
+        "solo_adultos": true,
+        "en": "blazer"
       },
       {
         "id": "sudadera",
@@ -2204,7 +2211,8 @@
         "recurso": "procedural:upper",
         "zonas": [
           "tela_a"
-        ]
+        ],
+        "en": "hoodie"
       },
       {
         "id": "camiseta_deportiva",
@@ -2216,7 +2224,8 @@
         "zona_color": "tela_a",
         "zonas": [
           "tela_a"
-        ]
+        ],
+        "en": "sports top"
       },
       {
         "id": "gabardina",
@@ -2234,7 +2243,8 @@
         "no_se_sienta": true,
         "sin_accesorios": [
           "bag"
-        ]
+        ],
+        "en": "trench coat"
       },
       {
         "id": "camiseta de tirantes",
@@ -2246,7 +2256,8 @@
         "etiquetas": [],
         "zonas": [
           "tela_a"
-        ]
+        ],
+        "en": "tank top"
       }
     ],
     "piernas": [
@@ -2262,7 +2273,8 @@
         "recurso": "procedural:lower",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "pants"
       },
       {
         "id": "pantalón de vestir",
@@ -2279,7 +2291,8 @@
         "zonas": [
           "tela_b"
         ],
-        "solo_adultos": true
+        "solo_adultos": true,
+        "en": "dress pants"
       },
       {
         "id": "bermudas",
@@ -2293,7 +2306,8 @@
         "recurso": "procedural:lower",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "Bermuda shorts"
       },
       {
         "id": "falda",
@@ -2307,7 +2321,8 @@
         "recurso": "procedural:lower",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "skirt"
       },
       {
         "id": "short_deportivo",
@@ -2319,7 +2334,8 @@
         "zona_color": "tela_b",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "running shorts"
       },
       {
         "id": "mallas",
@@ -2331,7 +2347,8 @@
         "zona_color": "tela_b",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "sports leggings"
       }
     ],
     "cabeza": [
@@ -2347,7 +2364,9 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "short hair",
+        "en_color": "short %s hair"
       },
       {
         "id": "flequillo",
@@ -2361,7 +2380,9 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "bangs",
+        "en_color": "%s bangs"
       },
       {
         "id": "melena",
@@ -2375,7 +2396,9 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "long hair",
+        "en_color": "long %s hair"
       },
       {
         "id": "coleta",
@@ -2389,7 +2412,9 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "ponytail",
+        "en_color": "%s ponytail"
       },
       {
         "id": "calvo",
@@ -2403,7 +2428,8 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "bald"
       },
       {
         "id": "gorra",
@@ -2417,7 +2443,8 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "cap"
       },
       {
         "id": "sombrero",
@@ -2428,7 +2455,8 @@
         "zonas": [
           "tela_b"
         ],
-        "solo_adultos": true
+        "solo_adultos": true,
+        "en": "brimmed hat"
       },
       {
         "id": "gorro",
@@ -2438,7 +2466,8 @@
         "zona_color": "tela_b",
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "wool hat"
       },
       {
         "id": "moño",
@@ -2450,7 +2479,9 @@
         "zonas": [
           "pelo",
           "tela_b"
-        ]
+        ],
+        "en": "bun",
+        "en_color": "%s hair in a bun"
       },
       {
         "id": "pelo rizado",
@@ -2461,7 +2492,9 @@
         "etiquetas": [],
         "zonas": [
           "pelo"
-        ]
+        ],
+        "en": "curly hair",
+        "en_color": "curly %s hair"
       },
       {
         "id": "boina",
@@ -2472,7 +2505,8 @@
         "etiquetas": [],
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "beret"
       },
       {
         "id": "gorra hacia atrás",
@@ -2484,7 +2518,9 @@
         "etiquetas": [],
         "zonas": [
           "tela_b"
-        ]
+        ],
+        "en": "backwards cap",
+        "en_color": "%s cap worn backwards"
       }
     ],
     "accesorio": [
@@ -2497,7 +2533,8 @@
         "zonas": [
           "accesorio"
         ],
-        "peso": 3
+        "peso": 3,
+        "en": "no accessories"
       },
       {
         "id": "bufanda",
@@ -2508,7 +2545,9 @@
         "zonas": [
           "accesorio"
         ],
-        "peso": 2
+        "peso": 2,
+        "en": "scarf",
+        "en_color": "a %s scarf"
       },
       {
         "id": "bandolera",
@@ -2519,7 +2558,9 @@
         "zonas": [
           "accesorio"
         ],
-        "peso": 2
+        "peso": 2,
+        "en": "shoulder bag",
+        "en_color": "a %s shoulder bag"
       },
       {
         "id": "mochila",
@@ -2531,7 +2572,9 @@
           "accesorio"
         ],
         "no_se_sienta": true,
-        "peso": 2
+        "peso": 2,
+        "en": "backpack",
+        "en_color": "a %s backpack"
       },
       {
         "id": "paraguas",
@@ -2543,7 +2586,9 @@
           "accesorio"
         ],
         "mano_ocupada": true,
-        "peso": 1
+        "peso": 1,
+        "en": "umbrella",
+        "en_color": "a %s umbrella"
       }
     ],
     "gafas": [
@@ -2556,7 +2601,8 @@
         "zonas": [
           "montura"
         ],
-        "peso": 14
+        "peso": 14,
+        "en": "no glasses"
       },
       {
         "id": "gafas",
@@ -2567,7 +2613,8 @@
         "zonas": [
           "montura"
         ],
-        "peso": 3
+        "peso": 3,
+        "en": "glasses"
       },
       {
         "id": "gafas de sol",
@@ -2579,7 +2626,8 @@
           "montura",
           "cristal"
         ],
-        "peso": 3
+        "peso": 3,
+        "en": "sunglasses"
       }
     ]
   },
@@ -2597,7 +2645,8 @@
         "morena",
         "morenos",
         "morenas"
-      ]
+      ],
+      "en": "dark"
     },
     "castaño": {
       "rgb": "704832",
@@ -2606,7 +2655,8 @@
         "castaña",
         "castaños",
         "castañas"
-      ]
+      ],
+      "en": "brown"
     },
     "rubio": {
       "rgb": "cfb46f",
@@ -2615,7 +2665,8 @@
         "rubia",
         "rubios",
         "rubias"
-      ]
+      ],
+      "en": "blond"
     },
     "pelirrojo": {
       "rgb": "b85832",
@@ -2624,7 +2675,8 @@
         "pelirroja",
         "pelirrojos",
         "pelirrojas"
-      ]
+      ],
+      "en": "red"
     },
     "canoso": {
       "rgb": "a6a5a0",
@@ -2633,7 +2685,8 @@
         "canosa",
         "canosos",
         "canosas"
-      ]
+      ],
+      "en": "gray"
     }
   },
   "tonos_ropa": {
@@ -2644,7 +2697,8 @@
         "negra",
         "negros",
         "negras"
-      ]
+      ],
+      "en": "black"
     },
     "blanco": {
       "rgb": "ebe8dc",
@@ -2653,7 +2707,8 @@
         "blanca",
         "blancos",
         "blancas"
-      ]
+      ],
+      "en": "white"
     },
     "gris": {
       "rgb": "77818a",
@@ -2662,7 +2717,8 @@
         "gris",
         "grises",
         "grises"
-      ]
+      ],
+      "en": "gray"
     },
     "azul marino": {
       "rgb": "253d5b",
@@ -2671,7 +2727,8 @@
         "azul marino",
         "azul marino",
         "azul marino"
-      ]
+      ],
+      "en": "navy"
     },
     "vaquero": {
       "rgb": "4f7898",
@@ -2680,7 +2737,8 @@
         "vaquera",
         "vaqueros",
         "vaqueras"
-      ]
+      ],
+      "en": "denim"
     },
     "rojo": {
       "rgb": "b74536",
@@ -2689,7 +2747,8 @@
         "roja",
         "rojos",
         "rojas"
-      ]
+      ],
+      "en": "red"
     },
     "verde": {
       "rgb": "5c7a43",
@@ -2698,7 +2757,8 @@
         "verde",
         "verdes",
         "verdes"
-      ]
+      ],
+      "en": "green"
     },
     "amarillo": {
       "rgb": "dcb653",
@@ -2707,7 +2767,8 @@
         "amarilla",
         "amarillos",
         "amarillas"
-      ]
+      ],
+      "en": "yellow"
     },
     "beige": {
       "rgb": "c3aa83",
@@ -2716,7 +2777,8 @@
         "beige",
         "beige",
         "beige"
-      ]
+      ],
+      "en": "beige"
     },
     "burdeos": {
       "rgb": "723c54",
@@ -2725,7 +2787,8 @@
         "burdeos",
         "burdeos",
         "burdeos"
-      ]
+      ],
+      "en": "burgundy"
     }
   },
   "tonos_calzado": {

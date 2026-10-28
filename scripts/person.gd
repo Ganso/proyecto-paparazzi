@@ -1,5 +1,6 @@
 class_name Pedestrian
 extends Node3D
+const Texts = preload("res://scripts/texts.gd")
 
 var traits: Dictionary
 var profile: Dictionary
@@ -364,7 +365,7 @@ func collider_body(id: String) -> StaticBody3D:
 		rig.add_child(attachment)
 		var body = StaticBody3D.new()
 		body.set_meta("person",self)
-		body.set_meta("label","un viandante en primer plano")
+		body.set_meta("label",Texts.get_text("un_viandante_en_primer_plano"))
 		attachment.add_child(body)
 		colliders[id] = body
 	return colliders[id]
