@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "photohacks",
-  "last_updated": "2026-10-28",
+  "last_updated": "2026-10-29",
   "next_episode": 2,
   "episodes": [
     {
@@ -12,8 +12,8 @@
       "video_file": "/home/ganso/codigo/afotando/build/video/short_bokeh_apertura.mp4",
       "title": "¿Por qué tus fotos no tienen este desenfoque? (Bokeh en 15s) #shorts #fotografia",
       "preview_text": "f/1.8 vs f/16",
-      "related_video": "PhotoHacks - v0.3.0 alfa",
-      "related_video_id": "NrxNwn-OvMU",
+      "related_video": "PhotoHacks — Official Trailer",
+      "related_video_id": "IZoAsAiY5Fk",
       "tag_pill": "[ // APRENDE FOTOGRAFÍA EN 15s // ]",
       "headline": "¿POR QUÉ NO CONSIGUES ESTE DESENFOQUE?",
       "subline": "Cómo la apertura afecta al bokeh: de f/1.8 a f/16",
@@ -34,13 +34,13 @@
     {
       "id": 2,
       "slug": "barrido",
-      "status": "listo",
-      "youtube_url": null,
+      "status": "programado",
+      "youtube_url": "https://youtube.com/shorts/XjeIYtMmzcw",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_barrido.mp4",
       "title": "El barrido: el corredor nítido y el fondo en movimiento #shorts #fotografia",
       "preview_text": "1/30 s + giro",
-      "related_video": "PhotoHacks - v0.3.0 alfa",
-      "related_video_id": "NrxNwn-OvMU",
+      "related_video": "PhotoHacks — Official Trailer",
+      "related_video_id": "IZoAsAiY5Fk",
       "tag_pill": "[ // VELOCIDAD DE OBTURACIÓN // ]",
       "headline": "EL BARRIDO: SIGUE AL CORREDOR",
       "subline": "1/30 s y la cámara acompañando su paso",
@@ -112,18 +112,20 @@
       "language": "Español",
       "playlists": [
         "PhotoHacks"
-      ]
+      ],
+      "youtube_id": "XjeIYtMmzcw",
+      "publish_date": "2026-10-30T18:00:00+01:00"
     },
     {
       "id": 3,
       "slug": "estrellas_farolas",
-      "status": "listo",
-      "youtube_url": null,
+      "status": "programado",
+      "youtube_url": "https://youtube.com/shorts/S8Nta5sNZRc",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_estrellas_farolas.mp4",
       "title": "El truco para convertir las farolas en estrellas #shorts #fotografia",
       "preview_text": "f/2.8 vs f/16",
-      "related_video": "PhotoHacks - v0.3.0 alfa",
-      "related_video_id": "NrxNwn-OvMU",
+      "related_video": "PhotoHacks — Official Trailer",
+      "related_video_id": "IZoAsAiY5Fk",
       "tag_pill": "[ // DIFRACCIÓN ÓPTICA DE NOCHE // ]",
       "headline": "CONVIERTE LAS FAROLAS EN ESTRELLAS",
       "subline": "Cierra el diafragma a f/11 o más · óptica real",
@@ -223,18 +225,20 @@
       "language": "Español",
       "playlists": [
         "PhotoHacks"
-      ]
+      ],
+      "youtube_id": "S8Nta5sNZRc",
+      "publish_date": "2026-11-01T18:00:00+01:00"
     },
     {
       "id": 4,
       "slug": "compresion_focal",
-      "status": "listo",
-      "youtube_url": null,
+      "status": "programado",
+      "youtube_url": "https://youtube.com/shorts/kXOGhUiUuOg",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_compresion_focal.mp4",
       "title": "El zoom no solo acerca: cambia el fondo (28 mm vs 135 mm) #shorts #fotografia",
       "preview_text": "28mm vs 135mm",
-      "related_video": "PhotoHacks - v0.3.0 alfa",
-      "related_video_id": "NrxNwn-OvMU",
+      "related_video": "PhotoHacks — Official Trailer",
+      "related_video_id": "IZoAsAiY5Fk",
       "tag_pill": "[ // DISTANCIA FOCAL Y PERSPECTIVA // ]",
       "headline": "EL TELE «APLASTA» EL FONDO",
       "subline": "28 mm de cerca vs 135 mm de lejos",
@@ -325,18 +329,20 @@
       "language": "Español",
       "playlists": [
         "PhotoHacks"
-      ]
+      ],
+      "youtube_id": "kXOGhUiUuOg",
+      "publish_date": "2026-11-03T18:00:00+01:00"
     },
     {
       "id": 5,
       "slug": "enfoque_partido",
-      "status": "listo",
-      "youtube_url": null,
+      "status": "programado",
+      "youtube_url": "https://youtube.com/shorts/KvJ3tcRInAw",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_enfoque_partido.mp4",
       "title": "Así se enfocaba antes del autofoco: la imagen partida #shorts #fotografia",
       "preview_text": "Enfoque manual",
-      "related_video": "PhotoHacks - v0.3.0 alfa",
-      "related_video_id": "NrxNwn-OvMU",
+      "related_video": "PhotoHacks — Official Trailer",
+      "related_video_id": "IZoAsAiY5Fk",
       "tag_pill": "[ // ENFOQUE MANUAL // ]",
       "headline": "ASÍ SE ENFOCABA ANTES DEL AUTOFOCO",
       "subline": "Imagen partida y doble imagen telemétrica",
@@ -429,18 +435,20 @@
       "language": "Español",
       "playlists": [
         "PhotoHacks"
-      ]
+      ],
+      "youtube_id": "KvJ3tcRInAw",
+      "publish_date": "2026-11-04T18:00:00+01:00"
     },
     {
       "id": 6,
       "slug": "tlr_cintura",
-      "status": "listo",
-      "youtube_url": null,
+      "status": "programado",
+      "youtube_url": "https://youtube.com/shorts/mxBqg-Qol9A",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_tlr_cintura.mp4",
       "title": "La cámara que se mira desde arriba (TLR 6×6) #shorts #fotografia",
       "preview_text": "A la cintura",
-      "related_video": "PhotoHacks - v0.3.0 alfa",
-      "related_video_id": "NrxNwn-OvMU",
+      "related_video": "PhotoHacks — Official Trailer",
+      "related_video_id": "IZoAsAiY5Fk",
       "tag_pill": "[ // CÁMARA TLR 6×6 // ]",
       "headline": "LA CÁMARA QUE SE MIRA DESDE ARRIBA",
       "subline": "Dos objetivos · visor a la cintura · foto cuadrada",
@@ -513,7 +521,9 @@
       "language": "Español",
       "playlists": [
         "PhotoHacks"
-      ]
+      ],
+      "youtube_id": "mxBqg-Qol9A",
+      "publish_date": "2026-11-05T18:00:00+01:00"
     }
   ]
 }
