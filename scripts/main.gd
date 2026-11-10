@@ -5016,6 +5016,11 @@ func save_screenshot() -> void:
 		return
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(screenshot_path)
+	var dc = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	var prim = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+	var vram = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / (1024.0 * 1024.0)
+	var fps = Engine.get_frames_per_second()
+	print("RENDER_METRICS: dc=%d prim=%d vram=%.1fMB fps=%d" % [dc, prim, vram, fps])
 	print("SCREENSHOT: "+screenshot_path)
 	if not run_metrics: get_tree().quit()
 
