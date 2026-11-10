@@ -150,13 +150,20 @@ Junto al quiosco, mirando hacia el sol y subiendo o bajando la vista, el césped
 
 Tras el arreglo quedaba un parpadeo de la luz al mover la vista. Medido punto a punto (brillo de puntos fijos del suelo con la cámara quieta y girando), venía de la **penumbra física** de las sombras (`light_angular_distance`): repartida sobre sombras de cien metros, daba un valor distinto en cada tramo del mapa de sombras, y el césped a media luz variaba un 20 % al cambiar de tramo. A la hora dorada, en el parque grande, las sombras son ahora planas y algo más difusas y dejan pasar parte del sol (`park.gd::long_shadows()`, `LONG_SHADOW_OPACITY = 0,55`, `shadow_blur = 2`): la misma luz en el suelo, y quieta (con la vista en movimiento el brillo de esos puntos varía lo mismo que con la cámara parada).
 
-### Márgenes de caminos: bordillos de piedra, faldón 3D y hierba al borde (10-11-2026)
+### Márgenes de caminos: bordillos de piedra elevados y luz de relleno (10-11-2026)
 
-Los caminos del parque grande presentaban un corte recto matemático contra la pradera, sin grosor vertical y con una franja vacía de 25 cm sin hierba (`path_distance < 0.25`). Se han implementado tres mejoras complementarias (`park_grande.gd`):
-1. **Bordillos de piedra biselada (`curb_line_mesh()`, `curb_disc_mesh()`)**: Encintado de granito de 14 cm de ancho y 5 cm de alto a lo largo de todos los paseos y plazas, fusionado en la malla estática (`d8d2c4`). Las entradas radiales a la plaza central se detectan con `path_distance < -0.10` para dejar el paso expedito.
-2. **Hierba orgánica hasta el borde (`grass_samples()`)**: La distancia mínima de seguridad se reduce a 5 cm (con bordillos) o 2 cm (sin ellos), con un escalonado suave de altura en la banda de contacto ($d < 0{,}22\text{ m}$) para que las briznas abracen el bordillo de forma natural.
-3. **Faldón vertical 3D (`strip()`, `disc()`)**: Conecta la cota superior del pavimento ($y = 1{,}4\text{–}2{,}6\text{ cm}$) con el suelo ($y = 0$), cerrando cualquier holgura en rasantes bajas.
-
-Las tres técnicas añaden **0 draw calls** y apenas 73.000 triángulos a la escena (< 3% del presupuesto de 5M de Ultra), con un consumo de VRAM prácticamente idéntico (+0,6 MB). Evidencias comparativas en `docs/evidencias/margenes/` y evaluador automatizado en `tools/eval_margins.py`.
+Los caminos del parque grande presentaban un corte recto matemático contra la pradera, sin grosor vertical. Se han rediseñado completamente los bordillos para que sobresalgan con volumen tridimensional sólido y alzada vertical limpia:
+1. **Bordillos de granito con alzada vertical (`curb_edge_mesh()`, `curb_disc_mesh()`)**:
+   - Bloque de piedra de granito blanco (`f4efe6`) con material propio (`curb_material`, rugosidad 0,45 y especular 0,50) que mantiene su brillo y blancura sin sufrir oscurecimiento por oclusión de suelo ni conversiones sRGB repetidas.
+   - Alzada vertical interior de +4,5 cm sobre la cota del pavimento (`y_paving`), chaflanes biselados a 45°, coronación plana horizontal de 11 cm a +6,0 cm sobre el pavimento, y caída vertical exterior hasta la cota 0 del césped.
+   - Entradas radiales a la plaza central expeditas mediante comprobación de distancia de camino.
+   - **Cinemática**: Al tener +6 cm de alzada con chaflán biselado suave a 45°, la suela y el talón del calzado del maniquí (3–4 cm) absorben el escalón con naturalidad visual sin necesidad de animaciones IK dedicadas.
+   - **Holgura de mobiliario**: Separación garantizada en plazas y paseos (> 38–43 cm de distancia libre entre el respaldo/patas de los bancos y papeleras y los bordillos de piedra).
+2. **Luz de relleno y relieve en personajes (`fill_sun`, `shaders/mannequin_pbr.gdshader`)**:
+   - Luz direccional de relleno (`fill_sun`) opuesta al sol sin proyección de sombras (coste 0 en pases de sombras), que levanta las sombras de los personajes a contraluz a la hora dorada (azimut 132°, energía 0,35) y en día (azimut 145°, energía 0,22).
+   - Resalte suave de contorno (`RIM = 0,7`) en madera barnizada y pelo/sombreros en `mannequin_pbr.gdshader` para definir siluetas tridimensionales sin empastarlas en negro.
+3. **Rendimiento e invariantes**:
+   - 0 draw calls adicionales (los bordillos se fusionan en la pasada estática del parque bajo la clave `curb`).
+   - Evidencias gráficas en `docs/evidencias/margenes/` (`panel_bordillos_parque_grande.png`, capturas de día y hora dorada).
 
 

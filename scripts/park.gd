@@ -6,6 +6,7 @@ const ParkAssets = preload("res://scripts/park_assets.gd")
 
 var environment: WorldEnvironment
 var sun: DirectionalLight3D
+var fill_sun: DirectionalLight3D
 var lamps: Array[OmniLight3D] = []
 var materials = {}
 var benches: Array[Dictionary] = []
@@ -22,6 +23,7 @@ var bulb_material: StandardMaterial3D
 var water_material: ShaderMaterial
 var spray_material: ShaderMaterial
 var windows_material: ShaderMaterial
+var curb_material: StandardMaterial3D
 # Lights of the meadow (bandstand and pond): lit at golden hour and night. They are not in
 # `lamps`, so the exposure meter ignores them; they stand 20 m away from the lanes anyway.
 var meadow_lights: Array[OmniLight3D] = []
@@ -54,6 +56,11 @@ func init_lantern_materials() -> void:
 		bulb_material.roughness = 0.20
 		bulb_material.metallic_specular = 0.5
 		materials[bulb_color.to_html()] = bulb_material
+	if curb_material == null:
+		curb_material = StandardMaterial3D.new()
+		curb_material.albedo_color = Color("f4efe6")
+		curb_material.roughness = 0.45
+		curb_material.metallic_specular = 0.50
 
 func build_farola_mesh(parent: Node3D, with_collider: bool = true) -> void:
 	init_lantern_materials()
@@ -156,7 +163,7 @@ func visual(asset: String, variant: String, parent: Node3D, offset: Transform3D 
 		node.mesh = mesh
 		node.transform = offset
 		node.set_meta("baked",true)
-		var own = {"glass":glass_material,"bulb":bulb_material,"water":water_material,"spray":spray_material,"windows":windows_material}
+		var own = {"glass":glass_material,"bulb":bulb_material,"water":water_material,"spray":spray_material,"windows":windows_material,"curb":curb_material}
 		node.material_override = own.get(role,vertex_color_material()) if role != "" else vertex_color_material()
 		parent.add_child(node)
 		# Counted once per mesh: reading the arrays back for each of the hundreds of copies was a
@@ -816,6 +823,11 @@ func build_environment() -> void:
 	sun.shadow_bias = 0.025
 	sun.shadow_normal_bias = 1.2
 	add_child(sun)
+	# Fill light (luz de relleno fotográfica opuesta al sol, sin sombras, docs/futuro/17).
+	fill_sun = DirectionalLight3D.new()
+	fill_sun.shadow_enabled = false
+	fill_sun.light_energy = 0.0
+	add_child(fill_sun)
 
 # The classic cylindrical park around the photographer (docs/ESCENARIO_Y_RENDIMIENTO.md §1).
 func build_layout() -> void:
@@ -1210,6 +1222,7 @@ func set_time_of_day(tod: String) -> void:
 		sun.rotation_degrees = Vector3(-72,-35,0)
 		sun.light_energy = MOONLIGHT
 		sun.light_color = Color("9caed4")
+		fill_sun.light_energy = 0.0
 		environment.environment.ambient_light_color = Color("394568")
 		base_ambient = .42
 		environment.environment.ambient_light_energy = base_ambient
@@ -1237,6 +1250,7 @@ func set_time_of_day(tod: String) -> void:
 		sun.rotation_degrees = Vector3(-80,-48,0)
 		sun.light_energy = .45
 		sun.light_color = Color("6f8fd8")
+		fill_sun.light_energy = 0.0
 		environment.environment.ambient_light_color = Color("7f93c4")
 		base_ambient = 1.35
 		environment.environment.ambient_light_energy = base_ambient
@@ -1262,6 +1276,10 @@ func set_time_of_day(tod: String) -> void:
 		sun.rotation_degrees = Vector3(-15,-48,0)
 		sun.light_energy = 2.6
 		sun.light_color = Color("ffa544")
+		# Fill light opuesta al sol de poniente (azimut 132°): levanta sombras de personajes a contraluz
+		fill_sun.rotation_degrees = Vector3(-30,132,0)
+		fill_sun.light_energy = 0.35
+		fill_sun.light_color = Color("8ea4c8")
 		# Shadows at sunset are lit by the blue sky: a clear ambient keeps the long shadows readable.
 		environment.environment.ambient_light_color = Color("9aaed0")
 		base_ambient = .7
@@ -1289,6 +1307,10 @@ func set_time_of_day(tod: String) -> void:
 		sun.rotation_degrees = Vector3(-72,-35,0)
 		sun.light_energy = 1.4
 		sun.light_color = Color("fff0d7")
+		# Fill light diurna opuesta al sol (azimut 145°): relleno suave del cielo
+		fill_sun.rotation_degrees = Vector3(-45,145,0)
+		fill_sun.light_energy = 0.22
+		fill_sun.light_color = Color("a8bed8")
 		environment.environment.ambient_light_color = Color("c6d6df")
 		base_ambient = .22
 		environment.environment.ambient_light_energy = base_ambient
@@ -1457,10 +1479,10 @@ func merge_static_meshes() -> void:
 	var groups = {}
 	srgb_meshes.clear()
 	for node in find_children("*","MeshInstance3D",true,false):
-		if node.mesh != null and not node.has_meta("ground") and not node.material_override in [glass_material,bulb_material,water_material,spray_material,windows_material]:
+		if node.mesh != null and not node.has_meta("ground") and not node.material_override in [glass_material,bulb_material,water_material,spray_material,windows_material,curb_material]:
 			add_occluder(node)
 	# Lantern glass (transparent) and bulbs (night emission) keep their own materials.
-	var own_key = {glass_material:"glass",bulb_material:"bulb",water_material:"water",spray_material:"spray",windows_material:"windows"}
+	var own_key = {glass_material:"glass",bulb_material:"bulb",water_material:"water",spray_material:"spray",windows_material:"windows",curb_material:"curb"}
 	for node in find_children("*","MeshInstance3D",true,false):
 		if node.mesh == null: continue
 		var key = own_key.get(node.material_override,sector_key(node.global_position))
@@ -1493,7 +1515,7 @@ func merge_static_meshes() -> void:
 		var node = MeshInstance3D.new()
 		node.name = "Parque_"+key.replace(":","_")
 		node.mesh = mesh
-		var own = {"glass":glass_material,"bulb":bulb_material,"water":water_material,"spray":spray_material,"windows":windows_material}
+		var own = {"glass":glass_material,"bulb":bulb_material,"water":water_material,"spray":spray_material,"windows":windows_material,"curb":curb_material}
 		if own.has(key): node.material_override = own[key]
 		elif key.begins_with("suelo:"): node.material_override = ground_material()
 		else: node.material_override = vertex_color_material()

@@ -32,6 +32,8 @@ void fragment() {
 		SPECULAR = 0.5;
 		CLEARCOAT = clearcoat_amount;
 		CLEARCOAT_ROUGHNESS = 0.3;
+		RIM = rim_amount * 0.7;
+		RIM_TINT = 0.5;
 	} else if (zone < 2.5) {
 		// Knit and twill.
 		ROUGHNESS = 0.92;
@@ -42,6 +44,8 @@ void fragment() {
 		// Hair and hats.
 		ROUGHNESS = 0.7;
 		SPECULAR = 0.35;
+		RIM = rim_amount * 0.85;
+		RIM_TINT = 0.5;
 	} else {
 		// Shoes, trims and accessories.
 		ROUGHNESS = 0.55;
