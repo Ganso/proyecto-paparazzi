@@ -42,6 +42,50 @@ def to_blender(v):
     return Vector((v[0], -v[2], v[1]))
 
 
+def apply_canopy_normals(mesh, is_column=False, soften=1.0):
+    """Normales esféricas de copa puras (máxima exageración volumétrica):
+    cada vértice de la copa toma su normal directamente del vector saliente desde el centro
+    de la cúpula vegetal completa con fuerte componente radial horizontal para maximizar
+    el contraste de luz lateral y eliminar cualquier costura o bulto entre racimos."""
+    if not mesh.vertices:
+        return
+    verts = mesh.vertices
+    xs = [v.co.x for v in verts]
+    ys = [v.co.y for v in verts]
+    zs = [v.co.z for v in verts]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    min_z, max_z = min(zs), max(zs)
+    cx = (min_x + max_x) * 0.5
+    cy = (min_y + max_y) * 0.5
+
+    custom_normals = []
+    if is_column:
+        for v in verts:
+            orig = v.normal.copy()
+            rad = Vector((v.co.x - cx, v.co.y - cy, 0.0))
+            if rad.length > 1e-4:
+                rad_n = rad.normalized()
+                sn = Vector((rad_n.x, rad_n.y, 0.15)).normalized()
+            else:
+                sn = Vector((0.0, 0.0, 1.0))
+            blended = (orig * (1.0 - soften) + sn * soften).normalized()
+            custom_normals.append(blended)
+    else:
+        cz = min_z + (max_z - min_z) * 0.40
+        for v in verts:
+            orig = v.normal.copy()
+            dx = (v.co.x - cx) * 1.6
+            dy = (v.co.y - cy) * 1.6
+            dz = (v.co.z - cz) * 0.5
+            from_c = Vector((dx, dy, dz))
+            sn = from_c.normalized() if from_c.length > 1e-4 else Vector((0.0, 0.0, 1.0))
+            blended = (orig * (1.0 - soften) + sn * soften).normalized()
+            custom_normals.append(blended)
+
+    mesh.normals_split_custom_set_from_vertices(custom_normals)
+
+
 class Builder:
     """Acumula geometría (en coordenadas de Godot) con color por cara."""
 
@@ -71,7 +115,7 @@ class Builder:
     def empty(self):
         return not self.faces
 
-    def to_object(self, name, smooth_angle=35.0):
+    def to_object(self, name, smooth_angle=35.0, canopy=False, is_column=False, soften=1.0):
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata([to_blender(v) for v in self.verts], [], self.faces)
         mesh.validate(clean_customdata=False)
@@ -85,6 +129,8 @@ class Builder:
         for poly in mesh.polygons:
             poly.use_smooth = True
         mesh.set_sharp_from_angle(angle=math.radians(smooth_angle))
+        if canopy:
+            apply_canopy_normals(mesh, is_column=is_column, soften=soften)
         obj = bpy.data.objects.new(name, mesh)
         bpy.context.scene.collection.objects.link(obj)
         return obj
@@ -861,7 +907,7 @@ def setup_bake_scene():
     return ground
 
 
-def bake_ao(obj, objects):
+def bake_ao(obj, objects, is_canopy=False):
     # Cada malla se hornea sola: las variantes y los dos niveles de detalle comparten el origen.
     for other in objects:
         other.hide_render = other is not obj
@@ -875,8 +921,9 @@ def bake_ao(obj, objects):
     bpy.ops.object.bake(type="AO", target="VERTEX_COLORS")
     for i, d in enumerate(col.data):
         a = ao.data[i].color[0]
-        # Oclusión suavizada: nunca por debajo de 0,45 para no ennegrecer las juntas.
-        k = 0.45 + 0.55 * a
+        # Oclusión suavizada: en copas de árboles se mantiene alta (>= 0.95) para no
+        # romper con costuras oscuras el gradiente continuo de las normales esféricas.
+        k = (0.95 + 0.05 * a) if is_canopy else (0.45 + 0.55 * a)
         c = d.color
         d.color = (c[0] * k, c[1] * k, c[2] * k, 1.0)
     mesh.color_attributes.remove(ao)
@@ -913,12 +960,16 @@ def main():
                     if builder.empty():
                         continue
                     obj_name = "_".join(p for p in (lod_name, variant, role) if p)
-                    objects.append(builder.to_object(obj_name))
+                    is_foliage = name.startswith("arbol_") or name == "arbusto"
+                    canopy = is_foliage and role == ""
+                    is_column = name == "arbol_cipres"
+                    objects.append(builder.to_object(obj_name, canopy=canopy, is_column=is_column))
         if bake:
             bpy.context.scene.world.light_settings.distance = AO_DISTANCE.get(name, 0.35)
             for obj in objects:
                 if not obj.name.endswith(("glass", "bulb", "water", "spray", "windows")) and name != "torre":
-                    bake_ao(obj, objects)
+                    is_canopy = (name.startswith("arbol_") or name == "arbusto") and not obj.name.endswith("_trunk")
+                    bake_ao(obj, objects, is_canopy=is_canopy)
             for obj in objects:
                 obj.hide_render = False
         bpy.data.objects.remove(ground)
