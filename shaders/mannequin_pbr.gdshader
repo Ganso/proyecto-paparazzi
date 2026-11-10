@@ -9,6 +9,7 @@ uniform bool textured = true;
 uniform float texture_strength : hint_range(0.0, 1.0) = 1.0;
 uniform float clearcoat_amount : hint_range(0.0, 1.0) = 0.55;
 uniform float rim_amount : hint_range(0.0, 1.0) = 0.3;
+uniform float rim_wood_amount : hint_range(0.0, 1.0) = 0.7;
 
 #include "res://shaders/mannequin_patterns.gdshaderinc"
 
@@ -32,7 +33,7 @@ void fragment() {
 		SPECULAR = 0.5;
 		CLEARCOAT = clearcoat_amount;
 		CLEARCOAT_ROUGHNESS = 0.3;
-		RIM = rim_amount * 0.7;
+		RIM = rim_amount * rim_wood_amount;
 		RIM_TINT = 0.5;
 	} else if (zone < 2.5) {
 		// Knit and twill.

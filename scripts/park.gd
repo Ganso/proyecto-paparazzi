@@ -24,6 +24,12 @@ var water_material: ShaderMaterial
 var spray_material: ShaderMaterial
 var windows_material: ShaderMaterial
 var curb_material: StandardMaterial3D
+var enable_fill_light: bool = true
+
+func _init() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg == "--no-fill-light":
+			enable_fill_light = false
 # Lights of the meadow (bandstand and pond): lit at golden hour and night. They are not in
 # `lamps`, so the exposure meter ignores them; they stand 20 m away from the lanes anyway.
 var meadow_lights: Array[OmniLight3D] = []
@@ -1278,7 +1284,7 @@ func set_time_of_day(tod: String) -> void:
 		sun.light_color = Color("ffa544")
 		# Fill light opuesta al sol de poniente (azimut 132°): levanta sombras de personajes a contraluz
 		fill_sun.rotation_degrees = Vector3(-30,132,0)
-		fill_sun.light_energy = 0.35
+		fill_sun.light_energy = 0.35 if enable_fill_light else 0.0
 		fill_sun.light_color = Color("8ea4c8")
 		# Shadows at sunset are lit by the blue sky: a clear ambient keeps the long shadows readable.
 		environment.environment.ambient_light_color = Color("9aaed0")
@@ -1309,7 +1315,7 @@ func set_time_of_day(tod: String) -> void:
 		sun.light_color = Color("fff0d7")
 		# Fill light diurna opuesta al sol (azimut 145°): relleno suave del cielo
 		fill_sun.rotation_degrees = Vector3(-45,145,0)
-		fill_sun.light_energy = 0.22
+		fill_sun.light_energy = 0.22 if enable_fill_light else 0.0
 		fill_sun.light_color = Color("a8bed8")
 		environment.environment.ambient_light_color = Color("c6d6df")
 		base_ambient = .22

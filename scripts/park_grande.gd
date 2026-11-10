@@ -24,16 +24,6 @@ var discs: Array = []                 # [centre, radius, layer]
 var view_point = Vector3.ZERO         # where the photographer is (lamp shadows follow it)
 var shadow_timer = 0.0
 
-# Opciones de márgenes de caminos (Bordillos de piedra):
-var enable_curbs: bool = true
-
-func _init() -> void:
-	for arg in OS.get_cmdline_user_args():
-		if arg == "--margins=none" or arg == "--margins=baseline":
-			enable_curbs = false
-		elif arg == "--margins=curbs" or arg == "--margins=all":
-			enable_curbs = true
-
 func ring_point(x: float, z: float) -> Vector3:
 	return Vector3(x,0,z)
 
@@ -49,8 +39,6 @@ func build_layout() -> void:
 	ground.add_child(ground_collision)
 	define_paths()
 	build_ground()
-	if enable_curbs and detail == "hd":
-		build_curbs()
 	var rng = RandomNumberGenerator.new()
 	rng.seed = 1234
 	if ParkAssets.available("torre"): build_skyline(rng)
@@ -227,125 +215,6 @@ func disc(centre: Vector3, radius: float, layer: int, under = false) -> void:
 	var piece = prop(st.commit(),centre,Color("c5bdac"))
 	piece.set_meta("ground",true)
 	piece.set_meta("ground_layer",layer)
-
-func build_curbs() -> void:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for s in strips:
-		var a: Vector3 = s[0]
-		var b: Vector3 = s[1]
-		var width: float = s[2]
-		var layer: int = s[3]
-		var under = s[4] if s.size() > 4 else false
-		if under: continue
-		var length = a.distance_to(b)
-		if length < 0.5: continue
-		var dir = (b - a).normalized()
-		var side_vec = Vector3(-dir.z, 0, dir.x) * (width * 0.5)
-		var y_paving = paving_height(layer, false)
-
-		# Clamping: si arranca o termina dentro de la plaza central, iniciar fuera
-		var p_start = a
-		var p_end = b
-		if p_start.length() < PLAZA_R:
-			var t = clampf((PLAZA_R + 0.1 - p_start.length()) / p_start.distance_to(p_end), 0.0, 0.9)
-			p_start = p_start.lerp(p_end, t)
-		if p_end.length() < PLAZA_R:
-			var t = clampf((PLAZA_R + 0.1 - p_end.length()) / p_end.distance_to(p_start), 0.0, 0.9)
-			p_end = p_end.lerp(p_start, t)
-		if p_start.distance_to(p_end) < 0.5: continue
-
-		var line_dir = (p_end - p_start).normalized()
-		# Borde izquierdo: normal exterior = -side_vec.normalized().
-		# Para mantener outward.cross(dir_borde) == Vector3.UP, el borde izquierdo corre de p_end a p_start.
-		var out_left = -side_vec.normalized()
-		curb_edge_mesh(st, p_end - side_vec, p_start - side_vec, -line_dir, out_left, y_paving)
-
-		# Borde derecho: normal exterior = +side_vec.normalized().
-		# Corre de p_start a p_end con line_dir.
-		var out_right = side_vec.normalized()
-		curb_edge_mesh(st, p_start + side_vec, p_end + side_vec, line_dir, out_right, y_paving)
-
-	# Bordillos de plazas circulares
-	var y_plaza = paving_height(GROUND_LAYERS.find("losas"), true)
-	curb_disc_mesh(st, Vector3.ZERO, PLAZA_R, y_plaza, true)
-
-	var y_play = paving_height(GROUND_LAYERS.find("grava"), false)
-	curb_disc_mesh(st, PLAYGROUND_POS, PLAYGROUND_R, y_play, false)
-
-	var y_band = paving_height(GROUND_LAYERS.find("losas"), false)
-	curb_disc_mesh(st, BANDSTAND_POS, 6.5, y_band, false)
-
-	st.index()
-	var kerb_node = prop(st.commit(), Vector3.ZERO, Color("f4efe6"))
-	init_lantern_materials()
-	kerb_node.material_override = curb_material
-
-func curb_edge_mesh(st: SurfaceTool, p0: Vector3, p1: Vector3, dir: Vector3, outward: Vector3, y_paving: float) -> void:
-	var length = p0.distance_to(p1)
-	if length < 0.3: return
-	var steps = maxi(2, int(ceil(length / 1.5)))
-	var y_top = y_paving + 0.060
-	# Bloque de piedra de granito: alzada vertical interior de 4.5 cm, biseles de 45°, coronación plana de 11 cm a +6 cm y caída vertical exterior hasta cota 0.
-	var profile = [
-		Vector2(-0.07, y_paving),
-		Vector2(-0.07, y_top - 0.015),
-		Vector2(-0.055, y_top),
-		Vector2(0.055, y_top),
-		Vector2(0.07, y_top - 0.015),
-		Vector2(0.07, 0.0)
-	]
-	for i in steps:
-		var pt_a = p0 + dir * (length * i / steps)
-		var pt_b = p0 + dir * (length * (i + 1) / steps)
-		for k in profile.size() - 1:
-			var pr0: Vector2 = profile[k]
-			var pr1: Vector2 = profile[k + 1]
-			var ds = pr1.x - pr0.x
-			var dy = pr1.y - pr0.y
-			var norm = (outward * (-dy) + Vector3.UP * ds).normalized()
-			var v00 = pt_a + outward * pr0.x + Vector3.UP * pr0.y
-			var v01 = pt_a + outward * pr1.x + Vector3.UP * pr1.y
-			var v11 = pt_b + outward * pr1.x + Vector3.UP * pr1.y
-			var v10 = pt_b + outward * pr0.x + Vector3.UP * pr0.y
-			for v in [v00, v01, v11, v00, v11, v10]:
-				st.set_normal(norm)
-				st.add_vertex(v)
-
-func curb_disc_mesh(st: SurfaceTool, centre: Vector3, radius: float, y_paving: float, check_entrances: bool) -> void:
-	var segments = 72
-	var y_top = y_paving + 0.060
-	var profile = [
-		Vector2(-0.07, y_paving),
-		Vector2(-0.07, y_top - 0.015),
-		Vector2(-0.055, y_top),
-		Vector2(0.055, y_top),
-		Vector2(0.07, y_top - 0.015),
-		Vector2(0.07, 0.0)
-	]
-	for i in segments:
-		var a0 = i * TAU / segments
-		var a1 = (i + 1) * TAU / segments
-		var mid_a = (a0 + a1) * 0.5
-		var mid_pt = centre + Vector3(sin(mid_a) * radius, 0, cos(mid_a) * radius)
-		if check_entrances and path_distance(mid_pt) < -0.10:
-			continue
-		var r0 = Vector3(sin(a0), 0, cos(a0))
-		var r1 = Vector3(sin(a1), 0, cos(a1))
-		var mid_r = Vector3(sin(mid_a), 0, cos(mid_a))
-		for k in profile.size() - 1:
-			var pr0: Vector2 = profile[k]
-			var pr1: Vector2 = profile[k + 1]
-			var ds = pr1.x - pr0.x
-			var dy = pr1.y - pr0.y
-			var norm = (mid_r * (-dy) + Vector3.UP * ds).normalized()
-			var v00 = centre + r0 * (radius + pr0.x) + Vector3.UP * pr0.y
-			var v01 = centre + r0 * (radius + pr1.x) + Vector3.UP * pr1.y
-			var v11 = centre + r1 * (radius + pr1.x) + Vector3.UP * pr1.y
-			var v10 = centre + r1 * (radius + pr0.x) + Vector3.UP * pr0.y
-			for v in [v00, v01, v11, v00, v11, v10]:
-				st.set_normal(norm)
-				st.add_vertex(v)
 
 # ---- Grass: on the lawns inside and around the fence, not on paths ----
 func grass_samples(rng: RandomNumberGenerator, _bandstand: Vector3, _pond: Vector3) -> Dictionary:

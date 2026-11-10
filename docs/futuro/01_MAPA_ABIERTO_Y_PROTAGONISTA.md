@@ -150,20 +150,17 @@ Junto al quiosco, mirando hacia el sol y subiendo o bajando la vista, el césped
 
 Tras el arreglo quedaba un parpadeo de la luz al mover la vista. Medido punto a punto (brillo de puntos fijos del suelo con la cámara quieta y girando), venía de la **penumbra física** de las sombras (`light_angular_distance`): repartida sobre sombras de cien metros, daba un valor distinto en cada tramo del mapa de sombras, y el césped a media luz variaba un 20 % al cambiar de tramo. A la hora dorada, en el parque grande, las sombras son ahora planas y algo más difusas y dejan pasar parte del sol (`park.gd::long_shadows()`, `LONG_SHADOW_OPACITY = 0,55`, `shadow_blur = 2`): la misma luz en el suelo, y quieta (con la vista en movimiento el brillo de esos puntos varía lo mismo que con la cámara parada).
 
-### Márgenes de caminos: bordillos de piedra elevados y luz de relleno (10-11-2026)
+### Transición de caminos y luz de relleno en personajes (10-11-2026)
 
-Los caminos del parque grande presentaban un corte recto matemático contra la pradera, sin grosor vertical. Se han rediseñado completamente los bordillos para que sobresalgan con volumen tridimensional sólido y alzada vertical limpia:
-1. **Bordillos de granito con alzada vertical (`curb_edge_mesh()`, `curb_disc_mesh()`)**:
-   - Bloque de piedra de granito blanco (`f4efe6`) con material propio (`curb_material`, rugosidad 0,45 y especular 0,50) que mantiene su brillo y blancura sin sufrir oscurecimiento por oclusión de suelo ni conversiones sRGB repetidas.
-   - Alzada vertical interior de +4,5 cm sobre la cota del pavimento (`y_paving`), chaflanes biselados a 45°, coronación plana horizontal de 11 cm a +6,0 cm sobre el pavimento, y caída vertical exterior hasta la cota 0 del césped.
-   - Entradas radiales a la plaza central expeditas mediante comprobación de distancia de camino.
-   - **Cinemática**: Al tener +6 cm de alzada con chaflán biselado suave a 45°, la suela y el talón del calzado del maniquí (3–4 cm) absorben el escalón con naturalidad visual sin necesidad de animaciones IK dedicadas.
-   - **Holgura de mobiliario**: Separación garantizada en plazas y paseos (> 38–43 cm de distancia libre entre el respaldo/patas de los bancos y papeleras y los bordillos de piedra).
-2. **Luz de relleno y relieve en personajes (`fill_sun`, `shaders/mannequin_pbr.gdshader`)**:
+1. **Retirada de bordillos extruidos**:
+   - Tras evaluar bordillos extruidos a lo largo de las tiras de camino, la proyección poligonal plana generaba artefactos de ángulo de visión rasante (césped visible por debajo de la línea de piedra) e irregularidades de orientación en las uniones. Se optó por retirarlos para preservar la estética limpia, continua y unificada del diorama y evitar Z-fighting o costuras visuales. Las holguras de bancos y papeleras (> 38–43 cm) se mantienen intactas.
+2. **Luz de relleno dedicada y relieve en personajes (`fill_sun`, `shaders/mannequin_pbr.gdshader`)**:
    - Luz direccional de relleno (`fill_sun`) opuesta al sol sin proyección de sombras (coste 0 en pases de sombras), que levanta las sombras de los personajes a contraluz a la hora dorada (azimut 132°, energía 0,35) y en día (azimut 145°, energía 0,22).
-   - Resalte suave de contorno (`RIM = 0,7`) en madera barnizada y pelo/sombreros en `mannequin_pbr.gdshader` para definir siluetas tridimensionales sin empastarlas en negro.
+   - Resalte suave de contorno (`RIM = rim_amount * rim_wood_amount`) en madera barnizada y pelo/sombreros en `mannequin_pbr.gdshader` para definir siluetas tridimensionales sin empastarlas en negro ni romper la calidez del atardecer.
+   - Verificado con 5 pruebas comparativas A/B (con y sin luz de relleno) en `docs/evidencias/iluminacion_personajes/` y panel general en `panel_general_iluminacion_personajes.png`.
 3. **Rendimiento e invariantes**:
-   - 0 draw calls adicionales (los bordillos se fusionan en la pasada estática del parque bajo la clave `curb`).
-   - Evidencias gráficas en `docs/evidencias/margenes/` (`panel_bordillos_parque_grande.png`, capturas de día y hora dorada).
+   - 0 draw calls de sombras añadidas (`shadow_enabled = false`).
+   - Día en Forward+ Ultra: 51 draw calls (presupuesto ≤ 300).
+   - Invariantes de cinemática y físicas inalterados (drift 0,000000 m/frame).
 
 
