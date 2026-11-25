@@ -1326,10 +1326,19 @@ Cada etapa deja el juego funcionando y sus pruebas en verde. No se empieza una s
   - **Récord:** cuenta el último nivel superado en la carrera, no el nivel al que se llega.
 - **Queda para etapas posteriores:** los dobles del §10.3 (al cargar la escena, desde el tramo 4), comodines y rescate (E5), aprendizaje, chuleta y táctil (E6), recarga y elección de persona en el grande (E7), polaroid, álbum y sonidos propios (E8). Mientras tanto, la ayuda de la pausa es la de la cámara y el H no hace nada.
 
-### E5 · Puntería y ayudas
-- [ ] `aim_point`, enganche, auto-encuadre, soltar, retén, evidencia en vivo, semáforo, corchetes, etiqueta de plano y barra de zoom.
-- [ ] Comprobación de rasgos, flecha, anillo, Congelar, Otro y rescate.
-- **Aceptación:** pruebas 4–6, 9, 11 y 12 del §19.3.
+### E5 · Puntería y ayudas ✅ (25-11-2026, falta la prueba a mano)
+- [x] `aim_point`, enganche, auto-encuadre, soltar, retén, evidencia en vivo, semáforo, corchetes, etiqueta de plano y barra de zoom.
+- [x] Comprobación de rasgos, flecha, anillo, Congelar, Otro y rescate.
+- **Aceptación:** pruebas 4–6, 9, 11 y 12 del §19.3 en verde (`test_paparazzi_play.gd`, 65 comprobaciones). Medido: `aim_point()` falla como mucho 0,0010 del encuadre a 24 mm y 0,0002 de 50 a 600 mm; el seguimiento a 200 mm de una persona caminando, 0,019; el enganche automático a 60 mm tarda un fotograma; diez niveles seguidos (3–12) disparando en verde, diez aciertos; con ámbar, el fallo coincide con el consejo.
+- **Cómo quedó (diferencias con el plan):**
+  - **`aim_point()` hace hasta cuatro pasos de Newton**, no tres: con tres quedaba 0,0022 a 24 mm lejos del centro. Gira `camera.rotation` directamente en los pasos y llama a `update_camera()` una sola vez.
+  - **El semáforo evalúa cada fotograma**, no a 20 Hz: la evidencia en vivo (`capture(p, true)`) no calcula las descripciones, y así lo que dice es lo que juzgará la foto.
+  - **El retén** suena solo si no sonó hace menos de 0,35 s (en el borde de una franja el plano parpadea). Abrir el zoom a 26 mm suelta solo si lo hace el jugador: el «mantener el tamaño» puede bajar de ahí siguiendo a alguien que se acerca.
+  - **Tras soltar a alguien**, el enganche automático no lo vuelve a enganchar hasta que sale del centro (si no, `{pz_enganchar}` para soltar no servía con zoom).
+  - **Las tarjetas de suceso** (`flecha`, `taparse`) se abren en mitad de la búsqueda y vuelven a ella. La de la flecha no sale en los niveles 1–3, donde la flecha está desde el principio. La de `rescate` no se enseña: su panel ya lo explica, y se marca como vista al usarlo.
+  - **Comodines:** desde el nivel 1, Congelar se regala al llegar al 5 y Otro al 8 (una vez por carrera); los hitos dan el suyo (`milestone_joker()`) y el aviso lo dice («Ganas un comodín: Congelar»). Sonidos provisionales hasta E8: `bloqueo` (Congelar) y `control_elegir` (Otro).
+  - **HUD:** la ficha mide `Rect2(10,10,480,172)` (los rasgos largos pisaban las marcas ✓/✗). Las marcas, la flecha y el ✓ del plano se dibujan (las fuentes no tienen esos signos). Las esquinas van por debajo de la ficha y del reloj. Con mucho zoom los corchetes se quedan dentro de la pantalla, y si no queda sitio bajo ellos el consejo va encima de la etiqueta del plano.
+- **Queda para etapas posteriores:** el táctil de los comodines y la chuleta (E6), la flecha con distancia en el grande (E7).
 
 ### E6 · Enseñar
 - [ ] Aprendizaje de los niveles 1–3, tarjetas, chuleta y `plane_icon.gd`.

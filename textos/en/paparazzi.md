@@ -320,6 +320,36 @@ Menu
 ### pz_punto
 Level %d
 
+### pz_congelado
+Frozen %d
+
+### pz_comodin_congelar
+Freeze ×%d {pz_congelar}
+
+### pz_comodin_otro
+Skip ×%d {pz_otro}
+
+### pz_comodin_congelar_nombre
+Freeze
+
+### pz_comodin_otro_nombre
+New assignment
+
+### pz_comodin_ganado
+You win a joker: %s
+
+### pz_rescate_titulo
+Time's up!
+
+### pz_rescate_texto
+You have a rescue left: %d more seconds to stay on this level.
+
+### pz_rescate_si
+Use the rescue
+
+### pz_rescate_no
+Finish
+
 ## Tarjetas de novedad
 
 ### pz_nov_bienvenida_titulo

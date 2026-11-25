@@ -1,8 +1,9 @@
 extends SceneTree
-# Paparazzi played for real (docs/futuro/29 §19.3), the parts of E4: the menu's card, the reduced
-# interface, the zoom, a good photo and a wrong person, the clock, a milestone and the end of the
-# run. It aims as a player would (without the lock-on, which comes with E5). Needs a display, and
-# never writes the player's files.
+# Paparazzi played for real (docs/futuro/29 §19.3): the menu's card, the reduced interface, the
+# zoom, aim_point(), the lock-on and its follow, facing, a good photo and a wrong person, the
+# traffic light telling the truth, the clock, Freeze, the rescue, a milestone and the end of the
+# run. It aims as a player would, locking on to the person. Needs a display, and never writes the
+# player's files.
 #   ~/bin/godot-4-fp --path . --disable-vsync --script tests/test_paparazzi_play.gd
 const Paparazzi = preload("res://scripts/paparazzi.gd")
 const Framing = preload("res://scripts/framing.gd")
@@ -84,10 +85,27 @@ func run() -> void:
 	check(is_equal_approx(game.focal,600.0),"3. 40 notches up: %.1f mm" % game.focal)
 	for i in 40: wheel(false)
 	check(is_equal_approx(game.focal,24.0),"3. 40 notches down: %.1f mm" % game.focal)
-	# Camera keys do nothing (the aperture key, for one).
+	# Camera keys do nothing (the aperture key, for one; E is the lock-on's now).
 	var before_n = game.n_index
-	key(KEY_E)
+	key(KEY_Q)
 	check(game.n_index == before_n,"3. the camera's keys are idle")
+	# 4. aim_point(): any point of the world to any place of the frame, at any focal.
+	var rng = RandomNumberGenerator.new()
+	rng.seed = 29
+	for f in [24.0,50.0,200.0,600.0]:
+		game.focal = f
+		game.update_camera()
+		var worst = 0.0
+		for i in 40:
+			var yaw = deg_to_rad(rng.randf_range(0,360))
+			var rise = deg_to_rad(rng.randf_range(-15,15))
+			var world = game.camera.global_position+Vector3(sin(yaw)*cos(rise),sin(rise),-cos(yaw)*cos(rise))*rng.randf_range(3,30)
+			var screen = Vector2(rng.randf_range(.08,.92),rng.randf_range(.08,.92))
+			game.aim_point(world,screen,1.0)
+			worst = maxf(worst,(game.camera.unproject_position(world)/Vector2(game.viewport.size)-screen).length())
+		check(worst < .002,"4. aim_point at %d mm: worst miss %.5f" % [f,worst])
+	game.focal = 24.0
+	game.update_camera()
 	# 7. The photo asked for, of the person asked for → level 2, the clock untouched in 1–3.
 	var bank_before = pz.bank
 	var ok = await shoot_target()
@@ -95,6 +113,49 @@ func run() -> void:
 	check(pz.spec.n == 2,"7. level 2 next: %d" % pz.spec.n)
 	check(pz.bank == bank_before,"7. no clock in levels 1–3")
 	await dismiss()
+	# 5. The lock-on: the person in the middle at 60 mm is locked on within half a second; at 200 mm,
+	# walking, the follow keeps her anchor where the framing wants it.
+	pz.release()
+	pz.released = null
+	game.focal = 60.0
+	game.update_camera()
+	game.aim_point(game.target.control_points()[1],Vector2(.5,.5),1.0)
+	var t0 = Time.get_ticks_msec()
+	while pz.locked == null and Time.get_ticks_msec()-t0 < 500: await process_frame
+	check(pz.locked == game.target,"5. locked on in %d ms: %s" % [Time.get_ticks_msec()-t0,str(pz.locked)])
+	pz.release()
+	game.focal = 200.0
+	game.update_camera()
+	pz.lock(game.target)
+	await seconds(.6)
+	var worst_follow = 0.0
+	var walked = 0.0
+	var start_at: Vector3 = game.target.global_position
+	t0 = Time.get_ticks_msec()
+	while Time.get_ticks_msec()-t0 < 3000:
+		await process_frame
+		if pz.locked != game.target: break
+		var w = Framing.world_landmarks(game.target)
+		var v: Vector3 = game.target.actual_velocity
+		var side = signf(v.dot(game.camera.global_basis.x)) if v.length() > .2 else 0.0
+		var want = Vector2(.5-.10*side,.5)
+		var at = game.camera.unproject_position((w.crown+w.feet)*.5)/Vector2(game.viewport.size)
+		worst_follow = maxf(worst_follow,(at-want).length())
+		walked = maxf(walked,game.target.global_position.distance_to(start_at))
+	check(pz.locked == game.target,"5. still locked after 3 s")
+	check(worst_follow < .1,"5. the follow keeps the anchor in place: worst %.3f (walked %.1f m)" % [worst_follow,walked])
+	pz.release()
+	# 6. facing: towards the camera under 10°, the back over 170°.
+	var someone = game.target
+	var keep_rotation = someone.rotation.y
+	var to: Vector3 = game.camera.global_position-someone.global_position
+	someone.rotation.y = atan2(-to.x,-to.z)-someone.look_yaw
+	check(game.facing_of(someone) < 10.0,"6. facing the camera: %.1f°" % game.facing_of(someone))
+	someone.rotation.y += PI
+	check(game.facing_of(someone) > 170.0,"6. the back to it: %.1f°" % game.facing_of(someone))
+	someone.rotation.y = keep_rotation
+	game.focal = 24.0
+	game.update_camera()
 	# 8. Someone else, well framed → «Esa no es».
 	var wrong = await shoot_someone_else()
 	check(wrong.get("reasons",[]).size() > 0 and wrong.reasons[0].key == "no_es","8. another person is refused: %s" % str(wrong.get("reasons",[])))
@@ -103,6 +164,59 @@ func run() -> void:
 	check(pz.spec.n == 2,"8. still level 2")
 	ok = await shoot_target()
 	check(ok and pz.spec.n == 3,"7. level 2 passed: %s" % str(pz.last_verdict.get("reasons",[])))
+	# 9. The traffic light tells the truth: locked on to the person, shooting as soon as it turns
+	# green passes the level, ten levels in a row (3–12); shooting on amber fails for the reason
+	# its advice gave.
+	for card in ["flecha","taparse"]: pz.mark_seen(card)
+	var greens = 0
+	var amber_checked = false
+	for level in 10:
+		await dismiss()
+		var n = pz.spec.n
+		if not amber_checked and pz.spec.clock:
+			# Amber: far too wide for the shot asked for.
+			pz.release()
+			game.focal = 24.0
+			game.update_camera()
+			aim_point(game.target.control_points()[1],Vector2(.5,.5))
+			pz.lock(game.target)
+			await frames(4)
+			var tip: String = pz.live.get("tip","")
+			if not pz.live.is_empty() and not pz.live.ok and tip != "":
+				await take()
+				check(not pz.last_verdict.ok and pz.last_verdict.tip == tip,"9. amber («%s») fails for that: %s" % [tip,str(pz.last_verdict.get("reasons",[]))])
+				amber_checked = true
+		if await green_shot(): greens += 1
+		else: print("NO GREEN n=%d plane=%s live=%s" % [n,pz.current_request().plane,str(pz.live)])
+	check(greens == 10,"9. shooting on green passes: %d of 10" % greens)
+	check(amber_checked,"9. a shot on amber was tried")
+	# 11. Freeze: for 5 s nobody moves more than 1 cm; then they do.
+	await dismiss()
+	check(int(Paparazzi.run.jokers.congelar) >= 1,"11. a Freeze was given on level 5: %s" % str(Paparazzi.run.jokers))
+	pz.release()
+	var spots = {}
+	for p in game.people: spots[p] = p.global_position
+	key(KEY_1)
+	check(pz.frozen > 0.0,"11. 1 freezes the park")
+	await seconds(4.6)
+	var moved = 0.0
+	for p in game.people: moved = maxf(moved,p.global_position.distance_to(spots[p]))
+	check(moved < .01 and game.mode == "SEARCH","11. nobody moves while frozen: %.3f m (%s)" % [moved,game.mode])
+	await seconds(1.4)
+	moved = 0.0
+	for p in game.people: moved = maxf(moved,p.global_position.distance_to(spots[p]))
+	check(moved > .05,"11. and they move again: %.2f m" % moved)
+	# 12. The clock at zero: the rescue gives 30 s once; the second time, the end.
+	pz.bank = .3
+	await seconds(.6)
+	check(game.mode == "PZ_RESCUE","12. at zero, the rescue is offered: %s" % game.mode)
+	pz.use_rescue()
+	await frames(2)
+	check(game.mode == "SEARCH" and absf(pz.bank-Paparazzi.RESCUE_TIME) < .3,"12. 30 s more: %.1f" % pz.bank)
+	pz.bank = .3
+	await seconds(.6)
+	check(game.mode == "PZ_END","12. no rescue left: the end (%s)" % game.mode)
+	check(Paparazzi.load_progress().record >= 12,"12. the record is in the test file: %s" % str(Paparazzi.load_progress()))
 	# 10. From level 4 the clock runs while searching, not on a card nor paused.
 	pz.start(4)
 	await frames(5)
@@ -121,6 +235,7 @@ func run() -> void:
 	check(pz.bank == bank_pause and game.mode == "PAUSE","10. it waits in the pause")
 	game.resume_search()
 	# A missed photo in stretch 1 costs nothing.
+	pz.release()
 	var bank_fail = pz.bank
 	game.angle = fposmod(game.angle+180.0,360.0)
 	game.pitch = 60.0
@@ -202,6 +317,7 @@ func aim_point(world: Vector3, screen: Vector2) -> void:
 # Frame someone as the request asks: the focal of the shot, the crown with its air (or the whole
 # body in the middle), as the auto-framing of E5 will.
 func frame(p, plane: String) -> void:
+	game.pz.release()
 	var to = p.global_position-game.camera.global_position
 	var d = Vector2(to.x,to.z).length()
 	game.focal = clampf(Framing.focal_for(plane,Framing.rest_heights(p),d),24.0,600.0)
@@ -209,6 +325,35 @@ func frame(p, plane: String) -> void:
 	var w = Framing.world_landmarks(p)
 	if plane in ["entero","general"]: aim_point((w.crown+w.feet)*.5,Vector2(.5,.5))
 	else: aim_point(w.crown,Vector2(.5,Framing.AIR+.02))
+	game.pz.lock(p)
+
+# Locked on to the person asked for, zooming as the advice says until the light is green, then the
+# photo: whether the level was passed.
+func green_shot() -> bool:
+	var pz = game.pz
+	var n = pz.spec.n
+	pz.release()
+	var w = Framing.world_landmarks(game.target)
+	var to = game.target.global_position-game.camera.global_position
+	game.focal = clampf(Framing.focal_for(pz.current_request().plane,Framing.rest_heights(game.target),Vector2(to.x,to.z).length()),24.0,600.0)
+	game.update_camera()
+	aim_point(w.chest,Vector2(.5,.5))
+	pz.lock(game.target)
+	var t0 = Time.get_ticks_msec()
+	while Time.get_ticks_msec()-t0 < 10000:
+		await frames(3)
+		if game.mode == "PZ_CARD": await dismiss()
+		if pz.locked != game.target: pz.lock(game.target)
+		if pz.live.is_empty(): continue
+		if pz.live.ok:
+			await take()
+			if pz.spec.n != n: return true
+			print("GREEN BUT MISSED n=%d %s" % [n,str(pz.last_verdict.reasons)])
+			return false
+		match pz.live.tip:
+			"mas_zoom": pz.zoom_step(1)
+			"menos_zoom","cabeza": pz.zoom_step(-1)
+	return false
 
 func take() -> void:
 	game.take_photo()

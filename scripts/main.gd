@@ -1940,7 +1940,7 @@ func _process(dt: float) -> void:
 				if Input.is_physical_key_pressed(KEY_CTRL): rate = 0.65
 				adjust_focus_delta(-key_dir * rate * dt)
 		park.update_weather(dt)
-		if not (sandbox and sandbox_paused):
+		if not (sandbox and sandbox_paused) and not (paparazzi_active() and pz.frozen > 0.0):
 			for p in people: step_person(p,dt)
 			pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 			extras.update(dt)
@@ -3102,6 +3102,29 @@ func aim_at(p, rate: float) -> void:
 	pitch = lerpf(pitch,want_pitch,minf(1.0,rate))
 	update_camera()
 
+# Puts a point of the world at a place of the frame (0–1 on both axes), a share `rate` of the way
+# (Paparazzi's lock-on, docs/futuro/29 §7.4). The closed formula is the first guess; with the camera
+# tilted a sideways shift on screen is not a pure turn (up to 4.9 % of the frame off), so the miss
+# measured on the real projection corrects it: up to four Newton steps (three left 0.0022 at 24 mm,
+# far off the middle), to less than 0.0002.
+func aim_point(world: Vector3, screen: Vector2, rate: float) -> void:
+	var from = Vector2(angle,pitch)
+	var to = world-camera.global_position
+	var tan_h = tan(deg_to_rad(camera.fov)*.5)        # (KEEP_WIDTH: camera.fov is the horizontal one)
+	var tan_v = tan_h*float(viewport.size.y)/float(viewport.size.x)
+	var want = Vector2(rad_to_deg(atan2(to.x,-to.z))-rad_to_deg(atan((screen.x-.5)*2.0*tan_h)),
+		rad_to_deg(atan2(to.y,Vector2(to.x,to.z).length()))+rad_to_deg(atan((screen.y-.5)*2.0*tan_v)))
+	for i in 4:
+		camera.rotation = Vector3(deg_to_rad(clampf(want.y,-75,75)),-deg_to_rad(want.x),0)
+		if camera.is_position_behind(world): break
+		var miss = camera.unproject_position(world)/Vector2(viewport.size)-screen
+		if miss.length() < .0002: break
+		want.x += rad_to_deg(atan(miss.x*2.0*tan_h))
+		want.y -= rad_to_deg(atan(miss.y*2.0*tan_v))
+	angle = fposmod(from.x+rad_to_deg(angle_difference(deg_to_rad(from.x),deg_to_rad(want.x)))*minf(1.0,rate),360)
+	pitch = lerpf(from.y,want.y,minf(1.0,rate))
+	update_camera()
+
 func photographer_input(event: InputEvent) -> bool:
 	# With the fingers: the stick and the look are touch_controls.gd's; the mouse a touch emulates
 	# (or the real one playing the finger) does nothing here.
@@ -3351,6 +3374,7 @@ func darkroom_quality(on: bool) -> void:
 # The world, a slice of the exposure on (what _process() does for it while searching).
 func advance_world(dt: float) -> void:
 	if (sandbox and sandbox_paused) or (academy and academy.active and academy.paused): return
+	if paparazzi_active() and pz.frozen > 0.0: return
 	for p in people: step_person(p,dt)
 	if pigeons: pigeons.update(dt,people,([dog] if dog else [])+([player_proxy] if player_proxy else []))
 	if extras: extras.update(dt)
@@ -3991,7 +4015,9 @@ static func stick(x: float) -> float:
 func update_trigger(rt: float) -> void:
 	if trigger_stage == 0 and rt >= .35:
 		trigger_stage = 1
-		if eye_ready() and mode == "SEARCH":
+		# (Paparazzi: the half press locks on to whoever is nearest the middle, §7.2)
+		if paparazzi_active() and mode == "SEARCH": pz.lock_middle(false)
+		elif eye_ready() and mode == "SEARCH":
 			if equipment.focus_mode != "MF": autofocus()
 			update_meter()
 			if equipment.auto_exposure: auto_expose()

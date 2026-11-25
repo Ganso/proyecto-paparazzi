@@ -320,6 +320,36 @@ Menú
 ### pz_punto
 Nivel %d
 
+### pz_congelado
+Congelado %d
+
+### pz_comodin_congelar
+Congelar ×%d {pz_congelar}
+
+### pz_comodin_otro
+Otro ×%d {pz_otro}
+
+### pz_comodin_congelar_nombre
+Congelar
+
+### pz_comodin_otro_nombre
+Otro encargo
+
+### pz_comodin_ganado
+Ganas un comodín: %s
+
+### pz_rescate_titulo
+¡Se acabó el tiempo!
+
+### pz_rescate_texto
+Te queda un rescate: %d segundos más para seguir en este nivel.
+
+### pz_rescate_si
+Usar el rescate
+
+### pz_rescate_no
+Terminar
+
 ## Tarjetas de novedad
 
 ### pz_nov_bienvenida_titulo
