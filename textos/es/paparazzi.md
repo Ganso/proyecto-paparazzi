@@ -243,6 +243,83 @@ Encuadras tú
 ### pz_tramo_infinito
 Sin final
 
+## Interfaz de la carrera
+
+### pz_ficha_busca
+BUSCA A
+
+### pz_ficha_foto
+LA FOTO
+
+### pz_nivel
+NIVEL %d
+
+### pz_tramo
+Tramo %d
+
+### pz_sin_reloj
+Sin reloj
+
+### pz_bonus
++%d s
+
+### pz_penal
+−%d s
+
+### pz_corte_limpio
+Corte limpio: +%d s
+
+### pz_primera
+A la primera: +%d s
+
+### pz_bien
+¡Bien!
+
+### pz_hito_consolidado
+¡Hito consolidado! Podrás empezar desde el nivel %d
+
+### pz_reportaje_siguiente
+Foto %d de 3: %s
+
+### pz_reportaje_ficha
+Reportaje: %s
+
+### pz_empezar
+¡A por ella!
+
+### pz_entendido
+Entendido
+
+### pz_pausa_terminar
+Terminar la carrera
+
+### pz_fin_titulo
+Fin de la carrera
+
+### pz_fin_record
+¡Nuevo récord!
+
+### pz_fin_nivel
+Has llegado al nivel %d
+
+### pz_fin_mejor
+Tu récord: nivel %d
+
+### pz_fin_desde
+Puedes empezar desde el nivel %d
+
+### pz_fin_otra
+Otra vez desde el nivel %d
+
+### pz_fin_inicio
+Desde el principio
+
+### pz_fin_menu
+Menú
+
+### pz_punto
+Nivel %d
+
 ## Tarjetas de novedad
 
 ### pz_nov_bienvenida_titulo

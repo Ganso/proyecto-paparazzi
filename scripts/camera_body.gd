@@ -154,7 +154,7 @@ func _draw() -> void:
 	if main == null or mode != "camara" or body < 0: return
 	# Only while searching: behind a screen (briefing, result, pause…) the LEDs showed through the
 	# frosted glass, sharp over the blurred park.
-	if main.mode != "SEARCH": return
+	if main.mode != "SEARCH" or main.paparazzi_active(): return   # (Paparazzi: no camera around the picture)
 	draw_texture_rect(mask(body),Rect2(Vector2.ZERO,Vector2(1280,720)),false)
 	var r: Rect2 = RECTS[body]
 	match body:

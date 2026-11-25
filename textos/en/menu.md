@@ -207,6 +207,18 @@ Arcade · 20 levels
 ### menu_sandbox_titulo
 SANDBOX · CHOOSE SETTING AND LIGHT
 
+### modo_paparazzi_titulo
+Paparazzi
+
+### modo_paparazzi_texto
+You're asked for a photo of someone in the park: Find them, frame them the way they say and shoot before time runs out. The camera does the rest.
+
+### modo_paparazzi_progreso
+Record: level %d · Start at:
+
+### modo_paparazzi_nuevo
+You haven't played yet: Start at level 1.
+
 ### modo_arcade_titulo
 Arcade
 

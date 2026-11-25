@@ -102,7 +102,7 @@ func thirds() -> void:
 	var G = preload("res://scripts/input_glyphs.gd")
 	game.exposure_thirds = true
 	game.intro()
-	game.modal.current = 4
+	game.modal.current = game.modal.MODES.find("opciones")
 	game.modal.build_card()
 	await shot("23_opciones_tercios")
 	game.set_interface("camara")

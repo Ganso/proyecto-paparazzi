@@ -243,6 +243,83 @@ You frame it
 ### pz_tramo_infinito
 No end
 
+## Interfaz de la carrera
+
+### pz_ficha_busca
+FIND
+
+### pz_ficha_foto
+THE PHOTO
+
+### pz_nivel
+LEVEL %d
+
+### pz_tramo
+Stretch %d
+
+### pz_sin_reloj
+No clock
+
+### pz_bonus
++%d s
+
+### pz_penal
+−%d s
+
+### pz_corte_limpio
+Clean cut: +%d s
+
+### pz_primera
+First try: +%d s
+
+### pz_bien
+Nice!
+
+### pz_hito_consolidado
+Milestone reached! You can start from level %d
+
+### pz_reportaje_siguiente
+Photo %d of 3: %s
+
+### pz_reportaje_ficha
+Photo story: %s
+
+### pz_empezar
+Go get them!
+
+### pz_entendido
+Got it
+
+### pz_pausa_terminar
+End the run
+
+### pz_fin_titulo
+End of the run
+
+### pz_fin_record
+New record!
+
+### pz_fin_nivel
+You reached level %d
+
+### pz_fin_mejor
+Your record: level %d
+
+### pz_fin_desde
+You can start from level %d
+
+### pz_fin_otra
+Again from level %d
+
+### pz_fin_inicio
+From the start
+
+### pz_fin_menu
+Menu
+
+### pz_punto
+Level %d
+
 ## Tarjetas de novedad
 
 ### pz_nov_bienvenida_titulo

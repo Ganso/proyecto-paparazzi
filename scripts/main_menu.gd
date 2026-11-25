@@ -22,7 +22,7 @@ var time_of_day = "day"
 var cards = {}
 var chips = {}
 var theme_buttons = []
-const MODES = ["tutorial","arcade","sandbox","academia","opciones","historia"]
+const MODES = ["tutorial","paparazzi","arcade","sandbox","academia","opciones","historia"]
 static var current = 0
 var stick_push = 0
 var stick_latched = false
@@ -232,6 +232,8 @@ func build_card() -> void:
 			enter_callback = Callable()
 		"tutorial":
 			enter_button(main.start_tutorial)
+		"paparazzi":
+			build_paparazzi()
 		"sandbox":
 			build_sandbox()
 			enter_button(func(): main.start_in(scenario,time_of_day,true))
@@ -244,6 +246,31 @@ func build_card() -> void:
 	for k in dots.size():
 		dots[k].add_theme_stylebox_override("panel",box(SKY if k == current else UiStyle.surf(.6),6,LINE))
 	hint.set_rich(Texts.get_rich("modo_ayuda_menu"))
+
+# Paparazzi (docs/futuro/29 §12.7): the record and a button per starting point (level 1 and the
+# level after each consolidated milestone; with more than six, the 1 and the five highest).
+func build_paparazzi() -> void:
+	var Paparazzi = preload("res://scripts/paparazzi.gd")
+	var progress = Paparazzi.load_progress()
+	var points: Array = Paparazzi.start_points(int(progress.hito))
+	if points.size() > 6: points = [1]+points.slice(points.size()-5)
+	if int(progress.record) <= 0:
+		text(card,Texts.get_text("modo_paparazzi_nuevo"),Vector2(32,190),18,INK,body_medium)
+		enter_button(func(): main.start_paparazzi(1))
+		return
+	text(card,Texts.get_text("modo_paparazzi_progreso") % int(progress.record),Vector2(32,190),18,INK,body_medium)
+	var row = []
+	for k in points.size():
+		var n: int = points[k]
+		var b = flat_button(card,Texts.get_text("pz_punto") % n,Rect2(32+k*90,226,82,46),func(): main.start_paparazzi(n))
+		b.focus_mode = Control.FOCUS_ALL
+		b.add_theme_font_size_override("font_size",14)
+		row.append(b)
+	for k in row.size():
+		row[k].focus_neighbor_left = row[k].get_path_to(row[posmod(k-1,row.size())])
+		row[k].focus_neighbor_right = row[k].get_path_to(row[posmod(k+1,row.size())])
+	# «Entrar» starts from the highest point reached.
+	enter_button(func(): main.start_paparazzi(int(points[-1])))
 
 func enter_button(callback: Callable) -> void:
 	var b = flat_button(card,Texts.get_text("modo_entrar"),Rect2(32,306,536,58),callback,"primary")

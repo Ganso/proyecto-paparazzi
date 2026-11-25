@@ -60,6 +60,9 @@ func set_enabled(value: bool) -> void:
 	queue_redraw()
 
 func _process(_dt: float) -> void:
+	# Paparazzi has its own reduced interface: none of the camera's keys apply (docs/futuro/29 §12.1).
+	visible = not main.paparazzi_active()
+	if not visible: return
 	# With the fingers the touch layer has its own buttons, and a list of keys means nothing.
 	if Glyphs.touch and Glyphs.device == "tactil":
 		raise_button.visible = false

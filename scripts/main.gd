@@ -101,6 +101,7 @@ var had_multitouch = false
 var sound: AudioStreamPlayer
 var sfx                             # scripts/sfx.gd: the recorded effects (camera, interface, people)
 var music                           # scripts/music.gd: the menus' jazz loop
+var pz                              # scripts/paparazzi_run.gd: the Paparazzi mode (docs/futuro/29)
 var graphics_preset: String = "Ultra"
 var graphics_button: Button
 var graphics_button_intro: Button
@@ -305,6 +306,8 @@ func _ready() -> void:
 			Input.emulate_touch_from_mouse = true
 		if arg == "--tutorial": pending_start["tutorial"] = true
 		if arg.begins_with("--level="): pending_start["level"] = int(arg.trim_prefix("--level="))-1
+		# --paparazzi=<n>: a Paparazzi run from level n (tests and captures).
+		if arg.begins_with("--paparazzi="): pending_start["paparazzi_start"] = int(arg.trim_prefix("--paparazzi="))
 		# Cheat code: every arcade level open for this run (the saved progress is not touched).
 		if arg == "--cheat=niveles": Arcade.all_open = true
 		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
@@ -356,6 +359,9 @@ func _ready() -> void:
 	academy = preload("res://scripts/academy.gd").new(self)
 	ui.add_child(academy)
 	preload("res://scripts/academy.gd").register_actions()
+	pz = preload("res://scripts/paparazzi_run.gd").new()
+	pz.main = self
+	add_child(pz)
 	register_pad_ui()
 	if not InputMap.has_action("camara_controles"):
 		InputMap.add_action("camara_controles")
@@ -417,7 +423,11 @@ func _ready() -> void:
 		start_tutorial()
 	elif pending_start.has("academy"):
 		show_academy()
-	for key in ["time","sandbox","academy","level","tutorial"]: pending_start.erase(key)
+	elif pending_start.has("paparazzi"):
+		pz.resume()
+	elif pending_start.has("paparazzi_start"):
+		start_paparazzi(int(pending_start.paparazzi_start))
+	for key in ["time","sandbox","academy","level","tutorial","paparazzi","paparazzi_start"]: pending_start.erase(key)
 	if run_metrics:
 		# Measure the real cost, not the vsync cap.
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -1228,6 +1238,7 @@ func ensure_modal_focus() -> void:
 # Main menu (scripts/main_menu.gd, docs/futuro/20): the live park behind frosted glass.
 func intro() -> void:
 	mode = "INTRO"
+	if pz and (pz.active or pz.saved_equipment != null): pz.stop()
 	if tutorial and tutorial.active: tutorial.stop()
 	if academy and academy.active: academy.stop()
 	close_modal()
@@ -1279,6 +1290,11 @@ func reload_with(which: String, start: Dictionary) -> void:
 	pending_start = start
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().reload_current_scene()
+
+# Paparazzi (docs/futuro/29): a run from level n, in the park of that level.
+func start_paparazzi(n: int) -> void:
+	arcade_level = -1
+	pz.start(maxi(1,n))
 
 # The Academy uses the classic park (its lessons are staged around the photographer).
 func open_academy() -> void:
@@ -1366,6 +1382,7 @@ func start_session(time_mode = "day", free_play = false) -> void:
 		best = {}
 		briefing.text = Texts.get_text("sandbox_encargo")
 		resume_search()
+	elif paparazzi_active(): pz.on_session_started()
 	else: new_assignment()
 
 # How tall someone can come out in the photo (fraction of its height) from the middle of the
@@ -1496,6 +1513,9 @@ func new_assignment() -> void:
 
 # Only the game itself earns badges: the test suites and the capture tools run the same scene and
 # must not fill the player's file (they are never the tree's current scene, or carry their flags).
+func paparazzi_active() -> bool:
+	return pz != null and pz.active
+
 func badges_count() -> bool:
 	return get_tree().current_scene == self and not smoke and screenshot_path == "" and not run_metrics and demo.is_empty() and photo_walk.is_empty()
 
@@ -1743,7 +1763,7 @@ func update_follow_mark() -> void:
 		follow_label.add_theme_color_override("font_outline_color",Color(0,0,0,.85))
 		follow_label.add_theme_constant_override("outline_size",6)
 		follow_label.z_index = 20
-	var on = follow_state != "" and mode == "SEARCH"
+	var on = follow_state != "" and mode == "SEARCH" and not paparazzi_active()
 	follow_label.visible = on
 	if not on: return
 	follow_label.text = Texts.get_text("seguimiento_"+follow_state)
@@ -1895,8 +1915,13 @@ func _process(dt: float) -> void:
 			angle = fposmod(angle+key_turn(axis,dt)*dt+pan_velocity*dt,360)
 			pitch += (float(Input.is_physical_key_pressed(KEY_UP))-float(Input.is_physical_key_pressed(KEY_DOWN)))*dt*30*24/view_focal()
 			pan_velocity = move_toward(pan_velocity,0,dt*180)
-			if eye_ready() and Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
-			if eye_ready() and Input.is_physical_key_pressed(KEY_S): focal = clampf(focal-dt*30,equipment.lens().min,equipment.lens().max)
+			if paparazzi_active():
+				# (24 to 600 mm: the zoom goes by ratios, as long at the long end as at the wide one)
+				var zoom_keys = float(Input.is_physical_key_pressed(KEY_W))-float(Input.is_physical_key_pressed(KEY_S))
+				if eye_ready() and zoom_keys != 0.0: pz.zoom_continuous(zoom_keys*pz.KEY_ZOOM,dt)
+			else:
+				if eye_ready() and Input.is_physical_key_pressed(KEY_W): focal = clampf(focal+dt*30,equipment.lens().min,equipment.lens().max)
+				if eye_ready() and Input.is_physical_key_pressed(KEY_S): focal = clampf(focal-dt*30,equipment.lens().min,equipment.lens().max)
 		if run_metrics:
 			angle = 120.0
 			focal = 24.0
@@ -1905,6 +1930,7 @@ func _process(dt: float) -> void:
 		else:
 			update_demo(dt)
 		update_pad(dt)
+		if paparazzi_active(): pz.update(dt)
 		update_camera()
 		update_focus_aid(dt)
 		if equipment.focus_mode == "MF" and not hands_off:
@@ -2223,6 +2249,7 @@ func seat_target() -> void:
 	target.set_meta("seat_activity",TARGET_ACTIVITIES[casting.rng.randi()%TARGET_ACTIVITIES.size()])
 
 func activity_on_duty(p) -> bool:
+	if paparazzi_active() and p.protected_target and pz.still_wanted: return true
 	return p.protected_target and arcade_level >= 0 and not sandbox and Arcade.LEVELS[arcade_level].get("target","") == "activity"
 
 func runner_on_duty(p) -> bool:
@@ -3159,6 +3186,8 @@ func place_view() -> void:
 		if viewport.size != wanted:
 			viewport.size = wanted
 			viewport_container.size = Vector2(wanted)
+	# Paparazzi: no camera around the picture, the park fills the frame (docs/futuro/29 §12.1).
+	if paparazzi_active() and mode != "INTRO": view_rect = Rect2(0,0,1280,720)
 	viewport_container.position = view_rect.position+frame_offset
 	viewport_container.scale = view_rect.size/Vector2(viewport.size)
 	# On a screen: the park behind the glass covers the whole window, bands included.
@@ -3173,10 +3202,11 @@ func place_view() -> void:
 		focus_aid.size = view_rect.size
 	if is_instance_valid(toast):
 		toast.position = Vector2(view_rect.get_center().x-350,view_rect.end.y-(100 if interface_mode == "camara" else 146))
+		if paparazzi_active(): toast.position = Vector2(290,560)
 	if is_instance_valid(finder):
 		finder.view = Rect2(view_rect.position+view_shift,view_rect.size)
 		finder.classic = interface_mode != "camara"
-		finder.visible = eye_ready()
+		finder.visible = eye_ready() and not paparazzi_active()
 	update_finder_shader()
 
 # Shutter sound of each body (tools/audio/build_camera_sounds.py): SLR mirror clack, rangefinder
@@ -3519,11 +3549,12 @@ func set_dof_blur(value: bool) -> void:
 
 func dof_allowed() -> bool:
 	if demo.has("aperture-sweep"): return true
-	return is_instance_valid(dof_pass) and bool(Graphics.settings(graphics_preset).dof) and not ("dof" in debug_off)
+	# (Paparazzi's ideal camera has everything sharp: at 600 mm the finder's blur would hide the park.)
+	return is_instance_valid(dof_pass) and bool(Graphics.settings(graphics_preset).dof) and not ("dof" in debug_off) and not paparazzi_active()
 
 func update_finder_shader() -> void:
 	if lens_material == null: return
-	var body_code = equipment.body if interface_mode == "camara" and eye_ready() else -1
+	var body_code = equipment.body if interface_mode == "camara" and eye_ready() and not paparazzi_active() else -1
 	lens_material.set_shader_parameter("finder_body",body_code)
 	var tlr_view = equipment.tlr() and eye_ready() and mode != "INTRO"
 	lens_material.set_shader_parameter("mirror",tlr_view)
@@ -3533,7 +3564,7 @@ func update_finder_shader() -> void:
 	var shift = view_shift/view_rect.size if view_rect.size.x > 0 else Vector2.ZERO
 	lens_material.set_shader_parameter("parallax",shift)
 	# Compact LCD noise grows in dim light (scene EV below ~9).
-	lens_material.set_shader_parameter("lcd_noise",clampf((9.0-measured_ev)/6.0,0.0,1.0) if equipment.body == 0 else 0.0)
+	lens_material.set_shader_parameter("lcd_noise",clampf((9.0-measured_ev)/6.0,0.0,1.0) if equipment.body == 0 and not paparazzi_active() else 0.0)
 
 func set_interface(value: String) -> void:
 	interface_mode = value
@@ -3631,8 +3662,8 @@ func update_hud_visibility(dt: float) -> void:
 	# control in hand and the on-screen help are the whole interface, in every mode.
 	var show = interface_mode != "camara"
 	if mode == "SEARCH" and not eye_ready(): show = false
-	if mode == "INTRO": show = false
-	finder.visible = eye_ready() and mode != "INTRO"
+	if mode == "INTRO" or paparazzi_active(): show = false
+	finder.visible = eye_ready() and mode != "INTRO" and not paparazzi_active()
 	for node in hud_top+hud_bottom:
 		node.visible = show
 	# The parallax of the rangefinder follows the focus distance.
@@ -3912,6 +3943,7 @@ func refresh_device() -> void:
 
 # Buttons while searching. Returns true when the event was used.
 func pad_button(event: InputEventJoypadButton) -> bool:
+	if paparazzi_active() and pz.pad_button(event): return true
 	if not event.pressed or mode != "SEARCH": return false
 	match event.button_index:
 		JOY_BUTTON_A:
@@ -4006,7 +4038,8 @@ func update_pad(dt: float) -> void:
 	var rx = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_X))
 	var ry = stick(Input.get_joy_axis(0,JOY_AXIS_RIGHT_Y))
 	if eye_ready():
-		if ry != 0.0 and equipment.zoom(): focal = clampf(focal-ry*dt*40*slow,equipment.lens().min,equipment.lens().max)
+		if ry != 0.0 and paparazzi_active(): pz.zoom_continuous(-ry*pz.PAD_ZOOM*slow,dt)
+		elif ry != 0.0 and equipment.zoom(): focal = clampf(focal-ry*dt*40*slow,equipment.lens().min,equipment.lens().max)
 		if rx != 0.0 and equipment.focus_mode == "MF": adjust_focus_delta(-rx*.3*slow*dt)
 		# TLR: the left trigger holds the loupe over the ground glass.
 		if equipment.tlr():
@@ -4177,6 +4210,9 @@ func square_evidence(e: Dictionary) -> void:
 	e["square"] = true
 
 func take_photo() -> void:
+	if paparazzi_active():
+		pz.take_photo()
+		return
 	if mode != "SEARCH" or (not sandbox and shots <= 0) or shooting or level_over: return
 	if not eye_ready(): return
 	# TLR in the sandbox: 12 frames per roll and the crank between shots (in the arcade the level's
@@ -4314,7 +4350,9 @@ func update_lens_effects() -> void:
 		# With the camera lowered you look with your own eyes: no lens character at all.
 		var through_lens = eye_ready() and not (equipment.body == 1 and interface_mode == "camara")
 		lens_material.set_shader_parameter("chromatic_aberration",strengths.y if through_lens else 0.0)
-		if not eye_ready(): lens_material.set_shader_parameter("vignette_amount",0.0)
+		if not eye_ready() or paparazzi_active():
+			lens_material.set_shader_parameter("vignette_amount",0.0)
+			lens_material.set_shader_parameter("chromatic_aberration",0.0)
 	if dof_active():
 		var dof_material: ShaderMaterial = dof_pass.material_override
 		dof_material.set_shader_parameter("focal_mm",focal)
@@ -4645,6 +4683,7 @@ func show_tutorial_end() -> void:
 # Someone who has been looking for the subject through the finder for a while is told that the
 # camera can be lowered to search with the naked eye (with the key or button in use).
 func update_hunt_hint(dt: float) -> void:
+	if paparazzi_active(): return
 	var hunting = mode == "SEARCH" and not sandbox and is_instance_valid(target) and not (academy and academy.active) and not (tutorial and tutorial.active) and demo.is_empty() and photo_walk.is_empty() and walk_demo < 0
 	if not hunting or not eye_ready():
 		hunt_time = 0.0
@@ -4673,7 +4712,11 @@ func show_pause(confirm = false) -> void:
 	label(root,Texts.get_text("pausa_titulo"),Rect2(440,190,400,60),40)
 	if not confirm:
 		button(root,Texts.get_text("pausa_seguir"),Rect2(440,270 if Glyphs.touch else 280,400,56),resume_search,true)
-		button(root,Texts.get_text("pausa_ayuda"),Rect2(440,350,400,56),show_help)
+		if paparazzi_active():
+			# (Paparazzi: the run can be ended here, with its final screen and the record kept.)
+			button(root,Texts.get_text("pz_pausa_terminar"),Rect2(440,350,400,56),pz.end_run)
+		else:
+			button(root,Texts.get_text("pausa_ayuda"),Rect2(440,350,400,56),show_help)
 		button(root,Texts.get_text("pausa_salir"),Rect2(440,430 if Glyphs.touch else 420,400,56),func(): show_pause(true))
 	else:
 		var warn = label(root,Texts.get_text("pausa_confirmar"),Rect2(440,260,400,60),18,UiStyle.WARN)
@@ -4734,6 +4777,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if frame_offset != Vector2.ZERO and (event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag):
 		event = event.duplicate()
 		event.position -= frame_offset
+	# Paparazzi first: its screens take Enter, Escape and the pad's buttons, and while searching it
+	# leaves the camera's keys idle (paparazzi_run.gd::handle_input()).
+	if paparazzi_active() and pz.handle_input(event): return
 	if crowd and mode == "SEARCH" and photographer_input(event): return
 	# A demonstration of the Academy is running: the tutor drives. Only the lesson's own keys
 	# (next, back, pause the scene) and the pause menu answer.
@@ -4854,7 +4900,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				mouse_last = event.position
 				pan_velocity = 0
 			else:
-				if dragging and not dragged: nearest_af(event.position)
+				if dragging and not dragged:
+					if paparazzi_active(): pz.click(event.position)
+					else: nearest_af(event.position)
 				dragging = false
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed:
@@ -4885,7 +4933,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if touches.size() >= 2: had_multitouch = true
 			pan_velocity = 0
 		else:
-			if touches.has(event.index) and touches.size() == 1 and not had_multitouch and not touch_held and event.position.distance_to(touch_start[event.index]) < 10: nearest_af(event.position)
+			if touches.has(event.index) and touches.size() == 1 and not had_multitouch and not touch_held and event.position.distance_to(touch_start[event.index]) < 10:
+				if paparazzi_active(): pz.click(event.position)
+				else: nearest_af(event.position)
 			touches.erase(event.index)
 			touch_start.erase(event.index)
 			if touches.is_empty(): had_multitouch = false

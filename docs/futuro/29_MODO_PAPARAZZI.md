@@ -1311,11 +1311,20 @@ Cada etapa deja el juego funcionando y sus pruebas en verde. No se empieza una s
 - Hecho de paso: los textos que usa la parte pura (`textos/es|en/paparazzi.md`: tarjetas `pz_nov_*`, motivos, consejos, planos, exigencias, aprendizaje y tramos; el resto llega en E4–E6), sus límites en `tools/textos.py` y los cuatro controles `pz_*` en `input_glyphs.gd`. `reason_text()` y `mod_text()` dan el aviso de una línea en el idioma en uso.
 - **Aceptación:** `test_paparazzi.gd` sin fallos.
 
-### E4 · El modo jugable en el clásico, sin ayudas de puntería
-- [ ] `paparazzi_run.gd` (inicio, reanudación, niveles, elección de persona del §10.2 para el clásico, captura, foto, avisos, reloj, fin) y los ganchos del §16.2.
-- [ ] HUD mínimo: ficha (sin comprobación), reloj y avisos.
-- [ ] Tarjeta del menú, `PZ_END`, persistencia y `--paparazzi=<n>`.
-- **Aceptación:** se juegan a mano los niveles 1–12; pruebas 1–3, 7, 8 y 10 del §19.3.
+### E4 · El modo jugable en el clásico, sin ayudas de puntería ✅ (25-11-2026, falta la prueba a mano)
+- [x] `paparazzi_run.gd` (inicio, reanudación, niveles, elección de persona del §10.2 para el clásico, captura, foto, avisos, reloj, fin) y los ganchos del §16.2.
+- [x] HUD mínimo (`paparazzi_hud.gd`): ficha (sin comprobación), reloj, puntos del tramo, retícula y avisos.
+- [x] Tarjeta del menú, `PZ_END`, persistencia y `--paparazzi=<n>`.
+- [x] `tests/test_paparazzi_play.gd`: pruebas 1–3, 7, 8, 10, 12 (sin rescate) y 13 del §19.3, 45 comprobaciones.
+- **Aceptación:** se juegan a mano los niveles 1–12 (pendiente: el usuario); pruebas 1–3, 7, 8 y 10 del §19.3 en verde.
+- **Cómo quedó (diferencias con el plan):**
+  - **La cámara ideal es un equipo:** `scripts/ideal_equipment.gd` (la compacta con un 24–600 mm sin carácter) ocupa `main.equipment` durante la carrera y el del jugador vuelve al salir. Así el rango de zoom vale sin tocar `update_camera()`, el pellizco ni los límites: no hicieron falta `zoom_min()`, `zoom_max()` ni `can_zoom()` (§16.2). Antes de recargar la escena se devuelve el equipo del jugador, porque `reload_with()` guarda el que haya.
+  - **La miniatura de la ficha es el retrato de `main`** (`update_portrait()`, la persona girando): la ficha de Paparazzi se dibuja a su lado, en `Rect2(10,10,420,172)`. No se oculta el retrato (§12.1 decía lo contrario).
+  - **Tarjetas y ficha grande con `create_modal()`:** el parque queda tras el cristal, como en el resto de pantallas, y el botón con el foco sirve al mando.
+  - **Niveles 1–3, «en la vista»:** se elige a cualquiera que cumpla y luego se gira la vista hacia esa persona, a ±15° del centro (elegir entre quien ya estaba en la vista dejaba a menudo sin nadie). En los niveles 1 y 3, si no hay nadie quieto, una persona del camino de los bancos se sienta (`seat_target()`), y `activity_on_duty()` la mantiene sentada.
+  - **Protagonista (§6.4):** la altura cuenta solo hasta el 60 % del encuadre y pesa el centrado horizontal (`1 − 1,4·|ojos.x − 0,5|`). Con la fórmula del plan, alguien que pasaba cerca, medio dentro del encuadre, ganaba a la persona encuadrada en el centro. Con el enganche (E5) el protagonista es el enganchado.
+  - **Récord:** cuenta el último nivel superado en la carrera, no el nivel al que se llega.
+- **Queda para etapas posteriores:** los dobles del §10.3 (al cargar la escena, desde el tramo 4), comodines y rescate (E5), aprendizaje, chuleta y táctil (E6), recarga y elección de persona en el grande (E7), polaroid, álbum y sonidos propios (E8). Mientras tanto, la ayuda de la pausa es la de la cámara y el H no hace nada.
 
 ### E5 · Puntería y ayudas
 - [ ] `aim_point`, enganche, auto-encuadre, soltar, retén, evidencia en vivo, semáforo, corchetes, etiqueta de plano y barra de zoom.

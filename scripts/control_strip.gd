@@ -108,7 +108,7 @@ func _process(_dt: float) -> void:
 	var fingers = Glyphs.touch and Glyphs.device == "tactil"
 	minus.visible = false
 	plus.visible = false
-	var list: Array = main.selectable_controls() if main.mode == "SEARCH" and main.eye_ready() else []
+	var list: Array = main.selectable_controls() if main.mode == "SEARCH" and main.eye_ready() and not main.paparazzi_active() else []
 	visible = not list.is_empty()
 	if not visible: return
 	if list != ids: rebuild(list)

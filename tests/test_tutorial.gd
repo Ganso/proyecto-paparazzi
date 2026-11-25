@@ -55,8 +55,8 @@ func run() -> void:
 	game.intro()
 	await frames(3)
 	var menu = game.modal
-	check(menu.MODES == ["tutorial","arcade","sandbox","academia","opciones","historia"],"The menu has the six modes (Historia announced)")
-	menu.current = 5
+	check(menu.MODES == ["tutorial","paparazzi","arcade","sandbox","academia","opciones","historia"],"The menu has the seven modes (Paparazzi second, Historia announced)")
+	menu.current = menu.MODES.find("historia")
 	menu.build_card()
 	check(not menu.enter_callback.is_valid(),"Historia cannot be entered yet")
 	menu.current = 0
@@ -66,7 +66,7 @@ func run() -> void:
 	right.physical_keycode = KEY_RIGHT
 	right.pressed = true
 	menu._input(right)
-	check(menu.current == (first+1)%6,"→ changes the mode")
+	check(menu.current == (first+1)%menu.MODES.size(),"→ changes the mode")
 	var pad_left = InputEventJoypadButton.new()
 	pad_left.button_index = JOY_BUTTON_DPAD_LEFT
 	pad_left.pressed = true

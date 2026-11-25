@@ -209,6 +209,18 @@ Arcade · 20 niveles
 ### menu_sandbox_titulo
 SANDBOX · ELIGE ESCENARIO Y LUZ
 
+### modo_paparazzi_titulo
+Paparazzi
+
+### modo_paparazzi_texto
+Te piden una foto de alguien del parque: Encuéntralo, encuádralo como te digan y dispara antes de que se acabe el tiempo. La cámara hace el resto.
+
+### modo_paparazzi_progreso
+Récord: nivel %d · Empieza en:
+
+### modo_paparazzi_nuevo
+Aún no has jugado: Empieza por el nivel 1.
+
 ### modo_arcade_titulo
 Arcade
 
