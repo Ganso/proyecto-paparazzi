@@ -129,6 +129,9 @@ func target_spot() -> Vector3:
 
 func update(dt: float) -> void:
 	if walker == null: return
+	# Away with its owner: a level that hides people (docs/futuro/29, E5 test by hand) left the dog
+	# walking alone, its leash pulling at nothing.
+	visible = walker.visible
 	clock += dt
 	var walking = walker.state == "CAMINANDO"
 	var goal = target_spot()

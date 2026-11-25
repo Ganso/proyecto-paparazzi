@@ -200,7 +200,7 @@ Acércate con {zoom} hasta que las esquinas se pongan verdes.
 ¡Ahora! Dispara con {disparar}.
 
 ### pz_coach_enganchar
-Apúntale y acerca el zoom, o usa {pz_enganchar}: La cámara la seguirá sola.
+Haz clic sobre ella o usa {pz_enganchar}: La cámara la seguirá sola.
 
 ### pz_coach_comprobar
 Mira la ficha: En verde, lo que coincide con quien buscas.
@@ -374,7 +374,7 @@ Cuando las esquinas se ponen verdes, la foto vale. En ámbar te dicen qué falta
 El enganche
 
 ### pz_nov_enganche_texto
-Apunta a alguien y acerca el zoom: La cámara se le engancha y lo sigue. Para soltarla, mira a otro lado o abre el zoom del todo.
+Haz clic sobre alguien o usa {pz_enganchar}: La cámara lo sigue. Para soltarlo, vuelve a usar {pz_enganchar} o mira a otro lado.
 
 ### pz_nov_comprobar_titulo
 ¿Es esta?

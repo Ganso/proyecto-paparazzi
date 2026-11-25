@@ -32,8 +32,6 @@ const IDLE_KEYS = [KEY_Q,KEY_E,KEY_Z,KEY_X,KEY_C,KEY_V,KEY_R,KEY_T,KEY_F,KEY_M,K
 const LANE_LINES = [Vector2(1.33,2.12), Vector2(3.07,4.57), Vector2(6.38,7.62), Vector2(10.80,12.04)]   # main.gd
 # The lock-on (§7).
 const LOCK_REACH = Vector2(70,90)      # a click this close to someone's chest locks on to them
-const AUTO_REACH = Vector2(128,86)     # zooming in with someone this close to the middle, too
-const AUTO_LOCK_FOCAL = 45.0
 const RELEASE_FOCAL = 26.0             # the zoom opened all the way lets go
 const FOLLOW_GAIN = 15.0               # the follow's smoothing, and its lead (1/gain s), measured
 const PUSH_WINDOW = .6                 # a look away this long…
@@ -64,9 +62,6 @@ var last_verdict = {}
 # The aim (§7) and the aids (§8).
 var locked = null                # the person the camera follows
 var lock_time = 0.0
-var lock_candidate = null        # in the middle while zooming in, for lock_delay
-var candidate_time = 0.0
-var released = null              # let go: not locked again on its own until it leaves the middle
 var pushes = []                  # [time, look pushed in frames] over the last PUSH_WINDOW
 var last_set = Vector2.ZERO      # angle and pitch as the follow left them
 var behind_time = 0.0
@@ -161,8 +156,8 @@ func on_session_started() -> void:
 func begin_level() -> void:
 	spec = Paparazzi.level_spec(int(Paparazzi.run.n))
 	release()
-	released = null
 	search_time = 0.0
+	if main.crowd: main.set_raised(false)      # (the big park: every level starts walking)
 	frozen = 0.0
 	gift_jokers()
 	if spec.time != main.time_of_day: main.preview_time(spec.time)
@@ -479,7 +474,6 @@ func update(dt: float) -> void:
 			time_out()
 			return
 	follow(dt)
-	if not main.shooting: auto_lock(dt)
 	update_live()
 	zoom_touched = false
 	events()
@@ -504,7 +498,8 @@ func zoom_continuous(rate: float, dt: float) -> void:
 	zoom_touched = true
 
 # ---------------------------------------------------------------------------------------------
-# The lock-on (§7)
+# The lock-on (§7). Only when the player asks for it (a click on someone, {pz_enganchar}): it used
+# to lock on by itself when zooming in, and kept jumping to whoever crossed the middle (user, E5).
 
 # The middle of the frame, in main.ui's coordinates (as main.finder_position()).
 func middle() -> Vector2:
@@ -516,7 +511,6 @@ func lock(p) -> void:
 	lock_time = 0.0
 	pushes.clear()
 	behind_time = 0.0
-	released = null
 	last_set = Vector2(main.angle,main.pitch)
 	f_ref = main.focal
 	d_ref = flat_distance(p)
@@ -530,7 +524,6 @@ func lock(p) -> void:
 
 func release() -> void:
 	if locked == null: return
-	released = locked
 	locked = null
 	live = {}
 	on_plane = false
@@ -546,22 +539,6 @@ func lock_middle(toggle: bool) -> void:
 		if toggle: release()
 		return
 	lock(p)
-
-# Zooming in with someone in the middle locks on (after lock_delay, from tramo 7).
-func auto_lock(dt: float) -> void:
-	if locked != null or main.focal < AUTO_LOCK_FOCAL:
-		lock_candidate = null
-		return
-	var p = main.person_near(middle(),AUTO_REACH)
-	if p != released: released = null
-	if p == null or p == released:
-		lock_candidate = null
-		return
-	if p != lock_candidate:
-		lock_candidate = p
-		candidate_time = 0.0
-	candidate_time += dt
-	if candidate_time >= spec.lock_delay: lock(p)
 
 func flat_distance(p) -> float:
 	var chest: Vector3 = p.control_points()[1]

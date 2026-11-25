@@ -200,7 +200,7 @@ Zoom in with {zoom} until the corners turn green.
 Now! Shoot with {disparar}.
 
 ### pz_coach_enganchar
-Aim at them and zoom in, or use {pz_enganchar}: The camera will follow them.
+Click on them or use {pz_enganchar}: The camera will follow them.
 
 ### pz_coach_comprobar
 Check the card: Green means it matches who you're looking for.
@@ -374,7 +374,7 @@ When the corners turn green, the photo is good. In amber, they tell you what's m
 Lock-on
 
 ### pz_nov_enganche_texto
-Aim at someone and zoom in: The camera locks on and follows them. To let go, look away or zoom all the way out.
+Click on someone or use {pz_enganchar}: The camera follows them. To let go, use {pz_enganchar} again or look away.
 
 ### pz_nov_comprobar_titulo
 Is it them?

@@ -113,17 +113,20 @@ func run() -> void:
 	check(pz.spec.n == 2,"7. level 2 next: %d" % pz.spec.n)
 	check(pz.bank == bank_before,"7. no clock in levels 1–3")
 	await dismiss()
-	# 5. The lock-on: the person in the middle at 60 mm is locked on within half a second; at 200 mm,
-	# walking, the follow keeps her anchor where the framing wants it.
+	# 5. The lock-on: only when asked for (zooming in on someone does not lock on); E locks on to the
+	# person in the middle and E again lets go. At 200 mm, walking, the follow keeps her anchor where
+	# the framing wants it.
 	pz.release()
-	pz.released = null
 	game.focal = 60.0
 	game.update_camera()
 	game.aim_point(game.target.control_points()[1],Vector2(.5,.5),1.0)
-	var t0 = Time.get_ticks_msec()
-	while pz.locked == null and Time.get_ticks_msec()-t0 < 500: await process_frame
-	check(pz.locked == game.target,"5. locked on in %d ms: %s" % [Time.get_ticks_msec()-t0,str(pz.locked)])
-	pz.release()
+	await seconds(.5)
+	check(pz.locked == null,"5. zooming in does not lock on by itself: %s" % str(pz.locked))
+	key(KEY_E)
+	check(pz.locked == game.target,"5. E locks on to the person in the middle: %s" % str(pz.locked))
+	key(KEY_E)
+	check(pz.locked == null,"5. E again lets go")
+	var t0 = 0
 	game.focal = 200.0
 	game.update_camera()
 	pz.lock(game.target)

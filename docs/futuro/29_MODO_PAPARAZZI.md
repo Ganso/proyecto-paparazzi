@@ -12,7 +12,15 @@
 6. Los objetivos nuevos que no existían en el arcade **se añaden también al arcade** como niveles nuevos (§17).
 7. **Interfaz reducida** propia del modo.
 8. **Cuantas más ayudas, mejor.**
-9. El enganche lo decide quien planifica: **siempre activo, nunca se quita** (justificación en §7.1).
+9. El enganche lo decide quien planifica: **siempre activo, nunca se quita** (justificación en §7.1). **Cambiado tras la prueba a mano (punto 10).**
+
+### Tras la primera prueba a mano (25-11-2026, con E5 hecha)
+
+10. **El enganche es voluntario:** «se me va a otros personajes muchas veces». Ya no se engancha solo al hacer zoom. Solo con clic sobre la persona o `{pz_enganchar}`, y se suelta igual. Hecho: `auto_lock()` quitado; `lock_delay` y la tarjeta `enganche_lento` del tramo 7 quedan sin uso hasta el rediseño.
+11. **El parque grande es lo que engancha** («ese es el verdadero busca a Wally»). **Hay que invertir el orden:** los primeros niveles, en el parque grande y pidiendo a la persona con **un plano cualquiera**, sin explicar los planos. Lo difícil llega después: ajustar el plano. **Pendiente de rediseñar** la curva del §9 y las etapas del §20 (E7 pasa a ir antes que el resto).
+12. **En el parque grande, cada nivel empieza con la cámara bajada** (andando). Hecho en `begin_level()`.
+13. **Arcade, bloque 7:** sin saber de planos de cine «es difícil saber qué quiere»: **hace falta una guía** (el pictograma del plano, la etiqueta en vivo, y en el motivo de rechazo dónde cortar con palabras llanas y hacia dónde mover el zoom). Las ayudas de Paparazzi sobre cada plano sí se entienden.
+14. **Fallo corregido:** en los niveles que esconden gente («nadie más en el encuadre») el perro se quedaba paseando solo si se escondía a su dueño. Ahora se esconde con él (`dog.gd`).
 
 ---
 
