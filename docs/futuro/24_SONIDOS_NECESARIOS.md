@@ -114,6 +114,8 @@ Lo que el juego ha ganado desde el 03-10 y todavía suena con un tono sintetizad
 |---|---|---|---|---|
 | 70 | `musica_menu` | Música tranquila para el menú principal, en la línea de `musica_videos.mp3` | 60–120 s | **Sí** |
 
+**✅ Hecha (25-11-2026):** `assets/audio/musica/menu_jazz.ogg`, una pequeña *big band* suave elegida por el usuario entre 16 candidatas (ACE-Step 1.5 en ComfyUI: `tools/audio/comfy_musica.py` con `tools/audio/encargo_musica_menu.json`; la toma original queda en `~/docker/ComfyUI/output/photohacks/`). Bucle de 40 compases a 106,9 BPM (89,8 s) hecho con `tools/audio/hacer_bucle.py`: corte donde la música más se parece a sí misma, alineado al pulso (el pulso no se mueve en el empalme) y a la onda, con fundido cruzado de 1,5 s. Suena con `scripts/music.gd` en el menú y las pantallas que se abren desde él (arcade, Academia, insignias, álbum, gráficos y equipo), entra con un fundido de 2,5 s, se apaga en 0,9 s al empezar a jugar y vuelve donde se quedó; no suena en las grabaciones. Comprobado en `tests/test_tutorial.gd`.
+
 **Total: 70 sonidos, 112 ficheros contando las variaciones.** Los imprescindibles para notar el cambio son los de la cámara (1–9, 13–16), los pasos (26–29), los ambientes (17–21) y los de nivel (48–52).
 
 ## Fichas de producción (06-10-2026)

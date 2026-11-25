@@ -100,6 +100,7 @@ var ui_touch_ids = {}
 var had_multitouch = false
 var sound: AudioStreamPlayer
 var sfx                             # scripts/sfx.gd: the recorded effects (camera, interface, people)
+var music                           # scripts/music.gd: the menus' jazz loop
 var graphics_preset: String = "Ultra"
 var graphics_button: Button
 var graphics_button_intro: Button
@@ -533,6 +534,10 @@ func build_world() -> void:
 	sfx = preload("res://scripts/sfx.gd").new()
 	add_child(sfx)
 	sfx.setup(self,viewport)
+	# The menus' music. Not in recordings (the videos lay their own music over the game's sound).
+	music = preload("res://scripts/music.gd").new(self)
+	music.enabled = not OS.has_feature("movie")
+	add_child(music)
 	world_times["sonido"] = Time.get_ticks_msec()-t_stage
 	camera = Camera3D.new()
 	camera.position.y = 1.6
@@ -1838,6 +1843,7 @@ var band_key = ""
 func _process(dt: float) -> void:
 	if exposing: return     # the shutter is open: expose_photo() moves the world itself
 	total_time += dt
+	if music and boot_done: music.update(dt)
 	watch_speed(dt)
 	if not debug_off.is_empty(): apply_debug_off()   # (the light of each hour sets the effects again)
 	check_long_press()

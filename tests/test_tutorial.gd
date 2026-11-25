@@ -76,9 +76,20 @@ func run() -> void:
 	menu.build_card()
 	await frames(2)
 	check(menu.enter_callback.is_valid(),"The tutorial card has its Enter")
+	# The menus' music (scripts/music.gd): it fades in under the menu…
+	var music = game.music
+	var t0 = Time.get_ticks_msec()
+	while music.level < 1.0 and Time.get_ticks_msec()-t0 < 6000: await process_frame
+	check(music.player.stream != null and music.player.stream.loop,"The menu music is loaded and loops")
+	check(music.player.playing and not music.player.stream_paused and music.level >= 1.0 and music.player.volume_db > music.VOLUME_DB-.5,"The music plays under the menu, faded in (level %.2f, %.1f dB)" % [music.level,music.player.volume_db])
+	var heard_at = music.player.get_playback_position()
 	menu.enter_callback.call()
 	await frames(5)
 	check(game.tutorial.active and game.mode == "SEARCH" and game.tutorial.id() == "bienvenida","Entering the tutorial starts it")
+	# …and fades out when a phase starts, keeping its place for the way back.
+	t0 = Time.get_ticks_msec()
+	while not music.player.stream_paused and Time.get_ticks_msec()-t0 < 3000: await process_frame
+	check(music.player.stream_paused and music.level <= 0.0 and music.player.get_playback_position() >= heard_at,"The music fades out in the phase and keeps its place")
 	var enter = InputEventKey.new()
 	enter.keycode = KEY_ENTER
 	enter.pressed = true
