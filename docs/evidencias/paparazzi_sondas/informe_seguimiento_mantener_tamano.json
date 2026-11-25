@@ -1,0 +1,466 @@
+{
+  "arranque": {
+    "imagen": "(1600, 900)",
+    "perfil": "Ultra",
+    "renderizador": "forward_plus"
+  },
+  "seguimiento": {
+    "casos": {
+      "andando, camino 1, cara · ganancia 10, adelanto 0.000 s": {
+        "d": 4.29,
+        "distancia_min_max": [
+          4.29,
+          4.3
+        ],
+        "error_max": 0.107,
+        "error_medio": 0.106,
+        "error_p95": 0.107,
+        "f": 271.0,
+        "fotogramas": 434,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 10, adelanto 0.100 s": {
+        "d": 4.3,
+        "distancia_min_max": [
+          4.3,
+          4.55
+        ],
+        "error_max": 0.02,
+        "error_medio": 0.013,
+        "error_p95": 0.02,
+        "f": 271.0,
+        "fotogramas": 460,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 10, adelanto 0.120 s": {
+        "d": 3.07,
+        "distancia_min_max": [
+          3.07,
+          3.19
+        ],
+        "error_max": 0.032,
+        "error_medio": 0.024,
+        "error_p95": 0.027,
+        "f": 181.0,
+        "fotogramas": 453,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 15, adelanto 0.067 s": {
+        "d": 4.57,
+        "distancia_min_max": [
+          4.29,
+          4.57
+        ],
+        "error_max": 0.018,
+        "error_medio": 0.013,
+        "error_p95": 0.018,
+        "f": 281.0,
+        "fotogramas": 448,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 4.3,
+        "distancia_min_max": [
+          4.3,
+          4.57
+        ],
+        "error_max": 0.016,
+        "error_medio": 0.011,
+        "error_p95": 0.015,
+        "f": 271.0,
+        "fotogramas": 424,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 10, adelanto 0.000 s": {
+        "d": 3.56,
+        "distancia_min_max": [
+          3.56,
+          4.29
+        ],
+        "error_max": 0.071,
+        "error_medio": 0.063,
+        "error_p95": 0.07,
+        "f": 149.0,
+        "fotogramas": 436,
+        "plano_estable": 0.92
+      },
+      "andando, camino 1, primer plano · ganancia 10, adelanto 0.100 s": {
+        "d": 4.57,
+        "distancia_min_max": [
+          4.3,
+          4.57
+        ],
+        "error_max": 0.014,
+        "error_medio": 0.009,
+        "error_p95": 0.014,
+        "f": 191.0,
+        "fotogramas": 451,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 10, adelanto 0.120 s": {
+        "d": 3.07,
+        "distancia_min_max": [
+          3.07,
+          3.07
+        ],
+        "error_max": 0.019,
+        "error_medio": 0.017,
+        "error_p95": 0.019,
+        "f": 126.0,
+        "fotogramas": 463,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 15, adelanto 0.067 s": {
+        "d": 4.3,
+        "distancia_min_max": [
+          4.3,
+          4.57
+        ],
+        "error_max": 0.012,
+        "error_medio": 0.008,
+        "error_p95": 0.011,
+        "f": 179.0,
+        "fotogramas": 457,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 4.57,
+        "distancia_min_max": [
+          4.29,
+          4.57
+        ],
+        "error_max": 0.012,
+        "error_medio": 0.007,
+        "error_p95": 0.01,
+        "f": 191.0,
+        "fotogramas": 435,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 10, adelanto 0.000 s": {
+        "d": 7.62,
+        "distancia_min_max": [
+          7.62,
+          7.62
+        ],
+        "error_max": 0.124,
+        "error_medio": 0.123,
+        "error_p95": 0.124,
+        "f": 448.0,
+        "fotogramas": 447,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 10, adelanto 0.100 s": {
+        "d": 6.38,
+        "distancia_min_max": [
+          6.38,
+          6.38
+        ],
+        "error_max": 0.037,
+        "error_medio": 0.024,
+        "error_p95": 0.036,
+        "f": 402.0,
+        "fotogramas": 452,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 10, adelanto 0.120 s": {
+        "d": 6.38,
+        "distancia_min_max": [
+          6.38,
+          6.38
+        ],
+        "error_max": 0.047,
+        "error_medio": 0.039,
+        "error_p95": 0.047,
+        "f": 402.0,
+        "fotogramas": 460,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 15, adelanto 0.067 s": {
+        "d": 6.38,
+        "distancia_min_max": [
+          6.38,
+          6.38
+        ],
+        "error_max": 0.027,
+        "error_medio": 0.018,
+        "error_p95": 0.027,
+        "f": 402.0,
+        "fotogramas": 453,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 6.38,
+        "distancia_min_max": [
+          6.38,
+          6.38
+        ],
+        "error_max": 0.027,
+        "error_medio": 0.018,
+        "error_p95": 0.027,
+        "f": 402.0,
+        "fotogramas": 430,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 10, adelanto 0.000 s": {
+        "d": 7.62,
+        "distancia_min_max": [
+          7.62,
+          7.62
+        ],
+        "error_max": 0.054,
+        "error_medio": 0.053,
+        "error_p95": 0.054,
+        "f": 194.0,
+        "fotogramas": 429,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 10, adelanto 0.100 s": {
+        "d": 7.62,
+        "distancia_min_max": [
+          7.62,
+          7.62
+        ],
+        "error_max": 0.01,
+        "error_medio": 0.007,
+        "error_p95": 0.01,
+        "f": 260.0,
+        "fotogramas": 455,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 10, adelanto 0.120 s": {
+        "d": 6.38,
+        "distancia_min_max": [
+          6.38,
+          6.38
+        ],
+        "error_max": 0.019,
+        "error_medio": 0.016,
+        "error_p95": 0.019,
+        "f": 159.0,
+        "fotogramas": 452,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 15, adelanto 0.067 s": {
+        "d": 6.38,
+        "distancia_min_max": [
+          6.38,
+          6.38
+        ],
+        "error_max": 0.011,
+        "error_medio": 0.007,
+        "error_p95": 0.011,
+        "f": 159.0,
+        "fotogramas": 437,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 7.62,
+        "distancia_min_max": [
+          7.62,
+          7.62
+        ],
+        "error_max": 0.072,
+        "error_medio": 0.005,
+        "error_p95": 0.008,
+        "f": 194.0,
+        "fotogramas": 421,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 10, adelanto 0.000 s": {
+        "d": 10.8,
+        "distancia_min_max": [
+          10.8,
+          10.8
+        ],
+        "error_max": 0.073,
+        "error_medio": 0.072,
+        "error_p95": 0.073,
+        "f": 452.0,
+        "fotogramas": 441,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 10, adelanto 0.100 s": {
+        "d": 10.8,
+        "distancia_min_max": [
+          10.8,
+          10.8
+        ],
+        "error_max": 0.014,
+        "error_medio": 0.009,
+        "error_p95": 0.013,
+        "f": 452.0,
+        "fotogramas": 426,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 10, adelanto 0.120 s": {
+        "d": 10.8,
+        "distancia_min_max": [
+          10.8,
+          10.8
+        ],
+        "error_max": 0.023,
+        "error_medio": 0.021,
+        "error_p95": 0.023,
+        "f": 452.0,
+        "fotogramas": 428,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 15, adelanto 0.067 s": {
+        "d": 10.8,
+        "distancia_min_max": [
+          10.8,
+          10.8
+        ],
+        "error_max": 0.01,
+        "error_medio": 0.007,
+        "error_p95": 0.01,
+        "f": 452.0,
+        "fotogramas": 444,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 10.8,
+        "distancia_min_max": [
+          10.8,
+          10.8
+        ],
+        "error_max": 0.074,
+        "error_medio": 0.009,
+        "error_p95": 0.015,
+        "f": 452.0,
+        "fotogramas": 412,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 10, adelanto 0.000 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.114,
+        "error_medio": 0.109,
+        "error_p95": 0.113,
+        "f": 99.0,
+        "fotogramas": 427,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 10, adelanto 0.100 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.018,
+        "error_medio": 0.008,
+        "error_p95": 0.017,
+        "f": 99.0,
+        "fotogramas": 430,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 10, adelanto 0.120 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.035,
+        "error_medio": 0.029,
+        "error_p95": 0.033,
+        "f": 99.0,
+        "fotogramas": 422,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 15, adelanto 0.067 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.017,
+        "error_medio": 0.008,
+        "error_p95": 0.016,
+        "f": 99.0,
+        "fotogramas": 419,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.017,
+        "error_medio": 0.008,
+        "error_p95": 0.016,
+        "f": 99.0,
+        "fotogramas": 417,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 10, adelanto 0.000 s": {
+        "d": 7.25,
+        "distancia_min_max": [
+          6.45,
+          7.56
+        ],
+        "error_max": 0.293,
+        "error_medio": 0.192,
+        "error_p95": 0.289,
+        "f": 247.0,
+        "fotogramas": 429,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 10, adelanto 0.100 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.052,
+        "error_medio": 0.025,
+        "error_p95": 0.049,
+        "f": 239.0,
+        "fotogramas": 455,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 10, adelanto 0.120 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.084,
+        "error_medio": 0.071,
+        "error_p95": 0.082,
+        "f": 239.0,
+        "fotogramas": 472,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 15, adelanto 0.067 s": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.05,
+        "error_medio": 0.023,
+        "error_p95": 0.048,
+        "f": 239.0,
+        "fotogramas": 428,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 15, adelanto 0.067 s · mantiene el tamaño": {
+        "d": 7.0,
+        "distancia_min_max": [
+          7.0,
+          7.0
+        ],
+        "error_max": 0.05,
+        "error_medio": 0.023,
+        "error_p95": 0.047,
+        "f": 239.0,
+        "fotogramas": 439,
+        "plano_estable": 1.0
+      }
+    }
+  }
+}

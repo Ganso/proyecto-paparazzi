@@ -1,0 +1,122 @@
+SONDA arranque · perfil Ultra · forward_plus · imagen (1600, 900) · detalle hd
+SONDA esqueleto · huesos que faltan: []
+SONDA esqueleto · estandar·anda (n=8) error del modelo de pie, cm: crown -3.8, eyes -3.8, chin -3.8, neck -3.8, shoulders -3.8, chest -3.8, waist -3.8, hips -3.8, knees -0.7, ankles +2.9, feet +3.0
+SONDA esqueleto · robusto·quieto (n=4) error del modelo de pie, cm: crown -0.0, eyes -0.0, chin -0.0, neck -0.0, shoulders +0.0, chest +0.0, waist +0.0, hips -0.0, knees -0.0, ankles -0.0, feet -0.0
+SONDA esqueleto · delgado·anda (n=6) error del modelo de pie, cm: crown -4.0, eyes -4.0, chin -4.0, neck -4.0, shoulders -4.0, chest -4.0, waist -4.0, hips -4.0, knees -0.8, ankles +3.3, feet +3.4
+SONDA esqueleto · robusto·anda (n=6) error del modelo de pie, cm: crown -4.3, eyes -4.3, chin -4.3, neck -4.3, shoulders -4.2, chest -4.2, waist -4.2, hips -4.2, knees -1.5, ankles +5.8, feet +5.9
+SONDA esqueleto · delgado·quieto (n=3) error del modelo de pie, cm: crown -0.1, eyes -0.0, chin -0.0, neck -0.0, shoulders -0.0, chest +0.0, waist -0.0, hips +0.0, knees +0.0, ankles -0.0, feet -0.0
+SONDA esqueleto · nino·anda (n=3) error del modelo de pie, cm: crown -2.0, eyes -2.0, chin -2.0, neck -2.0, shoulders -1.9, chest -1.9, waist -1.8, hips -1.8, knees +2.8, ankles +7.2, feet +7.3
+SONDA esqueleto · nino·quieto (n=2) error del modelo de pie, cm: crown -0.0, eyes -0.0, chin -0.0, neck +0.0, shoulders -0.0, chest -0.0, waist -0.0, hips +0.0, knees +0.0, ankles -0.0, feet -0.0
+SONDA orientacion · caminantes: ángulo entre −Z del cuerpo y la velocidad: media 0.3°, máx 4.0° (con +Z: media 179.7°) · n=14
+SONDA orientacion · eje del hueso de la cabeza que mira al frente: (0.0, 0.0, -1.0) (alineado 1.000) · look_yaw=+0.70 gira la cabeza +0.70 rad
+SONDA clasico_orientacion · DETENIDO (n=354): frente 46% · perfil 22% · tres cuartos 16% · espaldas 13%
+SONDA clasico_orientacion · CAMINANDO (n=1353): frente 2% · perfil 92% · tres cuartos 2% · espaldas 2%
+SONDA clasico_orientacion · CAMINANDO·corre (n=360): frente 0% · perfil 100% · tres cuartos 0% · espaldas 0%
+SONDA clasico_orientacion · SENTADO (n=448): frente 54% · perfil 20% · tres cuartos 25% · espaldas 0%
+SONDA clasico_orientacion · LEVANTANDO (n=5): frente 100% · perfil 0% · tres cuartos 0% · espaldas 0%
+SONDA apuntar ·  24 mm (inclinación hasta 30°): fórmula cerrada, error medio 0.0090 · máx 0.0365; con 3 correcciones, máx 0.00169 (fracción del encuadre)
+SONDA apuntar ·  50 mm (inclinación hasta 26°): fórmula cerrada, error medio 0.0042 · máx 0.0491; con 3 correcciones, máx 0.00019 (fracción del encuadre)
+SONDA apuntar · 200 mm (inclinación hasta 18°): fórmula cerrada, error medio 0.0023 · máx 0.0124; con 3 correcciones, máx 0.00019 (fracción del encuadre)
+SONDA apuntar · 600 mm (inclinación hasta 19°): fórmula cerrada, error medio 0.0021 · máx 0.0173; con 3 correcciones, máx 0.00019 (fracción del encuadre)
+SONDA planos · camino 0 · americano: n=9 · fuera de 24–600 5 · clasifica bien 4/4 · f mediana 33 máx 33 · se ve ≥60% 4 · cara libre 4 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 0 · cara: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 84 máx 125 · se ve ≥60% 9 · cara libre 9 · sola 4 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 0 · entero: n=9 · fuera de 24–600 9 · clasifica bien 0/0 · f mediana nan máx nan · se ve ≥60% 0 · cara libre 0 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 0 · general: n=9 · fuera de 24–600 0 · clasifica bien 0/9 · f mediana 24 máx 24 · se ve ≥60% 9 · cara libre 9 · sola 1 (+0 con figurantes) · defectos { "cara_fuera": 5, "cabeza": 1 }
+SONDA planos · camino 0 · medio: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 34 máx 54 · se ve ≥60% 9 · cara libre 9 · sola 1 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 0 · primer_plano: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 56 máx 87 · se ve ≥60% 9 · cara libre 9 · sola 2 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 1 · americano: n=10 · fuera de 24–600 0 · clasifica bien 10/10 · f mediana 68 máx 71 · se ve ≥60% 9 · cara libre 9 · sola 0 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 1 · cara: n=10 · fuera de 24–600 0 · clasifica bien 10/10 · f mediana 264 máx 285 · se ve ≥60% 9 · cara libre 9 · sola 6 (+3 con figurantes) · defectos {  }
+SONDA planos · camino 1 · entero: n=10 · fuera de 24–600 0 · clasifica bien 10/10 · f mediana 41 máx 43 · se ve ≥60% 9 · cara libre 9 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 1 · general: n=10 · fuera de 24–600 0 · clasifica bien 4/10 · f mediana 24 máx 24 · se ve ≥60% 9 · cara libre 9 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 1 · medio: n=10 · fuera de 24–600 0 · clasifica bien 10/10 · f mediana 112 máx 116 · se ve ≥60% 9 · cara libre 9 · sola 2 (+3 con figurantes) · defectos {  }
+SONDA planos · camino 1 · primer_plano: n=10 · fuera de 24–600 0 · clasifica bien 10/10 · f mediana 181 máx 192 · se ve ≥60% 9 · cara libre 9 · sola 4 (+4 con figurantes) · defectos {  }
+SONDA planos · camino 2 · americano: n=15 · fuera de 24–600 0 · clasifica bien 15/15 · f mediana 117 máx 171 · se ve ≥60% 13 · cara libre 13 · sola 6 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 2 · americano · corre: n=3 · fuera de 24–600 0 · clasifica bien 3/3 · f mediana 157 máx 157 · se ve ≥60% 2 · cara libre 3 · sola 1 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 2 · cara: n=15 · fuera de 24–600 0 · clasifica bien 15/15 · f mediana 448 máx 494 · se ve ≥60% 13 · cara libre 13 · sola 14 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 2 · cara · corre: n=3 · fuera de 24–600 0 · clasifica bien 3/3 · f mediana 454 máx 454 · se ve ≥60% 3 · cara libre 3 · sola 3 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 2 · entero: n=15 · fuera de 24–600 0 · clasifica bien 15/15 · f mediana 71 máx 107 · se ve ≥60% 12 · cara libre 13 · sola 4 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 2 · entero · corre: n=3 · fuera de 24–600 0 · clasifica bien 3/3 · f mediana 99 máx 99 · se ve ≥60% 1 · cara libre 3 · sola 1 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 2 · general: n=15 · fuera de 24–600 0 · clasifica bien 15/15 · f mediana 24 máx 24 · se ve ≥60% 12 · cara libre 13 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 2 · general · corre: n=3 · fuera de 24–600 0 · clasifica bien 3/3 · f mediana 24 máx 24 · se ve ≥60% 1 · cara libre 3 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 2 · medio: n=15 · fuera de 24–600 0 · clasifica bien 15/15 · f mediana 192 máx 260 · se ve ≥60% 13 · cara libre 13 · sola 9 (+2 con figurantes) · defectos {  }
+SONDA planos · camino 2 · medio · corre: n=3 · fuera de 24–600 0 · clasifica bien 3/3 · f mediana 239 máx 239 · se ve ≥60% 2 · cara libre 3 · sola 3 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 2 · primer_plano: n=15 · fuera de 24–600 0 · clasifica bien 15/15 · f mediana 313 máx 380 · se ve ≥60% 13 · cara libre 13 · sola 13 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 2 · primer_plano · corre: n=3 · fuera de 24–600 0 · clasifica bien 3/3 · f mediana 349 máx 349 · se ve ≥60% 3 · cara libre 3 · sola 3 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · americano: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 170 máx 185 · se ve ≥60% 7 · cara libre 7 · sola 3 (+3 con figurantes) · defectos {  }
+SONDA planos · camino 3 · americano · corre: n=6 · fuera de 24–600 0 · clasifica bien 6/6 · f mediana 257 máx 257 · se ve ≥60% 4 · cara libre 4 · sola 4 (+2 con figurantes) · defectos {  }
+SONDA planos · camino 3 · cara: n=9 · fuera de 24–600 9 · clasifica bien 0/0 · f mediana nan máx nan · se ve ≥60% 0 · cara libre 0 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · cara · corre: n=6 · fuera de 24–600 6 · clasifica bien 0/0 · f mediana nan máx nan · se ve ≥60% 0 · cara libre 0 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · entero: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 103 máx 111 · se ve ≥60% 7 · cara libre 7 · sola 3 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 3 · entero · corre: n=6 · fuera de 24–600 0 · clasifica bien 6/6 · f mediana 161 máx 161 · se ve ≥60% 4 · cara libre 4 · sola 2 (+1 con figurantes) · defectos {  }
+SONDA planos · camino 3 · general: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 24 máx 24 · se ve ≥60% 7 · cara libre 7 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · general · corre: n=6 · fuera de 24–600 0 · clasifica bien 6/6 · f mediana 24 máx 24 · se ve ≥60% 4 · cara libre 4 · sola 0 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · medio: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 275 máx 304 · se ve ≥60% 7 · cara libre 7 · sola 9 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · medio · corre: n=6 · fuera de 24–600 0 · clasifica bien 6/6 · f mediana 389 máx 389 · se ve ≥60% 4 · cara libre 4 · sola 4 (+2 con figurantes) · defectos {  }
+SONDA planos · camino 3 · primer_plano: n=9 · fuera de 24–600 0 · clasifica bien 9/9 · f mediana 452 máx 502 · se ve ≥60% 7 · cara libre 7 · sola 9 (+0 con figurantes) · defectos {  }
+SONDA planos · camino 3 · primer_plano · corre: n=6 · fuera de 24–600 0 · clasifica bien 6/6 · f mediana 570 máx 570 · se ve ≥60% 4 · cara libre 4 · sola 4 (+2 con figurantes) · defectos {  }
+SONDA planos · franja de zoom de medio: mediana ×1.735 · mínima ×1.545 (n=14) — un paso de rueda de ×1,15 no se la salta
+SONDA planos · franja de zoom de primer_plano: mediana ×1.509 · mínima ×1.333 (n=14) — un paso de rueda de ×1,15 no se la salta
+SONDA planos · franja de zoom de cara: mediana ×1.421 · mínima ×1.246 (n=11) — un paso de rueda de ×1,15 no se la salta
+SONDA planos · franja de zoom de americano: mediana ×1.521 · mínima ×1.432 (n=12) — un paso de rueda de ×1,15 no se la salta
+SONDA seguimiento · andando, camino 1, primer plano · ganancia 10, adelanto 0.120 s: 191 mm a 4.6 m · error medio 0.020 p95 0.022 máx 0.022 · mismo plano 100% de 455 fotogramas
+SONDA seguimiento · andando, camino 1, cara · ganancia 10, adelanto 0.120 s: 280 mm a 4.4 m · error medio 0.020 p95 0.037 máx 0.037 · mismo plano 100% de 451 fotogramas
+SONDA seguimiento · andando, camino 2, medio · ganancia 10, adelanto 0.120 s: 159 mm a 6.4 m · error medio 0.016 p95 0.019 máx 0.019 · mismo plano 100% de 439 fotogramas
+SONDA seguimiento · andando, camino 2, cara · ganancia 10, adelanto 0.120 s: 402 mm a 6.4 m · error medio 0.039 p95 0.047 máx 0.047 · mismo plano 100% de 444 fotogramas
+SONDA seguimiento · andando, camino 3, primer plano · ganancia 10, adelanto 0.120 s: 452 mm a 10.8 m · error medio 0.020 p95 0.023 máx 0.023 · mismo plano 100% de 454 fotogramas
+SONDA seguimiento · corriendo, entero · ganancia 10, adelanto 0.120 s: 99 mm a 7.0 m · error medio 0.029 p95 0.033 máx 0.034 · mismo plano 100% de 443 fotogramas
+SONDA seguimiento · corriendo, medio · ganancia 10, adelanto 0.120 s: 239 mm a 7.0 m · error medio 0.072 p95 0.083 máx 0.085 · mismo plano 100% de 432 fotogramas
+SONDA seguimiento · andando, camino 1, primer plano · ganancia 10, adelanto 0.100 s: 191 mm a 4.6 m · error medio 0.009 p95 0.014 máx 0.014 · mismo plano 100% de 445 fotogramas
+SONDA seguimiento · andando, camino 1, cara · ganancia 10, adelanto 0.100 s: 271 mm a 4.3 m · error medio 0.014 p95 0.020 máx 0.021 · mismo plano 100% de 436 fotogramas
+SONDA seguimiento · andando, camino 2, medio · ganancia 10, adelanto 0.100 s: 159 mm a 6.4 m · error medio 0.010 p95 0.014 máx 0.015 · mismo plano 100% de 439 fotogramas
+SONDA seguimiento · andando, camino 2, cara · ganancia 10, adelanto 0.100 s: 402 mm a 6.4 m · error medio 0.024 p95 0.036 máx 0.037 · mismo plano 100% de 446 fotogramas
+SONDA seguimiento · andando, camino 3, primer plano · ganancia 10, adelanto 0.100 s: 452 mm a 10.8 m · error medio 0.009 p95 0.013 máx 0.014 · mismo plano 100% de 440 fotogramas
+SONDA seguimiento · corriendo, entero · ganancia 10, adelanto 0.100 s: 161 mm a 11.4 m · error medio 0.008 p95 0.016 máx 0.017 · mismo plano 100% de 446 fotogramas
+SONDA seguimiento · corriendo, medio · ganancia 10, adelanto 0.100 s: 389 mm a 11.4 m · error medio 0.024 p95 0.049 máx 0.051 · mismo plano 100% de 443 fotogramas
+SONDA seguimiento · andando, camino 1, primer plano · ganancia 15, adelanto 0.067 s: 170 mm a 4.2 m · error medio 0.006 p95 0.008 máx 0.008 · mismo plano 100% de 454 fotogramas
+SONDA seguimiento · andando, camino 1, cara · ganancia 15, adelanto 0.067 s: 233 mm a 4.0 m · error medio 0.008 p95 0.018 máx 0.019 · mismo plano 53% de 430 fotogramas
+SONDA seguimiento · andando, camino 2, medio · ganancia 15, adelanto 0.067 s: 192 mm a 7.6 m · error medio 0.005 p95 0.007 máx 0.007 · mismo plano 100% de 431 fotogramas
+SONDA seguimiento · andando, camino 2, cara · ganancia 15, adelanto 0.067 s: 468 mm a 7.6 m · error medio 0.012 p95 0.017 máx 0.017 · mismo plano 100% de 424 fotogramas
+SONDA seguimiento · andando, camino 3, primer plano · ganancia 15, adelanto 0.067 s: 452 mm a 10.8 m · error medio 0.007 p95 0.010 máx 0.010 · mismo plano 100% de 422 fotogramas
+SONDA seguimiento · corriendo, entero · ganancia 15, adelanto 0.067 s: 99 mm a 7.0 m · error medio 0.008 p95 0.016 máx 0.017 · mismo plano 100% de 414 fotogramas
+SONDA seguimiento · corriendo, medio · ganancia 15, adelanto 0.067 s: 239 mm a 7.0 m · error medio 0.023 p95 0.048 máx 0.050 · mismo plano 100% de 440 fotogramas
+SONDA seguimiento · andando, camino 1, primer plano · ganancia 10, adelanto 0.000 s: 176 mm a 4.3 m · error medio 0.062 p95 0.064 máx 0.064 · mismo plano 100% de 450 fotogramas
+SONDA seguimiento · andando, camino 1, cara · ganancia 10, adelanto 0.000 s: 269 mm a 4.6 m · error medio 0.095 p95 0.097 máx 0.097 · mismo plano 100% de 444 fotogramas
+SONDA seguimiento · andando, camino 2, medio · ganancia 10, adelanto 0.000 s: 159 mm a 6.4 m · error medio 0.048 p95 0.049 máx 0.049 · mismo plano 100% de 438 fotogramas
+SONDA seguimiento · andando, camino 2, cara · ganancia 10, adelanto 0.000 s: 468 mm a 7.6 m · error medio 0.107 p95 0.108 máx 0.108 · mismo plano 100% de 459 fotogramas
+SONDA seguimiento · andando, camino 3, primer plano · ganancia 10, adelanto 0.000 s: 452 mm a 10.8 m · error medio 0.058 p95 0.059 máx 0.059 · mismo plano 100% de 444 fotogramas
+SONDA seguimiento · corriendo, entero · ganancia 10, adelanto 0.000 s: 93 mm a 6.6 m · error medio 0.081 p95 0.099 máx 0.102 · mismo plano 100% de 414 fotogramas
+SONDA seguimiento · corriendo, medio · ganancia 10, adelanto 0.000 s: 260 mm a 7.6 m · error medio 0.012 p95 0.032 máx 0.057 · mismo plano 100% de 436 fotogramas
+SONDA coste · clasico: evaluación en vivo 627 µs (personas 21, figurantes 18) · get_image() mediana 16.3 ms máx 24.3 ms
+SONDA reparto · clasico: 21 personas (3 niños, 18 figurantes) · personas con N dobles (≥2 rasgos en común): { 0: 19, 1: 2 } · descripción mínima de 3/4 rasgos: { 3: 21 } · figurantes idénticos a alguien: 0 en todo, 0 en lo mínimo
+SONDA dobles · reparto con dobles hechos a propósito (300 pruebas): dobles conseguidos { 1: 100, 2: 100, 3: 100 } de { 1: 100, 2: 100, 3: 100 } · la buscada sigue siendo única: 300/300 (rasgos mínimos: { 3: 157, 4: 143 })
+SONDA dobles · construir una persona (hd): mediana 40.7 ms, máx 43.7 ms
+SONDA congelar · clasico: en 5 s congelado se mueven como mucho (m) { "people": 0.0, "extras": 0.0, "birds": 0.0, "dog": 0.0, "ducks": 0.0 } · al soltar, en 2 s: { "people": 5.297, "extras": 1.549, "birds": 0.441, "dog": 1.011, "ducks": 0.4062 }
+SONDA perro · clasico: perro sí · su paseante está en main.people: true · distancia 0.58 m
+SONDA sentar · prueba 1: se sienta a los 5.5 s y se levanta a los 42.5 s · segundos sentada por actividad: { "leer": 36.0, "": 1.0 }
+SONDA sentar · prueba 2: se sienta a los 5.0 s y se levanta a los 58.5 s · segundos sentada por actividad: { "palomas": 13.5, "charla": 39.5, "": 0.5 }
+SONDA sentar · prueba 3: se sienta a los 5.5 s y se levanta a los 62.0 s · segundos sentada por actividad: { "movil": 9.5, "charla": 46.0, "": 1.0 }
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_day_camino1_cara_285mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_day_camino2_cara_374mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_day_camino3_primer_plano_452mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_day_camino2_medio_154mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_golden_camino2_cara_374mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_night_camino2_cara_374mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_night_camino1_primer_plano_127mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/clasico_night_camino3_600mm_forward_plus_Ultra.png
+SONDA gpu · clasico: { "24 mm": { "gpu_ms": 6.03, "cpu_ms": 0.44 }, "600 mm": { "gpu_ms": 5.7, "cpu_ms": 0.33 } }
+SONDA coste · grande: evaluación en vivo 277 µs (personas 45, figurantes 6) · get_image() mediana 16.7 ms máx 27.0 ms
+SONDA reparto · grande: 45 personas (9 niños, 6 figurantes) · personas con N dobles (≥2 rasgos en común): { 0: 43, 1: 2 } · descripción mínima de 3/4 rasgos: { 3: 45 } · figurantes idénticos a alguien: 0 en todo, 0 en lo mínimo
+SONDA congelar · grande: en 5 s congelado se mueven como mucho (m) { "people": 0.0, "extras": 0.0, "birds": 0.0, "dog": 0.0, "ducks": 0.0 } · al soltar, en 2 s: { "people": 5.939, "extras": 2.865, "birds": 0.442, "dog": 1.159, "ducks": 0.0 }
+SONDA perro · grande: perro sí · su paseante está en main.people: true · distancia 0.58 m
+SONDA grande_orientacion · CAMINANDO a menos de 30 m (n=2508): frente 48% · perfil 17% · tres cuartos 12% · espaldas 20%
+SONDA grande_orientacion · DETENIDO a menos de 30 m (n=354): frente 32% · perfil 37% · tres cuartos 17% · espaldas 12%
+SONDA grande_orientacion · SENTADO a menos de 30 m (n=32): frente 0% · perfil 100% · tres cuartos 0% · espaldas 0%
+SONDA grande_orientacion · SENTADO: 1 episodios completos, mediana 44.0 s, mínimo 44.0 s
+SONDA grande_orientacion · DETENIDO: 29 episodios completos, mediana 11.0 s, mínimo 1.0 s
+SONDA taparse · de 14 acercamientos a 1,9 m con la cámara al ojo: reaccionan 14, se tapan 5 (tapados una media de 2.4 s)
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/grande_day_12-20m_primer_plano_600mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/grande_day_20-35m_medio_600mm_forward_plus_Ultra.png
+SONDA visual · captura /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/grande_day_35-60m_entero_600mm_forward_plus_Ultra.png
+SONDA gpu · grande: { "24 mm": { "gpu_ms": 6.98, "cpu_ms": 0.37 }, "600 mm": { "gpu_ms": 7.29, "cpu_ms": 0.37 } }
+SONDA recarga · el estático sobrevive a dos recargas: true · recargar al grande 4464 ms, al clásico 4071 ms
+SONDAS: informe en /tmp/claude-1000/-home-ganso-codigo/e32f7f60-9359-4a8c-8bd6-5ab1ee788472/scratchpad/sondas_final/informe_forward_plus.json

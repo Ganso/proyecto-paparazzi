@@ -1,0 +1,89 @@
+{
+  "arranque": {
+    "imagen": "(1280, 720)",
+    "perfil": "Alto",
+    "renderizador": "gl_compatibility"
+  },
+  "coste": {
+    "evaluacion_us_clasico": 207.0,
+    "evaluacion_us_grande": 262.0,
+    "get_image_ms_clasico": 2.2,
+    "get_image_ms_grande": 3.1,
+    "imagen_clasico": "1280x720",
+    "imagen_grande": "1280x720"
+  },
+  "gpu": {
+    "clasico": {
+      "24 mm": {
+        "cpu_ms": 0.36,
+        "gpu_ms": 1.2
+      },
+      "600 mm": {
+        "cpu_ms": 0.28,
+        "gpu_ms": 1.0
+      }
+    },
+    "grande": {
+      "24 mm": {
+        "cpu_ms": 0.48,
+        "gpu_ms": 1.26
+      },
+      "600 mm": {
+        "cpu_ms": 0.37,
+        "gpu_ms": 1.08
+      }
+    }
+  },
+  "visual": {
+    "clasico_day_camino1_cara": {
+      "d": 3.1,
+      "f": 181.0,
+      "plano": "cara"
+    },
+    "clasico_day_camino2_cara": {
+      "d": 6.4,
+      "f": 402.0,
+      "plano": "cara"
+    },
+    "clasico_day_camino2_medio": {
+      "d": 6.4,
+      "f": 159.0,
+      "plano": "medio"
+    },
+    "clasico_day_camino3_primer_plano": {
+      "d": 10.8,
+      "f": 452.0,
+      "plano": "primer_plano"
+    },
+    "clasico_golden_camino2_cara": {
+      "d": 6.4,
+      "f": 402.0,
+      "plano": "cara"
+    },
+    "clasico_night_camino1_primer_plano": {
+      "d": 3.1,
+      "f": 126.0,
+      "plano": "primer_plano"
+    },
+    "clasico_night_camino2_cara": {
+      "d": 6.4,
+      "f": 402.0,
+      "plano": "cara"
+    },
+    "grande_12-20m": {
+      "d": 12.9,
+      "f": 600.0,
+      "plano": "primer_plano"
+    },
+    "grande_20-35m": {
+      "d": 34.0,
+      "f": 600.0,
+      "plano": "entero"
+    },
+    "grande_35-60m": {
+      "d": 56.2,
+      "f": 600.0,
+      "plano": "entero"
+    }
+  }
+}

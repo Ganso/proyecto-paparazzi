@@ -1,0 +1,1253 @@
+{
+  "apuntar": {
+    "200_mm": {
+      "corregida_max": 0.00019,
+      "formula_max": 0.0124,
+      "formula_media": 0.0023
+    },
+    "24_mm": {
+      "corregida_max": 0.00169,
+      "formula_max": 0.0365,
+      "formula_media": 0.009
+    },
+    "50_mm": {
+      "corregida_max": 0.00019,
+      "formula_max": 0.0491,
+      "formula_media": 0.0042
+    },
+    "600_mm": {
+      "corregida_max": 0.00019,
+      "formula_max": 0.0173,
+      "formula_media": 0.0021
+    }
+  },
+  "arranque": {
+    "imagen": "(1600, 900)",
+    "perfil": "Ultra",
+    "renderizador": "forward_plus"
+  },
+  "clasico_orientacion": {
+    "histograma_cabeza": {
+      "CAMINANDO": {
+        "espaldas": 32,
+        "frente": 37,
+        "n": 1353,
+        "perfil": 1250,
+        "tres_cuartos": 34
+      },
+      "CAMINANDO·corre": {
+        "espaldas": 0,
+        "frente": 0,
+        "n": 360,
+        "perfil": 360,
+        "tres_cuartos": 0
+      },
+      "DETENIDO": {
+        "espaldas": 48,
+        "frente": 166,
+        "n": 354,
+        "perfil": 81,
+        "tres_cuartos": 59
+      },
+      "LEVANTANDO": {
+        "espaldas": 0,
+        "frente": 5,
+        "n": 5,
+        "perfil": 0,
+        "tres_cuartos": 0
+      },
+      "SENTADO": {
+        "espaldas": 0,
+        "frente": 242,
+        "n": 448,
+        "perfil": 92,
+        "tres_cuartos": 114
+      }
+    }
+  },
+  "congelar": {
+    "clasico": {
+      "congelado": {
+        "birds": 0.0,
+        "dog": 0.0,
+        "ducks": 0.0,
+        "extras": 0.0,
+        "people": 0.0
+      },
+      "suelto": {
+        "birds": 0.441,
+        "dog": 1.011,
+        "ducks": 0.4062,
+        "extras": 1.549,
+        "people": 5.297
+      }
+    },
+    "grande": {
+      "congelado": {
+        "birds": 0.0,
+        "dog": 0.0,
+        "ducks": 0.0,
+        "extras": 0.0,
+        "people": 0.0
+      },
+      "suelto": {
+        "birds": 0.442,
+        "dog": 1.159,
+        "ducks": 0.0,
+        "extras": 2.865,
+        "people": 5.939
+      }
+    }
+  },
+  "coste": {
+    "evaluacion_us_clasico": 627.0,
+    "evaluacion_us_grande": 277.0,
+    "get_image_ms_clasico": 16.3,
+    "get_image_ms_grande": 16.7,
+    "imagen_clasico": "1600x900",
+    "imagen_grande": "1600x900"
+  },
+  "dobles": {
+    "construir_persona_ms": {
+      "detalle": "hd",
+      "max": 43.7,
+      "mediana": 40.7
+    },
+    "reparto": {
+      "conseguidos": {
+        "1": 100,
+        "2": 100,
+        "3": 100
+      },
+      "pedidos": {
+        "1": 100,
+        "2": 100,
+        "3": 100
+      },
+      "rasgos_minimos": {
+        "3": 157,
+        "4": 143
+      },
+      "unica": 300
+    }
+  },
+  "esqueleto": {
+    "error_cm_por_grupo": {
+      "delgado·anda": {
+        "ankles": 3.3,
+        "chest": -4.0,
+        "chin": -4.0,
+        "crown": -4.0,
+        "eyes": -4.0,
+        "feet": 3.4,
+        "hips": -4.0,
+        "knees": -0.8,
+        "n": 6,
+        "neck": -4.0,
+        "shoulders": -4.0,
+        "waist": -4.0
+      },
+      "delgado·quieto": {
+        "ankles": 0.0,
+        "chest": 0.0,
+        "chin": 0.0,
+        "crown": -0.1,
+        "eyes": 0.0,
+        "feet": 0.0,
+        "hips": 0.0,
+        "knees": 0.0,
+        "n": 3,
+        "neck": 0.0,
+        "shoulders": 0.0,
+        "waist": 0.0
+      },
+      "estandar·anda": {
+        "ankles": 2.9,
+        "chest": -3.8,
+        "chin": -3.8,
+        "crown": -3.8,
+        "eyes": -3.8,
+        "feet": 3.0,
+        "hips": -3.8,
+        "knees": -0.7,
+        "n": 8,
+        "neck": -3.8,
+        "shoulders": -3.8,
+        "waist": -3.8
+      },
+      "nino·anda": {
+        "ankles": 7.2,
+        "chest": -1.9,
+        "chin": -2.0,
+        "crown": -2.0,
+        "eyes": -2.0,
+        "feet": 7.3,
+        "hips": -1.8,
+        "knees": 2.8,
+        "n": 3,
+        "neck": -2.0,
+        "shoulders": -1.9,
+        "waist": -1.8
+      },
+      "nino·quieto": {
+        "ankles": 0.0,
+        "chest": 0.0,
+        "chin": 0.0,
+        "crown": 0.0,
+        "eyes": 0.0,
+        "feet": 0.0,
+        "hips": 0.0,
+        "knees": 0.0,
+        "n": 2,
+        "neck": 0.0,
+        "shoulders": 0.0,
+        "waist": 0.0
+      },
+      "robusto·anda": {
+        "ankles": 5.8,
+        "chest": -4.2,
+        "chin": -4.3,
+        "crown": -4.3,
+        "eyes": -4.3,
+        "feet": 5.9,
+        "hips": -4.2,
+        "knees": -1.5,
+        "n": 6,
+        "neck": -4.3,
+        "shoulders": -4.2,
+        "waist": -4.2
+      },
+      "robusto·quieto": {
+        "ankles": 0.0,
+        "chest": 0.0,
+        "chin": 0.0,
+        "crown": 0.0,
+        "eyes": 0.0,
+        "feet": 0.0,
+        "hips": 0.0,
+        "knees": 0.0,
+        "n": 4,
+        "neck": 0.0,
+        "shoulders": 0.0,
+        "waist": 0.0
+      }
+    },
+    "huesos_que_faltan": []
+  },
+  "gpu": {
+    "clasico": {
+      "24 mm": {
+        "cpu_ms": 0.44,
+        "gpu_ms": 6.03
+      },
+      "600 mm": {
+        "cpu_ms": 0.33,
+        "gpu_ms": 5.7
+      }
+    },
+    "grande": {
+      "24 mm": {
+        "cpu_ms": 0.37,
+        "gpu_ms": 6.98
+      },
+      "600 mm": {
+        "cpu_ms": 0.37,
+        "gpu_ms": 7.29
+      }
+    }
+  },
+  "grande_orientacion": {
+    "duraciones": {
+      "DETENIDO_mediana": 11.0,
+      "SENTADO_mediana": 44.0,
+      "episodios": 30
+    },
+    "histograma_cabeza": {
+      "CAMINANDO": {
+        "espaldas": 519,
+        "frente": 1224,
+        "n": 2508,
+        "perfil": 442,
+        "tres_cuartos": 323
+      },
+      "DETENIDO": {
+        "espaldas": 46,
+        "frente": 116,
+        "n": 354,
+        "perfil": 131,
+        "tres_cuartos": 61
+      },
+      "SENTADO": {
+        "espaldas": 0,
+        "frente": 0,
+        "n": 32,
+        "perfil": 32,
+        "tres_cuartos": 0
+      }
+    }
+  },
+  "orientacion": {
+    "eje_cabeza": "(0.0, 0.0, -1.0)",
+    "giro_cabeza_con_look_yaw_0.7": 0.7,
+    "menos_z_vs_velocidad_max_grados": 4.0,
+    "menos_z_vs_velocidad_media_grados": 0.3
+  },
+  "perro": {
+    "clasico": {
+      "paseante_en_people": true,
+      "perro": true
+    },
+    "grande": {
+      "paseante_en_people": true,
+      "perro": true
+    }
+  },
+  "planos": {
+    "franja_de_zoom": {
+      "americano": {
+        "mediana": 1.521,
+        "minimo": 1.432,
+        "n": 12
+      },
+      "cara": {
+        "mediana": 1.421,
+        "minimo": 1.246,
+        "n": 11
+      },
+      "medio": {
+        "mediana": 1.735,
+        "minimo": 1.545,
+        "n": 14
+      },
+      "primer_plano": {
+        "mediana": 1.509,
+        "minimo": 1.333,
+        "n": 14
+      }
+    },
+    "por_camino_y_plano": {
+      "camino 0 · americano": {
+        "acierta": 4,
+        "cara_libre": 4,
+        "defectos": {},
+        "f_max": 33.0,
+        "f_mediana": 33.0,
+        "fuera_de_rango": 5,
+        "n": 9,
+        "plano_hecho": {
+          "americano": 4
+        },
+        "se_ve_60": 4,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 0 · cara": {
+        "acierta": 9,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 125.0,
+        "f_mediana": 84.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "cara": 9
+        },
+        "se_ve_60": 9,
+        "sola": 4,
+        "solo_figurantes": 1
+      },
+      "camino 0 · entero": {
+        "acierta": 0,
+        "cara_libre": 0,
+        "defectos": {},
+        "f_max": null,
+        "f_mediana": null,
+        "fuera_de_rango": 9,
+        "n": 9,
+        "plano_hecho": {},
+        "se_ve_60": 0,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 0 · general": {
+        "acierta": 0,
+        "cara_libre": 9,
+        "defectos": {
+          "cabeza": 1,
+          "cara_fuera": 5
+        },
+        "f_max": 24.0,
+        "f_mediana": 24.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "": 5,
+          "entero": 4
+        },
+        "se_ve_60": 9,
+        "sola": 1,
+        "solo_figurantes": 0
+      },
+      "camino 0 · medio": {
+        "acierta": 9,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 54.0,
+        "f_mediana": 34.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "medio": 9
+        },
+        "se_ve_60": 9,
+        "sola": 1,
+        "solo_figurantes": 0
+      },
+      "camino 0 · primer_plano": {
+        "acierta": 9,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 87.0,
+        "f_mediana": 56.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "primer_plano": 9
+        },
+        "se_ve_60": 9,
+        "sola": 2,
+        "solo_figurantes": 0
+      },
+      "camino 1 · americano": {
+        "acierta": 10,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 71.0,
+        "f_mediana": 68.0,
+        "fuera_de_rango": 0,
+        "n": 10,
+        "plano_hecho": {
+          "americano": 10
+        },
+        "se_ve_60": 9,
+        "sola": 0,
+        "solo_figurantes": 1
+      },
+      "camino 1 · cara": {
+        "acierta": 10,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 285.0,
+        "f_mediana": 264.0,
+        "fuera_de_rango": 0,
+        "n": 10,
+        "plano_hecho": {
+          "cara": 10
+        },
+        "se_ve_60": 9,
+        "sola": 6,
+        "solo_figurantes": 3
+      },
+      "camino 1 · entero": {
+        "acierta": 10,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 43.0,
+        "f_mediana": 41.0,
+        "fuera_de_rango": 0,
+        "n": 10,
+        "plano_hecho": {
+          "entero": 10
+        },
+        "se_ve_60": 9,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 1 · general": {
+        "acierta": 4,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 24.0,
+        "f_mediana": 24.0,
+        "fuera_de_rango": 0,
+        "n": 10,
+        "plano_hecho": {
+          "entero": 6,
+          "general": 4
+        },
+        "se_ve_60": 9,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 1 · medio": {
+        "acierta": 10,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 116.0,
+        "f_mediana": 112.0,
+        "fuera_de_rango": 0,
+        "n": 10,
+        "plano_hecho": {
+          "medio": 10
+        },
+        "se_ve_60": 9,
+        "sola": 2,
+        "solo_figurantes": 3
+      },
+      "camino 1 · primer_plano": {
+        "acierta": 10,
+        "cara_libre": 9,
+        "defectos": {},
+        "f_max": 192.0,
+        "f_mediana": 181.0,
+        "fuera_de_rango": 0,
+        "n": 10,
+        "plano_hecho": {
+          "primer_plano": 10
+        },
+        "se_ve_60": 9,
+        "sola": 4,
+        "solo_figurantes": 4
+      },
+      "camino 2 · americano": {
+        "acierta": 15,
+        "cara_libre": 13,
+        "defectos": {},
+        "f_max": 171.0,
+        "f_mediana": 117.0,
+        "fuera_de_rango": 0,
+        "n": 15,
+        "plano_hecho": {
+          "americano": 15
+        },
+        "se_ve_60": 13,
+        "sola": 6,
+        "solo_figurantes": 1
+      },
+      "camino 2 · americano · corre": {
+        "acierta": 3,
+        "cara_libre": 3,
+        "defectos": {},
+        "f_max": 157.0,
+        "f_mediana": 157.0,
+        "fuera_de_rango": 0,
+        "n": 3,
+        "plano_hecho": {
+          "americano": 3
+        },
+        "se_ve_60": 2,
+        "sola": 1,
+        "solo_figurantes": 0
+      },
+      "camino 2 · cara": {
+        "acierta": 15,
+        "cara_libre": 13,
+        "defectos": {},
+        "f_max": 494.0,
+        "f_mediana": 448.0,
+        "fuera_de_rango": 0,
+        "n": 15,
+        "plano_hecho": {
+          "cara": 15
+        },
+        "se_ve_60": 13,
+        "sola": 14,
+        "solo_figurantes": 1
+      },
+      "camino 2 · cara · corre": {
+        "acierta": 3,
+        "cara_libre": 3,
+        "defectos": {},
+        "f_max": 454.0,
+        "f_mediana": 454.0,
+        "fuera_de_rango": 0,
+        "n": 3,
+        "plano_hecho": {
+          "cara": 3
+        },
+        "se_ve_60": 3,
+        "sola": 3,
+        "solo_figurantes": 0
+      },
+      "camino 2 · entero": {
+        "acierta": 15,
+        "cara_libre": 13,
+        "defectos": {},
+        "f_max": 107.0,
+        "f_mediana": 71.0,
+        "fuera_de_rango": 0,
+        "n": 15,
+        "plano_hecho": {
+          "entero": 15
+        },
+        "se_ve_60": 12,
+        "sola": 4,
+        "solo_figurantes": 1
+      },
+      "camino 2 · entero · corre": {
+        "acierta": 3,
+        "cara_libre": 3,
+        "defectos": {},
+        "f_max": 99.0,
+        "f_mediana": 99.0,
+        "fuera_de_rango": 0,
+        "n": 3,
+        "plano_hecho": {
+          "entero": 3
+        },
+        "se_ve_60": 1,
+        "sola": 1,
+        "solo_figurantes": 0
+      },
+      "camino 2 · general": {
+        "acierta": 15,
+        "cara_libre": 13,
+        "defectos": {},
+        "f_max": 24.0,
+        "f_mediana": 24.0,
+        "fuera_de_rango": 0,
+        "n": 15,
+        "plano_hecho": {
+          "general": 15
+        },
+        "se_ve_60": 12,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 2 · general · corre": {
+        "acierta": 3,
+        "cara_libre": 3,
+        "defectos": {},
+        "f_max": 24.0,
+        "f_mediana": 24.0,
+        "fuera_de_rango": 0,
+        "n": 3,
+        "plano_hecho": {
+          "general": 3
+        },
+        "se_ve_60": 1,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 2 · medio": {
+        "acierta": 15,
+        "cara_libre": 13,
+        "defectos": {},
+        "f_max": 260.0,
+        "f_mediana": 192.0,
+        "fuera_de_rango": 0,
+        "n": 15,
+        "plano_hecho": {
+          "medio": 15
+        },
+        "se_ve_60": 13,
+        "sola": 9,
+        "solo_figurantes": 2
+      },
+      "camino 2 · medio · corre": {
+        "acierta": 3,
+        "cara_libre": 3,
+        "defectos": {},
+        "f_max": 239.0,
+        "f_mediana": 239.0,
+        "fuera_de_rango": 0,
+        "n": 3,
+        "plano_hecho": {
+          "medio": 3
+        },
+        "se_ve_60": 2,
+        "sola": 3,
+        "solo_figurantes": 0
+      },
+      "camino 2 · primer_plano": {
+        "acierta": 15,
+        "cara_libre": 13,
+        "defectos": {},
+        "f_max": 380.0,
+        "f_mediana": 313.0,
+        "fuera_de_rango": 0,
+        "n": 15,
+        "plano_hecho": {
+          "primer_plano": 15
+        },
+        "se_ve_60": 13,
+        "sola": 13,
+        "solo_figurantes": 1
+      },
+      "camino 2 · primer_plano · corre": {
+        "acierta": 3,
+        "cara_libre": 3,
+        "defectos": {},
+        "f_max": 349.0,
+        "f_mediana": 349.0,
+        "fuera_de_rango": 0,
+        "n": 3,
+        "plano_hecho": {
+          "primer_plano": 3
+        },
+        "se_ve_60": 3,
+        "sola": 3,
+        "solo_figurantes": 0
+      },
+      "camino 3 · americano": {
+        "acierta": 9,
+        "cara_libre": 7,
+        "defectos": {},
+        "f_max": 185.0,
+        "f_mediana": 170.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "americano": 9
+        },
+        "se_ve_60": 7,
+        "sola": 3,
+        "solo_figurantes": 3
+      },
+      "camino 3 · americano · corre": {
+        "acierta": 6,
+        "cara_libre": 4,
+        "defectos": {},
+        "f_max": 257.0,
+        "f_mediana": 257.0,
+        "fuera_de_rango": 0,
+        "n": 6,
+        "plano_hecho": {
+          "americano": 6
+        },
+        "se_ve_60": 4,
+        "sola": 4,
+        "solo_figurantes": 2
+      },
+      "camino 3 · cara": {
+        "acierta": 0,
+        "cara_libre": 0,
+        "defectos": {},
+        "f_max": null,
+        "f_mediana": null,
+        "fuera_de_rango": 9,
+        "n": 9,
+        "plano_hecho": {},
+        "se_ve_60": 0,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 3 · cara · corre": {
+        "acierta": 0,
+        "cara_libre": 0,
+        "defectos": {},
+        "f_max": null,
+        "f_mediana": null,
+        "fuera_de_rango": 6,
+        "n": 6,
+        "plano_hecho": {},
+        "se_ve_60": 0,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 3 · entero": {
+        "acierta": 9,
+        "cara_libre": 7,
+        "defectos": {},
+        "f_max": 111.0,
+        "f_mediana": 103.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "entero": 9
+        },
+        "se_ve_60": 7,
+        "sola": 3,
+        "solo_figurantes": 1
+      },
+      "camino 3 · entero · corre": {
+        "acierta": 6,
+        "cara_libre": 4,
+        "defectos": {},
+        "f_max": 161.0,
+        "f_mediana": 161.0,
+        "fuera_de_rango": 0,
+        "n": 6,
+        "plano_hecho": {
+          "entero": 6
+        },
+        "se_ve_60": 4,
+        "sola": 2,
+        "solo_figurantes": 1
+      },
+      "camino 3 · general": {
+        "acierta": 9,
+        "cara_libre": 7,
+        "defectos": {},
+        "f_max": 24.0,
+        "f_mediana": 24.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "general": 9
+        },
+        "se_ve_60": 7,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 3 · general · corre": {
+        "acierta": 6,
+        "cara_libre": 4,
+        "defectos": {},
+        "f_max": 24.0,
+        "f_mediana": 24.0,
+        "fuera_de_rango": 0,
+        "n": 6,
+        "plano_hecho": {
+          "general": 6
+        },
+        "se_ve_60": 4,
+        "sola": 0,
+        "solo_figurantes": 0
+      },
+      "camino 3 · medio": {
+        "acierta": 9,
+        "cara_libre": 7,
+        "defectos": {},
+        "f_max": 304.0,
+        "f_mediana": 275.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "medio": 9
+        },
+        "se_ve_60": 7,
+        "sola": 9,
+        "solo_figurantes": 0
+      },
+      "camino 3 · medio · corre": {
+        "acierta": 6,
+        "cara_libre": 4,
+        "defectos": {},
+        "f_max": 389.0,
+        "f_mediana": 389.0,
+        "fuera_de_rango": 0,
+        "n": 6,
+        "plano_hecho": {
+          "medio": 6
+        },
+        "se_ve_60": 4,
+        "sola": 4,
+        "solo_figurantes": 2
+      },
+      "camino 3 · primer_plano": {
+        "acierta": 9,
+        "cara_libre": 7,
+        "defectos": {},
+        "f_max": 502.0,
+        "f_mediana": 452.0,
+        "fuera_de_rango": 0,
+        "n": 9,
+        "plano_hecho": {
+          "primer_plano": 9
+        },
+        "se_ve_60": 7,
+        "sola": 9,
+        "solo_figurantes": 0
+      },
+      "camino 3 · primer_plano · corre": {
+        "acierta": 6,
+        "cara_libre": 4,
+        "defectos": {},
+        "f_max": 570.0,
+        "f_mediana": 570.0,
+        "fuera_de_rango": 0,
+        "n": 6,
+        "plano_hecho": {
+          "primer_plano": 6
+        },
+        "se_ve_60": 4,
+        "sola": 4,
+        "solo_figurantes": 2
+      }
+    }
+  },
+  "recarga": {
+    "resultado": {
+      "estatico_sobrevive": true,
+      "ms_al_clasico": 4071,
+      "ms_al_grande": 4464
+    }
+  },
+  "reparto": {
+    "clasico": {
+      "descripcion_minima": {
+        "3": 21
+      },
+      "dobles": {
+        "0": 19,
+        "1": 2
+      },
+      "figurantes": 18,
+      "figurantes_identicos": 0,
+      "figurantes_identicos_en_lo_minimo": 0,
+      "ninos": 3,
+      "personas": 21
+    },
+    "grande": {
+      "descripcion_minima": {
+        "3": 45
+      },
+      "dobles": {
+        "0": 43,
+        "1": 2
+      },
+      "figurantes": 6,
+      "figurantes_identicos": 0,
+      "figurantes_identicos_en_lo_minimo": 0,
+      "ninos": 9,
+      "personas": 45
+    }
+  },
+  "seguimiento": {
+    "casos": {
+      "andando, camino 1, cara · ganancia 10, adelanto 0.000 s": {
+        "d": 4.57,
+        "error_max": 0.097,
+        "error_medio": 0.095,
+        "error_p95": 0.097,
+        "f": 269.0,
+        "fotogramas": 444,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 10, adelanto 0.100 s": {
+        "d": 4.3,
+        "error_max": 0.021,
+        "error_medio": 0.014,
+        "error_p95": 0.02,
+        "f": 271.0,
+        "fotogramas": 436,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 10, adelanto 0.120 s": {
+        "d": 4.43,
+        "error_max": 0.037,
+        "error_medio": 0.02,
+        "error_p95": 0.037,
+        "f": 280.0,
+        "fotogramas": 451,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, cara · ganancia 15, adelanto 0.067 s": {
+        "d": 3.95,
+        "error_max": 0.019,
+        "error_medio": 0.008,
+        "error_p95": 0.018,
+        "f": 233.0,
+        "fotogramas": 430,
+        "plano_estable": 0.53
+      },
+      "andando, camino 1, primer plano · ganancia 10, adelanto 0.000 s": {
+        "d": 4.3,
+        "error_max": 0.064,
+        "error_medio": 0.062,
+        "error_p95": 0.064,
+        "f": 176.0,
+        "fotogramas": 450,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 10, adelanto 0.100 s": {
+        "d": 4.57,
+        "error_max": 0.014,
+        "error_medio": 0.009,
+        "error_p95": 0.014,
+        "f": 191.0,
+        "fotogramas": 445,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 10, adelanto 0.120 s": {
+        "d": 4.56,
+        "error_max": 0.022,
+        "error_medio": 0.02,
+        "error_p95": 0.022,
+        "f": 191.0,
+        "fotogramas": 455,
+        "plano_estable": 1.0
+      },
+      "andando, camino 1, primer plano · ganancia 15, adelanto 0.067 s": {
+        "d": 4.16,
+        "error_max": 0.008,
+        "error_medio": 0.006,
+        "error_p95": 0.008,
+        "f": 170.0,
+        "fotogramas": 454,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 10, adelanto 0.000 s": {
+        "d": 7.62,
+        "error_max": 0.108,
+        "error_medio": 0.107,
+        "error_p95": 0.108,
+        "f": 468.0,
+        "fotogramas": 459,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 10, adelanto 0.100 s": {
+        "d": 6.38,
+        "error_max": 0.037,
+        "error_medio": 0.024,
+        "error_p95": 0.036,
+        "f": 402.0,
+        "fotogramas": 446,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 10, adelanto 0.120 s": {
+        "d": 6.38,
+        "error_max": 0.047,
+        "error_medio": 0.039,
+        "error_p95": 0.047,
+        "f": 402.0,
+        "fotogramas": 444,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, cara · ganancia 15, adelanto 0.067 s": {
+        "d": 7.62,
+        "error_max": 0.017,
+        "error_medio": 0.012,
+        "error_p95": 0.017,
+        "f": 468.0,
+        "fotogramas": 424,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 10, adelanto 0.000 s": {
+        "d": 6.38,
+        "error_max": 0.049,
+        "error_medio": 0.048,
+        "error_p95": 0.049,
+        "f": 159.0,
+        "fotogramas": 438,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 10, adelanto 0.100 s": {
+        "d": 6.38,
+        "error_max": 0.015,
+        "error_medio": 0.01,
+        "error_p95": 0.014,
+        "f": 159.0,
+        "fotogramas": 439,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 10, adelanto 0.120 s": {
+        "d": 6.38,
+        "error_max": 0.019,
+        "error_medio": 0.016,
+        "error_p95": 0.019,
+        "f": 159.0,
+        "fotogramas": 439,
+        "plano_estable": 1.0
+      },
+      "andando, camino 2, medio · ganancia 15, adelanto 0.067 s": {
+        "d": 7.62,
+        "error_max": 0.007,
+        "error_medio": 0.005,
+        "error_p95": 0.007,
+        "f": 192.0,
+        "fotogramas": 431,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 10, adelanto 0.000 s": {
+        "d": 10.8,
+        "error_max": 0.059,
+        "error_medio": 0.058,
+        "error_p95": 0.059,
+        "f": 452.0,
+        "fotogramas": 444,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 10, adelanto 0.100 s": {
+        "d": 10.8,
+        "error_max": 0.014,
+        "error_medio": 0.009,
+        "error_p95": 0.013,
+        "f": 452.0,
+        "fotogramas": 440,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 10, adelanto 0.120 s": {
+        "d": 10.8,
+        "error_max": 0.023,
+        "error_medio": 0.02,
+        "error_p95": 0.023,
+        "f": 452.0,
+        "fotogramas": 454,
+        "plano_estable": 1.0
+      },
+      "andando, camino 3, primer plano · ganancia 15, adelanto 0.067 s": {
+        "d": 10.8,
+        "error_max": 0.01,
+        "error_medio": 0.007,
+        "error_p95": 0.01,
+        "f": 452.0,
+        "fotogramas": 422,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 10, adelanto 0.000 s": {
+        "d": 6.61,
+        "error_max": 0.102,
+        "error_medio": 0.081,
+        "error_p95": 0.099,
+        "f": 93.0,
+        "fotogramas": 414,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 10, adelanto 0.100 s": {
+        "d": 11.42,
+        "error_max": 0.017,
+        "error_medio": 0.008,
+        "error_p95": 0.016,
+        "f": 161.0,
+        "fotogramas": 446,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 10, adelanto 0.120 s": {
+        "d": 7.0,
+        "error_max": 0.034,
+        "error_medio": 0.029,
+        "error_p95": 0.033,
+        "f": 99.0,
+        "fotogramas": 443,
+        "plano_estable": 1.0
+      },
+      "corriendo, entero · ganancia 15, adelanto 0.067 s": {
+        "d": 7.0,
+        "error_max": 0.017,
+        "error_medio": 0.008,
+        "error_p95": 0.016,
+        "f": 99.0,
+        "fotogramas": 414,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 10, adelanto 0.000 s": {
+        "d": 7.62,
+        "error_max": 0.057,
+        "error_medio": 0.012,
+        "error_p95": 0.032,
+        "f": 260.0,
+        "fotogramas": 436,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 10, adelanto 0.100 s": {
+        "d": 11.42,
+        "error_max": 0.051,
+        "error_medio": 0.024,
+        "error_p95": 0.049,
+        "f": 389.0,
+        "fotogramas": 443,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 10, adelanto 0.120 s": {
+        "d": 7.0,
+        "error_max": 0.085,
+        "error_medio": 0.072,
+        "error_p95": 0.083,
+        "f": 239.0,
+        "fotogramas": 432,
+        "plano_estable": 1.0
+      },
+      "corriendo, medio · ganancia 15, adelanto 0.067 s": {
+        "d": 7.0,
+        "error_max": 0.05,
+        "error_medio": 0.023,
+        "error_p95": 0.048,
+        "f": 239.0,
+        "fotogramas": 440,
+        "plano_estable": 1.0
+      }
+    }
+  },
+  "sentar": {
+    "pruebas": [
+      {
+        "actividad": {
+          "": 1.0,
+          "leer": 36.0
+        },
+        "se_levanta_s": 42.5,
+        "se_sienta_s": 5.5
+      },
+      {
+        "actividad": {
+          "": 0.5,
+          "charla": 39.5,
+          "palomas": 13.5
+        },
+        "se_levanta_s": 58.5,
+        "se_sienta_s": 5.0
+      },
+      {
+        "actividad": {
+          "": 1.0,
+          "charla": 46.0,
+          "movil": 9.5
+        },
+        "se_levanta_s": 62.0,
+        "se_sienta_s": 5.5
+      }
+    ]
+  },
+  "taparse": {
+    "resultado": {
+      "intentos": 14,
+      "reaccionan": 14,
+      "se_tapan": 5,
+      "segundos_tapados": 2.4
+    }
+  },
+  "visual": {
+    "clasico_day_camino1_cara": {
+      "d": 4.5,
+      "f": 285.0,
+      "plano": "cara"
+    },
+    "clasico_day_camino2_cara": {
+      "d": 6.1,
+      "f": 374.0,
+      "plano": "cara"
+    },
+    "clasico_day_camino2_medio": {
+      "d": 6.1,
+      "f": 154.0,
+      "plano": "medio"
+    },
+    "clasico_day_camino3_primer_plano": {
+      "d": 10.8,
+      "f": 452.0,
+      "plano": "primer_plano"
+    },
+    "clasico_golden_camino2_cara": {
+      "d": 6.1,
+      "f": 374.0,
+      "plano": "cara"
+    },
+    "clasico_night_camino1_primer_plano": {
+      "d": 3.1,
+      "f": 127.0,
+      "plano": "primer_plano"
+    },
+    "clasico_night_camino2_cara": {
+      "d": 6.1,
+      "f": 374.0,
+      "plano": "cara"
+    },
+    "grande_12-20m": {
+      "d": 16.5,
+      "f": 600.0,
+      "plano": "primer_plano"
+    },
+    "grande_20-35m": {
+      "d": 25.8,
+      "f": 600.0,
+      "plano": "medio"
+    },
+    "grande_35-60m": {
+      "d": 57.7,
+      "f": 600.0,
+      "plano": "entero"
+    }
+  }
+}
