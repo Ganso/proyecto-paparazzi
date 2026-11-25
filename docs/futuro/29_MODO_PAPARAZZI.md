@@ -104,7 +104,7 @@ El juego **enseña el lenguaje del encuadre** (planos, cortes limpios, aire, de 
 | `MAX_BANK` | 120 s | Tope: no se acumula más. |
 | `BONUS_FLOOR` | 12 s | Lo mínimo que da una foto buena. |
 | `BONUS_SPAN` | 18 s | `bonus(n) = BONUS_FLOOR + BONUS_SPAN·exp(−(n−1)/BONUS_DECAY)`, redondeado a 0,5 s. |
-| `BONUS_DECAY` | 60 niveles | Nivel 1 → 30 s; 30 → 21,9; 50 → 18,0; 100 → 15,4; 200 → 12,6. **A calibrar** (§19.4). |
+| `BONUS_DECAY` | 60 niveles | Nivel 1 → 30 s; 30 → 23,0; 50 → 20,0; 100 → 15,5; 200 → 12,5 (con el redondeo; corregido en E3, los números anteriores no salían de la fórmula). **A calibrar** (§19.4). |
 | `HITO_BONUS` | +15 s | Extra al superar un hito (el reportaje son tres fotos). |
 | `FIRST_TRY_BONUS` | +2 s | Foto buena sin fallos en ese nivel (desde el tramo 2). |
 | `CLEAN_CUT_BONUS` | +3 s | Corte limpio, §4.5 (desde el tramo 4, cuando se enseña). |
@@ -336,6 +336,7 @@ En el parque grande el fotógrafo se acerca andando: todo plano es viable. Pero 
 
 - **Persona reconocible** (igual que `conditions.gd::companions()`): el pecho dentro del encuadre, que mida al menos el 10 % del alto (`NOTICEABLE`) y que se vea (rayo libre). **Ampliado a los figurantes** (`main.extras.extras`): hoy no están en `main.people` y saldrían en la foto sin contar.
 - **Incompatibles:** `sola` con `acompanada`; `frente` con `perfil`.
+- **Incompatibles por la persona que exigen** (añadido en E3, `Paparazzi.compatible()`): `perro` con `actividad` (quien pasea al perro camina); `lugar` con `actividad` (los bancos no están junto a los sitios); en el clásico, `frente` con `perro` o `lugar` (de frente solo quien está quieto, y el del perro o el que pasa por el sitio camina) y `perfil` con `actividad` (de perfil solo quien camina).
 
 ### 5.1 De frente y de perfil en cada parque
 
@@ -575,7 +576,13 @@ n, tramo, k, hito (k == 10), reportaje (hito y tramo >= 2), scenario, time, plan
 mods (Array), max_mods, mod_chance, pace, runners (bool), dobles, rasgos ("todos"|"minimos"),
 check_delay, lock_delay, auto_frame, penalty, arrow_after, ring_after, min_turn, dist (Vector2),
 bonus, clock (false en los niveles 1–3), debut (String: plano o modificador que se estrena aquí,
-o ""), coach (String: paso de aprendizaje, §11.1, o ""), cards (Array: tarjetas que tocan aquí)
+"corredor", o ""), coach (Array: pasos de aprendizaje del nivel, §11.1, vacío desde el 4), cards
+(Array: tarjetas que tocan aquí)
+```
+
+Implementado en E3 con estas claves de más: `forced` (plano obligado sin estreno: el primer plano del nivel 10), `new_planes` (los planos estrenados en este tramo, que pesan ×3), `min_mods` (2 en el nivel 62, el de la tarjeta «Dos exigencias»), `third_chance` (0,25 desde el tramo 15), `in_view` (niveles 1–3: la persona, dentro de la vista). **Los planos y modificadores de un nivel son los ya estrenados** (`Paparazzi.DEBUTS`): así el nivel 4 no pide un primer plano antes de su tarjeta del nivel 6. `level_request(spec, rng)` devuelve el encargo del nivel, o el reportaje en los hitos (con `sequence`).
+
+```
 ```
 
 Una tabla `TRAMOS` (diez diccionarios) más la regla del §9.2.
@@ -716,7 +723,7 @@ Un panel sobre el parque congelado (modo `PZ_CARD`) con título, pictograma si e
 | `semaforo` | Nivel 1 | Las esquinas | Cuando las esquinas se ponen verdes, la foto vale. En ámbar te dicen qué falta. |
 | `enganche` | Nivel 2 | El enganche | Apunta a alguien y acerca el zoom: La cámara se le engancha y lo sigue. Para soltarla, mira a otro lado o abre el zoom del todo. |
 | `comprobar` | Nivel 2 | ¿Es esta? | Con alguien enganchado, la ficha marca en verde lo que coincide con quien buscas. Si todo está en verde, es tu persona. |
-| `medio` | Nivel 3 | Plano medio | Corta por la cintura. Es el plano de las conversaciones: Se ven la cara y las manos. |
+| `medio` | Nivel 3 | Plano medio | Corta entre el pecho y la cintura. Es el plano de las conversaciones: Se ven la cara y las manos. |
 | `reloj` | Nivel 4 | El reloj | Cada foto buena te da tiempo. Si llega a cero, se acaba la carrera. Mientras lees la ficha, el reloj espera. |
 | `congelar` | Nivel 5 | Comodín: Congelar | Con {pz_congelar} el parque se queda quieto cinco segundos. Úsalo cuando la persona se te escape. |
 | `primer_plano` | Nivel 6 | Primer plano | La cabeza y los hombros. Es el plano de la emoción: Lo que cuenta es la cara. |
@@ -1164,7 +1171,7 @@ Todas en `textos/es/paparazzi.md` (salvo `modo_*` y `album_paparazzi`), con su p
 | `pz_chuleta_general` | La persona pequeña y el sitio grande: Cuenta dónde está. |
 | `pz_chuleta_entero` | De la cabeza a los pies: Cómo viste, cómo se mueve. |
 | `pz_chuleta_americano` | Entre la cadera y la rodilla: El del oeste. |
-| `pz_chuleta_medio` | Por la cintura: La cara y las manos. |
+| `pz_chuleta_medio` | Entre el pecho y la cintura: La cara y las manos. (No «por la cintura»: el corte limpio prohíbe cortar ahí.) |
 | `pz_chuleta_primer_plano` | Cabeza y hombros: La emoción. |
 | `pz_chuleta_cara` | Solo la cara: Lo más cercano. |
 | `pz_chuleta_corte` | Nunca cortes por una articulación: Cuello, cintura, rodillas o tobillos. |
@@ -1217,7 +1224,7 @@ Comprobaciones:
 3. **Cada tarjeta** de `cards` y cada `debut` tienen sus textos `pz_nov_*` en español **y en inglés** (`Texts.set_language()`).
 4. `make_request()` con 2.000 semillas por tramo:
    - nunca incompatibles (§5);
-   - `frente`/`perfil` solo en el grande;
+   - `frente`/`perfil` en los dos parques (en el clásico lo limita la elección de persona, §5.1) y `actividad` solo en el clásico;
    - `sola` con entero, americano o general nunca en el clásico;
    - `max_mods` se respeta;
    - el `debut` se fuerza.
@@ -1298,9 +1305,10 @@ Cada etapa deja el juego funcionando y sus pruebas en verde. No se empieza una s
 - [ ] `test_arcade.gd` actualizado; `arcade_audit` y `arcade_solver` para 31–35; `check_text_fit --only=arcade` (es y en); capturas de la lista y de un encargo nuevo.
 - **Aceptación:** todo lo anterior en verde y las capturas revisadas.
 
-### E3 · Lo puro de Paparazzi (`paparazzi.gd`)
-- [ ] Tabla `TRAMOS`, `level_spec`, `bonus`, `compatible`, `make_request`, `reportage_planes`, `judge`, cuentas del reloj y progreso (§3, §9, §10.1, §15).
-- [ ] `tests/test_paparazzi.gd` (§19.2).
+### E3 · Lo puro de Paparazzi (`paparazzi.gd`) ✅ (25-11-2026)
+- [x] Tabla `TRAMOS`, `level_spec`, `bonus`, `compatible`, `make_request`, `reportage_planes`, `judge`, cuentas del reloj y progreso (§3, §9, §10.1, §15).
+- [x] `tests/test_paparazzi.gd` (§19.2): 214.700 comprobaciones, 0 fallos.
+- Hecho de paso: los textos que usa la parte pura (`textos/es|en/paparazzi.md`: tarjetas `pz_nov_*`, motivos, consejos, planos, exigencias, aprendizaje y tramos; el resto llega en E4–E6), sus límites en `tools/textos.py` y los cuatro controles `pz_*` en `input_glyphs.gd`. `reason_text()` y `mod_text()` dan el aviso de una línea en el idioma en uso.
 - **Aceptación:** `test_paparazzi.gd` sin fallos.
 
 ### E4 · El modo jugable en el clásico, sin ayudas de puntería

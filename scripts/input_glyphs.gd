@@ -55,6 +55,11 @@ const CONTROLS = {
 	"agacharse": ["⟦Ctrl⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
 	"mirar_paseo": ["Ratón","Stick derecho","Stick derecho","Stick derecho"],
 	"sacar": ["⟦Y⟧ · clic derecho","⦅Y⦆","⦅△⦆","⦅X⦆"],
+	# Paparazzi (docs/futuro/29 §13): A is drawn ⦅B⦆ on Nintendo, as with "aceptar".
+	"pz_enganchar": ["Clic sobre ella · ⟦E⟧","⦅A⦆ · ⦅RT⦆ a medias","⦅✕⦆ · ⦅R2⦆ a medias","⦅B⦆ · ⦅ZR⦆ a medias"],
+	"pz_congelar": ["⟦1⟧","Cruceta ←","Cruceta ←","Cruceta ←"],
+	"pz_otro": ["⟦2⟧","Cruceta →","Cruceta →","Cruceta →"],
+	"pz_chuleta": ["⟦H⟧","⦅B⦆","⦅◯⦆","⦅A⦆"],
 }
 
 # The same controls with the fingers (scripts/touch_controls.gd).
@@ -70,6 +75,7 @@ const TOUCH = {
 	"ayuda": "«Ayuda»", "pausa": "«Pausa»", "atras": "«Atrás»", "aceptar": "un toque", "elegir_opcion": "un toque",
 	"cambiar_modo": "‹ › o deslizando", "andar": "la palanca de la izquierda", "correr": "«Correr»",
 	"agacharse": "«Agacharse»", "mirar_paseo": "arrastrando un dedo", "sacar": "«Cámara»",
+	"pz_enganchar": "un toque sobre ella", "pz_congelar": "«Congelar»", "pz_otro": "«Otro»", "pz_chuleta": "«Chuleta»",
 }
 
 # The same in English (scripts/texts.gd decides the language). Every control of CONTROLS and TOUCH
@@ -115,6 +121,10 @@ const CONTROLS_EN = {
 	"agacharse": ["⟦Ctrl⟧","⦅LT⦆","⦅L2⦆","⦅ZL⦆"],
 	"mirar_paseo": ["Mouse","Right stick","Right stick","Right stick"],
 	"sacar": ["⟦Y⟧ · right-click","⦅Y⦆","⦅△⦆","⦅X⦆"],
+	"pz_enganchar": ["Click on them · ⟦E⟧","⦅A⦆ · ⦅RT⦆ half-pressed","⦅✕⦆ · ⦅R2⦆ half-pressed","⦅B⦆ · ⦅ZR⦆ half-pressed"],
+	"pz_congelar": ["⟦1⟧","D-pad ←","D-pad ←","D-pad ←"],
+	"pz_otro": ["⟦2⟧","D-pad →","D-pad →","D-pad →"],
+	"pz_chuleta": ["⟦H⟧","⦅B⦆","⦅◯⦆","⦅A⦆"],
 }
 
 const TOUCH_EN = {
@@ -129,6 +139,7 @@ const TOUCH_EN = {
 	"ayuda": "“Help”", "pausa": "“Pause”", "atras": "“Back”", "aceptar": "a tap", "elegir_opcion": "a tap",
 	"cambiar_modo": "‹ › or swiping", "andar": "the stick on the left", "correr": "“Run”",
 	"agacharse": "“Crouch”", "mirar_paseo": "dragging a finger", "sacar": "“Camera”",
+	"pz_enganchar": "a tap on them", "pz_congelar": "“Freeze”", "pz_otro": "“Other”", "pz_chuleta": "“Cheat sheet”",
 }
 
 const MOUSE_SWITCH = 60.0        # pixels the mouse must travel within 0.4 s to take over

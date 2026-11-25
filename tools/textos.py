@@ -29,6 +29,7 @@ LIMITS = [
     (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_d\d+", 110), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_resumen", 60), (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_p\d+", 75),
     (r"academia_(?:composicion|enfoque|focal|exposicion|dof|movimiento|medicion|modos|objetivos|camaras)_pista_.*", 130), (r"arcade_nivel_\d+_titulo", 22), (r"arcade_nivel_\d+_texto", 220),
     (r"academia_[a-z]+_intro", 110), (r"esquema_.*", 62), (r"cond_.*", 100), (r"tutorial_(?!resultado|paso|fin_titulo|ir_|menu|bien|pendiente|empezar|saltar|salir|continuar).*", 210),
+    (r"pz_nov_.*_titulo", 28), (r"pz_nov_.*_texto", 160), (r"pz_motivo_.*", 90), (r"pz_consejo_.*", 24), (r"pz_coach_.*", 110),
     (r"tutorial_.*_texto", 120), (r"modo_.*_texto", 180), (r"insignia_.*_texto", 100), (r"pista_bajar_camara", 85),
 ]
 # Dónde va cada clave al exportar: (patrón, fichero, bloque). El primero que casa manda.
@@ -37,6 +38,7 @@ PLACES = [
     (r"academia_op_.*", "academia", "Botones de elección del panel"), (r"esquema_.*", "academia", "Esquemas"), (r"academia.*", "academia", "General"),
     (r"arcade_nivel_(\d+)_.*", "arcade", "Nivel {0}"), (r"cond_.*", "arcade", "Condiciones"), (r"arcade.*", "arcade", "General"),
     (r"tutorial_.*", "tutorial", "Tutorial"),
+    (r"pz_nov_.*", "paparazzi", "Tarjetas de novedad"), (r"pz_.*", "paparazzi", "General"),
     (r"modo_.*|menu_.*|opcion_.*|tema_.*|intro_.*|escenario_.*", "menu", "Menú principal"), (r"pausa_.*", "menu", "Pausa"),
     (r"equipo_.*", "menu", "Equipo"), (r"sandbox_.*", "menu", "Sandbox"), (r"encargo_.*", "menu", "Encargo"),
     (r"gfx_.*", "graficos", "Gráficos"),
