@@ -72,7 +72,7 @@ Time stands still
 Street photographer
 
 ### insignia_calle_texto
-Clear all 30 arcade levels.
+Clear every arcade level.
 
 ## Album
 

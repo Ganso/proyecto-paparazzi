@@ -8,6 +8,7 @@ const Finder = preload("res://scripts/viewfinder.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
+const Framing = preload("res://scripts/framing.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
 const Badges = preload("res://scripts/badges.gd")
 const Album = preload("res://scripts/album.gd")
@@ -1376,6 +1377,13 @@ func subject_reach(p, lane: int) -> float:
 func subject_fits(p, lane: int) -> bool:
 	if crowd: return true      # (in the big park the photographer walks up to them)
 	var level: Dictionary = Arcade.LEVELS[arcade_level] if arcade_level >= 0 else {}
+	# A shot size (docs/futuro/29 §17): the focal length it needs where this person walks, within
+	# the level's lens.
+	if level.get("cond",{}).has("plano"):
+		var lens: Dictionary = equipment.lens()
+		var longest: float = minf(lens.max,float(level.cond.get("focal_max",lens.max)))
+		var f = Framing.focal_for(str(level.cond.plano),Framing.rest_heights(p),p.radius)
+		return f >= lens.min/.97 and f <= longest*.97
 	var need = float(level.cond.grande)+.05 if level.get("cond",{}).has("grande") else .4
 	if subject_reach(p,lane) < need: return false
 	# A blurred background has to be possible there one stop down from wide open (wide open the
@@ -1414,7 +1422,9 @@ func new_assignment() -> void:
 				people[i].set_meta("away",true)
 				people[i].set_hidden(true)
 	# The subject never runs, except in the levels about freezing a runner.
-	var candidates = people.filter(func(p): return p.lane in [1,2] and p.state != "RETIRADO" and not p.runner and p.visible)
+	# (a shot size may need the inner path: an extreme close-up with a 200 mm is only possible there)
+	var lanes = [0,1,2,3] if level.get("cond",{}).has("plano") else [1,2]
+	var candidates = people.filter(func(p): return p.lane in lanes and p.state != "RETIRADO" and not p.runner and p.visible)
 	if level.get("target","") == "runner":
 		# Never the runner passing right in front (lane 0): one further away, to follow.
 		var runners = people.filter(func(p): return p.runner and p.visible and p.state != "RETIRADO" and p.lane >= 1)
@@ -4068,6 +4078,16 @@ func play_tone(frequency: float, duration: float) -> void:
 	sound.stream = stream
 	sound.play()
 
+# Where a person's body lands on the picture (scripts/framing.gd, docs/futuro/29 §4.1).
+func body_landmarks(p) -> Dictionary:
+	return Framing.project(Framing.world_landmarks(p),camera,Vector2(viewport.size))
+
+# How far a person's head turns away from the camera, in degrees: 0 looking at it, 180 the back.
+# The body faces −Z (turn_heading()) and look_yaw turns the head on top (gait.gd::head()).
+func facing_of(p) -> float:
+	var to: Vector3 = camera.global_position-p.global_position
+	return rad_to_deg(absf(angle_difference(p.rotation.y+p.look_yaw,atan2(-to.x,-to.z))))
+
 func capture_evidence() -> Dictionary:
 	var points = target.control_points()
 	var projected = []
@@ -4093,8 +4113,13 @@ func capture_evidence() -> Dictionary:
 	var perpendicular = (velocity-view_axis*velocity.dot(view_axis)).length()
 	var e = {"f":focal,"n":aperture_value(),"t":1.0/shutter_denominator(),"iso":iso_value(),"s":focus_distance,"d":camera.global_position.distance_to(points[1]),"v":perpendicular,"scene_ev":park.illumination_ev(points[1],time_of_day,target),"head":camera.unproject_position(head_world)/Vector2(viewport.size),"feet":feet_point,"chest":projected[1],"in_front":not camera.is_position_behind(points[1]),"blockers":blocked,"rays":rays,"camera_transform":camera.global_transform,"projection":camera.get_camera_projection(),"subject_points":points,"subject_velocity":velocity,"motion_sign":signf(velocity.dot(camera.global_basis.x)),"film":equipment.film,"cloud_cover":park.cloud_cover,"seed":shot_serial+1}
 	# The subject is judged on its eyes, as photographers do (docs/futuro/21 §2): focus distance and
-	# position of the eyes, halfway up the head.
-	var eyes_world = target.global_transform*(head_pose*Vector3(0,.5*target.height/target.profile.relacion_cabeza,0))
+	# position of the eyes, halfway up the head and on the face: the head faces −Z (measured by
+	# tools/paparazzi_sondas.gd) and the face is some 36 % of the head's height in front of its
+	# middle, where the autofocus ray meets it. (Judged at the middle of the skull, a face the AF
+	# had found came out 9 cm out of focus: nothing at four metres, a blurred close-up at one and a
+	# half with a long lens — docs/futuro/29 §17.)
+	var head_h: float = target.height/target.profile.relacion_cabeza
+	var eyes_world = target.global_transform*(head_pose*Vector3(0,.5*head_h,-.36*head_h))
 	e["eyes"] = camera.unproject_position(eyes_world)/Vector2(viewport.size)
 	e["d_eyes"] = camera.global_position.distance_to(eyes_world)
 	# Everyone else who shows in the frame (conditions "aislado" and "acompanado").
@@ -4121,6 +4146,10 @@ func capture_evidence() -> Dictionary:
 		var spot: Vector3 = park.places[key]+Vector3.UP*1.6
 		places[key] = {"pos":camera.unproject_position(spot)/Vector2(viewport.size),"d":camera.global_position.distance_to(spot),"front":not camera.is_position_behind(spot)}
 	e["places"] = places
+	# The shot it makes and which way the face turns (conditions «plano», «frente», «perfil»,
+	# «corte_limpio»; scripts/framing.gd).
+	e["body"] = body_landmarks(target)
+	e["facing"] = facing_of(target)
 	if dog and is_instance_valid(dog) and dog.walker == target:
 		var at: Vector3 = dog.global_position+Vector3.UP*.25
 		e["dog"] = {"pos":camera.unproject_position(at)/Vector2(viewport.size),"d":camera.global_position.distance_to(at),"front":not camera.is_position_behind(at)}
@@ -4135,6 +4164,8 @@ func square_evidence(e: Dictionary) -> void:
 	for key in ["head","feet","chest","eyes"]:
 		if e.has(key): e[key] = to_square.call(e[key])
 	for o in e.get("others",[]): o.chest = to_square.call(o.chest)
+	if e.has("body"):
+		for key in Framing.LANDMARKS: e.body[key] = to_square.call(e.body[key])
 	for key in e.get("places",{}): e.places[key].pos = to_square.call(e.places[key].pos)
 	if e.has("dog"): e.dog.pos = to_square.call(e.dog.pos)
 	e["square"] = true
@@ -4476,21 +4507,31 @@ func show_arcade() -> void:
 	if Arcade.all_open: label(root,Texts.get_text("arcade_trampa"),Rect2(65,662,700,26),15,Color("f0c75e"))
 	var progress = Arcade.load_progress()
 	var focus_set = false
+	# Seven blocks do not fit on one screen: the list scrolls, and follows the focus of the gamepad.
+	var scroll = ScrollContainer.new()
+	scroll.position = Vector2(65,110)
+	scroll.size = Vector2(1170,530)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	root.add_child(scroll)
+	var list = Control.new()
+	list.custom_minimum_size = Vector2(1150,Arcade.BLOCKS.size()*88)
+	scroll.add_child(list)
 	for block in Arcade.BLOCKS.size():
-		var y = 112+block*88   # (six blocks)
-		label(root,Texts.get_text(Arcade.BLOCKS[block]),Rect2(65,y,1100,22),13,Color("b8d78c"))
+		var y = block*88
+		label(list,Texts.get_text(Arcade.BLOCKS[block]),Rect2(0,y,1100,22),13,Color("b8d78c"))
 		for k in 5:
 			var n = block*5+k
 			var open = Arcade.unlocked(n,progress)
 			var card = Button.new()
-			card.position = Vector2(65+k*232,y+22)
+			card.position = Vector2(k*232,y+22)
 			card.size = Vector2(220,62)
 			# Reachable with the gamepad (D-pad / stick to move, A to start); the focus starts on the
 			# first level still to pass.
 			card.focus_mode = Control.FOCUS_ALL
 			card.disabled = not open
 			card.pressed.connect(func(): start_level(n))
-			root.add_child(card)
+			list.add_child(card)
 			if open and not progress.has(n) and not focus_set:
 				card.call_deferred("grab_focus")
 				focus_set = true

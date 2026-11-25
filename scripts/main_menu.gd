@@ -215,7 +215,7 @@ func build_card() -> void:
 			var progress = preload("res://scripts/arcade.gd").load_progress()
 			var stars = 0
 			for n in progress: stars += int(progress[n].stars)
-			text(card,Texts.get_text("modo_arcade_progreso") % [progress.size(),stars],Vector2(32,190),18,INK,body_medium)
+			text(card,Texts.get_text("modo_arcade_avance") % [progress.size(),preload("res://scripts/arcade.gd").LEVELS.size(),stars],Vector2(32,190),18,INK,body_medium)
 			enter_button(main.show_arcade)
 		"historia":
 			# Not playable yet: said clearly, with a disabled button (docs/futuro/10).

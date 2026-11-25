@@ -18,7 +18,7 @@ Light
 Arcade
 
 ### arcade_subtitulo
-Thirty levels. Each one sets the setting, the light and the camera, and asks for something different. Clear one to unlock the next.
+Thirty-five levels. Each one sets the setting, the light and the camera, and asks for something different. Clear one to unlock the next.
 
 ### arcade_nivel_d
 LEVEL %d
@@ -112,6 +112,9 @@ The TLR
 
 ### arcade_bloque_6
 Mastery · the SLR all the way
+
+### arcade_bloque_7
+Framing · the shot sizes
 
 ### arcade_trampa
 Cheat on: Every level unlocked in this session.
@@ -379,6 +382,78 @@ There's nobody in the photo: Frame a person.
 ### seguimiento_esperando · Viewfinder mark while it waits for them to reach the focus point
 WAITING FOR SUBJECT…
 
+### cond_plano
+Framing · asked for: %s · made: %s
+
+### cond_plano_general
+wide shot
+
+### cond_plano_entero
+full shot
+
+### cond_plano_americano
+cowboy shot
+
+### cond_plano_medio
+medium shot
+
+### cond_plano_primer_plano
+close-up
+
+### cond_plano_cara
+extreme close-up
+
+### cond_plano_ninguno
+none (the face is not all in)
+
+### cond_plano_defecto_cabeza
+, with the head cut off
+
+### cond_plano_defecto_pies
+, with the feet cut off
+
+### cond_plano_defecto_aire
+, with too much sky above
+
+### cond_frente
+Facing you · the face turns %d° away from you (45° at most)
+
+### cond_perfil
+In profile · the face turns %d° away from you (between 60° and 120°)
+
+### cond_corte_limpio
+Clean cut · %s
+
+### cond_corte_limpio_ok
+the bottom edge misses every joint
+
+### cond_corte_limpio_no
+the bottom edge cuts through %s
+
+### cond_articulacion_neck
+the neck
+
+### cond_articulacion_waist
+the waist
+
+### cond_articulacion_knees
+the knees
+
+### cond_articulacion_ankles
+the ankles
+
+### cond_corta_plano
+%s
+
+### cond_corta_frente
+Facing you
+
+### cond_corta_perfil
+In profile
+
+### cond_corta_corte_limpio
+No cuts at the joints
+
 ## Level 1 · First assignment
 
 ### arcade_nivel_1_titulo · title
@@ -618,3 +693,43 @@ Nocturne
 
 ### arcade_nivel_30_texto · briefing
 Two shots, at night and all manual: Put the focus point on the face. Make it big, with nobody else.
+
+## Level 31 · Head to toe
+
+### arcade_nivel_31_titulo · title
+Head to toe
+
+### arcade_nivel_31_texto · briefing
+The full shot: The whole person, head to feet, nothing cut off and nobody else. Zoom until they fit with a little room around.
+
+## Level 32 · Facing you
+
+### arcade_nivel_32_titulo · title
+Facing you
+
+### arcade_nivel_32_texto · briefing
+A fixed 50 mm: Here your feet are the zoom. A cowboy shot (cut between hip and knee) of someone walking toward you. Get ahead and wait.
+
+## Level 33 · Medium shot
+
+### arcade_nivel_33_titulo · title
+Medium shot
+
+### arcade_nivel_33_texto · briefing
+Cut at the waist: It's the shot of conversations. But don't let the edge fall right on the waist or another joint: A little higher.
+
+## Level 34 · Close-up
+
+### arcade_nivel_34_titulo · title
+Close-up
+
+### arcade_nivel_34_texto · briefing
+Head and shoulders, with a sharp face: The shot of emotion. Put the focus point on the face.
+
+## Level 35 · Just the face
+
+### arcade_nivel_35_titulo · title
+Just the face
+
+### arcade_nivel_35_texto · briefing
+Just the face, chin to hair, and sharp: Find whoever walks closest. At five feet the sharp zone is barely two fingers deep: Stop down a little.

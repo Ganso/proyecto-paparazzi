@@ -11,7 +11,7 @@ extends RefCounted
 #   auto: true (program), false (manual), "A" or "S" (priority) · pace: walkers' speed factor
 #   limit: seconds (0 = none) · target: "runner" picks someone running
 static var SAVE = OS.get_environment("PAPARAZZI_ARCADE_CFG") if OS.has_environment("PAPARAZZI_ARCADE_CFG") else "user://arcade.cfg"   # tests and capture tools point it elsewhere
-const BLOCKS = ["arcade_bloque_1","arcade_bloque_2","arcade_bloque_3","arcade_bloque_4","arcade_bloque_5","arcade_bloque_6"]
+const BLOCKS = ["arcade_bloque_1","arcade_bloque_2","arcade_bloque_3","arcade_bloque_4","arcade_bloque_5","arcade_bloque_6","arcade_bloque_7"]
 #   target: "runner" picks someone running, "activity" someone who sits down to do something,
 #           "dog" the dog's owner, "anyone" whoever the player frames (no subject is given)
 #           · toward: "quiosco" or "sol", whoever gets there first
@@ -63,6 +63,16 @@ const LEVELS = [
 	{"scenario":"clasico","time":"golden","body":2,"lens":4,"auto":"A","shots":3,"limit":120,"min":70,"cond":{"fondo":true,"aurea":true}},
 	{"scenario":"grande","time":"day","body":2,"lens":0,"auto":false,"pace":.7,"target":"dog","shots":3,"limit":180,"min":70,"cond":{"perro":true,"grande":.4}},
 	{"scenario":"clasico","time":"night","body":2,"lens":2,"auto":false,"focus":"AF puntual","pace":.6,"shots":2,"limit":90,"min":80,"cond":{"ojos":true,"aislado":true,"grande":.5}},
+	# Block 7 · framing (docs/futuro/29 §17): the shot sizes, from wide to tight, with the real
+	# cameras. Where the frame cuts the person is what each level asks (scripts/framing.gd); the
+	# subject is chosen where the level's lens can make that shot (main.gd::subject_fits()).
+	{"scenario":"clasico","time":"day","body":0,"lens":0,"auto":true,"shots":4,"limit":120,"min":60,"cond":{"plano":"entero","aislado":true}},
+	# (zooming with the feet: a 50 mm and walking up to someone who comes the other way)
+	{"scenario":"grande","time":"day","body":1,"lens":1,"auto":"A","pace":.7,"shots":3,"limit":180,"min":60,"cond":{"plano":"americano","frente":true}},
+	{"scenario":"clasico","time":"golden","body":2,"lens":0,"auto":"A","shots":3,"limit":120,"min":65,"cond":{"plano":"medio","corte_limpio":true}},
+	{"scenario":"clasico","time":"day","body":2,"lens":1,"auto":true,"focus":"AF puntual","shots":3,"limit":120,"min":65,"cond":{"plano":"primer_plano","ojos":true}},
+	# (with 200 mm a face fills the frame only on the inner path)
+	{"scenario":"clasico","time":"golden","body":2,"lens":1,"auto":"A","shots":3,"limit":150,"min":70,"cond":{"plano":"cara","ojos":true}},
 ]
 # Until 0.3.4 there were 25 levels; where each one of those is now (the ones missing were dropped).
 const FORMAT = 2

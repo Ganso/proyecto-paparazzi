@@ -136,6 +136,11 @@ El arcade pedía nueve cosas y varios niveles se resolvían igual. Ahora **cada 
 | 28 | Retrato de autor | Dorada · 105 f/1,8 · A | `fondo`, `aurea` |
 | 29 | **Paseando al perro** (nuevo) | Parque grande, día · M · `target: dog` | `perro`, `grande` 40 % |
 | 30 | Nocturno | Noche · 50 f/1,8 · M | `ojos`, `aislado`, `grande` 50 % |
+| 31 | Cuerpo entero (bloque 7) | Día · compacta 24–120 · P | `plano` entero, `aislado` |
+| 32 | De frente | Parque grande, día · telemétrica 50 f/1,4 · A | `plano` americano, `frente` |
+| 33 | Plano medio | Dorada · réflex 24–105 · A | `plano` medio, `corte_limpio` |
+| 34 | Primer plano | Día · réflex 70–200 · P · AF puntual | `plano` primer_plano, `ojos` |
+| 35 | Solo la cara | Dorada · réflex 70–200 · A | `plano` cara, `ojos` |
 
 Desaparecen dos niveles que repetían combinación («Sola y de cerca» y «Barrido al atardecer»); «En pareja» baja al nivel 4 (antes un nivel sin condición).
 
@@ -220,3 +225,13 @@ Encargo del usuario: una foto nocturna a **f/11**, «con la excusa de la estrell
 - En los sitios menos iluminados (EV 5,5–6) la combinación queda un paso oscura y no hay con qué compensar: es la gracia del desafío, y la nota sigue por encima de 90.
 - Pruebas: `tests/test_arcade.gd` (las tres condiciones y el nivel), `tests/test_photography.gd` (`Photo.star()`); el solucionador elige a la persona quieta mejor iluminada y lo supera con 100. Evidencia: [`nivel_20_noche_de_estrellas.jpg`](../evidencias/interfaz/nivel_20_noche_de_estrellas.jpg).
 
+## Bloque 7 · El encuadre: los planos (25-11-2026, usuario)
+
+Los objetivos nuevos del modo Paparazzi ([29 §17](29_MODO_PAPARAZZI.md)) se juegan también con las cámaras de verdad: cinco niveles (31–35), del plano entero al primerísimo primer plano.
+
+- **Condiciones nuevas** (`scripts/conditions.gd`, con `scripts/framing.gd`): `plano` (dónde corta el encuadre a la persona, sin cabeza ni pies cortados ni cielo de más), `frente` y `perfil` (la cabeza a 45° o menos de la cámara, o entre 60° y 120°) y `corte_limpio` (el borde no cae en cuello, cintura, rodillas ni tobillos; en la cara, el cuello no cuenta). La evidencia lleva `body` (los once puntos del cuerpo en la imagen) y `facing`.
+- **El sujeto se elige donde el objetivo del nivel puede hacer ese plano** (`main.gd::subject_fits()`, con `Framing.focal_for()` y la distancia a la que camina), y en estos niveles puede estar en cualquier camino: la cara con un 70–200 solo es posible en el interior.
+- **El primerísimo primer plano** puede cortar la coronilla sin perder nota de encuadre (`crown_cut_ok`, de `Conditions.prepare()` a `Photography.evaluate()`).
+- **Los ojos, en la cara** (`main.gd::capture_evidence()`): se medían en el centro del cráneo y el autofoco da en la cara, 9 cm por delante. A 4 m no se notaba; en un primer plano a metro y medio con tele, una cara bien enfocada salía desenfocada. Ahora están adelantados el 36 % del alto de la cabeza. Los 30 niveles anteriores siguen superándose (solucionador, 35/35).
+- **La lista de niveles se desplaza** (siete bloques no caben): `ScrollContainer` con `follow_focus`, para el mando.
+- **Solucionador**: encuadra con `Framing.focal_for()` y la coronilla arriba, se adelanta a quien camina para verlo de frente y, con `ojos`, solo acepta ajustes que aguanten un error de enfoque de ±1,5 % (como el de un jugador). Auditoría: los cinco, al alcance del jugador en todas las muestras.

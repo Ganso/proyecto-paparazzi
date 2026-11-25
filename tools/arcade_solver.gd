@@ -12,6 +12,7 @@ const MainScript = preload("res://scripts/main.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Photo = preload("res://scripts/photography.gd")
+const Framing = preload("res://scripts/framing.gd")
 var game
 
 func _initialize() -> void: call_deferred("run")
@@ -46,6 +47,16 @@ func best_settings(e: Dictionary, level: Dictionary) -> Dictionary:
 				trial.t = 1.0/game.fine_value("t",at)
 				trial.iso = Photo.ISOS[iso]
 				var r = Conditions.judge(trial,level.cond)
+				# A sharp face up close: the autofocus lands a centimetre or two off, as it does for a
+				# player; a setting that only passes with perfect focus is no setting (docs/futuro/29 §17).
+				if level.cond.has("ojos") and not r.rejected:
+					for k in [.985,1.015]:
+						var off = e.duplicate()
+						off.n = trial.n
+						off.t = trial.t
+						off.iso = trial.iso
+						off.s = e.s*k
+						if Conditions.judge(off,level.cond).rejected: r.rejected = true
 				if not r.rejected and r.score >= level.min and (best.is_empty() or r.score > best.score):
 					best = {"score":r.score,"n":n,"t":at[0],"t_fine":at[1],"iso":iso}
 	return best
@@ -62,6 +73,15 @@ func still_person():
 			best_person = p
 	return best_person
 
+# «De frente» in the big park (docs/futuro/29 §17): stand a few metres ahead of the subject, on
+# its way, as a player does, and wait for it to come.
+func place_ahead(target, metres: float) -> void:
+	var ahead: Vector3 = target.actual_velocity if target.actual_velocity.length() > .2 else -target.global_basis.z
+	ahead.y = 0
+	game.player.position = target.global_position+ahead.normalized()*metres
+	game.player.position.y = 0
+	game.free_player_spot()
+
 func solve(n: int) -> String:
 	var level: Dictionary = Arcade.LEVELS[n]
 	if MainScript.scenario != level.scenario or not is_instance_valid(game): await make_game(level.scenario)
@@ -77,6 +97,7 @@ func solve(n: int) -> String:
 	if game.crowd:
 		var away = Vector3(sin(game.angle),0,cos(game.angle))
 		game.player.position = target.global_position+Vector3(4.5,0,3.0)
+		if level.cond.has("frente"): place_ahead(target,4.2)
 		game.set_raised(true)
 		game.raise_anim = 1.0
 	var want_h = .7
@@ -108,12 +129,19 @@ func solve(n: int) -> String:
 				still.protected_target = true
 			target = still
 		if not is_instance_valid(target) or game.mode != "SEARCH": continue
-		if game.crowd and game.player.position.distance_to(target.global_position) > 9.0:
+		if game.crowd and level.cond.has("frente"):
+			var gap = game.player.position.distance_to(target.global_position)
+			if gap > 6.0 or gap < 2.6 or game.facing_of(target) > 60.0: place_ahead(target,4.2)
+		elif game.crowd and game.player.position.distance_to(target.global_position) > 9.0:
 			game.player.position = target.global_position+Vector3(4.5,0,3.0)
 		game.aim_at(target,1.0)
 		var h_goal: float = sweep[tries % sweep.size()]
 		var d = game.camera.global_position.distance_to(target.control_points()[1])
 		var want_f = h_goal*20.25*d/target.height
+		# A shot size: the focal length that makes it where the subject is (scripts/framing.gd).
+		if level.cond.has("plano"):
+			var flat = Vector2(target.global_position.x-game.camera.global_position.x,target.global_position.z-game.camera.global_position.z).length()
+			want_f = Framing.focal_for(str(level.cond.plano),Framing.rest_heights(target),flat)
 		if level.cond.has("focal_min"): want_f = maxf(want_f,float(level.cond.focal_min))
 		if level.cond.has("focal_max"): want_f = minf(want_f,float(level.cond.focal_max))
 		game.focal = clampf(want_f,game.equipment.lens().min,game.equipment.lens().max)
@@ -121,7 +149,16 @@ func solve(n: int) -> String:
 		# A tight framing (a telephoto on someone near) is a portrait: what has to be in is the face,
 		# so the camera tilts up until the head sits near the top of the frame.
 		var tight = game.capture_evidence()
-		if absf(tight.feet.y-tight.head.y) > .85:
+		if level.cond.has("plano"):
+			# As the auto-framing does: the crown just under the top edge (the whole body centred
+			# for a full or wide shot).
+			var vfov = rad_to_deg(2*atan(20.25/(2.0*game.focal)))
+			for i in 2:
+				var b = game.body_landmarks(target)
+				var off = (b.crown.y+b.feet.y)*.5-.5 if str(level.cond.plano) in ["entero","general"] else b.crown.y-Framing.AIR
+				game.pitch -= off*vfov
+				game.update_camera()
+		elif absf(tight.feet.y-tight.head.y) > .85:
 			game.pitch += (tight.head.y-.1)*-rad_to_deg(2*atan(20.25/(2.0*game.focal)))
 			game.update_camera()
 		# Golden section: turn so the chest sits on the 38 % line (on the square for the TLR).
@@ -198,6 +235,9 @@ func solve(n: int) -> String:
 		# player does when the subject is off-centre (golden section, lead room).
 		if game.equipment.focus_mode != "MF":
 			var on: Vector2 = e.chest if Photo.inside(e.chest) else e.get("eyes",e.chest)
+			# A close shot judged on the face: the point goes on the face (the chest is at the edge
+			# of the frame, or out of it, and out of the depth of field of a long lens).
+			if level.cond.has("plano") and str(level.cond.plano) in ["medio","primer_plano","cara"]: on = e.get("eyes",on)
 			var face = game.view_rect.position+on*game.view_rect.size
 			var points: Array = game.finder.points()
 			var nearest = 4

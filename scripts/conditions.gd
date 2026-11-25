@@ -29,7 +29,13 @@ extends RefCounted
 #               steady (prepare()), though the focal length would ask for more
 #   quieto      the person does not come out moved (drag within the sharpness limit): at a slow
 #               shutter, somebody who is not walking
+#   plano       a shot size ("entero", "americano", "medio", "primer_plano", "cara", "general"):
+#               where the frame cuts the person (scripts/framing.gd, docs/futuro/29 §4), with no
+#               defect (head cut, feet cut, too much sky)
+#   frente      the face turned 45° or less from the camera; perfil: between 60° and 120°
+#   corte_limpio the bottom edge keeps off the neck, waist, knees and ankles
 const Photo = preload("res://scripts/photography.gd")
+const Framing = preload("res://scripts/framing.gd")
 const Texts = preload("res://scripts/texts.gd")
 const NOTICEABLE = .10
 const GOLDEN = [.382,.618]
@@ -55,6 +61,8 @@ static func prepare(e: Dictionary, cond: Dictionary) -> void:
 		e["scene_ev"] = e.scene_ev+SILHOUETTE
 		e["ev_shift"] = SILHOUETTE
 	if cond.has("estela"): e["trail"] = true
+	# An extreme close-up may cut the top of the head: the framing mark does not count it against.
+	if str(cond.get("plano","")) == "cara": e["crown_cut_ok"] = true
 	if cond.has("pulso"): e["steady"] = float(cond.pulso)
 
 # The whole verdict of a level's photo.
@@ -192,6 +200,28 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				elif e.t >= 1.0/30-.0001: pan_why = Texts.get_text("cond_barrido_corto_focal") % [streak,roundi(1.0/e.t)]
 				else: pan_why = Texts.get_text("cond_barrido_corto") % [streak,roundi(1.0/e.t)]
 				text_value = Texts.get_text("cond_barrido") % pan_why
+			"plano":
+				var want = str(cond[key])
+				var got = Framing.classify(e.get("body",{"behind":true,"eyes":Vector2(-1,-1),"chin":Vector2.ZERO}))
+				ok = got.plane == want and got.defects.is_empty()
+				var made = plane_name(got.plane)
+				for d in got.defects:
+					if d in ["cabeza","pies","aire"]: made += Texts.get_text("cond_plano_defecto_"+d)
+				text_value = Texts.get_text("cond_plano") % [plane_name(want),made]
+			"frente", "perfil":
+				var turned: float = float(e.get("facing",180.0))
+				ok = turned <= 45.0 if key == "frente" else (turned >= 60.0 and turned <= 120.0)
+				text_value = Texts.get_text("cond_"+key) % roundi(turned)
+			"corte_limpio":
+				var shot: Dictionary = e.get("body",{})
+				var cut = ""
+				if not shot.is_empty():
+					var plane = str(cond.get("plano",""))
+					for j in Framing.JOINTS:
+						if j == "neck" and plane == "cara": continue
+						if absf(float(shot[j].y)-1.0) < Framing.CLEAN: cut = j
+				ok = not shot.is_empty() and cut == ""
+				text_value = Texts.get_text("cond_corte_limpio") % (Texts.get_text("cond_corte_limpio_ok") if ok else Texts.get_text("cond_corte_limpio_no") % Texts.get_text("cond_articulacion_"+cut))
 			"congelado":
 				# Relative to the camera's own turn: a good pan freezes the runner too.
 				var drag: float = absf(e.v*(1.0 if e.get("motion_sign",1.0) == 0.0 else e.get("motion_sign",1.0))-e.get("camera_omega",0.0)*e.d)*e.t*e.f/e.d
@@ -207,6 +237,10 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 		out.append({"key":key,"ok":ok,"text":text_value})
 	return out
 
+# A shot size by name, as a phrase («plano medio», «medium shot»); "" is no shot at all.
+static func plane_name(plane: String) -> String:
+	return Texts.get_text("cond_plano_"+(plane if plane != "" else "ninguno"))
+
 static func star_number(n: float) -> String:
 	return ("%.0f" % n) if is_equal_approx(n,roundf(n)) else str(n)
 
@@ -219,6 +253,9 @@ static func describe(key: String, value) -> String:
 		"focal_min": return Texts.get_text("cond_corta_focal_min") % float(value)
 		"focal_max": return Texts.get_text("cond_corta_focal_max") % float(value)
 		"lugar": return Texts.get_text("cond_corta_lugar") % Texts.get_text(NAMES.get(str(value),str(value)))
+		"plano":
+			var name = plane_name(str(value))
+			return name.substr(0,1).to_upper()+name.substr(1)
 	return Texts.get_text("cond_corta_"+key)
 
 # Adds the condition results to an evaluated photo; any failure rejects it with its reason.

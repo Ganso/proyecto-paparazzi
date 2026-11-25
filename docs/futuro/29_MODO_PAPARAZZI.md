@@ -276,10 +276,10 @@ const FRAME_MM = 20.25
 const AIR = 0.08                       # el auto-encuadre deja la coronilla al 8 % del borde superior
 static func cut_middle(plane, rest) -> float:
 	match plane:
-		"cara":         return (rest.chin + rest.shoulders) * .5
-		"primer_plano": return (rest.shoulders + rest.chest) * .5
-		"medio":        return (rest.chest + rest.hips) * .5
-		"americano":    return (rest.hips + (rest.knees + rest.ankles) * .5) * .5
+		"cara":         return (rest.chin + rest.neck) * .5         # bajo la barbilla
+		"primer_plano": return (rest.shoulders + rest.chest) * .5   # mitad del pecho
+		"medio":        return (rest.chest + rest.waist) * .5       # el ombligo, no la cintura
+		"americano":    return (rest.hips + rest.knees) * .5        # medio muslo
 	return 0.0
 # Focal con la que el borde inferior cae en mitad de su franja (con la coronilla en AIR).
 static func focal_for(plane, rest, d) -> float:
@@ -292,7 +292,9 @@ static func fits(plane, rest, d_near, d_far, f_min, f_max) -> bool:
 	return focal_for(plane, rest, d_far) <= f_max*.95 and focal_for(plane, rest, d_near) >= f_min
 ```
 
-Comprobado a mano con un adulto de 1,75 m (`relacion_cabeza` 7): primerísimo primer plano a 7,62 m → ≈ 495 mm (cabe en 600); a 12,04 m → ≈ 781 mm (no cabe); plano entero en el camino 0 (1,33 m) → no cabe ni a 24 mm.
+Con un adulto de 1,75 m (`relacion_cabeza` 7): primerísimo primer plano a 7,62 m → ≈ 514 mm (cabe en 600); a 12,04 m, no cabe; plano entero en el camino 0 (1,33 m) → no cabe ni a 24 mm.
+
+**Dónde corta el auto-encuadre (cambiado en E1).** La mitad de cada franja caía en una articulación: la del plano medio, en la cintura, y la de la cara, en el cuello. Así el corte limpio nunca se cumplía. `cut_middle()` corta ahora la cara bajo la barbilla (entre barbilla y cuello), el primer plano en mitad del pecho, el medio a la altura del ombligo (entre pecho y cintura) y el americano a medio muslo. `clean_cut(body, plano)` no cuenta el cuello en un primerísimo primer plano. Las focales suben un poco (las de la tabla de abajo, medidas por las sondas con el corte anterior, son algo menores) y la tabla de qué cabe en cada camino no cambia.
 
 **Tabla resultante en el parque clásico con la cámara ideal (24–600 mm),** distancias de `main.gd::LANE_LINES`. La prueba headless debe reproducirla:
 
@@ -1070,7 +1072,11 @@ var crop = 1.0 if (inside(e.head) or e.get("crown_cut_ok",false)) and (portrait 
 
 **`subject_fits()`** (`main.gd:1376`): si el nivel tiene `cond.plano`, se exige `Framing.fits(plano, Framing.rest_heights(p), LANE_LINES[lane].x, LANE_LINES[lane].y, lens.min, mínimo entre lens.max y focal_max)`.
 
-### 17.2 Niveles 31–35 (borrador; **los fijan `arcade_audit` y `arcade_solver`**)
+### 17.2 Niveles 31–35
+
+> **Hechos.** Tras el solucionador y la auditoría quedaron ordenados del plano más abierto al más cerrado: 31 entero (compacta), 32 americano de frente (parque grande, telemétrica 50 mm: el zoom son los pies), 33 medio con corte limpio (réflex 24–105), 34 primer plano con la cara nítida (70–200, AF puntual) y 35 la cara nítida (70–200: solo en el camino interior; su texto enseña a cerrar el diafragma). La tabla de abajo es el borrador original.
+
+**Ojos en la cara.** Al hacer el 35 apareció un fallo del juego: los ojos de la evidencia estaban en el centro del cráneo y el autofoco da en la cara, 9 cm por delante. En un primer plano a metro y medio con un 100 mm, una cara bien enfocada salía con 0,16 mm de desenfoque. `capture_evidence()` adelanta ahora los ojos el 36 % del alto de la cabeza (hacia el −Z de su hueso). A partir de 3–4 m no cambia nada: los 35 niveles pasan el solucionador, y la Academia, sus pruebas jugadas.
 
 | N | Título (es) | Escenario | Luz | Cuerpo · objetivo | Exposición | Disparos · tiempo · mínimo | Condiciones |
 |---|---|---|---|---|---|---|---|
@@ -1275,6 +1281,8 @@ Cada etapa deja el juego funcionando y sus pruebas en verde. No se empieza una s
 ### E0 · Preparación
 - [ ] Leer lo del §0.1.
 - [ ] Pasar y anotar: `--smoke-test`, `tests/test_arcade.gd` (headless), `tests/test_texts.gd` (headless), `tests/test_tutorial.gd` (con pantalla). Si algo ya fallaba, decirlo antes de tocar nada.
+
+> **E0, E1 y E2 hechas (25-11-2026).** Lo que cambió al hacerlas: el auto-encuadre corta lejos de las articulaciones (§4.6: el medio a la altura del ombligo, el americano a medio muslo, la cara bajo la barbilla, sin contar el cuello); los ojos de la evidencia pasan a estar en la cara (§17.1); los niveles 31–35 quedaron ordenados del plano más abierto al más cerrado (§17.2, tabla final en [21](21_ARCADE_CONDICIONES_TLR.md)).
 
 ### E1 · El encuadre (`framing.gd`)
 - [ ] Partir del código ya validado en `tools/paparazzi_sondas.gd`: `world_landmarks()`, `screen_body()`, `rest_of()`, `classify()`, `cut_middle()`, `plane_focal()`, `aim_point()` y `double_of()`. Pasarlo a sus sitios definitivos, con los nombres del §16.1.

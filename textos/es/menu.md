@@ -214,10 +214,10 @@ Arcade
 
 ### modo_arcade_texto
 > máximo 180 caracteres
-Treinta niveles con encargos cada vez más exigentes: De la compacta automática a la TLR manual, la luz y el barrido, cada uno con algo nuevo.
+Treinta y cinco niveles cada vez más exigentes: De la compacta automática a la TLR manual, la luz, el barrido y los planos, cada uno con algo nuevo.
 
-### modo_arcade_progreso
-%d de 30 niveles superados · %d ★
+### modo_arcade_avance
+%d de %d niveles superados · %d ★
 
 ### modo_tutorial_titulo
 Tutorial

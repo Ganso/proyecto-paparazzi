@@ -18,7 +18,7 @@ La luz
 Arcade
 
 ### arcade_subtitulo
-Treinta niveles. Cada uno fija escenario, luz y cámara, y pide algo distinto. Supera uno para abrir el siguiente.
+Treinta y cinco niveles. Cada uno fija escenario, luz y cámara, y pide algo distinto. Supera uno para abrir el siguiente.
 
 ### arcade_nivel_d
 NIVEL %d
@@ -116,6 +116,9 @@ La TLR
 
 ### arcade_bloque_6
 Maestría · la réflex a fondo
+
+### arcade_bloque_7
+El encuadre · los planos
 
 ### arcade_trampa
 Trampa activa: Todos los niveles abiertos en esta partida.
@@ -468,6 +471,86 @@ No hay nadie en la foto: Encuadra a una persona.
 > máximo 30 caracteres
 ESPERANDO AL SUJETO…
 
+### cond_plano
+> máximo 100 caracteres
+Encuadre · pedido: %s · hecho: %s
+
+### cond_plano_general
+plano general
+
+### cond_plano_entero
+plano entero
+
+### cond_plano_americano
+plano americano
+
+### cond_plano_medio
+plano medio
+
+### cond_plano_primer_plano
+primer plano
+
+### cond_plano_cara
+primerísimo primer plano
+
+### cond_plano_ninguno
+ninguno (la cara no sale entera)
+
+### cond_plano_defecto_cabeza
+, con la cabeza cortada
+
+### cond_plano_defecto_pies
+, con los pies cortados
+
+### cond_plano_defecto_aire
+, con demasiado cielo encima
+
+### cond_frente
+> máximo 100 caracteres
+De frente · la cara se aparta %d° de ti (hasta 45°)
+
+### cond_perfil
+> máximo 100 caracteres
+De perfil · la cara se aparta %d° de ti (entre 60 y 120°)
+
+### cond_corte_limpio
+> máximo 100 caracteres
+Corte limpio · %s
+
+### cond_corte_limpio_ok
+el borde de abajo no cae en ninguna articulación
+
+### cond_corte_limpio_no
+el borde de abajo corta por %s
+
+### cond_articulacion_neck
+el cuello
+
+### cond_articulacion_waist
+la cintura
+
+### cond_articulacion_knees
+las rodillas
+
+### cond_articulacion_ankles
+los tobillos
+
+### cond_corta_plano
+> máximo 100 caracteres
+%s
+
+### cond_corta_frente
+> máximo 100 caracteres
+De frente
+
+### cond_corta_perfil
+> máximo 100 caracteres
+De perfil
+
+### cond_corta_corte_limpio
+> máximo 100 caracteres
+Sin cortar por las articulaciones
+
 ## Nivel 1 · Primer encargo
 
 ### arcade_nivel_1_titulo · título
@@ -768,3 +851,52 @@ Nocturno
 > máximo 220 caracteres
 Dos disparos, de noche y todo manual: Pon el punto de enfoque en la cara. Que salga grande y sin nadie más.
 
+## Nivel 31 · Cuerpo entero
+
+### arcade_nivel_31_titulo · título
+> máximo 22 caracteres
+Cuerpo entero
+
+### arcade_nivel_31_texto · encargo
+> máximo 220 caracteres
+El plano entero: Toda la persona, de la cabeza a los pies, sin cortarle nada y sin nadie más. Ajusta el zoom hasta que quepa entera con un poco de aire.
+
+## Nivel 32 · De frente
+
+### arcade_nivel_32_titulo · título
+> máximo 22 caracteres
+De frente
+
+### arcade_nivel_32_texto · encargo
+> máximo 220 caracteres
+Un 50 mm fijo: Aquí el zoom son tus pies. Plano americano (corta entre la cadera y la rodilla) de alguien que viene de frente. Adelántate y espérala.
+
+## Nivel 33 · Plano medio
+
+### arcade_nivel_33_titulo · título
+> máximo 22 caracteres
+Plano medio
+
+### arcade_nivel_33_texto · encargo
+> máximo 220 caracteres
+Corta por la cintura: Es el plano de las conversaciones. Pero que el borde no caiga justo en la cintura ni en otra articulación: Un poco más arriba.
+
+## Nivel 34 · Primer plano
+
+### arcade_nivel_34_titulo · título
+> máximo 22 caracteres
+Primer plano
+
+### arcade_nivel_34_texto · encargo
+> máximo 220 caracteres
+Cabeza y hombros, con la cara nítida: El plano de la emoción. Pon el punto de enfoque en la cara.
+
+## Nivel 35 · Solo la cara
+
+### arcade_nivel_35_titulo · título
+> máximo 22 caracteres
+Solo la cara
+
+### arcade_nivel_35_texto · encargo
+> máximo 220 caracteres
+Solo la cara, de la barbilla al pelo, y nítida: Busca a quien pasa más cerca. A metro y medio la nitidez apenas mide dos dedos: Cierra un poco el diafragma.

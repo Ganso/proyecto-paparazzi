@@ -211,10 +211,10 @@ SANDBOX · CHOOSE SETTING AND LIGHT
 Arcade
 
 ### modo_arcade_texto
-Thirty levels with assignments that ask a little more each time: From the automatic compact to the manual TLR, light and panning, each one with something new.
+Thirty-five levels that ask a little more each time: From the automatic compact to the manual TLR, light, panning and shot sizes, each one with something new.
 
-### modo_arcade_progreso
-%d of 30 levels cleared · %d ★
+### modo_arcade_avance
+%d of %d levels cleared · %d ★
 
 ### modo_tutorial_titulo
 Tutorial

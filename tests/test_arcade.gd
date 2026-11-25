@@ -5,6 +5,7 @@ const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Texts = preload("res://scripts/texts.gd")
 const Photography = preload("res://scripts/photography.gd")
+const Framing = preload("res://scripts/framing.gd")
 var checks = 0
 var failures = 0
 func check(ok: bool, message: String) -> void:
@@ -23,9 +24,9 @@ func _initialize() -> void:
 	# (Some checks read the Spanish wording of a reason: the player's language must not matter.)
 	Texts.set_language("es",false)
 	# Level data: 20 levels in 4 blocks, the curve tightens.
-	check(Arcade.LEVELS.size() == 30 and Arcade.BLOCKS.size() == 6,"30 levels in 6 blocks")
+	check(Arcade.LEVELS.size() == 35 and Arcade.BLOCKS.size() == 7,"35 levels in 7 blocks")
 	# Passing clouds only where the exposure is the player's and there is a sun to cover.
-	var cloudy = range(30).filter(func(n): return Arcade.clouds(n))
+	var cloudy = range(Arcade.LEVELS.size()).filter(func(n): return Arcade.clouds(n))
 	check(not cloudy.is_empty() and cloudy.all(func(n): return Arcade.LEVELS[n].auto is bool and not Arcade.LEVELS[n].auto and Arcade.LEVELS[n].time in ["day","golden"]) and not Arcade.clouds(0) and not Arcade.clouds(-1),"Clouds darken only the manual-exposure levels by day (%s)" % str(cloudy.map(func(n): return n+1)))
 	check(Texts.get_text("arcade_aviso_nubes") != "arcade_aviso_nubes","…and their briefing warns about them")
 	check(Arcade.LEVELS[0].shots == 5 and Arcade.LEVELS[24].shots == 1,"Shots go from 5 to 1")
@@ -51,6 +52,43 @@ func _initialize() -> void:
 		check(Texts.get_text("arcade_nivel_%d_titulo" % (n+1)) != "arcade_nivel_%d_titulo" % (n+1),"Level %d has a title" % (n+1))
 		for key in Arcade.LEVELS[n].cond:
 			check(not Conditions.describe(key,Arcade.LEVELS[n].cond[key]).begins_with("cond_corta"),"Level %d: condition %s has a label" % [n+1,key])
+	# Block 7 · framing (docs/futuro/29 §17): every level asks for a shot size, from wide to tight.
+	var shots = Arcade.LEVELS.slice(30,35).map(func(l): return str(l.cond.get("plano","")))
+	check(shots == ["entero","americano","medio","primer_plano","cara"],"Block 7: the shot sizes from wide to tight (%s)" % str(shots))
+	check(Texts.get_text("arcade_bloque_7") != "arcade_bloque_7","Block 7 has a name")
+	# The new conditions on synthetic evidence: an adult framed by a frame whose top edge is at
+	# `top` metres and `tall` metres high.
+	var r = Framing.rest_for(1.75,1.5)
+	var body = func(top: float, tall: float) -> Dictionary:
+		var b = {"behind":false}
+		for k in Framing.LANDMARKS: b[k] = Vector2(.5,(top-r[k])/tall)
+		return b
+	var medium_tall = (r.crown-Framing.cut_middle("medio",r))/(1.0-Framing.AIR)
+	var medium = body.call(r.crown+Framing.AIR*medium_tall,medium_tall)
+	var verdict = func(cond: Dictionary, extra: Dictionary) -> Dictionary:
+		var out = {}
+		for c in Conditions.check(evidence(extra),cond): out[c.key] = c
+		return out
+	check(verdict.call({"plano":"medio"},{"body":medium}).plano.ok,"A medium shot framed as such passes «plano medio»")
+	var wrong = verdict.call({"plano":"primer_plano"},{"body":medium}).plano
+	check(not wrong.ok and "plano medio" in wrong.text,"…and fails «primer plano», saying what it made (%s)" % wrong.text)
+	check(not verdict.call({"plano":"medio"},{}).plano.ok,"No body in the evidence: no shot")
+	var headless = body.call(r.crown-.05,medium_tall)
+	check(not verdict.call({"plano":"medio"},{"body":headless}).plano.ok,"The head cut off: «plano» fails")
+	var at_waist = body.call(r.crown+.05,(r.crown+.05)-r.waist)
+	var clean = verdict.call({"corte_limpio":true},{"body":at_waist}).corte_limpio
+	check(not clean.ok and "cintura" in clean.text,"Cut at the waist: not clean (%s)" % clean.text)
+	check(verdict.call({"corte_limpio":true},{"body":medium}).corte_limpio.ok,"The auto-framed medium shot is a clean cut")
+	check(verdict.call({"frente":true},{"facing":20.0}).frente.ok and not verdict.call({"frente":true},{"facing":80.0}).frente.ok,"Facing: 20° yes, 80° no")
+	check(verdict.call({"perfil":true},{"facing":90.0}).perfil.ok and not verdict.call({"perfil":true},{"facing":20.0}).perfil.ok,"Profile: 90° yes, 20° no")
+	for key in ["plano","frente","perfil","corte_limpio"]:
+		check(not Conditions.describe(key,"medio").begins_with("cond_corta"),"Condition %s has a short label" % key)
+	check(Conditions.describe("plano","cara") == "Primerísimo primer plano","The short label of a shot is its name, capitalised (%s)" % Conditions.describe("plano","cara"))
+	# An extreme close-up may cut the top of the head without losing framing marks.
+	var face_e = evidence({"head":Vector2(.5,-.05),"feet":Vector2(.5,2.6),"chest":Vector2(.5,1.3),"eyes":Vector2(.5,.3)})
+	var plain_mark = Photography.evaluate(face_e.duplicate(true)).framing
+	var face_mark = Conditions.judge(face_e.duplicate(true),{"plano":"cara"}).framing
+	check(face_mark > plain_mark,"Crown cut in an extreme close-up asked for: no framing penalty (%.2f > %.2f)" % [face_mark,plain_mark])
 	# Progress: unlocking and stars.
 	check(Arcade.unlocked(0,{}) and not Arcade.unlocked(1,{}) and Arcade.unlocked(1,{0:{"score":70,"stars":2}}),"A passed level opens the next")
 	check(Arcade.stars_for(49,50) == 0 and Arcade.stars_for(50,50) == 1 and Arcade.stars_for(100,50) == 5,"Stars from the pass mark to 100")

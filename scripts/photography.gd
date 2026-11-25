@@ -90,7 +90,8 @@ static func evaluate(e: Dictionary) -> Dictionary:
 	var portrait: bool = h > .85
 	var size_score = 1.0
 	if h < .45: size_score = clampf((h-.15)/.30, 0, 1)
-	var crop = 1.0 if inside(e.head) and (portrait or inside(e.feet)) else .6
+	# (an extreme close-up asked for may cut the top of the head: conditions.gd::prepare())
+	var crop = 1.0 if (inside(e.head) or e.get("crown_cut_ok",false)) and (portrait or inside(e.feet)) else .6
 	var thirds = .15 if minf(abs(face.x-.333), abs(face.x-.667)) < .05 else 0.0
 	var framing = clampf(size_score*crop+thirds, 0, 1)
 	var rejected: bool = not e.in_front or not inside(face) or e.blockers.size() >= 4
