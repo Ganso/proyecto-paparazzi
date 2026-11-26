@@ -524,6 +524,137 @@
       ],
       "youtube_id": "mxBqg-Qol9A",
       "publish_date": "2026-11-05T18:00:00+01:00"
+    },
+    {
+      "id": 7,
+      "slug": "clase_hora_dorada",
+      "formato": "clase",
+      "status": "pendiente",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_hora_dorada.mp4",
+      "title": "Por qué las fotos de la tarde son más bonitas: la hora dorada #shorts #fotografia",
+      "preview_text": "Mediodía vs tarde",
+      "tema": "La luz · La hora dorada",
+      "pregunta": "¿Por qué las fotos de la tarde son más bonitas?",
+      "regla": "La luz baja dibuja. La de mediodía aplana.",
+      "deberes": "Haz la misma foto a mediodía y una hora antes de la puesta de sol. Compáralas.",
+      "takes": {
+        "clase_mediodia": {
+          "secs": 10,
+          "args": [
+            "--idioma=es",
+            "--scenario=grande",
+            "--sandbox",
+            "--profile=Ultra",
+            "--pitch=0",
+            "--focal=28",
+            "--hud=0",
+            "--pan=1",
+            "--time=day",
+            "--at=-22,-27,133"
+          ]
+        },
+        "clase_dorada": {
+          "secs": 10,
+          "args": [
+            "--idioma=es",
+            "--scenario=grande",
+            "--sandbox",
+            "--profile=Ultra",
+            "--pitch=0",
+            "--focal=28",
+            "--hud=0",
+            "--pan=1",
+            "--time=golden",
+            "--at=-22,-27,133"
+          ]
+        },
+        "clase_azul": {
+          "secs": 10,
+          "args": [
+            "--idioma=es",
+            "--scenario=grande",
+            "--sandbox",
+            "--profile=Ultra",
+            "--pitch=0",
+            "--focal=28",
+            "--hud=0",
+            "--pan=1",
+            "--time=blue",
+            "--at=-22,-27,133"
+          ]
+        },
+        "clase_contraluz": {
+          "secs": 10,
+          "args": [
+            "--idioma=es",
+            "--scenario=grande",
+            "--sandbox",
+            "--profile=Ultra",
+            "--pitch=0",
+            "--focal=28",
+            "--hud=0",
+            "--pan=1",
+            "--time=golden",
+            "--at=-22,-27,226"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "clase_contraluz",
+          "ss": 1.0,
+          "t": 3.5
+        },
+        {
+          "take": "clase_mediodia",
+          "ss": 1.0,
+          "t": 5.5,
+          "titulo": "MEDIODÍA",
+          "texto": "El sol cae desde arriba: sombras cortas, justo debajo de cada cosa."
+        },
+        {
+          "take": "clase_dorada",
+          "ss": 1.0,
+          "t": 5.5,
+          "titulo": "UNA HORA ANTES DE LA PUESTA",
+          "texto": "El sol está bajo: la luz entra de lado, cálida, y las sombras se alargan."
+        },
+        {
+          "split": [
+            "clase_mediodia",
+            "clase_dorada"
+          ],
+          "ss": 6.5,
+          "t": 6.5,
+          "split_labels": [
+            "MEDIODÍA",
+            "TARDE"
+          ],
+          "titulo": "POR QUÉ",
+          "texto": "La luz de lado marca el volumen y la textura. Desde arriba, todo queda plano."
+        },
+        {
+          "take": "clase_contraluz",
+          "ss": 4.5,
+          "t": 4.5,
+          "titulo": "Y A CONTRALUZ",
+          "texto": "Un borde de luz dorada en el pelo y la ropa de la gente."
+        },
+        {
+          "take": "clase_azul",
+          "ss": 1.0,
+          "t": 4.0,
+          "titulo": "DESPUÉS: LA HORA AZUL",
+          "texto": "Luz suave y fría, con las farolas ya encendidas."
+        }
+      ],
+      "regla_secs": 6,
+      "tags": "shorts, fotografia, hora dorada, golden hour, luz, aprender fotografia, consejos de fotografia, fotografia para principiantes",
+      "description": "¿Por qué las fotos de la tarde son más bonitas?\n\nPor la luz. A mediodía el sol cae desde arriba: las sombras quedan cortas, justo debajo de cada cosa, y todo se ve plano. Una hora antes de la puesta, el sol está bajo: la luz entra de lado, es cálida y las sombras se alargan, así que marca el volumen y la textura. A contraluz deja un borde dorado en el pelo y la ropa. Y justo después de ponerse el sol llega la hora azul: luz suave y fría.\n\nLa regla: la luz baja dibuja; la de mediodía aplana.\n\nPruébalo hoy: haz la misma foto a mediodía y una hora antes de la puesta de sol, y compáralas.\n\nLas imágenes son de PhotoHacks, un juego gratuito para practicar fotografía: https://geese-bumps.itch.io/photohacks\n\n#shorts #fotografia #horadorada",
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ]
     }
   ]
 }

@@ -655,6 +655,212 @@ def render_recipe(ep, force=False):
     return out_file
 
 
+# ---- «Clase» format (season 2, 26-11-2026): a photography lesson, not an ad ----
+# Four beats: the question (top plate, all along), the phenomenon (cuts with a title and a
+# sentence under the image), the why (a cut, often a split of two takes) and the rule card with
+# homework. No class number, no brand card, no call to download: the game is only named in the
+# last line of the description. Fields: "formato": "clase", "pregunta", "tema", "regla",
+# "deberes"; cuts take "titulo"/"texto" (and "split": [left_take, right_take] with
+# "split_labels").
+C_BG = (10, 14, 22, 255)
+C_GOLD = (255, 200, 90)
+# The game, cut a little narrower than 16:9 to fill more of the 9:16 (1067×810 → 1080×820).
+GAME_Y, GAME_H, GAME_CROP = 500, 820, "1067:810:(iw-1067)/2:0"
+CAP_Y = GAME_Y + GAME_H + 18
+
+
+def wrap(draw, text, font, width):
+    lines, line = [], ""
+    for word in text.split():
+        test = (line + " " + word).strip()
+        if draw.textbbox((0, 0), test, font=font)[2] > width and line:
+            lines.append(line)
+            line = word
+        else:
+            line = test
+    return lines + ([line] if line else [])
+
+
+def class_top_plate(ep, filename):
+    """Topic pill and the question, in the top safe zone (y 230-560)."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    f_tag = get_font(FONT_BOLD, 26)
+    f_q = get_font(FONT_RUSSO, 54)
+    lines = wrap(d, ep["pregunta"], f_q, 900)
+    h = 86 + 66 * len(lines) + 22
+    d.rounded_rectangle([(50, 230), (W - 50, 230 + h)], radius=26, fill=(10, 14, 22, 225))
+    d.rounded_rectangle([(50, 230), (W - 50, 230 + h)], radius=26, outline=C_GOLD + (255,), width=4)
+    tag = ep["tema"].upper()
+    tw = d.textbbox((0, 0), tag, font=f_tag)[2]
+    d.rounded_rectangle([(90, 254), (90 + tw + 32, 254 + 44)], radius=10, fill=C_GOLD)
+    d.text((106, 261), tag, font=f_tag, fill=(0, 0, 0))
+    for k, line in enumerate(lines):
+        d.text((90, 316 + 66 * k), line, font=f_q, fill=(255, 255, 255))
+    out = os.path.join(OUT_DIR, filename)
+    img.save(out)
+    return out
+
+
+def class_caption(title, text, filename, split_labels=None):
+    """Title and sentence under the game (y 1270-1530), and, for a split, a label on each half."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    f_title = get_font(FONT_RUSSO, 44)
+    f_text = get_font(FONT_BOLD, 34)
+    if title or text:
+        lines = wrap(d, text or "", f_text, 900)
+        h = 28 + (58 if title else 0) + 46 * len(lines) + 16
+        d.rounded_rectangle([(50, CAP_Y), (W - 50, CAP_Y + h)], radius=22, fill=(10, 14, 22, 235))
+        y = CAP_Y + 20
+        if title:
+            d.text((90, y), title, font=f_title, fill=C_GOLD)
+            y += 58
+        for line in lines:
+            d.text((90, y), line, font=f_text, fill=(255, 255, 255))
+            y += 46
+    if split_labels:
+        f_l = get_font(FONT_BOLD, 32)
+        top = GAME_Y
+        d.line([(W // 2, top), (W // 2, top + GAME_H)], fill=(255, 255, 255, 255), width=5)
+        for k, lab in enumerate(split_labels):
+            tw = d.textbbox((0, 0), lab, font=f_l)[2]
+            x = (W // 4) * (1 + 2 * k) - tw // 2
+            d.rounded_rectangle([(x - 16, top + 18), (x + tw + 16, top + 70)], radius=10, fill=(10, 14, 22, 220))
+            d.text((x, top + 26), lab, font=f_l, fill=(255, 255, 255))
+    out = os.path.join(OUT_DIR, filename)
+    img.save(out)
+    return out
+
+
+def class_rule_card(ep, filename):
+    """The rule and the homework, full screen over the blurred last image; a small icon at the foot."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    f_head = get_font(FONT_BOLD, 30)
+    f_rule = get_font(FONT_RUSSO, 60)
+    f_hw = get_font(FONT_BOLD, 42)
+    rule = wrap(d, ep["regla"], f_rule, 880)
+    hw = wrap(d, ep["deberes"], f_hw, 880)
+    y0 = 300
+    h = 80 + 78 * len(rule) + 90 + 80 + 58 * len(hw) + 50
+    d.rounded_rectangle([(50, y0), (W - 50, y0 + h)], radius=30, fill=(10, 14, 22, 240))
+    d.rounded_rectangle([(50, y0), (W - 50, y0 + h)], radius=30, outline=C_GOLD + (255,), width=5)
+    y = y0 + 40
+    d.text((100, y), "LA REGLA", font=f_head, fill=C_GOLD)
+    y += 56
+    for line in rule:
+        d.text((100, y), line, font=f_rule, fill=(255, 255, 255))
+        y += 78
+    y += 40
+    d.line([(100, y), (W - 100, y)], fill=(80, 90, 110, 255), width=2)
+    y += 40
+    d.text((100, y), "PRUÉBALO HOY", font=f_head, fill=C_GOLD)
+    y += 56
+    for line in hw:
+        d.text((100, y), line, font=f_hw, fill=(225, 232, 245))
+        y += 58
+    icon_path = os.path.join(BRAND, "icono.png")
+    if os.path.exists(icon_path):
+        icon = Image.open(icon_path).convert("RGBA")
+        icon.thumbnail((84, 84), Image.LANCZOS)
+        img.paste(icon, ((W - icon.size[0]) // 2, y0 + h + 40), icon)
+    out = os.path.join(OUT_DIR, filename)
+    img.save(out)
+    return out
+
+
+def class_raw(ep, name, force=False):
+    raw = os.path.join(RAW_DIR, f"take_{name}.avi")
+    if name in ep.get("takes", {}):
+        return record_take(name, ep["takes"][name], force)
+    if not os.path.exists(raw):
+        raise SystemExit(f"Falta la toma {raw}")
+    return raw
+
+
+def render_class_cut(ep, k, cut, raws, top):
+    out = os.path.join(OUT_DIR, f"ep{ep['id']}_cut{k}.mp4")
+    cap = class_caption(cut.get("titulo", ""), cut.get("texto", ""), f"ep{ep['id']}_cap{k}.png", cut.get("split_labels"))
+    t = cut["t"]
+    y = GAME_Y
+    fit = f"crop={GAME_CROP},scale=1080:{GAME_H}:flags=lanczos,setsar=1"
+    if "split" in cut:
+        a, b = cut["split"]
+        inputs = ["-ss", str(cut["ss"]), "-t", str(t), "-i", raws[a], "-ss", str(cut["ss"]), "-t", str(t), "-i", raws[b]]
+        game = (f"[0:v]{fit},split=2[ga][bg_src];"
+                f"[1:v]{fit},crop=540:ih:540:0[gb];"
+                "[ga][gb]overlay=540:0[game];")
+        n = 2
+    else:
+        inputs = ["-ss", str(cut["ss"]), "-t", str(t), "-i", raws[cut["take"]]]
+        game = f"[0:v]{fit},split=2[game][bg_src];"
+        n = 1
+    graph = (game +
+             "[bg_src]scale=-2:1920,crop=1080:1920,setsar=1,gblur=sigma=32,eq=brightness=-0.35[bg];"
+             f"[bg][game]overlay=0:{y}[framed];"
+             f"[{n}:v]format=rgba[top];[{n + 1}:v]format=rgba[cap];"
+             "[framed][top]overlay=0:0:eof_action=repeat[v1];[v1][cap]overlay=0:0:eof_action=repeat,"
+             f"fade=t=in:st=0:d=0.25,fade=t=out:st={t - 0.25}:d=0.25,setsar=1[outv];"
+             f"[0:a]afade=t=in:st=0:d=0.25,afade=t=out:st={t - 0.25}:d=0.25,aresample=48000[outa]")
+    subprocess.run(["ffmpeg", "-v", "error", "-y"] + inputs +
+                   ["-loop", "1", "-framerate", "30", "-i", top, "-loop", "1", "-framerate", "30", "-i", cap,
+                    "-filter_complex", graph, "-map", "[outv]", "-map", "[outa]", "-t", str(t), "-aspect", "9:16",
+                    "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30",
+                    "-c:a", "pcm_s16le", out], check=True)
+    return out
+
+
+def render_class(ep, force=False):
+    os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(RAW_DIR, exist_ok=True)
+    names = set(ep.get("takes", {}))
+    for cut in ep["cuts"]:
+        names.update(cut.get("split", [cut.get("take")]))
+    raws = {n: class_raw(ep, n, force) for n in names if n}
+    top = class_top_plate(ep, f"ep{ep['id']}_top.png")
+    clips = [render_class_cut(ep, k, cut, raws, top) for k, cut in enumerate(ep["cuts"])]
+    # The rule card over the blurred last image, with the park's sound fading under it.
+    card = class_rule_card(ep, f"ep{ep['id']}_regla.png")
+    last = ep["cuts"][-1]
+    lt = ep.get("regla_secs", 6)
+    c_out = os.path.join(OUT_DIR, f"ep{ep['id']}_regla.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(last["ss"] + last["t"]), "-t", str(lt),
+                    "-i", raws[last.get("take") or last["split"][1]],
+                    "-loop", "1", "-framerate", "30", "-i", card,
+                    "-filter_complex", "[0:v]scale=-2:1920,crop=1080:1920,setsar=1,gblur=sigma=36,eq=brightness=-0.4[bg];"
+                    "[1:v]format=rgba,fade=in:st=0:d=0.4:alpha=1[c];[bg][c]overlay=0:0:eof_action=repeat,setsar=1[outv];"
+                    f"[0:a]volume=0.6,afade=t=out:st={lt - 1.5}:d=1.5,aresample=48000[outa]",
+                    "-map", "[outv]", "-map", "[outa]", "-t", str(lt), "-aspect", "9:16", "-c:v", "libx264",
+                    "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "pcm_s16le", c_out], check=True)
+    clips.append(c_out)
+    return finish_mix(ep, clips)
+
+
+def finish_mix(ep, clips):
+    lst = os.path.join(OUT_DIR, f"ep{ep['id']}_list.txt")
+    open(lst, "w").write("".join(f"file '{c}'\n" for c in clips))
+    joined = os.path.join(OUT_DIR, f"ep{ep['id']}_joined.mkv")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", joined], check=True)
+    total = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", joined],
+                                 capture_output=True, text=True).stdout)
+    music = os.path.join(AUDIO, "musica_videos.mp3")
+    mix = (f"[1:a]volume=0.32,afade=t=in:st=0:d=1,afade=t=out:st={total - 2}:d=2[m];[0:a]volume=1.4[g];"
+           f"[m][g]amix=inputs=2:duration=first:normalize=0")
+    measure = subprocess.run(["ffmpeg", "-hide_banner", "-i", joined, "-i", music, "-filter_complex",
+                              mix + ",loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
+                             capture_output=True, text=True).stderr
+    m = json.loads(measure[measure.rindex("{"):measure.rindex("}") + 1])
+    norm = (f"loudnorm=I=-14:TP=-1.5:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
+            f"measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true")
+    out_file = ep["video_file"]
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", joined, "-i", music, "-filter_complex", mix + "," + norm + ",aresample=48000[a]",
+                    "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-aspect", "9:16", "-c:a", "aac", "-b:a", "192k",
+                    "-movflags", "+faststart", "-shortest", out_file], check=True)
+    print(f"[VIDEO BUILD] Complete: {out_file} ({total:.1f} s, {os.path.getsize(out_file) // 1024} KB)")
+    return out_file
+
+
 def main():
     parser = argparse.ArgumentParser(description="Publicador de Shorts de PhotoHacks")
     parser.add_argument("--id", type=int, default=None, help="ID específico del episodio a publicar")
@@ -681,7 +887,8 @@ def main():
         print(f"\n[SKIP-RENDER] Utilizando vídeo ya generado: {ep['video_file']}")
         video_file = ep["video_file"]
     else:
-        video_file = render_recipe(ep, args.regrabar) if ep.get("cuts") else render_short_video(ep)
+        video_file = (render_class(ep, args.regrabar) if ep.get("formato") == "clase" else
+                          render_recipe(ep, args.regrabar) if ep.get("cuts") else render_short_video(ep))
 
     if args.solo_video:
         print(f"\n[OK] Vídeo generado: {video_file}")
