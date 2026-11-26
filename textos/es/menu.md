@@ -148,7 +148,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.7.0 · EN DESARROLLO
+VERSIÓN ALFA 0.7.1 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -385,6 +385,14 @@ Restablecer gráficos
 ### novedades_restablecido · El mismo botón, ya pulsado
 > máximo 24 caracteres
 Gráficos restablecidos
+
+### novedades_0_7_1_1 · Novedades de la versión 0.7.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Academia, lección nueva «Los planos»: Los seis planos con su maniquí y dónde cortar, para practicarlos con una cámara de 24 a 600 mm.
+
+### novedades_0_7_1_2 · Novedades de la versión 0.7.1 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Ayudas de Paparazzi en todo el juego: Corchetes sobre quien sigues, chuleta de planos con la tecla de ayuda y maniquíes en el resultado.
 
 ### novedades_0_7_0_1 · Novedades de la versión 0.7.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres

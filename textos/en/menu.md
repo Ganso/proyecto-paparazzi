@@ -148,7 +148,7 @@ Night
 Blue hour
 
 ### menu_estudio
-ALPHA VERSION 0.7.0 · IN DEVELOPMENT
+ALPHA VERSION 0.7.1 · IN DEVELOPMENT
 
 ### nombre_juego
 PhotoHacks
@@ -365,6 +365,12 @@ Reset graphics
 
 ### novedades_restablecido · The same button, once pressed
 Graphics reset
+
+### novedades_0_7_1_1 · What's new in 0.7.1
+Academy, new lesson “Shot sizes”: The six shot sizes with their mannequin and where to cut, to practise them with a 24–600 mm camera.
+
+### novedades_0_7_1_2 · What's new in 0.7.1
+Paparazzi aids everywhere: Brackets on whoever you follow, a shot cheat sheet on the help key and mannequins on the result screen.
 
 ### novedades_0_7_0_1 · What's new in 0.7.0
 New mode, Paparazzi: Find the person on the card in the big park and take the photo you're asked for before time runs out.
