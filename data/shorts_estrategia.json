@@ -1,8 +1,8 @@
 {
   "version": 1,
   "project": "photohacks",
-  "last_updated": "2026-11-26",
-  "next_episode": 11,
+  "last_updated": "2026-11-27",
+  "next_episode": 16,
   "episodes": [
     {
       "id": 1,
@@ -965,6 +965,487 @@
       "youtube_url": "https://youtube.com/shorts/u5vt5-IVb3E",
       "upload_date": "2026-11-26",
       "publish_date": "2026-12-04T18:00:00+01:00"
+    },
+    {
+      "id": 11,
+      "slug": "clase_desenfocar_fondo",
+      "formato": "clase",
+      "status": "programado",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_desenfocar_fondo.mp4",
+      "title": "Cómo desenfocar el fondo sin un objetivo caro #shorts #fotografia",
+      "preview_text": "28 vs 135 mm",
+      "tema": "El enfoque · El desenfoque",
+      "pregunta": "¿Cómo desenfoco el fondo sin un objetivo caro?",
+      "regla": "Acércate al sujeto, aleja el fondo y usa el zoom.",
+      "deberes": "Con el móvil, aléjate y usa el zoom 2× o 3× en vez de acercarte con el gran angular. Compara el fondo.",
+      "practica": "Academia · Lección 6: La profundidad de campo. Y en el arcade, «Fondo desenfocado».",
+      "takes": {
+        "c5_bk_ancho": {
+          "secs": 8,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=1.6",
+            "--look-drop=0.35",
+            "--lens=2,3",
+            "--priority=A",
+            "--fnum=2.8",
+            "--hud=0"
+          ]
+        },
+        "c5_bk_tele": {
+          "secs": 8,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=7.5",
+            "--look-drop=0.35",
+            "--lens=2,5",
+            "--priority=A",
+            "--fnum=2.8",
+            "--hud=0"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "c5_bk_tele",
+          "ss": 2.0,
+          "t": 3.0,
+          "crop": "808:614:316:36"
+        },
+        {
+          "take": "c5_bk_ancho",
+          "ss": 2.0,
+          "t": 5.0,
+          "crop": "808:614:316:36",
+          "titulo": "28 MM, DE CERCA · F/2.8",
+          "texto": "El fondo cabe entero y se ve casi nítido."
+        },
+        {
+          "take": "c5_bk_tele",
+          "ss": 2.0,
+          "t": 5.0,
+          "crop": "808:614:316:36",
+          "titulo": "135 MM, DE LEJOS · F/2.8",
+          "texto": "Mismo diafragma y la persona del mismo tamaño: el fondo se agranda y se deshace."
+        },
+        {
+          "split": [
+            "c5_bk_ancho",
+            "c5_bk_tele"
+          ],
+          "ss": 3.0,
+          "t": 6.5,
+          "crop": "808:614:316:36",
+          "split_labels": [
+            "28 MM",
+            "135 MM"
+          ],
+          "titulo": "POR QUÉ",
+          "texto": "Con tele y con el fondo lejos, el desenfoque crece. No hace falta un objetivo caro: aléjate y usa el zoom."
+        }
+      ],
+      "tags": "shorts, fotografia, desenfoque, bokeh, profundidad de campo, retrato, aprender fotografia, fotografia para principiantes",
+      "description": "¿Cómo desenfoco el fondo sin un objetivo caro?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 6 («La profundidad de campo»), y en el arcade, «Fondo desenfocado».\nhttps://geese-bumps.itch.io/photohacks\n\nEl desenfoque no depende solo del diafragma. Con el mismo f/2.8, un gran angular de cerca deja el fondo casi nítido, y un tele desde lejos, con la persona del mismo tamaño, lo deshace. Cuanto más lejos está el fondo de la persona y más largo es el objetivo, más se desenfoca.\n\nLa regla: Acércate al sujeto, aleja el fondo y usa el zoom.\n\nPruébalo hoy: Con el móvil, aléjate y usa el zoom 2× o 3× en vez de acercarte con el gran angular. Compara el fondo.\n\n#shorts #fotografia #bokeh",
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ],
+      "youtube_id": "nHV3VbCL5ik",
+      "youtube_url": "https://youtube.com/shorts/nHV3VbCL5ik",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-06T18:00:00+01:00"
+    },
+    {
+      "id": 12,
+      "slug": "clase_foto_movida",
+      "formato": "clase",
+      "status": "programado",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_foto_movida.mp4",
+      "title": "Por qué sale borrosa si no se mueve nada: la velocidad mínima #shorts #fotografia",
+      "preview_text": "1/30 vs 1/250",
+      "tema": "El movimiento · El pulso",
+      "pregunta": "¿Por qué sale borrosa si no se mueve nada?",
+      "regla": "Velocidad mínima: 1/focal. A 200 mm, 1/200 s o más rápido.",
+      "deberes": "Con zoom, sube la velocidad o apóyate en algo firme antes de disparar.",
+      "practica": "Academia · Lección 7: El movimiento. Y en el arcade, «Teleobjetivo».",
+      "takes": {
+        "c5_mov_30": {
+          "secs": 9,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=12",
+            "--look-drop=0.3",
+            "--lens=2,1",
+            "--focal=200",
+            "--priority=S",
+            "--shutter=30",
+            "--hud=1",
+            "--shoot-at=3.5"
+          ]
+        },
+        "c5_mov_250": {
+          "secs": 9,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=12",
+            "--look-drop=0.3",
+            "--lens=2,1",
+            "--focal=200",
+            "--priority=S",
+            "--shutter=250",
+            "--hud=1",
+            "--shoot-at=3.5"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "c5_mov_30",
+          "ss": 5.5,
+          "t": 3.0,
+          "crop": "687:522:147:134"
+        },
+        {
+          "take": "c5_mov_30",
+          "ss": 5.5,
+          "t": 5.0,
+          "crop": "687:522:147:134",
+          "titulo": "200 MM A 1/30 S",
+          "texto": "Nadie se mueve y sale borrosa: es tu pulso, ampliado por el tele."
+        },
+        {
+          "take": "c5_mov_250",
+          "ss": 5.5,
+          "t": 5.0,
+          "crop": "687:522:147:134",
+          "titulo": "200 MM A 1/250 S",
+          "texto": "La misma foto, nítida."
+        },
+        {
+          "split": [
+            "c5_mov_30",
+            "c5_mov_250"
+          ],
+          "ss": 6.0,
+          "t": 6.5,
+          "crop": "687:522:147:134",
+          "split_labels": [
+            "1/30 S",
+            "1/250 S"
+          ],
+          "titulo": "POR QUÉ",
+          "texto": "El tele amplía también el temblor de las manos. A más milímetros, más rápida tiene que ser la velocidad."
+        }
+      ],
+      "tags": "shorts, fotografia, foto movida, trepidacion, velocidad de obturacion, teleobjetivo, aprender fotografia, fotografia para principiantes",
+      "description": "¿Por qué sale borrosa si no se mueve nada?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 7 («El movimiento»), y en el arcade, «Teleobjetivo».\nhttps://geese-bumps.itch.io/photohacks\n\nNadie se movía: la que se movía era la cámara. El pulso siempre tiembla un poco, y el teleobjetivo amplía ese temblor igual que amplía la imagen. A 200 mm y 1/30 s, la foto sale movida; a 1/250 s, nítida. La regla clásica: la velocidad, al menos 1 partido por la focal.\n\nLa regla: Velocidad mínima: 1/focal. A 200 mm, 1/200 s o más rápido.\n\nPruébalo hoy: Con zoom, sube la velocidad o apóyate en algo firme antes de disparar.\n\n#shorts #fotografia #teleobjetivo",
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ],
+      "youtube_id": "Xlr_X6rUiw4",
+      "youtube_url": "https://youtube.com/shorts/Xlr_X6rUiw4",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-08T18:00:00+01:00"
+    },
+    {
+      "id": 13,
+      "slug": "clase_aire_mirada",
+      "formato": "clase",
+      "status": "programado",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_aire_mirada.mp4",
+      "title": "Centro o a un lado: deja aire delante de la mirada #shorts #fotografia",
+      "preview_text": "¿Centro o lado?",
+      "tema": "La composición · El aire",
+      "pregunta": "¿Dónde pongo a la persona en la foto?",
+      "regla": "Deja espacio hacia donde mira o hacia donde va.",
+      "deberes": "Activa la cuadrícula de la cámara del móvil y coloca a la persona en un tercio, mirando hacia el centro.",
+      "practica": "Academia · Lección 1: La composición. Y en el arcade, «Con aire por delante».",
+      "takes": {},
+      "cuts": [
+        {
+          "take": "c5_aire_borde",
+          "ss": 0.0,
+          "t": 3.0,
+          "crop": "1067:810:0:0"
+        },
+        {
+          "take": "c5_aire_borde",
+          "ss": 3.0,
+          "t": 4.5,
+          "crop": "1067:810:0:0",
+          "titulo": "MAL · PEGADO AL BORDE",
+          "texto": "Mira hacia la derecha y no le queda sitio: parece que se va a chocar con el marco."
+        },
+        {
+          "take": "c5_aire_fuera",
+          "ss": 0.0,
+          "t": 4.5,
+          "crop": "1067:810:0:0",
+          "titulo": "MAL · MIRANDO FUERA",
+          "texto": "Mira hacia el borde más cercano: la foto se escapa por ahí."
+        },
+        {
+          "take": "c5_aire_bien",
+          "ss": 0.0,
+          "t": 4.5,
+          "crop": "1067:810:0:0",
+          "titulo": "BIEN · AIRE DELANTE",
+          "texto": "En un tercio y mirando hacia el espacio libre: la foto respira."
+        },
+        {
+          "take": "c5_aire_porque",
+          "ss": 0.0,
+          "t": 6.5,
+          "crop": "1067:810:0:0",
+          "titulo": "POR QUÉ",
+          "texto": "El ojo sigue la mirada de la gente. Si delante hay sitio, se queda dentro de la foto."
+        }
+      ],
+      "tags": "shorts, fotografia, composicion, regla de los tercios, retrato, aprender fotografia, fotografia para principiantes",
+      "description": "¿Dónde pongo a la persona en la foto?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 1 («La composición»), y en el arcade, «Con aire por delante».\nhttps://geese-bumps.itch.io/photohacks\n\nLos ojos de quien mira una foto siguen la mirada de las personas que salen en ella. Si la persona mira hacia el borde, o está pegada a él, la mirada se escapa de la foto. En un tercio y con espacio delante, la foto respira.\n\nLa regla: Deja espacio hacia donde mira o hacia donde va.\n\nPruébalo hoy: Activa la cuadrícula de la cámara del móvil y coloca a la persona en un tercio, mirando hacia el centro.\n\n#shorts #fotografia #composicion",
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ],
+      "youtube_id": "oWyUMt400eg",
+      "youtube_url": "https://youtube.com/shorts/oWyUMt400eg",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-10T18:00:00+01:00"
+    },
+    {
+      "id": 14,
+      "slug": "clase_enfoca_ojos",
+      "formato": "clase",
+      "status": "programado",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_enfoca_ojos.mp4",
+      "title": "Por qué no está nítida si he enfocado: enfoca a la cara #shorts #fotografia",
+      "preview_text": "Foco en la cara",
+      "tema": "El enfoque · Dónde enfocar",
+      "pregunta": "¿Por qué no está nítida si he enfocado?",
+      "regla": "En un retrato, enfoca a los ojos. Al más cercano, si no salen los dos.",
+      "deberes": "En el móvil, toca la cara en la pantalla antes de disparar, o activa el enfoque a los ojos.",
+      "practica": "Academia · Lección 3: El enfoque. Y en el arcade, «Cara nítida».",
+      "takes": {
+        "c5_ojo_cara": {
+          "secs": 8,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=4.5",
+            "--lens=2,5",
+            "--priority=A",
+            "--fnum=1.8",
+            "--focus-m=4.5",
+            "--hud=0"
+          ]
+        },
+        "c5_ojo_fondo": {
+          "secs": 8,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=4.5",
+            "--lens=2,5",
+            "--priority=A",
+            "--fnum=1.8",
+            "--focus-m=14",
+            "--hud=0"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "c5_ojo_fondo",
+          "ss": 2.0,
+          "t": 3.0,
+          "crop": "808:614:316:36"
+        },
+        {
+          "take": "c5_ojo_fondo",
+          "ss": 2.0,
+          "t": 5.0,
+          "crop": "808:614:316:36",
+          "titulo": "FOCO EN EL FONDO",
+          "texto": "La cámara se ha ido a lo que tenía más contraste, el quiosco. La cara, borrosa."
+        },
+        {
+          "take": "c5_ojo_cara",
+          "ss": 2.0,
+          "t": 5.0,
+          "crop": "808:614:316:36",
+          "titulo": "FOCO EN LA CARA",
+          "texto": "El mismo f/1.8: ahora la cara está nítida y el fondo se deshace."
+        },
+        {
+          "split": [
+            "c5_ojo_fondo",
+            "c5_ojo_cara"
+          ],
+          "ss": 3.0,
+          "t": 6.5,
+          "crop": "808:614:316:36",
+          "split_labels": [
+            "FONDO",
+            "CARA"
+          ],
+          "titulo": "POR QUÉ",
+          "texto": "Con el diafragma abierto, la zona nítida mide unos centímetros. Si no cae en la cara, la foto falla."
+        }
+      ],
+      "tags": "shorts, fotografia, enfoque, retrato, autofoco, profundidad de campo, aprender fotografia, fotografia para principiantes",
+      "description": "¿Por qué no está nítida si he enfocado?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 3 («El enfoque»), y en el arcade, «Cara nítida».\nhttps://geese-bumps.itch.io/photohacks\n\nCon el diafragma muy abierto, la zona nítida mide unos pocos centímetros. Si la cámara enfoca el fondo, que tiene más contraste, la cara se queda borrosa aunque la foto «esté enfocada». En un retrato, el punto de enfoque va en los ojos (los maniquíes del juego no tienen, así que allí enfocamos la cara).\n\nLa regla: En un retrato, enfoca a los ojos. Al más cercano, si no salen los dos.\n\nPruébalo hoy: En el móvil, toca la cara en la pantalla antes de disparar, o activa el enfoque a los ojos.\n\n#shorts #fotografia #retrato",
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ],
+      "youtube_id": "vE0fr16t55k",
+      "youtube_url": "https://youtube.com/shorts/vE0fr16t55k",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-12T18:00:00+01:00"
+    },
+    {
+      "id": 15,
+      "slug": "clase_todo_nitido",
+      "formato": "clase",
+      "status": "programado",
+      "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_todo_nitido.mp4",
+      "title": "Cómo sacar nítido lo de delante y el fondo #shorts #fotografia",
+      "preview_text": "f/1.8 vs f/16",
+      "tema": "El enfoque · Todo nítido",
+      "pregunta": "¿Cómo saco nítido lo de delante y el fondo?",
+      "regla": "Para que salga todo nítido, cierra el diafragma: f/11 o f/16.",
+      "deberes": "Haz una foto con alguien cerca y paisaje detrás a f/16 y otra a f/2 (en modo A o Pro). Fíjate en el fondo.",
+      "practica": "Academia · Lección 6: La profundidad de campo. Y en el arcade, «Todo nítido».",
+      "takes": {
+        "c5_nit_1.8": {
+          "secs": 8,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=3",
+            "--look-drop=0.3",
+            "--lens=2,2",
+            "--priority=A",
+            "--fnum=1.8",
+            "--hud=0"
+          ]
+        },
+        "c5_nit_16": {
+          "secs": 8,
+          "args": [
+            "--idioma=es",
+            "--profile=Ultra",
+            "--sandbox",
+            "--stage=parado",
+            "--stage-gender=m",
+            "--stage-facing=camara",
+            "--time=day",
+            "--angle=125",
+            "--stage-dist=3",
+            "--look-drop=0.3",
+            "--lens=2,2",
+            "--priority=A",
+            "--fnum=16",
+            "--hud=0"
+          ]
+        }
+      },
+      "cuts": [
+        {
+          "take": "c5_nit_1.8",
+          "ss": 2.0,
+          "t": 3.0,
+          "crop": "808:614:316:36"
+        },
+        {
+          "take": "c5_nit_1.8",
+          "ss": 2.0,
+          "t": 5.0,
+          "crop": "808:614:316:36",
+          "titulo": "F/1.8",
+          "texto": "La persona, nítida. El quiosco y la gente de detrás, borrosos."
+        },
+        {
+          "take": "c5_nit_16",
+          "ss": 2.0,
+          "t": 5.0,
+          "crop": "808:614:316:36",
+          "titulo": "F/16",
+          "texto": "El mismo sitio con el diafragma cerrado: todo nítido, de delante a atrás."
+        },
+        {
+          "split": [
+            "c5_nit_1.8",
+            "c5_nit_16"
+          ],
+          "ss": 3.0,
+          "t": 6.5,
+          "crop": "808:614:316:36",
+          "split_labels": [
+            "F/1.8",
+            "F/16"
+          ],
+          "titulo": "POR QUÉ",
+          "texto": "Cuanto más cierras el diafragma, más profunda es la zona nítida. A cambio, entra menos luz."
+        }
+      ],
+      "tags": "shorts, fotografia, diafragma, profundidad de campo, paisaje, aprender fotografia, fotografia para principiantes",
+      "description": "¿Cómo saco nítido lo de delante y el fondo?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 6 («La profundidad de campo»), y en el arcade, «Todo nítido».\nhttps://geese-bumps.itch.io/photohacks\n\nCuanto más cerrado está el diafragma (un número f más alto), más profunda es la zona nítida. A f/1.8 solo la persona sale nítida; a f/16, también el quiosco y la gente de detrás. El precio: entra menos luz, así que la velocidad baja o el ISO sube.\n\nLa regla: Para que salga todo nítido, cierra el diafragma: f/11 o f/16.\n\nPruébalo hoy: Haz una foto con alguien cerca y paisaje detrás a f/16 y otra a f/2 (en modo A o Pro). Fíjate en el fondo.\n\n#shorts #fotografia #diafragma",
+      "language": "Español",
+      "playlists": [
+        "PhotoHacks"
+      ],
+      "youtube_id": "_xfsSqjYG9Y",
+      "youtube_url": "https://youtube.com/shorts/_xfsSqjYG9Y",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-14T18:00:00+01:00"
     }
   ]
 }

@@ -318,7 +318,7 @@ func _ready() -> void:
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		# --stage-gender=m|f and --stage-skip=N choose who --stage=sentado sits on the bench
 		# (Shorts: another person, other clothes).
-		for key in ["lens","pan","zoom-to","hud","stage-gender","stage-skip","stage-arrive","priority","metering","comp","stage-dist","stage-facing","look-drop"]:
+		for key in ["lens","pan","zoom-to","hud","stage-gender","stage-skip","stage-arrive","priority","metering","comp","stage-dist","stage-facing","look-drop","fnum","focus-m"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
 		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot","--strip-demo","--aperture-sweep","--seated"]: demo[arg.trim_prefix("--")] = true
 		# Capture helper: the help texts of a device (teclado, mando) whatever is plugged in.
@@ -2492,7 +2492,7 @@ func stage_scene(name: String) -> void:
 			p.state_time = 999.0
 			p.activity = "mirar"
 			p.act_time = 0.0
-			var facing = PI if str(demo.get("stage-facing","")) == "camara" else 0.0
+			var facing = {"camara":PI,"derecha":PI*.62,"izquierda":-PI*.62}.get(str(demo.get("stage-facing","")),0.0)
 			p.heading = -deg_to_rad(angle)+facing
 			p.face_target = -deg_to_rad(angle)+facing
 			p.heading_ready = true
@@ -5318,6 +5318,24 @@ func update_demo(dt: float) -> void:
 			var act: String = script[beat%script.size()]
 			if act == "next": select_control(1)
 			else: change_control(1 if act == "up" else -1)
+	# --fnum=<f> (with --priority=A) and --focus-m=<m>, held until the shot (Shorts: aperture and
+	# where the focus falls). --focus-m also turns autofocus off so it is not overridden.
+	if not demo.has("shot") and demo.has("fnum"):
+		var stops = apertures()
+		var best_i = 0
+		for i in stops.size():
+			if absf(stops[i]-float(demo.fnum)) < absf(stops[best_i]-float(demo.fnum)): best_i = i
+		if n_index != best_i or fine["n"] != 0:
+			n_index = best_i
+			fine["n"] = 0
+			auto_expose()
+			update_camera()
+			refresh()
+	if not demo.has("shot") and demo.has("focus-m"):
+		equipment.focus_mode = "MF"
+		if absf(focus_distance-float(demo["focus-m"])) > .01:
+			focus_distance = float(demo["focus-m"])
+			update_dof_pass()
 	# --metering/--comp held every frame until the shot: a level or a session start resets them.
 	if not demo.has("shot") and (demo.has("metering") or demo.has("comp")):
 		var k_comp = Array(equipment.EV_COMPENSATIONS).find(float(demo.get("comp","0")))
