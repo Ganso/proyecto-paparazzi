@@ -118,64 +118,50 @@ Al generar los episodios siguientes, deben tenerse en cuenta las siguientes regl
 
 ---
 
-## 6. Temporada 2: «Escuela PhotoHacks» (plan del 26-11-2026)
+## 6. Temporada 2: clases independientes (26-11-2026)
 
-> **Encargo del usuario (26-11-2026):** «mira los shorts que hemos hecho hasta ahora y planifica los siguientes. me gusta enfocarlos como una escuela de fotografía más que como publicidad del juego».
+> **Decisiones del usuario (26-11-2026):** «me gusta enfocarlos como una escuela de fotografía más que como publicidad del juego» y «Vamos a hacer clases 100% independientes, sin relación entre sí».
 
 ### 6.1 Qué nos dicen los seis primeros
 
-- Los que más se ven enseñan **un fenómeno que se ve solo**: el barrido (130 visitas) y las estrellas de las farolas (99). Los que explican una herramienta (enfoque manual, TLR) se ven la mitad.
-- Todos cierran vendiendo el juego: la tarjeta final, la frase «Aprende fotografía jugando…» y el tráiler como vídeo relacionado. Con 37–130 visitas, la venta no compensa: un espectador que aprende algo útil vuelve; uno al que le venden, no.
-- Son píldoras sueltas sin orden. Una escuela necesita **un temario, un número de clase y una cita con la siguiente**.
+Los que más se ven enseñan **un fenómeno que se ve solo**: el barrido (130 visitas) y las estrellas de las farolas (99). Los que explican una herramienta (enfoque manual, TLR) se ven la mitad. Todos cierran vendiendo el juego, y con 37–130 visitas la venta no compensa.
 
-### 6.2 El formato de clase (30–45 s)
+### 6.2 Formato de cada clase (30–45 s, completa en sí misma)
 
-Los seis se reconvierten como **Clases 1–6** y la temporada 2 sigue desde la 7. Cada clase tiene cuatro tiempos:
+1. **Pregunta** (0–3 s): la duda real de quien hace fotos, sobre la imagen del problema. Es también la vista previa.
+2. **Fenómeno** (3–20 s): el antes y el después, con los datos de la cámara visibles.
+3. **Por qué** (20–30 s): una sola idea.
+4. **Regla y deberes** (30–40 s): la regla para recordar y «Pruébalo hoy», un ejercicio con el móvil o la cámara.
 
-| Tiempo | Duración | Qué se ve |
-|---|---|---|
-| **Pregunta** | 0–3 s | La duda real de quien hace fotos («¿Por qué me salen las caras negras a contraluz?»), sobre la imagen del problema. Es la vista previa. |
-| **Fenómeno** | 3–20 s | El antes y el después en el parque, con los datos de la cámara visibles (f/, velocidad, mm): son el contenido, no decoración. |
-| **Por qué** | 20–30 s | Una sola idea, en una frase y, si hace falta, un esquema sencillo encima de la imagen. |
-| **Regla y deberes** | 30–40 s | Cartela fija con **la regla para recordar** y **«Pruébalo hoy»**: un ejercicio con el móvil o la cámara del espectador. |
+Sin número de clase, sin «próxima clase», sin referencias a otros vídeos y sin exámenes que repasen. Cada una se entiende vista sola y en cualquier orden. El juego solo aparece en la última línea de la descripción; en pantalla no se dice «juego», «descarga» ni «gratis». Interfaz mínima: visor y datos de exposición sí; menús y puntuaciones no.
 
-Cambios respecto a la temporada 1:
+### 6.3 Temas, en orden de publicación
 
-- **Cartela de cabecera**: «ESCUELA PHOTOHACKS · CLASE 7» en lugar de las pastillas tipo «[ // DIFRACCIÓN ÓPTICA // ]».
-- **Cierre**: «Próxima clase: <tema>» en lugar de la tarjeta de marca. El logo, pequeño, en una esquina.
-- **El juego, solo en la descripción**: una línea al final («Las imágenes son de PhotoHacks, un juego gratuito para practicar esto: <enlace>»). En pantalla no se dice «juego», «descarga» ni «gratis».
-- **Vídeo relacionado**: la clase anterior (o la lista), no el tráiler. *(Pendiente de que el usuario lo confirme: cambia la regla 7 del §2.)*
-- **Lista nueva** «Escuela de fotografía en 30 s» con las clases en orden, además de «PhotoHacks».
-- **Interfaz del juego**: la mínima. Visor y datos de exposición, sí; menús, puntuaciones y créditos, no. Excepción: los maniquíes de los planos y la cuadrícula de tercios, que ya son material didáctico.
-- **Ritmo**: dos clases por semana a las 18:00 (martes y viernes).
+Primero, los fenómenos más visuales y las dudas más comunes de quien empieza.
 
-### 6.3 Temario de la temporada 2
-
-Tres bloques, de lo que más pregunta quien empieza (encuadrar) a lo más técnico. Cada fila dice de dónde salen las imágenes; todo existe ya en el juego.
-
-| Clase | Pregunta (vista previa) | Fenómeno | Regla y deberes | Imágenes |
-|---|---|---|---|---|
-| **7 · Los seis planos** | «¿Plano medio o americano?» | Una persona, del general al primerísimo primer plano con el zoom de 24 a 600 mm, con el maniquí de cada plano en la esquina. | *Cada plano corta en un sitio del cuerpo.* Haz los seis a la misma persona. | Lección 2 de la Academia y Paparazzi (cámara ideal, `--sandbox` en el parque grande) |
-| **8 · Nunca cortes por una articulación** | «¿Por qué esta foto queda rara?» | El mismo encuadre cortando por las rodillas (rechazada) y por media pierna (válida); «Pedido» y «Tu foto». | *Corta entre articulaciones, nunca en ellas.* Repasa tus últimas diez fotos. | Arcade, bloque 7, nivel 32 |
-| **9 · Aire delante de la mirada** | «¿Centro o a un lado?» | Corredor en el centro, en un tercio mirando al borde y en un tercio con aire delante. | *Deja espacio hacia donde mira o va.* Activa la cuadrícula del móvil. | Lección 1 de la Academia (esquemas de tercios y aire) |
-| **10 · ¿Quién es el protagonista?** | «¿A quién miro en esta foto?» | Plano general con mucha gente y el mismo sitio con tele: la persona aislada. | *Si no sabes quién es, tampoco lo sabrá quien la mire.* Una foto, una persona. | Paparazzi: búsqueda en la multitud y el plano pedido |
-| **11 · El fotómetro quiere gris** | «¿Por qué el cielo me oscurece la foto?» | Matricial con mucho cielo: cara oscura; puntual sobre la cara o compensación +1: cara bien. | *La cámara lo lleva todo a gris medio.* Prueba a tocar la cara en el móvil antes de disparar. | Lección 8 (medir la luz) y niveles de contraluz |
-| **12 · Contraluz o silueta** | «¿Error o silueta?» | El mismo contraluz medido para la cara y medido para el cielo. | *Mide para lo que quieras ver bien.* Busca una silueta esta tarde. | Arcade: niveles de contraluz y silueta |
-| **13 · La hora dorada** | «¿Por qué las fotos de la tarde son más bonitas?» | El mismo encuadre de día, en la hora dorada, en la hora azul y de noche. | *La luz baja dibuja; la de mediodía aplana.* Sal una hora antes de que se ponga el sol. | Sandbox, `--time=day/golden/blue/night` |
-| **14 · Congelar o dejar estela** | «¿Por qué sale borroso el que corre?» | El corredor a 1/1000 s (congelado) y a 1/15 s (estela), y el barrido de la clase 2 como tercera vía. | *Velocidad rápida congela; lenta cuenta el movimiento.* Fotografía a alguien andando a las dos velocidades. | Lección 7 (movimiento), prioridad S |
-| **15 · La foto movida** | «¿Por qué me sale borrosa si no se mueve nada?» | A 200 mm, 1/30 s tiembla y 1/250 s no. | *Velocidad mínima ≈ 1/focal.* Con zoom, sube la velocidad. | Simulación de trepidación (lección 7) |
-| **16 · El desenfoque no es solo el diafragma** | «¿Cómo desenfoco el fondo sin un objetivo caro?» | Mismo f/: cerca del sujeto, fondo lejos y con tele frente a lejos y gran angular. | *Acércate, aleja el fondo, usa tele.* Hazlo con el modo normal del móvil. | Lección 6 (profundidad de campo) |
-| **17 · Enfoca a los ojos** | «¿Por qué no está nítida si he enfocado?» | f/1.8 a 135 mm: foco en la oreja o el fondo frente a foco en el ojo. | *En un retrato, el ojo más cercano.* Toca los ojos en la pantalla antes de disparar. | Lección 3 (enfoque), punto único |
-| **18 · A o S: elige qué mandas** | «¿Qué modo uso?» | Dos situaciones: retrato (A: elige el fondo) y corredor (S: elige el movimiento). | *A cuando importa el fondo; S cuando importa el movimiento.* | Lección 9 (P, A, S y M) |
-
-**Intercaladas, tres clases de examen** (20–25 s): «¿Qué plano es?», «¿Qué velocidad usó?», «¿Dónde está el fallo?». Una imagen, 3 s de cuenta atrás con la pregunta, la respuesta y «Dímelo en los comentarios antes de verla». Repasan las clases anteriores y dan comentarios. Van tras las clases 9, 13 y 17.
+| # | Tema | Pregunta (vista previa) | Fenómeno | Regla y deberes | Imágenes |
+|---|---|---|---|---|---|
+| 1 | La hora dorada | «¿Por qué las fotos de la tarde son más bonitas?» | El mismo encuadre de día, en la hora dorada, en la hora azul y de noche | La luz baja dibuja; la de mediodía aplana. Sal una hora antes de que se ponga el sol | Sandbox, `--time=day/golden/blue/night` |
+| 2 | Congelar o dejar estela | «¿Por qué sale borroso el que corre?» | El corredor a 1/1000 s y a 1/15 s | Rápida congela; lenta cuenta el movimiento | Lección 7, prioridad S |
+| 3 | El fotómetro quiere gris | «¿Por qué me sale la cara oscura?» | Matricial con mucho cielo frente a puntual en la cara o +1 de compensación | La cámara lo lleva todo a gris medio. Toca la cara en el móvil antes de disparar | Lección 8 y niveles de contraluz |
+| 4 | Nunca cortes por una articulación | «¿Por qué esta foto queda rara?» | Cortar por las rodillas frente a cortar por media pierna | Corta entre articulaciones, nunca en ellas | Arcade, nivel 32 |
+| 5 | Desenfocar el fondo sin un objetivo caro | «¿Cómo consigo el fondo borroso?» | Mismo diafragma: cerca y con el fondo lejos frente a lejos y con el fondo cerca | Acércate, aleja el fondo, usa tele. Vale con el modo normal del móvil | Lección 6 |
+| 6 | Contraluz o silueta | «¿Error o silueta?» | El mismo contraluz medido para la cara y para el cielo | Mide para lo que quieras ver bien. Busca una silueta esta tarde | Arcade, contraluz y silueta |
+| 7 | La foto movida | «¿Por qué sale borrosa si nada se mueve?» | A 200 mm, 1/30 s tiembla y 1/250 s no | Velocidad mínima ≈ 1/focal | Trepidación, lección 7 |
+| 8 | Aire delante de la mirada | «¿Centro o a un lado?» | Corredor centrado, en un tercio mirando al borde y con aire delante | Deja espacio hacia donde mira o va. Activa la cuadrícula | Lección 1 |
+| 9 | Los seis planos | «¿Plano medio o americano?» | Una persona del plano general al primerísimo, con el maniquí de cada plano | Cada plano corta en un sitio. Haz los seis a la misma persona | Lección 2, Paparazzi |
+| 10 | Enfoca a los ojos | «¿Por qué no está nítida si he enfocado?» | f/1.8 a 135 mm: foco en la oreja frente a foco en el ojo | En un retrato, el ojo más cercano | Lección 3 |
+| 11 | ¿Quién es el protagonista? | «¿A quién miro en esta foto?» | Plano general con mucha gente frente al tele que aísla a una persona | Una foto, una persona | Paparazzi |
+| 12 | A o S: qué modo usar | «¿Qué modo uso?» | Retrato en A (eliges el fondo) y corredor en S (eliges el movimiento) | A si importa el fondo; S si importa el movimiento | Lección 9 |
+| 13 | El gran angular deforma de cerca | «¿Por qué salgo con la nariz grande?» | Retrato a 24 mm pegado frente a 85 mm de lejos | Para retratos, aléjate y usa más focal | Lección 4 |
+| 14 | Enfocar y reencuadrar | «¿Cómo enfoco algo que no está en el centro?» | Foco al centro en el fondo frente a bloqueo de foco y reencuadre | Enfoca, mantén, reencuadra | Bloqueo AF/AE |
+| 15 | Cuándo todo nítido | «¿Cómo saco nítido el delante y el fondo?» | f/2 a 24 mm frente a f/11 a 24 mm, con banco cerca y quiosco lejos | Cierra y usa angular para paisaje | Lección 6 |
 
 ### 6.4 Lo que hay que añadir a `publicar_short.py`
 
-1. Plantilla «Escuela»: cabecera con el número de clase, cartela de regla y deberes (3–4 s, fija) y cierre «Próxima clase».
-2. Comparación en paralelo (dos tomas lado a lado o una sobre otra en el 9:16) para las clases 8, 11, 12, 13, 14, 15, 16 y 17.
-3. Pausa de examen: imagen congelada y cuenta atrás.
-4. Campos nuevos en `shorts_estrategia.json`: `clase`, `pregunta`, `regla`, `deberes`, `proxima`.
-5. Descripción con el texto de la clase (la regla y el ejercicio) y el juego solo al final.
+1. Plantilla de clase: cartela con la pregunta y tarjeta fija de regla y deberes (3–4 s). Cierre sin marca ni llamada a otro vídeo; logo pequeño en una esquina.
+2. Comparación en paralelo de dos tomas en el 9:16.
+3. Campos nuevos en `shorts_estrategia.json`: `pregunta`, `regla`, `deberes`.
+4. Descripción con la regla y el ejercicio; el juego, solo en la última línea.
 
-Esto no afecta a las clases 1–6 ya publicadas: no se tocan, solo entran en la lista nueva.
+Las seis primeras clases ya publicadas no se tocan.
