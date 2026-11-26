@@ -837,7 +837,9 @@ def render_class_cut(ep, k, cut, raws, top):
     cap = class_caption(cut.get("titulo", ""), cut.get("texto", ""), f"ep{ep['id']}_cap{k}.png", cut.get("split_labels"))
     t = cut["t"]
     y = GAME_Y
-    fit = f"crop={GAME_CROP},scale=1080:{GAME_H}:flags=lanczos,setsar=1"
+    # A cut may bring its own crop: takes with the camera to the eye keep the finder's dark border
+    # around the image, so they cut inside it.
+    fit = f"crop={cut.get('crop', GAME_CROP)},scale=1080:{GAME_H}:flags=lanczos,setsar=1"
     if "split" in cut:
         a, b = cut["split"]
         inputs = ["-ss", str(cut["ss"]), "-t", str(t), "-i", raws[a], "-ss", str(cut["ss"]), "-t", str(t), "-i", raws[b]]

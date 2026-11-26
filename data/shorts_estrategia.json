@@ -538,119 +538,127 @@
       "regla": "La luz baja dibuja. La de mediodía aplana.",
       "deberes": "Haz la misma foto a mediodía y una hora antes de la puesta de sol. Compáralas.",
       "takes": {
-        "clase_mediodia": {
+        "clase_retrato_dia": {
           "secs": 10,
           "args": [
             "--idioma=es",
-            "--scenario=grande",
             "--sandbox",
             "--profile=Ultra",
-            "--pitch=0",
-            "--focal=28",
+            "--stage=sentado",
+            "--activity=movil",
+            "--lens=1,2",
+            "--focal=70",
+            "--angle=35",
             "--hud=0",
-            "--pan=1",
-            "--time=day",
-            "--at=-22,-27,133"
+            "--time=day"
           ]
         },
-        "clase_dorada": {
+        "clase_retrato_dorada": {
+          "secs": 10,
+          "args": [
+            "--idioma=es",
+            "--sandbox",
+            "--profile=Ultra",
+            "--stage=sentado",
+            "--activity=movil",
+            "--lens=1,2",
+            "--focal=70",
+            "--angle=35",
+            "--hud=0",
+            "--time=golden"
+          ]
+        },
+        "clase_retrato_azul": {
+          "secs": 10,
+          "args": [
+            "--idioma=es",
+            "--sandbox",
+            "--profile=Ultra",
+            "--stage=sentado",
+            "--activity=movil",
+            "--lens=1,2",
+            "--focal=70",
+            "--angle=35",
+            "--hud=0",
+            "--time=blue"
+          ]
+        },
+        "clase_contraluz_cerca": {
           "secs": 10,
           "args": [
             "--idioma=es",
             "--scenario=grande",
             "--sandbox",
-            "--profile=Ultra",
-            "--pitch=0",
-            "--focal=28",
-            "--hud=0",
-            "--pan=1",
+            "--raised",
             "--time=golden",
-            "--at=-22,-27,133"
-          ]
-        },
-        "clase_azul": {
-          "secs": 10,
-          "args": [
-            "--idioma=es",
-            "--scenario=grande",
-            "--sandbox",
             "--profile=Ultra",
-            "--pitch=0",
-            "--focal=28",
+            "--lens=1,2",
+            "--at=-22,-27,224",
+            "--pitch=-3",
+            "--focal=85",
             "--hud=0",
-            "--pan=1",
-            "--time=blue",
-            "--at=-22,-27,133"
-          ]
-        },
-        "clase_contraluz": {
-          "secs": 10,
-          "args": [
-            "--idioma=es",
-            "--scenario=grande",
-            "--sandbox",
-            "--profile=Ultra",
-            "--pitch=0",
-            "--focal=28",
-            "--hud=0",
-            "--pan=1",
-            "--time=golden",
-            "--at=-22,-27,226"
+            "--pan=0.6"
           ]
         }
       },
       "cuts": [
         {
-          "take": "clase_contraluz",
+          "take": "clase_retrato_dorada",
           "ss": 1.0,
-          "t": 3.5
+          "t": 3.5,
+          "crop": "906:688:267:46"
         },
         {
-          "take": "clase_mediodia",
+          "take": "clase_retrato_dia",
           "ss": 1.0,
           "t": 5.5,
+          "crop": "906:688:267:46",
           "titulo": "MEDIODÍA",
-          "texto": "El sol cae desde arriba: sombras cortas, justo debajo de cada cosa."
+          "texto": "El sol cae desde arriba: la cara queda apagada y todo se ve plano."
         },
         {
-          "take": "clase_dorada",
-          "ss": 1.0,
+          "take": "clase_retrato_dorada",
+          "ss": 4.5,
           "t": 5.5,
+          "crop": "906:688:267:46",
           "titulo": "UNA HORA ANTES DE LA PUESTA",
-          "texto": "El sol está bajo: la luz entra de lado, cálida, y las sombras se alargan."
+          "texto": "El sol está bajo: la luz llega de frente, cálida, y dibuja la cara. Mira qué larga es la sombra sobre los arbustos."
         },
         {
           "split": [
-            "clase_mediodia",
-            "clase_dorada"
+            "clase_retrato_dia",
+            "clase_retrato_dorada"
           ],
-          "ss": 6.5,
+          "ss": 3.0,
           "t": 6.5,
+          "crop": "906:688:267:46",
           "split_labels": [
             "MEDIODÍA",
             "TARDE"
           ],
           "titulo": "POR QUÉ",
-          "texto": "La luz de lado marca el volumen y la textura. Desde arriba, todo queda plano."
+          "texto": "La luz baja marca el volumen y la textura. Desde arriba, todo queda plano."
         },
         {
-          "take": "clase_contraluz",
-          "ss": 4.5,
-          "t": 4.5,
+          "take": "clase_contraluz_cerca",
+          "ss": 3.0,
+          "t": 5.0,
+          "crop": "906:688:267:46",
           "titulo": "Y A CONTRALUZ",
-          "texto": "Un borde de luz dorada en el pelo y la ropa de la gente."
+          "texto": "El sol atraviesa la hierba y lo tiñe todo de dorado."
         },
         {
-          "take": "clase_azul",
+          "take": "clase_retrato_azul",
           "ss": 1.0,
           "t": 4.0,
+          "crop": "906:688:267:46",
           "titulo": "DESPUÉS: LA HORA AZUL",
-          "texto": "Luz suave y fría, con las farolas ya encendidas."
+          "texto": "Luz suave y fría, justo después de ponerse el sol."
         }
       ],
       "regla_secs": 6,
       "tags": "shorts, fotografia, hora dorada, golden hour, luz, aprender fotografia, consejos de fotografia, fotografia para principiantes",
-      "description": "¿Por qué las fotos de la tarde son más bonitas?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Sandbox, parque grande, luz «Hora dorada».\nhttps://geese-bumps.itch.io/photohacks\n\nPor la luz. A mediodía el sol cae desde arriba: las sombras quedan cortas, justo debajo de cada cosa, y todo se ve plano. Una hora antes de la puesta, el sol está bajo: la luz entra de lado, es cálida y las sombras se alargan, así que marca el volumen y la textura. A contraluz deja un borde dorado en el pelo y la ropa. Y justo después de ponerse el sol llega la hora azul: luz suave y fría.\n\nLa regla: La luz baja dibuja; la de mediodía aplana.\n\nPruébalo hoy: Haz la misma foto a mediodía y una hora antes de la puesta de sol, y compáralas.\n\n#shorts #fotografia #horadorada",
+      "description": "¿Por qué las fotos de la tarde son más bonitas?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Sandbox, parque grande, luz «Hora dorada».\nhttps://geese-bumps.itch.io/photohacks\n\nPor la luz. A mediodía el sol cae desde arriba: las caras quedan apagadas, las sombras cortas y todo se ve plano. Una hora antes de la puesta, el sol está bajo: la luz entra de lado, es cálida y las sombras se alargan, así que marca el volumen y la textura. A contraluz, atraviesa la hierba y las hojas y lo tiñe todo de dorado. Y justo después de ponerse el sol llega la hora azul: luz suave y fría.\n\nLa regla: La luz baja dibuja; la de mediodía aplana.\n\nPruébalo hoy: Haz la misma foto a mediodía y una hora antes de la puesta de sol, y compáralas.\n\n#shorts #fotografia #horadorada",
       "language": "Español",
       "playlists": [
         "PhotoHacks"
