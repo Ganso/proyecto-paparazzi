@@ -133,7 +133,9 @@ Los que más se ven enseñan **un fenómeno que se ve solo**: el barrido (130 vi
 3. **Por qué** (20–30 s): una sola idea.
 4. **Regla y deberes** (30–40 s): la regla para recordar y «Pruébalo hoy», un ejercicio con el móvil o la cámara.
 
-Sin número de clase, sin «próxima clase», sin referencias a otros vídeos y sin exámenes que repasen. Cada una se entiende vista sola y en cualquier orden. El juego solo aparece en la última línea de la descripción; en pantalla no se dice «juego», «descarga» ni «gratis». Interfaz mínima: visor y datos de exposición sí; menús y puntuaciones no.
+Sin número de clase, sin «próxima clase», sin referencias a otros vídeos y sin exámenes que repasen. Cada una se entiende vista sola y en cualquier orden. Interfaz mínima: visor y datos de exposición sí; menús y puntuaciones no.
+
+**El juego, al final y en la descripción** (usuario, 26-11-2026: «sí quiero que salga una tarjeta del juego al final y se vea en la descripción. Quiero que la gente aprenda con los shorts, pero luego se vaya a la academia del juego a terminar de aprender»): Tras la regla, 5 s de tarjeta «Sigue aprendiendo en PhotoHacks» con qué es (una escuela de fotografía que se juega), **dónde practicar esa clase en el juego** (campo `practica`: la lección de la Academia o el modo que toque), plataformas y enlace. En la descripción, el mismo mensaje y el enlace justo después de la primera línea.
 
 ### 6.3 Temas, en orden de publicación
 

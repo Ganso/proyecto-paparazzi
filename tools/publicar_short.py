@@ -658,8 +658,10 @@ def render_recipe(ep, force=False):
 # ---- «Clase» format (season 2, 26-11-2026): a photography lesson, not an ad ----
 # Four beats: the question (top plate, all along), the phenomenon (cuts with a title and a
 # sentence under the image), the why (a cut, often a split of two takes) and the rule card with
-# homework. No class number, no brand card, no call to download: the game is only named in the
-# last line of the description. Fields: "formato": "clase", "pregunta", "tema", "regla",
+# homework. No class number. Since 26-11-2026 (user: «quiero que la gente aprenda con los shorts, pero luego se
+# vaya a la academia del juego a terminar de aprender») each class ends with a card of the game
+# and where to practise that class in it («practica»), and the description says it near the top.
+# Fields: "formato": "clase", "pregunta", "tema", "regla",
 # "deberes"; cuts take "titulo"/"texto" (and "split": [left_take, right_take] with
 # "split_labels").
 C_BG = (10, 14, 22, 255)
@@ -760,13 +762,64 @@ def class_rule_card(ep, filename):
     for line in hw:
         d.text((100, y), line, font=f_hw, fill=(225, 232, 245))
         y += 58
+    out = os.path.join(OUT_DIR, filename)
+    img.save(out)
+    return out
+
+
+def class_game_card(ep, filename):
+    """Closing card (user, 26-11-2026: learn with the short, then finish learning in the game's
+    Academy): the game, what it is, where to practise this very class and where to get it."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    x0, y0, x1 = 50, 300, W - 50
+    f_small = get_font(FONT_BOLD, 30)
+    f_name = get_font(FONT_RUSSO, 72)
+    f_text = get_font(FONT_BOLD, 38)
+    f_prac = get_font(FONT_RUSSO, 44)
+    f_link = get_font(FONT_BOLD, 34)
+    what = wrap(d, "Una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen.", f_text, 860)
+    prac = wrap(d, ep["practica"], f_prac, 860)
+    h = 40 + 170 + 52 * len(what) + 40 + 46 + 58 * len(prac) + 40 + 112 + 44
+    d.rounded_rectangle([(x0, y0), (x1, y0 + h)], radius=30, fill=(10, 14, 22, 240))
+    d.rounded_rectangle([(x0, y0), (x1, y0 + h)], radius=30, outline=(255, 119, 0, 255), width=5)
+    y = y0 + 40
     icon_path = os.path.join(BRAND, "icono.png")
     if os.path.exists(icon_path):
         icon = Image.open(icon_path).convert("RGBA")
-        icon.thumbnail((84, 84), Image.LANCZOS)
-        img.paste(icon, ((W - icon.size[0]) // 2, y0 + h + 40), icon)
+        icon.thumbnail((130, 130), Image.LANCZOS)
+        img.paste(icon, (100, y), icon)
+    d.text((100 + 160, y + 8), "SIGUE APRENDIENDO EN", font=f_small, fill=C_GOLD)
+    d.text((100 + 160, y + 46), "PhotoHacks", font=f_name, fill=(255, 119, 0))
+    y += 170
+    for line in what:
+        d.text((100, y), line, font=f_text, fill=(235, 240, 250))
+        y += 52
+    y += 40
+    d.text((100, y), "PRACTICA ESTA CLASE", font=f_small, fill=C_GOLD)
+    y += 46
+    for line in prac:
+        d.text((100, y), line, font=f_prac, fill=(255, 255, 255))
+        y += 58
+    y += 40
+    d.rounded_rectangle([(100, y), (x1 - 50, y + 112)], radius=16, fill=(255, 119, 0))
+    for k, (line, font) in enumerate([("Gratis · PC, Mac, Linux, Android y navegador", get_font(FONT_BOLD, 28)), ("geese-bumps.itch.io/photohacks", f_link)]):
+        tw = d.textbbox((0, 0), line, font=font)[2]
+        d.text(((W - tw) // 2, y + 14 + 46 * k), line, font=font, fill=(0, 0, 0))
     out = os.path.join(OUT_DIR, filename)
     img.save(out)
+    return out
+
+
+def still_card(ep, raw, ss, card, secs, out, volume=0.6):
+    """A card over the blurred image of a take, with the park's sound fading under it."""
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(ss), "-t", str(secs), "-i", raw,
+                    "-loop", "1", "-framerate", "30", "-i", card,
+                    "-filter_complex", "[0:v]scale=-2:1920,crop=1080:1920,setsar=1,gblur=sigma=36,eq=brightness=-0.4[bg];"
+                    "[1:v]format=rgba,fade=in:st=0:d=0.4:alpha=1[c];[bg][c]overlay=0:0:eof_action=repeat,setsar=1[outv];"
+                    f"[0:a]volume={volume},afade=t=out:st={secs - 1.5}:d=1.5,aresample=48000[outa]",
+                    "-map", "[outv]", "-map", "[outa]", "-t", str(secs), "-aspect", "9:16", "-c:v", "libx264",
+                    "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "pcm_s16le", out], check=True)
     return out
 
 
@@ -824,16 +877,12 @@ def render_class(ep, force=False):
     card = class_rule_card(ep, f"ep{ep['id']}_regla.png")
     last = ep["cuts"][-1]
     lt = ep.get("regla_secs", 6)
-    c_out = os.path.join(OUT_DIR, f"ep{ep['id']}_regla.mp4")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(last["ss"] + last["t"]), "-t", str(lt),
-                    "-i", raws[last.get("take") or last["split"][1]],
-                    "-loop", "1", "-framerate", "30", "-i", card,
-                    "-filter_complex", "[0:v]scale=-2:1920,crop=1080:1920,setsar=1,gblur=sigma=36,eq=brightness=-0.4[bg];"
-                    "[1:v]format=rgba,fade=in:st=0:d=0.4:alpha=1[c];[bg][c]overlay=0:0:eof_action=repeat,setsar=1[outv];"
-                    f"[0:a]volume=0.6,afade=t=out:st={lt - 1.5}:d=1.5,aresample=48000[outa]",
-                    "-map", "[outv]", "-map", "[outa]", "-t", str(lt), "-aspect", "9:16", "-c:v", "libx264",
-                    "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "pcm_s16le", c_out], check=True)
-    clips.append(c_out)
+    last_raw = raws[last.get("take") or last["split"][1]]
+    clips.append(still_card(ep, last_raw, last["ss"], card, lt, os.path.join(OUT_DIR, f"ep{ep['id']}_regla.mp4")))
+    # And the game: where to finish learning (user, 26-11-2026).
+    gc = class_game_card(ep, f"ep{ep['id']}_juego.png")
+    clips.append(still_card(ep, last_raw, last["ss"], gc, ep.get("juego_secs", 5),
+                            os.path.join(OUT_DIR, f"ep{ep['id']}_juego.mp4"), volume=0.4))
     return finish_mix(ep, clips)
 
 
