@@ -316,7 +316,9 @@ func _ready() -> void:
 		if arg == "--cheat=niveles": Arcade.all_open = true
 		if arg.begins_with("--at="): pending_start["at"] = arg.trim_prefix("--at=")
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
-		for key in ["lens","pan","zoom-to","hud"]:
+		# --stage-gender=m|f and --stage-skip=N choose who --stage=sentado sits on the bench
+		# (Shorts: another person, other clothes).
+		for key in ["lens","pan","zoom-to","hud","stage-gender","stage-skip"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
 		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot","--strip-demo","--aperture-sweep","--seated"]: demo[arg.trim_prefix("--")] = true
 		# Capture helper: the help texts of a device (teclado, mando) whatever is plugged in.
@@ -2425,7 +2427,15 @@ func stage_scene(name: String) -> void:
 			var bench = park.benches[bench_i]
 			set_seat(bench,0,null)
 			set_seat(bench,1,null)
-			var p = pick(func(q): return q.lane == 1 and not q.runner and q.traits.profile != 3)
+			var want_gender = str(demo.get("stage-gender",""))
+			var adult = func(q): return not q.runner and q.traits.profile != 3 and (want_gender == "" or q.traits.get("gender","m") == want_gender)
+			var skipped = []
+			var p = null
+			for k in int(demo.get("stage-skip","0"))+1:
+				p = pick(func(q): return q.lane == 1 and adult.call(q),skipped)
+				if p == null: p = pick(adult,skipped)
+				if p == null: break
+				skipped.append(p)
 			if p == null: p = pick(func(q): return not q.runner and q.traits.profile != 3)
 			for q in people:
 				if q != p and (q.lane == 0 or q.lane == 1 or q.bench_index == bench_i or q.bench_goal == bench_i):

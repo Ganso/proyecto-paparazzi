@@ -545,9 +545,10 @@
             "--sandbox",
             "--profile=Ultra",
             "--stage=sentado",
-            "--activity=movil",
-            "--lens=1,2",
-            "--focal=70",
+            "--stage-gender=m",
+            "--activity=leer",
+            "--lens=2,0",
+            "--focal=75",
             "--angle=35",
             "--hud=0",
             "--time=day"
@@ -560,9 +561,10 @@
             "--sandbox",
             "--profile=Ultra",
             "--stage=sentado",
-            "--activity=movil",
-            "--lens=1,2",
-            "--focal=70",
+            "--stage-gender=m",
+            "--activity=leer",
+            "--lens=2,0",
+            "--focal=75",
             "--angle=35",
             "--hud=0",
             "--time=golden"
@@ -575,9 +577,10 @@
             "--sandbox",
             "--profile=Ultra",
             "--stage=sentado",
-            "--activity=movil",
-            "--lens=1,2",
-            "--focal=70",
+            "--stage-gender=m",
+            "--activity=leer",
+            "--lens=2,0",
+            "--focal=75",
             "--angle=35",
             "--hud=0",
             "--time=blue"
@@ -606,13 +609,13 @@
           "take": "clase_retrato_dorada",
           "ss": 1.0,
           "t": 3.5,
-          "crop": "906:688:267:46"
+          "crop": "808:614:316:36"
         },
         {
           "take": "clase_retrato_dia",
           "ss": 1.0,
           "t": 5.5,
-          "crop": "906:688:267:46",
+          "crop": "808:614:316:36",
           "titulo": "MEDIODÍA",
           "texto": "El sol cae desde arriba: la cara queda apagada y todo se ve plano."
         },
@@ -620,9 +623,9 @@
           "take": "clase_retrato_dorada",
           "ss": 4.5,
           "t": 5.5,
-          "crop": "906:688:267:46",
+          "crop": "808:614:316:36",
           "titulo": "UNA HORA ANTES DE LA PUESTA",
-          "texto": "El sol está bajo: la luz llega de frente, cálida, y dibuja la cara. Mira qué larga es la sombra sobre los arbustos."
+          "texto": "El sol está bajo: la luz llega de frente, cálida, y dibuja la cara y el periódico. Mira qué largas son las sombras."
         },
         {
           "split": [
@@ -631,7 +634,7 @@
           ],
           "ss": 3.0,
           "t": 6.5,
-          "crop": "906:688:267:46",
+          "crop": "808:614:316:36",
           "split_labels": [
             "MEDIODÍA",
             "TARDE"
@@ -651,7 +654,7 @@
           "take": "clase_retrato_azul",
           "ss": 1.0,
           "t": 4.0,
-          "crop": "906:688:267:46",
+          "crop": "808:614:316:36",
           "titulo": "DESPUÉS: LA HORA AZUL",
           "texto": "Luz suave y fría, justo después de ponerse el sol."
         }
