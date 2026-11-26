@@ -39,12 +39,12 @@ El mensaje final de cada Short es siempre el mismo:
 
 | Ep. | Eje Didáctico | Gancho en Pantalla | Vista Previa | Demostración Visual | Audio / SFX | Estado |
 |---|---|---|---|---|---|---|
-| **#1** | **El Secreto del Bokeh** | *«¿POR QUÉ TUS RETRATOS NO TIENEN ESTE DESENFOQUE?»* | *f/1.8 vs f/16* | De f/1.8 a f/16 con teleobjetivo 135mm: desenfoque cremoso a plena apertura que se vuelve nítido al cerrar. Sujeto sentado en banco. | Clics de rueda con cada paso + Sonido de obturador réflex + Música alegre | **Publicado (Público)**: [`nVvqfVOqyB4`](https://youtube.com/shorts/nVvqfVOqyB4). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). Lista «PhotoHacks». |
-| **#2** | **El barrido** | *«EL BARRIDO: SIGUE AL CORREDOR»* | *1/30 s + giro* | Nivel 26: la cámara sigue al corredor a 1/30 s y la foto sale con él nítido y el fondo arrastrado (100/100). | Sonido del juego + música | **Programado (30-10-2026, 18:00 CEST)**: [`XjeIYtMmzcw`](https://youtube.com/shorts/XjeIYtMmzcw). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
-| **#3** | **Estrellas de Noche** | *«CONVIERTE LAS FAROLAS EN ESTRELLAS»* | *f/2.8 vs f/16* | Sandbox nocturno: foto a f/2.8 (luces redondas), el diafragma cerrándose en el visor y foto a f/16 con las farolas y el quiosco en estrella. | Sonido del juego + música | **Programado (01-11-2026, 18:00 CET)**: [`S8Nta5sNZRc`](https://youtube.com/shorts/S8Nta5sNZRc). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
-| **#4** | **Compresión Focal** | *«EL TELE «APLASTA» EL FONDO»* | *28mm vs 135mm* | Demostración de la lección 3 de la Academia: 28 mm de cerca (fondo pequeño) frente a 135 mm de lejos (árboles enormes y pegados). | Sonido del juego + música | **Programado (06-11-2026, 18:00 CET; movido desde el 03-11 para no coincidir con el tráiler de Notrunner)**: [`kXOGhUiUuOg`](https://youtube.com/shorts/kXOGhUiUuOg). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
-| **#5** | **Enfoque manual** | *«ASÍ SE ENFOCABA ANTES DEL AUTOFOCO»* | *Enfoque manual* | Zoom al centro del visor: imagen partida de la réflex encajando al girar el anillo y doble imagen de la telemétrica juntándose. | Sonido del juego + música | **Programado (04-11-2026, 18:00 CET)**: [`KvJ3tcRInAw`](https://youtube.com/shorts/KvJ3tcRInAw). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
-| **#6** | **La cámara TLR** | *«LA CÁMARA QUE SE MIRA DESDE ARRIBA»* | *A la cintura* | Nivel 21: visor de cintura cuadrado e invertido, enfoque manual y foto 6×6 de 97/100. Sin nombres de marcas de cámaras. | Sonido del juego + música | **Programado (05-11-2026, 18:00 CET)**: [`mxBqg-Qol9A`](https://youtube.com/shorts/mxBqg-Qol9A). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
+| **#1** | **El Secreto del Bokeh** | *«¿POR QUÉ TUS RETRATOS NO TIENEN ESTE DESENFOQUE?»* | *f/1.8 vs f/16* | De f/1.8 a f/16 con teleobjetivo 135mm: desenfoque cremoso a plena apertura que se vuelve nítido al cerrar. Sujeto sentado en banco. | Clics de rueda con cada paso + Sonido de obturador réflex + Música alegre | **Publicado** (27-10-2026; 65 visitas el 26-11): [`nVvqfVOqyB4`](https://youtube.com/shorts/nVvqfVOqyB4). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). Lista «PhotoHacks». |
+| **#2** | **El barrido** | *«EL BARRIDO: SIGUE AL CORREDOR»* | *1/30 s + giro* | Nivel 26: la cámara sigue al corredor a 1/30 s y la foto sale con él nítido y el fondo arrastrado (100/100). | Sonido del juego + música | **Publicado** (30-10-2026; 130 visitas el 26-11): [`XjeIYtMmzcw`](https://youtube.com/shorts/XjeIYtMmzcw). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
+| **#3** | **Estrellas de Noche** | *«CONVIERTE LAS FAROLAS EN ESTRELLAS»* | *f/2.8 vs f/16* | Sandbox nocturno: foto a f/2.8 (luces redondas), el diafragma cerrándose en el visor y foto a f/16 con las farolas y el quiosco en estrella. | Sonido del juego + música | **Publicado** (01-11-2026; 99 visitas el 26-11): [`S8Nta5sNZRc`](https://youtube.com/shorts/S8Nta5sNZRc). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
+| **#4** | **Compresión Focal** | *«EL TELE «APLASTA» EL FONDO»* | *28mm vs 135mm* | Demostración de la lección 3 de la Academia: 28 mm de cerca (fondo pequeño) frente a 135 mm de lejos (árboles enormes y pegados). | Sonido del juego + música | **Publicado** (06-11-2026; 53 visitas el 26-11): [`kXOGhUiUuOg`](https://youtube.com/shorts/kXOGhUiUuOg). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
+| **#5** | **Enfoque manual** | *«ASÍ SE ENFOCABA ANTES DEL AUTOFOCO»* | *Enfoque manual* | Zoom al centro del visor: imagen partida de la réflex encajando al girar el anillo y doble imagen de la telemétrica juntándose. | Sonido del juego + música | **Publicado** (04-11-2026; 54 visitas el 26-11): [`KvJ3tcRInAw`](https://youtube.com/shorts/KvJ3tcRInAw). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
+| **#6** | **La cámara TLR** | *«LA CÁMARA QUE SE MIRA DESDE ARRIBA»* | *A la cintura* | Nivel 21: visor de cintura cuadrado e invertido, enfoque manual y foto 6×6 de 97/100. Sin nombres de marcas de cámaras. | Sonido del juego + música | **Publicado** (05-11-2026; 37 visitas el 26-11): [`mxBqg-Qol9A`](https://youtube.com/shorts/mxBqg-Qol9A). Vídeo relacionado: tráiler oficial (`IZoAsAiY5Fk`). |
 
 ---
 
@@ -115,3 +115,67 @@ Al generar los episodios siguientes, deben tenerse en cuenta las siguientes regl
   - En YouTube Shorts es fundamental asignar un «Vídeo relacionado» para convertir a los espectadores de 15 segundos en jugadores del juego completo.
   - Para PhotoHacks, el vídeo relacionado por defecto es el tráiler del juego: `PhotoHacks - v0.3.0 alfa` (ID `NrxNwn-OvMU`).
   - En la pantalla de edición de YouTube Studio, el campo `#linked-video-editor-link` debe apuntar siempre a este vídeo.
+
+---
+
+## 6. Temporada 2: «Escuela PhotoHacks» (plan del 26-11-2026)
+
+> **Encargo del usuario (26-11-2026):** «mira los shorts que hemos hecho hasta ahora y planifica los siguientes. me gusta enfocarlos como una escuela de fotografía más que como publicidad del juego».
+
+### 6.1 Qué nos dicen los seis primeros
+
+- Los que más se ven enseñan **un fenómeno que se ve solo**: el barrido (130 visitas) y las estrellas de las farolas (99). Los que explican una herramienta (enfoque manual, TLR) se ven la mitad.
+- Todos cierran vendiendo el juego: la tarjeta final, la frase «Aprende fotografía jugando…» y el tráiler como vídeo relacionado. Con 37–130 visitas, la venta no compensa: un espectador que aprende algo útil vuelve; uno al que le venden, no.
+- Son píldoras sueltas sin orden. Una escuela necesita **un temario, un número de clase y una cita con la siguiente**.
+
+### 6.2 El formato de clase (30–45 s)
+
+Los seis se reconvierten como **Clases 1–6** y la temporada 2 sigue desde la 7. Cada clase tiene cuatro tiempos:
+
+| Tiempo | Duración | Qué se ve |
+|---|---|---|
+| **Pregunta** | 0–3 s | La duda real de quien hace fotos («¿Por qué me salen las caras negras a contraluz?»), sobre la imagen del problema. Es la vista previa. |
+| **Fenómeno** | 3–20 s | El antes y el después en el parque, con los datos de la cámara visibles (f/, velocidad, mm): son el contenido, no decoración. |
+| **Por qué** | 20–30 s | Una sola idea, en una frase y, si hace falta, un esquema sencillo encima de la imagen. |
+| **Regla y deberes** | 30–40 s | Cartela fija con **la regla para recordar** y **«Pruébalo hoy»**: un ejercicio con el móvil o la cámara del espectador. |
+
+Cambios respecto a la temporada 1:
+
+- **Cartela de cabecera**: «ESCUELA PHOTOHACKS · CLASE 7» en lugar de las pastillas tipo «[ // DIFRACCIÓN ÓPTICA // ]».
+- **Cierre**: «Próxima clase: <tema>» en lugar de la tarjeta de marca. El logo, pequeño, en una esquina.
+- **El juego, solo en la descripción**: una línea al final («Las imágenes son de PhotoHacks, un juego gratuito para practicar esto: <enlace>»). En pantalla no se dice «juego», «descarga» ni «gratis».
+- **Vídeo relacionado**: la clase anterior (o la lista), no el tráiler. *(Pendiente de que el usuario lo confirme: cambia la regla 7 del §2.)*
+- **Lista nueva** «Escuela de fotografía en 30 s» con las clases en orden, además de «PhotoHacks».
+- **Interfaz del juego**: la mínima. Visor y datos de exposición, sí; menús, puntuaciones y créditos, no. Excepción: los maniquíes de los planos y la cuadrícula de tercios, que ya son material didáctico.
+- **Ritmo**: dos clases por semana a las 18:00 (martes y viernes).
+
+### 6.3 Temario de la temporada 2
+
+Tres bloques, de lo que más pregunta quien empieza (encuadrar) a lo más técnico. Cada fila dice de dónde salen las imágenes; todo existe ya en el juego.
+
+| Clase | Pregunta (vista previa) | Fenómeno | Regla y deberes | Imágenes |
+|---|---|---|---|---|
+| **7 · Los seis planos** | «¿Plano medio o americano?» | Una persona, del general al primerísimo primer plano con el zoom de 24 a 600 mm, con el maniquí de cada plano en la esquina. | *Cada plano corta en un sitio del cuerpo.* Haz los seis a la misma persona. | Lección 2 de la Academia y Paparazzi (cámara ideal, `--sandbox` en el parque grande) |
+| **8 · Nunca cortes por una articulación** | «¿Por qué esta foto queda rara?» | El mismo encuadre cortando por las rodillas (rechazada) y por media pierna (válida); «Pedido» y «Tu foto». | *Corta entre articulaciones, nunca en ellas.* Repasa tus últimas diez fotos. | Arcade, bloque 7, nivel 32 |
+| **9 · Aire delante de la mirada** | «¿Centro o a un lado?» | Corredor en el centro, en un tercio mirando al borde y en un tercio con aire delante. | *Deja espacio hacia donde mira o va.* Activa la cuadrícula del móvil. | Lección 1 de la Academia (esquemas de tercios y aire) |
+| **10 · ¿Quién es el protagonista?** | «¿A quién miro en esta foto?» | Plano general con mucha gente y el mismo sitio con tele: la persona aislada. | *Si no sabes quién es, tampoco lo sabrá quien la mire.* Una foto, una persona. | Paparazzi: búsqueda en la multitud y el plano pedido |
+| **11 · El fotómetro quiere gris** | «¿Por qué el cielo me oscurece la foto?» | Matricial con mucho cielo: cara oscura; puntual sobre la cara o compensación +1: cara bien. | *La cámara lo lleva todo a gris medio.* Prueba a tocar la cara en el móvil antes de disparar. | Lección 8 (medir la luz) y niveles de contraluz |
+| **12 · Contraluz o silueta** | «¿Error o silueta?» | El mismo contraluz medido para la cara y medido para el cielo. | *Mide para lo que quieras ver bien.* Busca una silueta esta tarde. | Arcade: niveles de contraluz y silueta |
+| **13 · La hora dorada** | «¿Por qué las fotos de la tarde son más bonitas?» | El mismo encuadre de día, en la hora dorada, en la hora azul y de noche. | *La luz baja dibuja; la de mediodía aplana.* Sal una hora antes de que se ponga el sol. | Sandbox, `--time=day/golden/blue/night` |
+| **14 · Congelar o dejar estela** | «¿Por qué sale borroso el que corre?» | El corredor a 1/1000 s (congelado) y a 1/15 s (estela), y el barrido de la clase 2 como tercera vía. | *Velocidad rápida congela; lenta cuenta el movimiento.* Fotografía a alguien andando a las dos velocidades. | Lección 7 (movimiento), prioridad S |
+| **15 · La foto movida** | «¿Por qué me sale borrosa si no se mueve nada?» | A 200 mm, 1/30 s tiembla y 1/250 s no. | *Velocidad mínima ≈ 1/focal.* Con zoom, sube la velocidad. | Simulación de trepidación (lección 7) |
+| **16 · El desenfoque no es solo el diafragma** | «¿Cómo desenfoco el fondo sin un objetivo caro?» | Mismo f/: cerca del sujeto, fondo lejos y con tele frente a lejos y gran angular. | *Acércate, aleja el fondo, usa tele.* Hazlo con el modo normal del móvil. | Lección 6 (profundidad de campo) |
+| **17 · Enfoca a los ojos** | «¿Por qué no está nítida si he enfocado?» | f/1.8 a 135 mm: foco en la oreja o el fondo frente a foco en el ojo. | *En un retrato, el ojo más cercano.* Toca los ojos en la pantalla antes de disparar. | Lección 3 (enfoque), punto único |
+| **18 · A o S: elige qué mandas** | «¿Qué modo uso?» | Dos situaciones: retrato (A: elige el fondo) y corredor (S: elige el movimiento). | *A cuando importa el fondo; S cuando importa el movimiento.* | Lección 9 (P, A, S y M) |
+
+**Intercaladas, tres clases de examen** (20–25 s): «¿Qué plano es?», «¿Qué velocidad usó?», «¿Dónde está el fallo?». Una imagen, 3 s de cuenta atrás con la pregunta, la respuesta y «Dímelo en los comentarios antes de verla». Repasan las clases anteriores y dan comentarios. Van tras las clases 9, 13 y 17.
+
+### 6.4 Lo que hay que añadir a `publicar_short.py`
+
+1. Plantilla «Escuela»: cabecera con el número de clase, cartela de regla y deberes (3–4 s, fija) y cierre «Próxima clase».
+2. Comparación en paralelo (dos tomas lado a lado o una sobre otra en el 9:16) para las clases 8, 11, 12, 13, 14, 15, 16 y 17.
+3. Pausa de examen: imagen congelada y cuenta atrás.
+4. Campos nuevos en `shorts_estrategia.json`: `clase`, `pregunta`, `regla`, `deberes`, `proxima`.
+5. Descripción con el texto de la clase (la regla y el ejercicio) y el juego solo al final.
+
+Esto no afecta a las clases 1–6 ya publicadas: no se tocan, solo entran en la lista nueva.

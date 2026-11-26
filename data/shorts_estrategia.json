@@ -1,8 +1,8 @@
 {
   "version": 1,
   "project": "photohacks",
-  "last_updated": "2026-10-29",
-  "next_episode": 2,
+  "last_updated": "2026-11-26",
+  "next_episode": 7,
   "episodes": [
     {
       "id": 1,
@@ -34,7 +34,7 @@
     {
       "id": 2,
       "slug": "barrido",
-      "status": "programado",
+      "status": "publicado",
       "youtube_url": "https://youtube.com/shorts/XjeIYtMmzcw",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_barrido.mp4",
       "title": "El barrido: el corredor nítido y el fondo en movimiento #shorts #fotografia",
@@ -119,7 +119,7 @@
     {
       "id": 3,
       "slug": "estrellas_farolas",
-      "status": "programado",
+      "status": "publicado",
       "youtube_url": "https://youtube.com/shorts/S8Nta5sNZRc",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_estrellas_farolas.mp4",
       "title": "El truco para convertir las farolas en estrellas #shorts #fotografia",
@@ -232,7 +232,7 @@
     {
       "id": 4,
       "slug": "compresion_focal",
-      "status": "programado",
+      "status": "publicado",
       "youtube_url": "https://youtube.com/shorts/kXOGhUiUuOg",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_compresion_focal.mp4",
       "title": "El zoom no solo acerca: cambia el fondo (28 mm vs 135 mm) #shorts #fotografia",
@@ -336,7 +336,7 @@
     {
       "id": 5,
       "slug": "enfoque_partido",
-      "status": "programado",
+      "status": "publicado",
       "youtube_url": "https://youtube.com/shorts/KvJ3tcRInAw",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_enfoque_partido.mp4",
       "title": "Así se enfocaba antes del autofoco: la imagen partida #shorts #fotografia",
@@ -442,7 +442,7 @@
     {
       "id": 6,
       "slug": "tlr_cintura",
-      "status": "programado",
+      "status": "publicado",
       "youtube_url": "https://youtube.com/shorts/mxBqg-Qol9A",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_tlr_cintura.mp4",
       "title": "La cámara que se mira desde arriba (TLR 6×6) #shorts #fotografia",
