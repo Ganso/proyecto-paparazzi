@@ -160,6 +160,14 @@ func practice() -> void:
 			academy.frame_goal = {"who":s,"x":academy.lead_x(s),"y":1.0/3.0,"lead":true}
 			await wait(3.0)
 			await shoot()
+		"planos":
+			# The zoom and the framing of each shot asked for, in order (the camera's own: the
+			# action of the theory pages, which a student does by hand).
+			for plane in academy.SHOT_TASKS:
+				academy.do_action("plano:"+plane)
+				await wait(1.5)
+				await focus_on(s)
+				await shoot()
 		"enfoque":
 			await aim(s,.5,.3)
 			main.finder.active = 3
@@ -252,6 +260,10 @@ func exam() -> void:
 			# The model walks: follow it with its head on a crossing and air in front.
 			academy.frame_goal = {"who":s,"x":academy.lead_x(s),"y":1.0/3.0,"lead":true}
 			await wait(3.5)
+		"planos":
+			academy.do_action("plano:"+academy.EXAM_SHOT)
+			await wait(1.5)
+			await focus_on(s)
 		"enfoque":
 			await aim(s,.5,.3)
 			await focus_on(s)

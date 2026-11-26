@@ -5,6 +5,7 @@ extends SceneTree
 const Conditions = preload("res://scripts/conditions.gd")
 const Main = preload("res://main.tscn")
 const Texts = preload("res://scripts/texts.gd")
+const Framing = preload("res://scripts/framing.gd")
 const Photo = preload("res://scripts/photography.gd")
 const TEST_PROGRESS = "user://academia_prueba.cfg"
 var checks = 0
@@ -70,7 +71,7 @@ func run() -> void:
 
 	# --- Demonstrations: they run to the end and take the photos they narrate ---
 	Engine.time_scale = 2.0
-	var expected_photos = {"exposicion":1, "dof":2, "movimiento":3, "composicion":1, "focal":2, "objetivos":2, "camaras":1, "enfoque":1, "medicion":1, "modos":1}
+	var expected_photos = {"exposicion":1, "dof":2, "movimiento":3, "composicion":1, "focal":2, "objetivos":2, "camaras":1, "enfoque":1, "medicion":1, "modos":1, "planos":3}
 	for n in range(1,academy.LESSONS+1):
 		print("· demo %d" % n)
 		academy.begin(n,"demo")
@@ -98,6 +99,10 @@ func run() -> void:
 					check(shots[0].t >= 1.0/30-.001 and shots[1].t <= 1.0/1000+.0001,"Demo 3 shoots at 1/30 and 1/1000")
 					check(shots[0].v > 1.5 and shots[1].v > 1.5,"Demo 3 catches the runner both times (%.2f, %.2f m/s)" % [shots[0].v,shots[1].v])
 					check(academy.demo_photos[0].result.drag > academy.demo_photos[1].result.drag*10,"Demo 3: 1/30 leaves a trail, 1/1000 freezes (%.3f / %.3f mm)" % [academy.demo_photos[0].result.drag,academy.demo_photos[1].result.drag])
+			"planos":
+				if shots.size() == 3:
+					check(shots[0].f < shots[1].f and shots[1].f < shots[2].f and shots[2].f > 300.0,"Shots demo: full, medium and extreme close-up, zooming in (%.0f, %.0f, %.0f mm)" % [shots[0].f,shots[1].f,shots[2].f])
+				check(game.equipment.lens().max == 600.0,"Shots demo: the ideal 24–600 mm camera")
 			"focal":
 				if shots.size() == 2:
 					check(shots[0].f <= 28.1 and shots[0].d < 3.0,"Demo 5: 28 mm close (%.1f m)" % shots[0].d)
@@ -146,6 +151,24 @@ func run() -> void:
 	academy.on_practice_photo(null,fake.call({"f":135.0,"d":11.5}))
 	check(academy.tasks[1] and academy.tasks[2],"Lesson 5: 135 mm far completes the comparison")
 	check(academy.comparison_photos().size() == 2,"Lesson 5: diptych of the two photos")
+
+	# The lesson on shots, framed for real: each shot asked for, in order, ticks its task; another
+	# shot ticks nothing and says what it was. Leaving the lesson gives the player's camera back.
+	var own_lens_max: float = game.equipment.lens().max
+	academy.begin(L.call("planos"),"practica")
+	check(game.equipment.lens().max == 600.0 and game.focal == 24.0,"Shots practice: the ideal camera, handed over at 24 mm")
+	academy.do_action("plano:general")
+	var wrong_notes = academy.on_practice_photo(null,fake.call({}))
+	check(not academy.tasks[0] and wrong_notes.size() == 1 and str(wrong_notes[0]).contains(academy.capital(Texts.get_text("cond_plano_general"))),"Shots: a wide shot when a full one is asked ticks nothing and says so: %s" % str(wrong_notes))
+	for k in academy.SHOT_TASKS.size():
+		academy.do_action("plano:"+academy.SHOT_TASKS[k])
+		academy.update_live_shape()
+		check(academy.live_shape.get("plane","") == academy.SHOT_TASKS[k] and academy.shot_hint(academy.SHOT_TASKS[k]).begins_with(Texts.get_text("academia_planos_pista_listo").split("%")[0]),"Shots: the live hint knows the %s is right: %s" % [academy.SHOT_TASKS[k],academy.shot_hint(academy.SHOT_TASKS[k])])
+		academy.on_practice_photo(null,fake.call({}))
+		check(academy.tasks[k],"Shots: the %s ticks task %d (%s)" % [academy.SHOT_TASKS[k],k+1,str(Framing.classify(game.body_landmarks(academy.subject)))])
+	check(academy.done(L.call("planos"),"practica"),"Shots: the three shots complete the practice")
+	academy.begin(L.call("composicion"),"teoria")
+	check(game.equipment.lens().max != 600.0 and academy.own_equipment == null,"Shots: the next lesson has its own camera back (%.0f mm, before %.0f)" % [game.equipment.lens().max,own_lens_max])
 
 	print("· equipment lessons")
 	# --- Lessons 6 to 10 (equipment): choices on the panel, practice criteria and exam reports ---
@@ -272,6 +295,23 @@ func run() -> void:
 	var exam_r1 = Academy.exam_report("exposicion",exam_base,{"delta":.2})
 	check(exam_r1.passed and exam_r1.lines.size() == 1 and exam_r1.score == 100 and Academy.exam_report("exposicion",exam_base,{"delta":.5}).score == 100 and Academy.exam_report("exposicion",exam_base,{"delta":.2}) == exam_r1,"Exam 1: centred needle and steady hands pass, always the same")
 	check(not Academy.exam_report("exposicion",exam_base,{"delta":-3.0}).passed,"Exam 1: three stops under fails")
+	# The lesson on shots: a clean cowboy shot passes; another shot, a defect or a cut at a joint fails,
+	# and the report names what was made and where it cut.
+	var cowboy = {"plane":"americano","defects":[]}
+	var shots_ok = Academy.exam_report("planos",exam_base,{"shape":cowboy,"clean":""})
+	check(shots_ok.passed and shots_ok.lines.size() == 2 and shots_ok.score == 100,"Exam on shots: a clean cowboy shot passes")
+	var shots_medium = Academy.exam_report("planos",exam_base,{"shape":{"plane":"medio","defects":[]},"clean":""})
+	check(not shots_medium.passed and str(shots_medium.lines[0][1]).contains(Academy.capital(Texts.get_text("cond_plano_medio"))),"Exam on shots: a medium shot fails and says so: %s" % str(shots_medium.lines))
+	check(not Academy.exam_report("planos",exam_base,{"shape":{"plane":"americano","defects":["aire"]},"clean":""}).passed,"Exam on shots: too much air above fails")
+	var shots_knees = Academy.exam_report("planos",exam_base,{"shape":cowboy,"clean":"knees"})
+	check(not shots_knees.passed and str(shots_knees.lines[1][1]).contains(Texts.get_text("cond_articulacion_knees")),"Exam on shots: cutting at the knees fails and says where")
+	check(not Academy.exam_report("planos",exam_base,{"shape":{"plane":"","defects":["cara_fuera"]},"clean":"?"}).passed,"Exam on shots: nobody in the frame fails")
+	var edge = {"behind":false}
+	for j in preload("res://scripts/framing.gd").LANDMARKS: edge[j] = Vector2(.5,.2)
+	edge.knees = Vector2(.5,1.01)
+	check(Academy.joint_cut(edge,"americano") == "knees","joint_cut: the bottom edge at the knees")
+	edge.knees = Vector2(.5,1.2)
+	check(Academy.joint_cut(edge,"americano") == "" and Academy.joint_cut({},"americano") == "?","joint_cut: clear of the joints, and nobody")
 	var exam_slow = exam_base.duplicate()
 	exam_slow.t = 1.0/15
 	check(Academy.exam_report("exposicion",exam_slow,{"delta":0.0}).passed,"The exposure exam does not judge camera shake: its lesson comes later")

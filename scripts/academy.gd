@@ -1,5 +1,5 @@
 extends Control
-# Academia de fotografía (docs/futuro/06_MODO_TUTOR_ACADEMIA.md): ten lessons (five on technique,
+# Academia de fotografía (docs/futuro/06_MODO_TUTOR_ACADEMIA.md): eleven lessons (six on technique,
 # five on the equipment), each with theory
 # pages drawn over the live viewfinder, a guided demonstration (the camera moves by itself, with
 # subtitles and highlighted controls) and a practice with tasks and live hints. The exam is shown
@@ -10,14 +10,19 @@ const Photo = preload("res://scripts/photography.gd")
 const Diagram = preload("res://scripts/academy_diagram.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
+const Framing = preload("res://scripts/framing.gd")
+const Conditions = preload("res://scripts/conditions.gd")
+const Ideal = preload("res://scripts/ideal_equipment.gd")
 const GlyphLabel = preload("res://scripts/glyph_label.gd")
 var progress_path = OS.get_environment("PAPARAZZI_ACADEMY_CFG") if OS.has_environment("PAPARAZZI_ACADEMY_CFG") else "user://academia.cfg"   # tests and capture tools point it elsewhere
 # The lessons in the order they are taught. Each has an id: the code, the texts
 # (academia_<id>_…) and the progress file go by id, so the order can change without touching them.
 # Rule of the order (user, 04-10-2026): no lesson talks about, asks for or examines anything that
 # an earlier one has not taught.
-const ORDER = ["composicion","enfoque","focal","exposicion","dof","movimiento","medicion","modos","objetivos","camaras"]
-const LESSONS = 10
+# The shots (user, 26-11-2026): right after the composition, which already says «never cut at a
+# joint»; the zoom it needs is the tutorial's.
+const ORDER = ["composicion","planos","enfoque","focal","exposicion","dof","movimiento","medicion","modos","objetivos","camaras"]
+const LESSONS = 11
 # The order before the ids, to read old progress files (sections leccion_<number>).
 const OLD_NUMBERS = {1:"exposicion",2:"dof",3:"movimiento",4:"composicion",5:"focal",6:"objetivos",7:"camaras",8:"enfoque",9:"medicion",10:"modos"}
 var kind = ""               # id of the lesson in hand
@@ -32,6 +37,11 @@ const SAVED = ["teoria","demo","practica","examen"]   # what the progress file k
 const SETUP = {
 	"composicion": {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":122.0,"pitch":-3.0,
 		"pages":["","tercios","tercios","tercios","tercios"],"practice_diagram":"tercios"},
+	# The shots: someone standing 6 m away and Paparazzi's ideal 24–600 mm zoom, so that every shot,
+	# from the wide one (24 mm) to the extreme close-up (≈ 440 mm), is made without moving. 53°: the
+	# clear sector of the focal lesson. Each theory page frames the model in the shot it explains.
+	"planos": {"time":"day","body":2,"lens":0,"focal":24.0,"auto":true,"focus":"AF puntual","angle":53.0,"pitch":-3.0,"ideal":true,
+		"pages":["planos","planos","planos","planos","planos"],"practice_diagram":"planos","page_do":["plano:entero","plano:general","plano:americano","plano:cara","plano:medio"]},
 	"enfoque": {"time":"day","body":2,"lens":2,"focal":50.0,"auto":true,"focus":"AF puntual","angle":125.0,"pitch":-3.0,
 		"pages":["","","",""],"practice_diagram":""},
 	# 53°: clear of the benches (35°, 125°…) and of the lamp posts (8° and 98° at 2.6 m, 38° and 68°
@@ -58,7 +68,7 @@ const SETUP = {
 		"pages":["","","","","",""],"practice_diagram":"","page_do":["body:0","body:0","body:1","body:2","body:3","body:0"]},
 }
 const SPOT_LESSONS = {"exposicion":"puntual"}
-const THEORY_PAGES = {"composicion":5, "enfoque":4, "focal":4, "exposicion":6, "dof":5, "movimiento":5, "medicion":5, "modos":5, "objetivos":4, "camaras":6}
+const THEORY_PAGES = {"composicion":5, "planos":5, "enfoque":4, "focal":4, "exposicion":6, "dof":5, "movimiento":5, "medicion":5, "modos":5, "objetivos":4, "camaras":6}
 # Lessons whose practice and exam put choices on the panel (lenses, bodies, metering, modes).
 const CHOICES = {
 	"focal": [["academia_op_28","lens:3:28"],["academia_op_135","lens:5:135"]],
@@ -69,7 +79,7 @@ const CHOICES = {
 }
 # What each exam looks at besides its own subject: only what its lesson, or an earlier one, taught.
 const EXAM_ASKS = {
-	"composicion": [], "enfoque": [], "focal": ["nitido"], "exposicion": ["expo"], "dof": [], "movimiento": ["pulso"],
+	"composicion": [], "planos": [], "enfoque": [], "focal": ["nitido"], "exposicion": ["expo"], "dof": [], "movimiento": ["pulso"],
 	"medicion": ["nitido","persona"], "modos": ["expo","nitido","persona"],
 	"objetivos": ["expo","pulso"], "camaras": ["nitido","persona"],
 }
@@ -86,6 +96,10 @@ const TASKS = 3
 var exam_attempts = 0
 var exam_last = {}          # report of the last exam photo
 var second = null           # second staged person (exam of lesson 2)
+var own_equipment = null    # the player's camera, kept aside while a lesson lends the ideal one
+var live_shape = {}         # lesson on shots: the shot the camera makes of the model now
+const SHOT_TASKS = ["entero","medio","cara"]   # practice of the lesson on shots, in order
+const EXAM_SHOT = "americano"
 
 var main
 var active = false
@@ -310,6 +324,8 @@ func begin(n: int, start_phase = "teoria") -> void:
 
 func apply_setup() -> void:
 	var s: Dictionary = SETUP[kind]
+	if s.get("ideal",false): use_ideal()
+	else: restore_equipment()
 	main.clear_fine()
 	main.equipment.film = false
 	main.equipment.body = s.body
@@ -352,6 +368,19 @@ func apply_setup() -> void:
 	else: expose_correctly()
 	main.refresh()
 
+# Paparazzi's ideal camera (24–600 mm) for the lesson on shots; the player's own comes back after.
+func use_ideal() -> void:
+	if own_equipment == null:
+		own_equipment = main.equipment
+		main.equipment = Ideal.new()
+	main.apply_equipment()
+
+func restore_equipment() -> void:
+	if own_equipment == null: return
+	main.equipment = own_equipment
+	own_equipment = null
+	main.apply_equipment()
+
 # Correct exposure for what the active point measures (as a helpful assistant would set it).
 func expose_correctly() -> void:
 	main.update_meter()
@@ -391,6 +420,7 @@ func stop() -> void:
 	active = false
 	visible = false
 	main.park.forced_cover = -1.0
+	restore_equipment()
 	release_staged()
 	for q in main.people: q.set_hidden(false)
 	frame_goal = {}
@@ -560,6 +590,7 @@ func stage_subject() -> void:
 		"dof": subject = stand_person(1,SETUP["dof"].angle,4.0)
 		"movimiento": runner = stage_runner()
 		"composicion": subject = walk_person(1,SETUP["composicion"].angle+16.0,-1.0)
+		"planos": subject = stand_person(2,SETUP["planos"].angle,6.0)
 		"focal": subject = stand_person(0,SETUP["focal"].angle-18.0,2.3)
 		"enfoque", "exposicion", "medicion", "modos", "objetivos", "camaras": subject = stand_person(1,SETUP[kind].angle,4.0)
 		_: subject = null
@@ -690,6 +721,14 @@ func start_demo() -> void:
 			[13.0,4,""],[13.5,-1,"shoot:Fijo · f/1,8"],
 			[17.5,5,""],
 			[20.5,-1,"end"]]
+		"planos": demo_steps = [
+			[0.1,-1,"freeze"],[0.3,1,"plano:general"],
+			[3.5,2,"plano:entero"],[5.5,-1,"shoot:Entero"],
+			[8.5,3,"plano:americano"],
+			[11.5,4,"plano:medio"],[13.5,-1,"shoot:Medio"],
+			[16.5,5,"plano:primer_plano"],
+			[19.5,6,"plano:cara"],[21.5,-1,"shoot:Primerísimo"],
+			[25.0,-1,"end"]]
 		"enfoque": demo_steps = [
 			[0.3,1,"look_subject"],[2.0,-1,"af"],
 			[4.0,2,"lock"],
@@ -816,6 +855,16 @@ func do_action(action: String, _from_page = false) -> void:
 		"look_subject":
 			if subject: frame_goal = {"who":subject,"x":.5,"y":.45}
 		"thirds": main.finder.thirds = true
+		"plano":
+			# Frame the model in a shot: the zoom it needs at its distance, and the crown with its
+			# air (the whole body in the middle for the wide shots), as Paparazzi's auto-framing.
+			if subject:
+				var to: Vector3 = subject.global_position-main.camera.global_position
+				main.focal = clampf(Framing.focal_for(parts[1],Framing.rest_heights(subject),Vector2(to.x,to.z).length()),main.equipment.lens().min,main.equipment.lens().max)
+				main.update_camera()
+				frame_goal = {"who":subject,"plane":parts[1],"snap":true}
+				track_frame_goal(0.0)
+				main.refresh()
 		"frame":
 			var who = subject if subject else null
 			if who: frame_goal = {"who":who,"x":float(parts[1]),"y":float(parts[2])}
@@ -888,7 +937,7 @@ func do_action(action: String, _from_page = false) -> void:
 				main.clear_sector([1,2],[runner],45.0,true)   # a clear run: nobody slows it down
 				main.reset_walker(runner,2,main.angle-25.0,1.0)
 		"end":
-			if kind == "focal": set_scene_pause(false)
+			if kind in ["focal","planos"]: set_scene_pause(false)
 			demo_done = true
 			highlight = ""
 			mark(lesson,"demo")
@@ -1006,6 +1055,7 @@ func start_practice() -> void:
 	# Never ready to shoot (user, 04-10-2026): the camera is handed over pointing elsewhere, and
 	# with whatever the lesson is about out of place.
 	if kind != "movimiento": main.angle = fposmod(main.angle+22.0,360)
+	if kind == "planos": main.focal = 24.0
 	match kind:
 		"enfoque", "dof": main.focus_distance = 40.0
 		"exposicion":
@@ -1071,7 +1121,8 @@ func start_exam() -> void:
 			main.iso_index = Photo.ISOS.find(100)
 		"camaras":
 			set_body(2,false)
-	main.angle = fposmod(main.angle+(22.0 if kind in ["enfoque","medicion","modos","camaras","focal"] else 0.0),360)
+	if kind == "planos": main.focal = 24.0
+	main.angle = fposmod(main.angle+(22.0 if kind in ["enfoque","medicion","modos","camaras","focal","planos"] else 0.0),360)
 	main.update_camera()
 	add_choices()
 	# The model of the composition exam walks: that is the exam.
@@ -1094,6 +1145,10 @@ func exam_context(result: Dictionary) -> Dictionary:
 	x["manual_focus"] = main.equipment.focus_mode == "MF"
 	x["comp"] = main.equipment.exposure_compensation()
 	if kind == "composicion": x["thirds"] = thirds_check(subject)
+	if kind == "planos" and is_instance_valid(subject):
+		var b = main.body_landmarks(subject)
+		x["shape"] = Framing.classify(b)
+		x["clean"] = joint_cut(b,EXAM_SHOT)
 	x["metering"] = main.equipment.metering
 	x["mode"] = main.equipment.exposure_mode()
 	x["person"] = e.get("person",true)
@@ -1148,6 +1203,14 @@ static func exam_report(n: String, e: Dictionary, x: Dictionary) -> Dictionary:
 		"composicion":
 			var state = str(x.get("thirds",""))
 			lines.append([state == "listo",Texts.get_text("academia_ex_tercios_"+(state if state in ["listo","cruce","aire"] else "nadie"))])
+		"planos":
+			var shape: Dictionary = x.get("shape",{"plane":"","defects":[]})
+			var right_shot = shape.plane == EXAM_SHOT and shape.defects.is_empty()
+			var made = capital(Conditions.plane_name(shape.plane))
+			lines.append([right_shot,Texts.get_text("academia_ex_plano_ok") if right_shot else Texts.get_text("academia_ex_plano_mal") % made])
+			var joint = str(x.get("clean","?"))
+			var clean = joint == "" and shape.plane != ""
+			lines.append([clean,Texts.get_text("academia_ex_corte_ok") if clean else (Texts.get_text("academia_ex_corte_mal") % Texts.get_text("cond_articulacion_"+joint) if joint != "?" and joint != "" else Texts.get_text("academia_ex_corte_nadie"))])
 		"enfoque":
 			var by_hand: bool = x.get("manual_focus",true)
 			lines.append([by_hand,Texts.get_text("academia_ex_manual_ok" if by_hand else "academia_ex_manual_mal")])
@@ -1206,7 +1269,7 @@ static func exam_report(n: String, e: Dictionary, x: Dictionary) -> Dictionary:
 
 # Exams with a model: who it is, by its clothes (as an assignment would).
 func model_line() -> String:
-	var who = subject if kind == "composicion" else (second if kind == "focal" else null)
+	var who = subject if kind in ["composicion","planos"] else (second if kind == "focal" else null)
 	if not is_instance_valid(who): return ""
 	return text("academia_examen_modelo") % ", ".join(Array(main.casting.descriptors(who.traits)).slice(0,3))
 
@@ -1267,6 +1330,11 @@ func check_practice(dt: float) -> void:
 				var check = thirds_check()
 				if check == "listo": tasks[1] = true
 				new_hint = lesson_text("pista_"+check) if check != "" else lesson_text("pista_cruce")
+		"planos":
+			var want_index = tasks.find(false)
+			if want_index >= 0:
+				var want: String = SHOT_TASKS[want_index]
+				new_hint = shot_hint(want)
 		"enfoque":
 			if main.finder.active != 4: tasks[0] = true
 			if main.focus_locked and is_instance_valid(main.af_person):
@@ -1330,6 +1398,7 @@ func practice_highlight() -> String:
 		"movimiento": return "velocidad"
 		"objetivos": return "velocidad"
 		"modos": return ["diafragma","velocidad","exposimetro"][next]
+		"planos": return "zoom"
 	return ""
 
 # The exposure lesson ends with a piece of advice: the thirds of a stop, for the game.
@@ -1387,6 +1456,16 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 				tasks[1] = true
 				tasks[2] = true
 			elif tasks[0]: notes.append(lesson_text("pista_foto_no"))
+		"planos":
+			# The shot of whoever is in the frame, task by task: the photo of the shot asked for
+			# ticks it; any other says what it was and the way to the one asked for.
+			var who = shot_person()
+			var shape = Framing.classify(main.body_landmarks(who)) if who != null else {"plane":"","defects":[]}
+			var next = tasks.find(false)
+			if next >= 0:
+				var want: String = SHOT_TASKS[next]
+				if shape.plane == want and shape.defects.is_empty(): tasks[next] = true
+				else: notes.append(lesson_text("pista_foto_no") % [capital(Conditions.plane_name(shape.plane)),Conditions.plane_guide(want,shape)])
 		"enfoque":
 			if tasks[1] and is_instance_valid(locked_person):
 				var where = head_screen(locked_person)
@@ -1447,6 +1526,36 @@ func on_practice_photo(texture, result: Dictionary) -> Array:
 	update_panel()
 	return notes
 
+# Lesson on shots: who the camera is on (the model first) and its shot, for the hints and the diagram.
+func shot_person():
+	var who = main.framed_person()
+	if who == null and is_instance_valid(subject) and subject.visible: who = subject
+	return who
+
+func update_live_shape() -> void:
+	var who = shot_person()
+	live_shape = Framing.classify(main.body_landmarks(who)) if who != null else {"plane":"","defects":[]}
+
+# «Ahora: plano medio» and, when it is not the one asked for, the way there in plain words.
+func shot_hint(want: String) -> String:
+	if live_shape.is_empty(): update_live_shape()
+	var now = capital(Conditions.plane_name(live_shape.get("plane","")))
+	var good = live_shape.get("plane","") == want and live_shape.get("defects",[]).is_empty()
+	if good: return lesson_text("pista_listo") % now
+	return lesson_text("pista_ahora") % [now,Conditions.plane_guide(want,live_shape)]
+
+static func capital(words: String) -> String:
+	return words.substr(0,1).to_upper()+words.substr(1)
+
+# The joint the bottom edge cuts at ("" when none), as the arcade's «corte limpio» judges it; "?" with
+# nobody in the frame.
+static func joint_cut(b: Dictionary, plane: String) -> String:
+	if b.is_empty() or b.get("behind",false): return "?"
+	for j in Framing.JOINTS:
+		if j == "neck" and plane == "cara": continue
+		if absf(float(b[j].y)-1.0) < Framing.CLEAN: return j
+	return ""
+
 # Distance to a meadow extra under the active focus point (−1 if none): its screen box from the
 # feet to the head, about a third of its height wide.
 func extra_at_focus() -> float:
@@ -1498,6 +1607,7 @@ func update(dt: float) -> void:
 	if phase == "demo": run_demo(dt)
 	elif phase == "practica" and main.mode == "SEARCH": check_practice(dt)
 	elif phase in ["teoria","examen"] and kind == "movimiento": loop_runner()
+	if kind == "planos" and main.mode == "SEARCH": update_live_shape()
 	if kind == "composicion" and phase in ["practica","examen"]: main.academy_last_thirds = thirds_check(subject if phase == "examen" else null)
 	# Depth of field, theory: the aperture opens and closes by itself so the change shows.
 	if kind == "dof" and phase == "teoria" and main.mode == "SEARCH" and not paused:
@@ -1558,6 +1668,14 @@ func run_tour(dt: float) -> void:
 func track_frame_goal(dt: float) -> void:
 	if frame_goal.is_empty() or not is_instance_valid(frame_goal.get("who")): return
 	var p = frame_goal.who
+	if frame_goal.has("plane"):
+		# A shot: the whole body in the middle (wide and full shots) or the crown under the top edge.
+		var w = Framing.world_landmarks(p)
+		var whole = frame_goal.plane in ["general","entero"]
+		var rate = 1.0 if frame_goal.get("snap",false) else minf(1.0,dt*2.5)
+		frame_goal.snap = false
+		main.aim_point((w.crown+w.feet)*.5 if whole else w.crown,Vector2(.5,.5 if whole else Framing.AIR),rate)
+		return
 	if frame_goal.get("lead",false): frame_goal.x = lead_x(p)
 	# Lead a walking subject a little (a camera operator anticipates), so it does not lag behind.
 	var head = p.control_points()[0]+p.actual_velocity*.35

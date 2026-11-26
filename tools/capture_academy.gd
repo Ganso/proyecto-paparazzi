@@ -54,8 +54,8 @@ func run() -> void:
 		academy.begin(n,"practica")
 		await wait(1.5)
 		await shot("%02d_leccion%d_practica" % [n*10+2,n])
-	# Lesson 5 result: a 28 mm photo close and a 135 mm photo far, side by side.
-	academy.begin(5,"practica")
+	# The focal lesson's result: a 28 mm photo close and a 135 mm photo far, side by side.
+	academy.begin(academy.ORDER.find("focal")+1,"practica")
 	await wait(1.0)
 	var near = academy.subject   # the practice places someone close, on the inner path
 	game.clear_sector([0,1,2,3],[near],40.0,true)

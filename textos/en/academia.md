@@ -207,6 +207,24 @@ Trail in the photo: %.3f mm
 ### esquema_congelado
 Frozen if it stays under ~0.1 mm · Handheld: 1/%d or faster
 
+### esquema_plano_general
+Wide
+
+### esquema_plano_entero
+Full
+
+### esquema_plano_americano
+Cowboy
+
+### esquema_plano_medio
+Medium
+
+### esquema_plano_primer_plano
+Close-up
+
+### esquema_plano_cara
+Extreme
+
 ### esquema_aire
 room ahead
 
@@ -505,7 +523,98 @@ In that photo the head wasn't on a crossing with room ahead. Try again.
 ### academia_composicion_examen · exam · brief
 EXAM. Your model is walking along the path. Frame them with their head on a thirds crossing and with room ahead, toward where they're going.
 
-## Lesson 2 · Focus
+## Lesson 2 · Shot sizes
+### academia_planos_titulo · lesson title
+Shot sizes
+
+### academia_planos_resumen · summary (Academy menu)
+How much of the person fits in the photo.
+
+### academia_planos_t1_titulo · theory 1 · title
+What a shot is
+
+### academia_planos_t1_texto · theory 1 · text
+A shot is how much of the person fits in the photo: From the whole body to just the face. Where the bottom edge falls decides it. This lesson gives you a 24–600 mm zoom: Every shot fits without moving.
+
+### academia_planos_t2_titulo · theory 2 · title
+Wide and full
+
+### academia_planos_t2_texto · theory 2 · text
+Wide shot: The person small and the place big; it tells where they are. Full shot: Head to toe, cutting nothing; it tells how they dress and move. The finder now shows a wide shot.
+
+### academia_planos_t3_titulo · theory 3 · title
+Cowboy and medium
+
+### academia_planos_t3_texto · theory 3 · text
+Cowboy shot: It cuts between the hip and the knee, as in westerns, so the revolver showed. Medium shot: It cuts between the chest and the waist; the face and the hands show well.
+
+### academia_planos_t4_titulo · theory 4 · title
+Close-up and extreme
+
+### academia_planos_t4_texto · theory 4 · text
+Close-up: Head and shoulders, cutting across the chest; it is the shot of emotion. Extreme close-up: Just the face; it may cut the hair, but never the chin. The closer, the more intimate.
+
+### academia_planos_t5_titulo · theory 5 · title
+Where not to cut
+
+### academia_planos_t5_texto · theory 5 · text
+Never cut right at a joint: Neck, waist, knees or ankles. It looks like an accident. Better a little before or a little after. And leave some room above the head, except in the extreme close-up.
+
+### academia_planos_d1 · demo · subtitle 1
+At 24 mm, a wide shot: The person is small and the park tells where they are.
+
+### academia_planos_d2 · demo · subtitle 2
+I zoom in until they fit from head to toe: Full shot.
+
+### academia_planos_d3 · demo · subtitle 3
+More zoom: The edge drops between the hip and the knee. Cowboy shot.
+
+### academia_planos_d4 · demo · subtitle 4
+Between the chest and the waist: Medium shot. Now the face and the hands show well.
+
+### academia_planos_d5 · demo · subtitle 5
+Head and shoulders: Close-up.
+
+### academia_planos_d6 · demo · subtitle 6
+Just the face: Extreme close-up. All without moving, just with the zoom.
+
+### academia_planos_p1 · practice · task 1
+Make a full shot of your model
+
+### academia_planos_p2 · practice · task 2
+Now, a medium shot
+
+### academia_planos_p3 · practice · task 3
+And an extreme close-up
+
+### academia_planos_pista_ahora · hint · live shot (the one you make and the way to the one asked for)
+Now: %s. %s.
+
+### academia_planos_pista_listo · hint · the shot asked for
+Now: %s, the one asked for. Shoot with {disparar}.
+
+### academia_planos_pista_foto_no · hint · photo with another shot
+That photo: %s. %s.
+
+### academia_planos_examen · exam · brief
+EXAM. Give your model a cowboy shot: The bottom edge between the hip and the knee, without cutting at any joint.
+
+### academia_ex_plano_ok · exam · shot asked for
+Cowboy shot, as asked.
+
+### academia_ex_plano_mal · exam · another shot
+A cowboy shot was asked for, and the photo gives: %s.
+
+### academia_ex_corte_ok · exam · clean cut
+The bottom edge cuts at no joint.
+
+### academia_ex_corte_mal · exam · cut at a joint
+The bottom edge cuts right at %s: Move it up or down a little.
+
+### academia_ex_corte_nadie · exam · no model
+Your model isn't in the photo.
+
+## Lesson 3 · Focus
 
 ### academia_enfoque_titulo · lesson title
 Focus
@@ -576,7 +685,7 @@ In that photo they weren't both to one side and sharp. Lock and reframe again.
 ### academia_enfoque_examen · exam · brief
 EXAM. The camera is on manual focus and out of focus. Make the person near you sharp by turning the ring ({enfoque_mf}).
 
-## Lesson 3 · Focal length and perspective
+## Lesson 4 · Focal length and perspective
 
 ### academia_focal_titulo · lesson title
 Focal length and perspective
@@ -650,7 +759,7 @@ Frame them full body: Have them fill almost the whole height of the photo.
 ### academia_focal_examen · exam · brief
 EXAM. Your model is far away. Take a full-body photo of them with the lens that makes the background look glued to their back.
 
-## Lesson 4 · Exposure
+## Lesson 5 · Exposure
 
 ### academia_exposicion_titulo · lesson title
 Exposure
@@ -745,7 +854,7 @@ That photo was off by %s stops. Wait for the dot to light up before you shoot.
 ### academia_exposicion_examen · exam · brief
 EXAM. It has suddenly clouded over and your settings no longer work: The light meter reads about 3 EV short. Get the dot to light up again with the aperture, shutter speed or ISO, and shoot.
 
-## Lesson 5 · Depth of field
+## Lesson 6 · Depth of field
 
 ### academia_dof_titulo · lesson title
 Depth of field
@@ -825,7 +934,7 @@ Now stop down ({diafragma}) to f/8 or more and shoot.
 ### academia_dof_examen · exam · brief
 EXAM. Two people, one quite a bit farther away than the other, and a single photo where both come out sharp. You'll have to stop down a lot… and think hard about where to focus.
 
-## Lesson 6 · Motion
+## Lesson 7 · Motion
 
 ### academia_movimiento_titulo · lesson title
 Motion
@@ -917,7 +1026,7 @@ The runner wasn't in the photo: Wait for them to cross the frame.
 ### academia_movimiento_examen · exam · brief
 EXAM. Now with the zoom at 70 mm, where everything moves faster: I want the runner completely frozen, and no camera shake.
 
-## Lesson 7 · Metering the light
+## Lesson 8 · Metering the light
 
 ### academia_medicion_titulo · lesson title
 Metering the light
@@ -994,7 +1103,7 @@ That photo wasn't well exposed with the compensation at 0. Again.
 ### academia_medicion_examen · exam · brief
 EXAM. I want a bright portrait: Meter on the person with spot metering and make it one stop brighter than the camera says.
 
-## Lesson 8 · P, A, S and M
+## Lesson 9 · P, A, S and M
 
 ### academia_modos_titulo · lesson title
 P, A, S and M
@@ -1074,7 +1183,7 @@ In M that photo was off by %s stops. Center the light meter before you shoot.
 ### academia_modos_examen · exam · brief
 EXAM. I want the person sharp and the background blurred: At f/2.8 or wider, and well exposed. You choose the mode.
 
-## Lesson 9 · Lenses
+## Lesson 10 · Lenses
 
 ### academia_objetivos_titulo · lesson title
 Lenses
@@ -1145,7 +1254,7 @@ Shaky: 1/%d s is too slow for a 50 mm handheld.
 ### academia_objetivos_examen · exam · brief
 EXAM. Blue hour. I need a wide shot at 24 mm, handheld and well exposed. Only one of your two lenses goes down to 24.
 
-## Lesson 10 · Cameras
+## Lesson 11 · Cameras
 
 ### academia_camaras_titulo · lesson title
 Cameras

@@ -8,8 +8,12 @@ extends Control
 #   tercios    frame with the thirds, crossings and lead room
 #   compresion side view: what a 28 mm near and a 135 mm far see behind the subject
 #   estrellas  a lamp at night at three apertures: a round glow wide open, a star once closed
+#   planos     the six shots, wide to tight: the one the camera makes now lit, the one asked for ringed
 const Texts = preload("res://scripts/texts.gd")
 const Photo = preload("res://scripts/photography.gd")
+const PlaneIcon = preload("res://scripts/plane_icon.gd")
+const Framing = preload("res://scripts/framing.gd")
+var icons: Array = []
 var academy
 var kind = "triangulo"
 var font: Font
@@ -32,6 +36,7 @@ func txt(pos: Vector2, s: String, size = 12, color = Color("15222e"), align = HO
 func _draw() -> void:
 	if academy == null or academy.main == null: return
 	draw_rect(Rect2(Vector2.ZERO,size),Color(1,1,1,.45))
+	for icon in icons: icon.visible = kind == "planos"
 	match kind:
 		"triangulo": draw_triangle()
 		"pasos": draw_scales("")
@@ -43,6 +48,7 @@ func _draw() -> void:
 		"tercios": draw_thirds()
 		"compresion": draw_compression()
 		"estrellas": draw_stars()
+		"planos": draw_shots()
 
 func needle_color(delta: float) -> Color:
 	return green if absf(delta) <= .34 else amber
@@ -164,7 +170,7 @@ func draw_thirds() -> void:
 	draw_line(head+Vector2(-14,22),head+Vector2(-60,22),amber,2)
 	draw_colored_polygon(PackedVector2Array([head+Vector2(-66,22),head+Vector2(-58,17),head+Vector2(-58,27)]),amber)
 	txt(head+Vector2(-70,12),Texts.get_text("esquema_aire"),11,amber)
-	if academy.phase == "practica" and academy.lesson == 4:
+	if academy.phase == "practica" and academy.kind == "composicion":
 		var state = m.academy_last_thirds
 		txt(Vector2(8,size.y-4),Texts.get_text("esquema_tercios_"+(state if state != "" else "nadie")),11,green if state == "listo" else ink)
 
@@ -226,3 +232,32 @@ func draw_stars() -> void:
 		txt(Vector2(centre.x-16,sky.end.y-3),Texts.get_text("esquema_estrellas_paso") % f_number.call(stops[k]),10,Color(.85,.9,.95))
 		if k == nearest: draw_rect(Rect2(sky.position.x+cell*k+3,sky.position.y+3,cell-6,sky.size.y-6),Color(.35,.75,1.0,.9),false,1.5)
 
+
+# The six shots side by side, each with its pictogram (plane_icon.gd) and its short name. Lit: the
+# shot the camera makes of the model now; ringed in amber: the one the practice or the exam asks for
+# (in the theory, the one the page explains).
+func draw_shots() -> void:
+	if icons.is_empty():
+		for plane in Framing.ORDER:
+			var icon = PlaneIcon.new(plane,ink)
+			icon.band_color = amber
+			add_child(icon)
+			icons.append(icon)
+	var slot = size.x/Framing.ORDER.size()
+	var now: String = academy.live_shape.get("plane","")
+	var asked = ""
+	match academy.phase:
+		"practica":
+			var next = academy.tasks.find(false)
+			if next >= 0: asked = academy.SHOT_TASKS[next]
+		"examen": asked = academy.EXAM_SHOT
+		_: asked = str(academy.frame_goal.get("plane",""))
+	for i in Framing.ORDER.size():
+		var plane: String = Framing.ORDER[i]
+		var box = Rect2(i*slot+2,4,slot-4,size.y-8)
+		if plane == now: draw_rect(box,Color(green,.22))
+		if plane == asked: draw_rect(box,amber,false,2)
+		var icon: Control = icons[i]
+		icon.position = Vector2(box.get_center().x-17,10)
+		icon.size = Vector2(34,86)
+		txt(Vector2(box.position.x,size.y-12),Texts.get_text("esquema_plano_"+plane),10,green if plane == now else ink,HORIZONTAL_ALIGNMENT_CENTER,box.size.x)

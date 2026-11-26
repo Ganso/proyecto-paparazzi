@@ -130,7 +130,7 @@ func thirds() -> void:
 	game.tutorial.stop()
 	game.intro()
 	game.academy.progress_path = OS.get_cache_dir().path_join("photohacks_capturas_academia.cfg")   # (not the player's progress)
-	game.academy.begin(4,"practica")
+	game.academy.begin(game.academy.ORDER.find("composicion")+1,"practica")
 	for i in 20: await process_frame
 	game.academy.tasks = [true,true,true]
 	for i in 40: await process_frame

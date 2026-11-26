@@ -3,7 +3,7 @@
 Este documento especifica la arquitectura pedagógica y los exámenes interactivos para el modo educativo **Academia de Fotografía**.
 
 > [!NOTE]
-> **Estado (02-10-2026): ✅ implementado, con exámenes.** Las cinco lecciones tienen **teoría, demostración guiada, práctica y examen** con informe del tutor; aprobar los cinco da el título de **Graduado de la Academia Fotográfica**. Lo implementado está en el §6 (los exámenes, en el §6.1). Evidencias en [`docs/evidencias/academia/`](../evidencias/academia/).
+> **Estado (26-11-2026): ✅ implementado, con exámenes; once lecciones (la 2, «Los planos», al final del documento).** Las cinco primeras lecciones tienen **teoría, demostración guiada, práctica y examen** con informe del tutor; aprobar los cinco da el título de **Graduado de la Academia Fotográfica**. Lo implementado está en el §6 (los exámenes, en el §6.1). Evidencias en [`docs/evidencias/academia/`](../evidencias/academia/).
 
 ---
 
@@ -232,3 +232,20 @@ La lección 5 («La profundidad de campo», la de la apertura) termina su teorí
 - No se examina ni se pide en la práctica: es teoría que invita a probarlo. Queda como idea para un nivel o un desafío ([05](05_DESAFIOS_Y_MODOS_JUEGO.md)).
 - Textos `academia_dof_t5_titulo`, `academia_dof_t5_texto` y `esquema_estrellas*` en `textos/es/academia.md`. Pruebas: `tests/test_academy.gd` (la página, su escena y la vuelta atrás) y la lección jugada entera (`tests/test_academy_play.gd -- --only=5`). Evidencia: [`dof_teoria_5_estrellas.jpg`](../evidencias/academia/dof_teoria_5_estrellas.jpg).
 
+
+## Once lecciones: «Los planos», la segunda (26-11-2026, usuario)
+
+Tras el modo Paparazzi y el bloque «El encuadre» del arcade ([29](29_MODO_PAPARAZZI.md)), el usuario pidió que **la definición de los planos fuera también una lección de la Academia**. Va **la segunda** (`ORDER`: `composicion`, `planos`, `enfoque`…): la composición ya dice «no se corta a nadie por las articulaciones», y el zoom que necesita es el del tutorial. Las demás lecciones bajan un puesto; el progreso va por identificador y no se pierde.
+
+| Nº | Id | Lección | Luz | La cámara | Práctica | El examen mira |
+|---|---|---|---|---|---|---|
+| 2 | `planos` | Los planos | Día | **La cámara ideal de Paparazzi (24–600 mm)**, todo automático | Un entero, un medio y un primerísimo primer plano, por orden | Plano americano sin defectos y el borde lejos de las articulaciones |
+
+- **Por qué la cámara ideal**: el fotógrafo de la Academia no se mueve. A 6 m (la modelo, en el sector despejado de 53° de la lección de la focal) el plano general sale a 24 mm y el primerísimo a unos 440 mm; ningún objetivo del catálogo cubre todo. `academy.gd::use_ideal()` / `restore_equipment()` (como `paparazzi_run.gd`) la prestan en `apply_setup()` y la devuelven en `stop()` o al cambiar de lección (`SETUP.planos.ideal`).
+- **Teoría que se ve**: cinco páginas («Qué es un plano», «General y entero», «Americano y medio», «Primer plano y primerísimo», «Dónde no cortar»); cada una encuadra a la modelo en el plano del que habla (acción `plano:<id>`: la focal de `Framing.focal_for()` y el encuadre de Paparazzi, el cuerpo centrado o la coronilla con su aire, por `frame_goal.plane` y `main.aim_point()`).
+- **Esquema `planos`** (`academy_diagram.gd::draw_shots()`): los seis pictogramas de `plane_icon.gd`, con el plano que hace la cámara ahora sombreado y el que se pide (o el de la página) con un marco ámbar.
+- **Demostración**: del general al primerísimo solo con el zoom, con fotos del entero, el medio y el primerísimo.
+- **Práctica**: la pista dice en vivo el plano que se está haciendo y el camino al pedido con las palabras del arcade («Ahora: Plano general. Acerca el zoom: El borde de abajo…», `Conditions.plane_guide()`); una foto de otro plano dice cuál era. Cuenta quien esté en el encuadre (`shot_person()`).
+- **Examen**: «Hazle a tu modelo un plano americano, sin cortar por ninguna articulación» (`exam_report("planos")`: la clasificación de `Framing.classify()` sobre la modelo y `joint_cut()`, la misma regla que la condición `corte_limpio` del arcade).
+- Textos `academia_planos_*`, `academia_ex_plano_*`, `academia_ex_corte_*` y `esquema_plano_*` en español e inglés. `academy_player.gd` juega la práctica y el examen; `test_academy_play.gd` exige las once.
+- Arreglo de paso: el esquema de tercios preguntaba por `lesson == 4` (la composición antes de reordenar); ahora pregunta por el identificador. `tools/capture_screens.gd` y `tools/capture_academy.gd` buscan su lección por identificador.

@@ -208,6 +208,24 @@ Rastro en la foto: %.3f mm
 ### esquema_congelado
 Congelado si no pasa de ~0,1 mm · Pulso: 1/%d o más rápida
 
+### esquema_plano_general
+General
+
+### esquema_plano_entero
+Entero
+
+### esquema_plano_americano
+Americano
+
+### esquema_plano_medio
+Medio
+
+### esquema_plano_primer_plano
+Primer pl.
+
+### esquema_plano_cara
+Primerísimo
+
 ### esquema_aire
 aire delante
 
@@ -531,7 +549,122 @@ En esa foto la cabeza no estaba en un cruce con aire delante. Prueba otra vez.
 > máximo 240 caracteres
 EXAMEN. Tu modelo camina por el paseo. Encuádralo con la cabeza en un cruce de los tercios y con aire por delante, hacia donde va.
 
-## Lección 2 · El enfoque
+## Lección 2 · Los planos
+### academia_planos_titulo · título de la lección
+Los planos
+
+### academia_planos_resumen · resumen (menú de la Academia)
+> máximo 60 caracteres
+Cuánto de la persona entra en la foto.
+
+### academia_planos_t1_titulo · teoría 1 · título
+> máximo 30 caracteres
+Qué es un plano
+
+### academia_planos_t1_texto · teoría 1 · texto
+> máximo 240 caracteres
+Un plano es cuánto de la persona entra en la foto: Del cuerpo entero a solo la cara. Lo marca dónde cae el borde de abajo. En esta lección tienes un zoom de 24 a 600 mm: Todos los planos caben sin moverte.
+
+### academia_planos_t2_titulo · teoría 2 · título
+> máximo 30 caracteres
+General y entero
+
+### academia_planos_t2_texto · teoría 2 · texto
+> máximo 240 caracteres
+Plano general: La persona pequeña y el sitio grande; cuenta dónde está. Plano entero: De la cabeza a los pies, sin cortar nada; cuenta cómo viste y cómo se mueve. En el visor tienes ahora un general.
+
+### academia_planos_t3_titulo · teoría 3 · título
+> máximo 30 caracteres
+Americano y medio
+
+### academia_planos_t3_texto · teoría 3 · texto
+> máximo 240 caracteres
+Plano americano: Corta entre la cadera y la rodilla, como en las películas del oeste, para que se viera el revólver. Plano medio: Corta entre el pecho y la cintura; se ven bien la cara y las manos.
+
+### academia_planos_t4_titulo · teoría 4 · título
+> máximo 30 caracteres
+Primer plano y primerísimo
+
+### academia_planos_t4_texto · teoría 4 · texto
+> máximo 240 caracteres
+Primer plano: Cabeza y hombros, corta por el pecho; es el plano de la emoción. Primerísimo primer plano: Solo la cara; puede cortar el pelo, pero nunca la barbilla. Cuanto más cerca, más íntimo.
+
+### academia_planos_t5_titulo · teoría 5 · título
+> máximo 30 caracteres
+Dónde no cortar
+
+### academia_planos_t5_texto · teoría 5 · texto
+> máximo 240 caracteres
+Nunca cortes justo por una articulación: Cuello, cintura, rodillas o tobillos. Parece un accidente. Mejor un poco antes o un poco después. Y deja algo de aire sobre la cabeza, salvo en el primerísimo.
+
+### academia_planos_d1 · demostración · subtítulo 1
+> máximo 110 caracteres
+A 24 mm, un plano general: La persona es pequeña y el parque cuenta dónde está.
+
+### academia_planos_d2 · demostración · subtítulo 2
+> máximo 110 caracteres
+Acerco el zoom hasta que entra de la cabeza a los pies: Plano entero.
+
+### academia_planos_d3 · demostración · subtítulo 3
+> máximo 110 caracteres
+Más zoom: El borde baja entre la cadera y la rodilla. Plano americano.
+
+### academia_planos_d4 · demostración · subtítulo 4
+> máximo 110 caracteres
+Entre el pecho y la cintura: Plano medio. Ya se ven bien la cara y las manos.
+
+### academia_planos_d5 · demostración · subtítulo 5
+> máximo 110 caracteres
+Cabeza y hombros: Primer plano.
+
+### academia_planos_d6 · demostración · subtítulo 6
+> máximo 110 caracteres
+Solo la cara: Primerísimo primer plano. Todo sin moverme, solo con el zoom.
+
+### academia_planos_p1 · práctica · tarea 1
+> máximo 75 caracteres
+Haz un plano entero de tu modelo
+
+### academia_planos_p2 · práctica · tarea 2
+> máximo 75 caracteres
+Ahora, un plano medio
+
+### academia_planos_p3 · práctica · tarea 3
+> máximo 75 caracteres
+Y un primerísimo primer plano
+
+### academia_planos_pista_ahora · pista · plano en vivo (el que haces y cómo llegar al pedido)
+> máximo 130 caracteres
+Ahora: %s. %s.
+
+### academia_planos_pista_listo · pista · el plano pedido
+> máximo 130 caracteres
+Ahora: %s, el que se pide. Dispara con {disparar}.
+
+### academia_planos_pista_foto_no · pista · foto con otro plano
+> máximo 130 caracteres
+Esa foto: %s. %s.
+
+### academia_planos_examen · examen · enunciado
+> máximo 240 caracteres
+EXAMEN. Hazle a tu modelo un plano americano: El borde de abajo entre la cadera y la rodilla, sin cortar por ninguna articulación.
+
+### academia_ex_plano_ok · examen · plano pedido
+Plano americano, como se pedía.
+
+### academia_ex_plano_mal · examen · otro plano
+Se pedía un plano americano y la foto da: %s.
+
+### academia_ex_corte_ok · examen · corte limpio
+El borde de abajo no corta por ninguna articulación.
+
+### academia_ex_corte_mal · examen · corte en una articulación
+El borde de abajo corta justo por %s: Súbelo o bájalo un poco.
+
+### academia_ex_corte_nadie · examen · sin modelo
+Tu modelo no sale en la foto.
+
+## Lección 3 · El enfoque
 
 ### academia_enfoque_titulo · título de la lección
 El enfoque
@@ -624,7 +757,7 @@ En esa foto no quedó a un lado y nítido a la vez. Bloquea y reencuadra otra ve
 > máximo 240 caracteres
 EXAMEN. La cámara está en enfoque manual y desenfocada. Deja nítida a la persona que tienes cerca girando el anillo ({enfoque_mf}).
 
-## Lección 3 · La focal y la perspectiva
+## Lección 4 · La focal y la perspectiva
 
 ### academia_focal_titulo · título de la lección
 La focal y la perspectiva
@@ -721,7 +854,7 @@ Encuádralo de cuerpo entero: Que ocupe casi toda la altura de la foto.
 > máximo 240 caracteres
 EXAMEN. Tu modelo está lejos. Hazle una foto de cuerpo entero con el objetivo que hace que el fondo parezca pegado a su espalda.
 
-## Lección 4 · La exposición
+## Lección 5 · La exposición
 
 ### academia_exposicion_titulo · título de la lección
 La exposición
@@ -846,7 +979,7 @@ Esa foto se desvió %s pasos. Espera a ver el punto encendido antes de disparar.
 > máximo 240 caracteres
 EXAMEN. Se ha nublado de golpe y tus ajustes ya no valen: El exposímetro marca unos 3 EV de menos. Haz que vuelva a encenderse el punto con el diafragma, la velocidad o el ISO, y dispara.
 
-## Lección 5 · La profundidad de campo
+## Lección 6 · La profundidad de campo
 
 ### academia_dof_titulo · título de la lección
 La profundidad de campo
@@ -951,7 +1084,7 @@ Ahora cierra ({diafragma}) hasta f/8 o más y dispara.
 > máximo 240 caracteres
 EXAMEN. Dos personas, una bastante más lejos que la otra, y una sola foto en la que las dos salgan nítidas. Habrá que cerrar mucho el diafragma… y pensar bien dónde se enfoca.
 
-## Lección 6 · El movimiento
+## Lección 7 · El movimiento
 
 ### academia_movimiento_titulo · título de la lección
 El movimiento
@@ -1072,7 +1205,7 @@ El corredor no estaba en la foto: Espera a que cruce el encuadre.
 > máximo 240 caracteres
 EXAMEN. Ahora con el zoom a 70 mm, que todo corre más: Quiero al corredor congelado del todo, y sin trepidar.
 
-## Lección 7 · Medir la luz
+## Lección 8 · Medir la luz
 
 ### academia_medicion_titulo · título de la lección
 Medir la luz
@@ -1173,7 +1306,7 @@ Esa foto no quedó bien expuesta con la compensación a 0. Otra vez.
 > máximo 240 caracteres
 EXAMEN. Quiero un retrato luminoso: Mide sobre la persona con la medición puntual y hazla un paso más clara de lo que dice la cámara.
 
-## Lección 8 · P, A, S y M
+## Lección 9 · P, A, S y M
 
 ### academia_modos_titulo · título de la lección
 P, A, S y M
@@ -1278,7 +1411,7 @@ En M esa foto se fue %s pasos. Centra el exposímetro antes de disparar.
 > máximo 240 caracteres
 EXAMEN. Quiero a la persona nítida y con el fondo desenfocado: A f/2,8 o más abierto, y bien expuesta. El modo lo eliges tú.
 
-## Lección 9 · Los objetivos
+## Lección 10 · Los objetivos
 
 ### academia_objetivos_titulo · título de la lección
 Los objetivos
@@ -1371,7 +1504,7 @@ Trepidada: 1/%d s es demasiado lento para un 50 mm a pulso.
 > máximo 240 caracteres
 EXAMEN. Hora azul. Necesito un plano general a 24 mm, a pulso y bien expuesto. Solo uno de tus dos objetivos llega a 24.
 
-## Lección 10 · Las cámaras
+## Lección 11 · Las cámaras
 
 ### academia_camaras_titulo · título de la lección
 Las cámaras
