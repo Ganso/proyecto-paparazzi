@@ -318,7 +318,7 @@ func _ready() -> void:
 		if arg.begins_with("--scare-at="): demo["scare-at"] = float(arg.get_slice("=",1))
 		# --stage-gender=m|f and --stage-skip=N choose who --stage=sentado sits on the bench
 		# (Shorts: another person, other clothes).
-		for key in ["lens","pan","zoom-to","hud","stage-gender","stage-skip"]:
+		for key in ["lens","pan","zoom-to","hud","stage-gender","stage-skip","stage-arrive","priority","metering","comp","stage-dist","stage-facing","look-drop"]:
 			if arg.begins_with("--%s=" % key): demo[key] = arg.get_slice("=",1)
 		if arg in ["--follow","--follow-target","--af","--mf-rack","--expose","--pan-shot","--strip-demo","--aperture-sweep","--seated"]: demo[arg.trim_prefix("--")] = true
 		# Capture helper: the help texts of a device (teclado, mando) whatever is plugged in.
@@ -446,6 +446,15 @@ func _ready() -> void:
 		if "--manual" in OS.get_cmdline_user_args(): equipment.auto_exposure = false
 		# Capture helper: manual focus on a body that has autofocus (the SLR's split image on video).
 		if "--mf" in OS.get_cmdline_user_args(): equipment.focus_mode = "MF"
+		# --priority=A|S|P: automatic exposure with that priority (Shorts: --shutter with S).
+		if demo.has("priority"):
+			equipment.auto_exposure = true
+			equipment.priority = "" if str(demo.priority) == "P" else str(demo.priority)
+		# --metering=puntual|ponderada|matricial and --comp=<EV> (Shorts: the light meter).
+		if demo.has("metering"): equipment.metering = str(demo.metering)
+		if demo.has("comp"):
+			var k = Array(equipment.EV_COMPENSATIONS).find(float(demo.comp))
+			if k >= 0: equipment.ev_comp_index = k
 	if smoke or screenshot_path != "" or run_metrics or not demo.is_empty() or not photo_walk.is_empty():
 		# With --level the level already set scenario, light and equipment: just enter it.
 		if arcade_level < 0: start_session(start_time_of_day,bool(pending_start.get("sandbox_demo",false)))
@@ -2469,26 +2478,47 @@ func stage_scene(name: String) -> void:
 			update_camera()
 			update_dof_pass()
 		"parado":
-			var p = pick(func(q): return q.lane == 1 and not q.runner)
+			var want_g = str(demo.get("stage-gender",""))
+			var p = pick(func(q): return q.lane == 1 and not q.runner and q.traits.profile != 3 and (want_g == "" or q.traits.get("gender","m") == want_g))
 			if p == null: p = pick(func(q): return not q.runner)
 			for q in people:
 				if q != p and (q.lane == 0 or q.lane == 1):
 					q.set_hidden(true)
 			p.set_hidden(false)
 			p.theta = angle
-			p.radius = 3.6
+			# --stage-dist=<m> and --stage-facing=camara (Shorts: a full figure facing us).
+			p.radius = float(demo.get("stage-dist","3.6"))
 			p.state = "DETENIDO"
 			p.state_time = 999.0
 			p.activity = "mirar"
 			p.act_time = 0.0
-			p.heading = -deg_to_rad(angle)
-			p.face_target = -deg_to_rad(angle)
+			var facing = PI if str(demo.get("stage-facing","")) == "camara" else 0.0
+			p.heading = -deg_to_rad(angle)+facing
+			p.face_target = -deg_to_rad(angle)+facing
 			p.heading_ready = true
 			p.place()
 			demo_follow = p
 			camera_raised = true
 			raise_anim = 1.0
 			focus_distance = camera.global_position.distance_to(p.control_points()[0])
+			update_camera()
+			update_dof_pass()
+		"corredor":
+			# A runner crosses the centre of the frame, close, at second --stage-arrive (default 3),
+			# with nobody else in the near lanes (Shorts: freeze or trail with a still camera).
+			var p = pick(func(q): return q.runner)
+			if p == null: return
+			for q in people:
+				if q != p and (q.lane <= 2 or q.runner):
+					q.set_hidden(true)
+			p.set_hidden(false)
+			var dir = 1.0
+			reset_walker(p,2,angle,dir)
+			var omega = rad_to_deg(p.speed/maxf(p.radius,1.0))
+			reset_walker(p,2,angle-dir*omega*float(demo.get("stage-arrive","3")),dir)
+			camera_raised = true
+			raise_anim = 1.0
+			focus_distance = p.radius
 			update_camera()
 			update_dof_pass()
 		"banco", "palomas":
@@ -5221,6 +5251,8 @@ func update_demo(dt: float) -> void:
 		focal = lerpf(demo_focal_start,float(demo["zoom-to"]),smoothstep(0.0,12.0,demo_time))
 	if is_instance_valid(demo_follow):
 		var look_pt = demo_follow.control_points()[0] if demo_follow.state in ["SENTADO","DETENIDO"] else demo_follow.global_position+Vector3.UP*demo_follow.height*.7
+		# --look-drop=<m>: aim that much below the head (Shorts: the whole figure in frame).
+		look_pt -= Vector3.UP*float(demo.get("look-drop","0"))
 		if demo_follow.state in ["SENTADO","DETENIDO"]:
 			var to = look_pt - camera.global_position
 			angle = rad_to_deg(atan2(to.x, -to.z))
@@ -5286,6 +5318,13 @@ func update_demo(dt: float) -> void:
 			var act: String = script[beat%script.size()]
 			if act == "next": select_control(1)
 			else: change_control(1 if act == "up" else -1)
+	# --metering/--comp held every frame until the shot: a level or a session start resets them.
+	if not demo.has("shot") and (demo.has("metering") or demo.has("comp")):
+		var k_comp = Array(equipment.EV_COMPENSATIONS).find(float(demo.get("comp","0")))
+		if (demo.has("metering") and equipment.metering != str(demo.metering)) or (demo.has("comp") and k_comp >= 0 and equipment.ev_comp_index != k_comp):
+			if demo.has("metering"): equipment.metering = str(demo.metering)
+			if demo.has("comp") and k_comp >= 0: equipment.ev_comp_index = k_comp
+			refresh()
 	if demo.has("shutter") and not demo.has("shot"):
 		var wanted_t = Photo.DENOMINATORS.find(int(demo["shutter"]))
 		if wanted_t >= 0 and t_index != wanted_t:
