@@ -40,6 +40,8 @@ graph TD
     A --> O[academy.gd · academy_diagram.gd<br/>Academia: lecciones, tutor sobre el visor, diagramas en vivo]
     A --> P[camera_body.gd<br/>Visor real de cada cuerpo: ocular, LED, LCD, paralaje]
     A --> Q[park_grande.gd · crowd_graph.gd<br/>Parque grande: caminos en grafo y paseo libre]
+    A --> R[paparazzi_run.gd · paparazzi_hud.gd<br/>Modo Paparazzi: la carrera, el enganche y su interfaz]
+    R --> S[paparazzi.gd · framing.gd · plane_icon.gd<br/>Reglas puras, planos y su pictograma]
     Q --> B
     N --> C
 ```
@@ -59,6 +61,7 @@ graph TD
 | **Visor HUD** | [scripts/viewfinder.gd](../scripts/viewfinder.gd) | Dibujo analógico del visor réflex/telemétrico: 9 puntos de enfoque AF, cuadrícula de tercios, exposímetro analógico. La ayuda de enfoque en MF (imagen partida / doble imagen) la dibuja `focus_aid.gdshader`. |
 | **Vida en el parque** | [scripts/pigeons.gd](../scripts/pigeons.gd), [scripts/dog.gd](../scripts/dog.gd), [scripts/extras.gd](../scripts/extras.gd), [scripts/ambience.gd](../scripts/ambience.gd) | Palomas (MultiMesh), perro con correa, figurantes de la pradera sin colisionadores y sonido ambiente sintetizado. Los actualiza `main.gd` cada fotograma junto a los viandantes ([futuro/19](futuro/19_VIDA_EN_EL_PARQUE.md)). |
 | **Visores** | [scripts/camera_body.gd](../scripts/camera_body.gd) | Interfaz de cámara: lo que rodea la imagen (`main.gd::view_rect`) y los datos de cada visor, dibujado fuera de la captura ([futuro/07 §5](futuro/07_VISORES_REALISTAS_Y_MOVIL.md)). |
+| **Modo Paparazzi** | [scripts/paparazzi.gd](../scripts/paparazzi.gd), [scripts/paparazzi_run.gd](../scripts/paparazzi_run.gd), [scripts/paparazzi_hud.gd](../scripts/paparazzi_hud.gd), [scripts/ideal_equipment.gd](../scripts/ideal_equipment.gd), [scripts/plane_icon.gd](../scripts/plane_icon.gd), [scripts/framing.gd](../scripts/framing.gd) | Supervivencia de encuadres en el parque grande con una cámara ideal de 24–600 mm ([futuro/29](futuro/29_MODO_PAPARAZZI.md)). `paparazzi.gd`: lo puro (curva de niveles, encargos, juez, reloj, dobles, progreso en `user://paparazzi.cfg`); el estado de la carrera vive en `static var run`, que sobrevive a recargar la escena. `paparazzi_run.gd` (`main.pz`): la carrera en el parque (elección de persona, enganche y seguimiento con `main.aim_point()`, semáforo, aprendizaje, chuleta, comodines, polaroid, final). `paparazzi_hud.gd`: la interfaz reducida. `framing.gd`: los puntos del cuerpo y la clasificación de planos (también la usa el arcade). `plane_icon.gd`: el pictograma de cada plano. |
 | **Academia** | [scripts/academy.gd](../scripts/academy.gd), [scripts/academy_diagram.gd](../scripts/academy_diagram.gd) | Modo tutor sobre la sesión de sandbox: panel sobre el visor con teoría, demostraciones guionizadas (subtítulos, resaltado de controles, fotos en miniatura) y prácticas con tareas y pistas; progreso en `user://academia.cfg` ([futuro/06](futuro/06_MODO_TUTOR_ACADEMIA.md)). |
 | **Localización** | [scripts/texts.gd](../scripts/texts.gd) | Resolución de claves localizadas desde `data/textos.es.json` con interpolación de variables. |
 
@@ -92,9 +95,24 @@ stateDiagram-v2
     SANDBOX_SETTINGS --> INTRO: Volver al menú
     INTRO --> EQUIPMENT: Equipo / modos
     EQUIPMENT --> INTRO: Usar este equipo (vuelve al estado de origen)
+    INTRO --> PZ_CARD: Paparazzi (start_paparazzi)
+    PZ_CARD --> SEARCH: Entendido / ¡A por ella! / mirar o zoom
+    SEARCH --> PZ_POLAROID: Foto buena
+    PZ_POLAROID --> PZ_CARD: Siguiente nivel
+    PZ_POLAROID --> SEARCH: Siguiente foto del reportaje
+    SEARCH --> PZ_HELP: Chuleta (H / B)
+    PZ_HELP --> SEARCH: Volver
+    SEARCH --> PZ_RESCUE: Reloj a cero con rescate
+    PZ_RESCUE --> SEARCH: Usar el rescate
+    PZ_RESCUE --> PZ_END: Terminar
+    SEARCH --> PZ_END: Reloj a cero / Terminar la carrera (pausa)
+    PZ_END --> PZ_CARD: Otra vez
+    PZ_END --> INTRO: Menú
 ```
 
 `EQUIPMENT` se puede abrir desde la intro y desde la barra superior durante la partida; al cerrarse vuelve al estado desde el que se abrió (`equipment_return`).
+
+Estados de Paparazzi ([futuro/29](futuro/29_MODO_PAPARAZZI.md)): `PZ_CARD` (tarjetas de novedad y ficha del nivel), `PZ_POLAROID` (la foto buena vuela al reloj, 1,5 s), `PZ_HELP` (chuleta), `PZ_RESCUE` y `PZ_END`. El reloj y el parque solo corren en `SEARCH`.
 
 Estados añadidos por la Academia: `ACADEMY` (menú de lecciones). Las lecciones corren en `SEARCH` sobre una sesión de sandbox con el panel del tutor encima; sus fotos de práctica abren `RESULT` con el resultado propio de la Academia.
 

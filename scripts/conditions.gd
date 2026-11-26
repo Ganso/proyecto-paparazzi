@@ -208,6 +208,9 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				for d in got.defects:
 					if d in ["cabeza","pies","aire"]: made += Texts.get_text("cond_plano_defecto_"+d)
 				text_value = Texts.get_text("cond_plano") % [plane_name(want),made]
+				# The way there, in plain words (user, 25-11-2026: without knowing film shots «es
+				# difícil saber qué quiere»): which way the zoom goes and where the bottom edge goes.
+				if not ok: text_value += " · "+plane_guide(want,got)
 			"frente", "perfil":
 				var turned: float = float(e.get("facing",180.0))
 				ok = turned <= 45.0 if key == "frente" else (turned >= 60.0 and turned <= 120.0)
@@ -236,6 +239,17 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				text_value = Texts.get_text("cond_congelado") % why
 		out.append({"key":key,"ok":ok,"text":text_value})
 	return out
+
+# What to do to get the shot asked for: zoom in or out, and where its bottom edge goes.
+static func plane_guide(want: String, got: Dictionary) -> String:
+	var way = ""
+	if got.plane == "": way = "cond_plano_menos_zoom"
+	elif got.plane != want: way = "cond_plano_mas_zoom" if Framing.wider(got.plane,want) else "cond_plano_menos_zoom"
+	elif "pies" in got.defects: way = "cond_plano_menos_zoom"
+	elif "cabeza" in got.defects: way = "cond_plano_cabeza"
+	elif "aire" in got.defects: way = "cond_plano_aire"
+	if way == "": return Texts.get_text("cond_plano_borde_"+want)
+	return Texts.get_text("cond_plano_guia") % [Texts.get_text(way),Texts.get_text("cond_plano_borde_"+want)]
 
 # A shot size by name, as a phrase («plano medio», «medium shot»); "" is no shot at all.
 static func plane_name(plane: String) -> String:

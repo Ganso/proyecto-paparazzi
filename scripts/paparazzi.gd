@@ -18,9 +18,11 @@ const LENS_MAX = 600.0
 # The clock (§3.1). Seconds.
 const START_BANK = 60.0
 const MAX_BANK = 120.0
+# Calibrated with tools/paparazzi_solver.gd (26-11-2026, §19.4): an average player reaches about
+# level 70, a good one goes past 120.
 const BONUS_FLOOR = 12.0
-const BONUS_SPAN = 18.0
-const BONUS_DECAY = 60.0          # levels (A calibrar, §19.4)
+const BONUS_SPAN = 20.0
+const BONUS_DECAY = 100.0         # levels
 const HITO_BONUS = 15.0
 const FIRST_TRY_BONUS = 2.0       # from stretch 2
 const CLEAN_CUT_BONUS = 3.0       # from stretch 4, when it is taught
@@ -34,59 +36,69 @@ const FREEZE_FROM = 5
 const SKIP_FROM = 8
 const RESCUE_FROM = 4
 
-# Modifiers (§5), in the order the judge checks them.
-const MODS = ["sola","acompanada","frente","perfil","perro","actividad","lugar"]
+# Modifiers (§5), in the order the judge checks them. («actividad», someone seated doing something,
+# only happens in the classic park: it is kept for when the classic park comes back to the mode.)
+const MODS = ["sola","acompanada","frente","perfil","perro","lugar"]
 const PLACES = ["quiosco","estanque"]
 const FACE_PLANES = ["medio","primer_plano","cara"]   # where covering the face spoils the photo
 const VISIBLE_MIN = .6
 const FRONT_MAX = 45.0
 const PROFILE_MIN = 60.0
 const PROFILE_MAX = 120.0
+# The first stretch asks for the person with any shot (user, 25-11-2026): from a full shot to the
+# face, so long as she is not a speck in the landscape. The planes come with stretch 2.
+const ANY = "cualquiera"
 
 # What each stretch brings (§9.1). Planes and modifiers come from DEBUTS: a stretch can offer only
 # what has already been introduced, so the curve never asks for something before its card.
+# The whole mode is played in the big park, «the real hide and seek» (user, 25-11-2026); the classic
+# park is still a scenario a stretch can name. The light changes within a stretch too, three
+# times (levels 1–4, 5–7 and 8–10), for variety.
 const TRAMOS = [
-	{"scenario":"clasico","time":"day",   "max_mods":0,"mod_chance":0.0,"pace":.70,"dobles":0,"rasgos":"todos",  "check_delay":0.0, "lock_delay":0.0,"auto_frame":true, "penalty":0.0,"arrow":4.0, "ring":12.0},
-	{"scenario":"clasico","time":"day",   "max_mods":1,"mod_chance":.5, "pace":.85,"dobles":0,"rasgos":"todos",  "check_delay":0.0, "lock_delay":0.0,"auto_frame":true, "penalty":3.0,"arrow":6.0, "ring":18.0},
-	{"scenario":"grande", "time":"day",   "max_mods":1,"mod_chance":.4, "pace":1.0,"dobles":0,"rasgos":"todos",  "check_delay":0.0, "lock_delay":0.0,"auto_frame":true, "penalty":5.0,"arrow":8.0, "ring":22.0},
-	{"scenario":"clasico","time":"golden","max_mods":1,"mod_chance":.7, "pace":1.0,"dobles":1,"rasgos":"todos",  "check_delay":0.0, "lock_delay":0.0,"auto_frame":true, "penalty":5.0,"arrow":10.0,"ring":26.0},
-	{"scenario":"grande", "time":"day",   "max_mods":1,"mod_chance":.7, "pace":1.0,"dobles":1,"rasgos":"todos",  "check_delay":0.0, "lock_delay":0.0,"auto_frame":true, "penalty":5.0,"arrow":12.0,"ring":30.0},
-	{"scenario":"clasico","time":"blue",  "max_mods":1,"mod_chance":.7, "pace":1.0,"dobles":1,"rasgos":"minimos","check_delay":1.5, "lock_delay":0.0,"auto_frame":true, "penalty":5.0,"arrow":14.0,"ring":32.0},
-	{"scenario":"grande", "time":"golden","max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":2,"rasgos":"minimos","check_delay":1.5, "lock_delay":0.3,"auto_frame":true, "penalty":5.0,"arrow":16.0,"ring":34.0},
-	{"scenario":"clasico","time":"night", "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":2,"rasgos":"minimos","check_delay":1.5, "lock_delay":0.3,"auto_frame":true, "penalty":5.0,"arrow":18.0,"ring":36.0},
-	{"scenario":"grande", "time":"blue",  "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":2,"rasgos":"minimos","check_delay":-1.0,"lock_delay":0.3,"auto_frame":true, "penalty":5.0,"arrow":20.0,"ring":38.0},
-	{"scenario":"clasico","time":"day",   "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":3,"rasgos":"minimos","check_delay":-1.0,"lock_delay":0.3,"auto_frame":true, "penalty":5.0,"arrow":22.0,"ring":40.0},
+	{"scenario":"grande","times":["day","golden","day"],   "max_mods":0,"mod_chance":0.0,"pace":.80,"dobles":0,"rasgos":"todos",  "check_delay":0.0, "penalty":0.0,"arrow":4.0, "ring":12.0},
+	{"scenario":"grande","times":["day","blue","golden"],  "max_mods":0,"mod_chance":0.0,"pace":.90,"dobles":0,"rasgos":"todos",  "check_delay":0.0, "penalty":3.0,"arrow":6.0, "ring":18.0},
+	{"scenario":"grande","times":["golden","day","blue"],  "max_mods":1,"mod_chance":.5, "pace":1.0,"dobles":0,"rasgos":"todos",  "check_delay":0.0, "penalty":5.0,"arrow":8.0, "ring":22.0},
+	{"scenario":"grande","times":["day","golden","blue"],  "max_mods":1,"mod_chance":.7, "pace":1.0,"dobles":1,"rasgos":"todos",  "check_delay":0.0, "penalty":5.0,"arrow":10.0,"ring":26.0},
+	{"scenario":"grande","times":["blue","day","golden"],  "max_mods":1,"mod_chance":.7, "pace":1.0,"dobles":1,"rasgos":"minimos","check_delay":1.5, "penalty":5.0,"arrow":12.0,"ring":30.0},
+	{"scenario":"grande","times":["golden","blue","day"],  "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":2,"rasgos":"minimos","check_delay":1.5, "penalty":5.0,"arrow":14.0,"ring":32.0},
+	{"scenario":"grande","times":["day","golden","blue"],  "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":2,"rasgos":"minimos","check_delay":1.5, "penalty":5.0,"arrow":16.0,"ring":34.0},
+	{"scenario":"grande","times":["night","night","blue"], "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":2,"rasgos":"minimos","check_delay":-1.0,"penalty":5.0,"arrow":18.0,"ring":36.0},
+	{"scenario":"grande","times":["golden","night","day"], "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":3,"rasgos":"minimos","check_delay":-1.0,"penalty":5.0,"arrow":20.0,"ring":38.0},
+	{"scenario":"grande","times":["day","blue","night"],   "max_mods":2,"mod_chance":.6, "pace":1.0,"dobles":3,"rasgos":"minimos","check_delay":-1.0,"penalty":5.0,"arrow":22.0,"ring":40.0},
 ]
+const LIGHTS = ["day","golden","blue","night"]
 # Stretch 10 is where the player frames by hand (§7.5).
 const NO_AUTO_FROM = 91
 # Search in the classic park: the least turn from where the player looks (§9.1).
 const MIN_TURN = [60.0, 90.0, 120.0]          # stretch 1 (levels 4–10), stretch 2, from stretch 4
-# Search in the big park: straight distance to the person, by stretch.
-const DIST = {3:Vector2(8,25), 5:Vector2(15,40), 7:Vector2(20,55)}
-const DIST_FAR = Vector2(25,70)                # from stretch 9
+# Search in the big park: straight distance to the person, by stretch (levels 1–3, nearer).
+# (Calibrated: walking is what the clock pays for, so nobody is further than REACH_MAX.)
+const DIST_LEARNING = Vector2(6,14)
+const DIST = {1:Vector2(6,15), 2:Vector2(7,21), 3:Vector2(10,28), 4:Vector2(10,28), 5:Vector2(14,30), 6:Vector2(14,30)}
+const DIST_FAR = Vector2(17,30)                # from stretch 7
+const REACH_MAX = 30.0                         # the search widened never goes further
 
 # Level where each plane, modifier or the runner is first asked, forced (§9.3).
-const DEBUTS = {1:"entero", 3:"medio", 6:"primer_plano", 11:"cara", 13:"sola", 31:"americano",
-	32:"general", 34:"acompanada", 41:"frente", 42:"perfil", 43:"perro", 52:"lugar", 53:"actividad",
-	54:"corredor"}
-# The milestone of stretch 1 is a plain request, a close-up.
-const FORCED = {10:"primer_plano"}
+const DEBUTS = {1:"cualquiera", 11:"entero", 14:"medio", 17:"primer_plano", 21:"cara", 23:"sola",
+	26:"frente", 27:"perfil", 31:"americano", 32:"general", 34:"acompanada", 36:"perro", 41:"lugar",
+	44:"corredor"}
+# Levels whose plane is fixed without being a debut.
+const FORCED = {}
 # The level whose card announces two demands asks for two.
-const MIN_MODS = {62:2}
+const MIN_MODS = {52:2}
 # Novelty cards by level (§11.2). Each is seen once per player.
-const CARDS_AT = {1:["bienvenida","entero","semaforo"], 2:["enganche","comprobar"], 3:["medio"],
-	4:["reloj"], 5:["congelar"], 6:["primer_plano"], 8:["otro"], 10:["hito"], 11:["cara","fallo"],
-	13:["sola"], 20:["reportaje"], 21:["grande","zona"], 31:["americano"], 32:["general"],
-	33:["corte_limpio"], 34:["acompanada"], 41:["frente"], 43:["perro"], 51:["comprobar_lenta"],
-	52:["lugar"], 53:["actividad"], 54:["corredor"], 61:["dobles","enganche_lento"], 62:["dos_mods"],
-	71:["noche"], 81:["sin_comprobar"], 91:["encuadras_tu"], 101:["infinito"]}
+const CARDS_AT = {1:["bienvenida","grande","semaforo"], 2:["enganche","comprobar"], 3:["zona"],
+	4:["reloj"], 5:["congelar"], 8:["otro"], 10:["hito"], 11:["planos","entero","fallo"], 14:["medio"],
+	17:["primer_plano"], 20:["reportaje"], 21:["cara"], 23:["sola"], 26:["frente"], 31:["americano"],
+	32:["general"], 33:["corte_limpio"], 34:["acompanada"], 36:["perro"], 41:["lugar","comprobar_lenta"],
+	44:["corredor"], 51:["dobles"], 52:["dos_mods"], 71:["noche","sin_comprobar"], 91:["encuadras_tu"],
+	101:["infinito"]}
 # Cards that come with an event, not with a level.
 const EVENT_CARDS = ["flecha","taparse","rescate"]
 # A debut without a card of its own shares one.
 const DEBUT_CARD = {"perfil":"frente"}
-# Learning steps of levels 1–3 (§11.1), completed by paparazzi_run.gd.
-const COACH = {1:["mirar","centro","zoom","disparar"], 2:["enganchar","comprobar","disparar"],
-	3:["plano","disparar"]}
+# Learning steps (§11.1), completed by paparazzi_run.gd.
+const COACH = {1:["andar","sacar","zoom","disparar"], 2:["enganchar","comprobar","disparar"]}
 const LEARNING = 3                 # levels without clock nor penalty
 
 # ---------------------------------------------------------------------------------------------
@@ -104,14 +116,14 @@ static func level_spec(n: int) -> Dictionary:
 	var t = tramo_of(n)
 	var k = (n-1)%10+1
 	var s = {}
+	var light = 0 if k <= 4 else (1 if k <= 7 else 2)
 	if t <= TRAMOS.size():
 		s = TRAMOS[t-1].duplicate()
+		s.time = s.times[light]
 	else:
-		# Beyond level 100 (§9.2): odd stretches in the big park, even ones in the classic.
-		var big = t%2 == 1
+		# Beyond level 100 (§9.2): everything mixed, the light turning round every few levels.
 		s = TRAMOS[TRAMOS.size()-1].duplicate()
-		s.scenario = "grande" if big else "clasico"
-		s.time = ["day","golden","blue"][((t-11)/2)%3] if big else ["day","golden","blue","night"][((t-12)/2)%4]
+		s.time = LIGHTS[(t+light)%LIGHTS.size()]
 		s.max_mods = 3 if t >= 15 else 2
 		s.mod_chance = .7
 		s.arrow = minf(30.0,22.0+(t-10))
@@ -119,11 +131,11 @@ static func level_spec(n: int) -> Dictionary:
 	var spec = {
 		"n":n, "tramo":t, "k":k, "hito":k == 10, "reportaje":k == 10 and t >= 2,
 		"scenario":s.scenario, "time":s.time,
-		"planes":available(n,Framing.ORDER), "new_planes":[], "mods":available(n,MODS),
+		"planes":[ANY] if n < DEBUTS.find_key("entero") else available(n,Framing.ORDER), "new_planes":[], "mods":available(n,MODS),
 		"max_mods":s.max_mods, "mod_chance":s.mod_chance, "third_chance":.25 if t >= 15 else 0.0,
 		"min_mods":MIN_MODS.get(n,0),
 		"pace":s.pace, "runners":n >= DEBUTS.find_key("corredor"), "dobles":s.dobles, "rasgos":s.rasgos,
-		"check_delay":s.check_delay, "lock_delay":s.lock_delay, "auto_frame":n < NO_AUTO_FROM,
+		"check_delay":s.check_delay, "auto_frame":n < NO_AUTO_FROM,
 		"penalty":0.0 if n <= LEARNING else s.penalty,
 		"arrow_after":0.0 if n <= LEARNING else s.arrow, "ring_after":0.0 if n <= LEARNING else s.ring,
 		"in_view":n <= LEARNING, "min_turn":0.0, "dist":Vector2.ZERO,
@@ -136,14 +148,15 @@ static func level_spec(n: int) -> Dictionary:
 	if spec.scenario == "clasico" and n > LEARNING:
 		spec.min_turn = MIN_TURN[0] if t == 1 else (MIN_TURN[1] if t <= 3 else MIN_TURN[2])
 	elif spec.scenario == "grande":
-		spec.dist = DIST.get(t,DIST_FAR)
+		spec.dist = DIST_LEARNING if n <= LEARNING else DIST.get(t,DIST_FAR)
 	return spec
 
 # The planes or modifiers already introduced by level n, in their own order.
 static func available(n: int, names: Array) -> Array:
 	var out = []
 	for name in names:
-		if DEBUTS.find_key(name) <= n: out.append(name)
+		var debut = DEBUTS.find_key(name)
+		if debut != null and debut <= n: out.append(name)
 	return out
 
 # The card a debut shows (the debut itself, or the card it shares).
@@ -177,11 +190,11 @@ static func compatible(mod: String, plane: String, scenario: String, mods: Dicti
 	var classic = scenario == "clasico"
 	match mod:
 		"sola":
-			if mods.has("acompanada"): return false
+			if mods.has("acompanada") or mods.has("lugar"): return false
 			# A full shot with nobody else in the crowded square is all but impossible.
 			if classic and not plane in ["medio","primer_plano","cara"]: return false
 		"acompanada":
-			if mods.has("sola") or not plane in ["general","entero","americano"]: return false
+			if mods.has("sola") or mods.has("lugar") or not plane in ["general","entero","americano"]: return false
 		"frente":
 			if mods.has("perfil") or plane == "general": return false
 			# In the classic park only someone still or seated faces the camera (§5.1): not the
@@ -192,7 +205,8 @@ static func compatible(mod: String, plane: String, scenario: String, mods: Dicti
 			# In the classic park only walkers are seen side on: not someone seated.
 			if classic and mods.has("actividad"): return false
 		"perro":
-			if not plane in ["general","entero","americano"]: return false
+			# (The dog is knee-high: a cowboy shot cuts it off.)
+			if not plane in ["general","entero"]: return false
 			if mods.has("actividad"): return false          # the walker walks
 			if classic and mods.has("frente"): return false
 		"actividad":
@@ -201,6 +215,9 @@ static func compatible(mod: String, plane: String, scenario: String, mods: Dicti
 			if mods.has("perro") or mods.has("lugar") or mods.has("perfil"): return false
 		"lugar":
 			if not plane in ["general","entero","americano"]: return false
+			# (People gather by the bandstand and the fountain: alone, or with exactly so many, there
+			# is all but impossible; seen with the solver, 26-11-2026.)
+			if mods.has("sola") or mods.has("acompanada"): return false
 			if mods.has("actividad"): return false          # the seats are not by the landmarks
 			if classic and mods.has("frente"): return false
 		_:
@@ -298,6 +315,9 @@ static func judge(e: Dictionary, request: Dictionary, ignore_identity = false) -
 	# 6. The plane.
 	if "corte_cara" in shape.defects:
 		reasons.append(reason("corte_cara",[],"menos_zoom"))
+	elif wanted == ANY:
+		# Any shot will do, but not a speck in the landscape (a wide shot).
+		if shape.plane == "general": reasons.append(reason("pequena",[],"mas_zoom"))
 	elif shape.plane != wanted:
 		var advice = "mas_zoom" if Framing.wider(shape.plane,wanted) else "menos_zoom"
 		reasons.append(reason("plano",[shape.plane,wanted,advice],advice))
@@ -305,6 +325,7 @@ static func judge(e: Dictionary, request: Dictionary, ignore_identity = false) -
 	for defect in ["cabeza","pies","aire"]:
 		if not defect in shape.defects: continue
 		if defect == "pies" and wanted != "entero": continue
+		if defect == "aire" and wanted == ANY: continue      # (composition comes with the planes)
 		reasons.append(reason(defect,[],defect))
 	# 8. The modifiers, in the request's order.
 	var others = int(e.get("others",0))
@@ -353,6 +374,60 @@ static func differing_trait(e: Dictionary) -> Array:
 		if i < subject_es.size() and i < target_es.size() and subject_es[i] != target_es[i]:
 			return [subject[i], target[i]]
 	return []
+
+# ---------------------------------------------------------------------------------------------
+# Look-alikes (§10.3): made on purpose when the park is cast for a run, since the casting hardly
+# ever makes them. Only colours change, which never breaks the casting's rules.
+
+const COLOUR_SLOTS = ["upper_color","lower_color","hair_color","accessory_color","glasses"]
+
+# How many of the four descriptions (in Spanish) two people share.
+static func shared(c, a: Dictionary, b: Dictionary) -> int:
+	var da = c.descriptors(a,"es")
+	var db = c.descriptors(b,"es")
+	var n = 0
+	for k in 4:
+		if da[k] == db[k]: n += 1
+	return n
+
+# A variant of t sharing exactly `keep` descriptions, whose four are nobody else's.
+static func double_of(c, t: Dictionary, keep: int, crowd: Array, rng: RandomNumberGenerator):
+	var signatures = crowd.map(func(x): return "|".join(c.descriptors(x,"es")))
+	for attempt in 200:
+		var d = t.duplicate(true)
+		for change in 4-keep+rng.randi()%2:
+			var slot: String = COLOUR_SLOTS[rng.randi()%COLOUR_SLOTS.size()]
+			match slot:
+				"hair_color": d.hair_color = c.catalog.tonos_pelo.keys()[rng.randi()%c.catalog.tonos_pelo.size()]
+				"glasses": d.glasses = rng.randi()%c.catalog.piezas.gafas.size()
+				_: d[slot] = c.catalog.tonos_ropa.keys()[rng.randi()%c.catalog.tonos_ropa.size()]
+		if shared(c,d,t) == keep and not "|".join(c.descriptors(d,"es")) in signatures: return d
+	return null
+
+# Groups of look-alikes in a cast (an Array of traits, changed in place): a model and `per` others
+# turned into its variants, the first sharing three descriptions and the rest two. Runners
+# (`skip`, indices) are left alone. Returns how many look-alikes were made.
+static func make_doubles(c, crowd: Array, rng: RandomNumberGenerator, groups: int, per: int, skip: Array) -> int:
+	var free = []
+	for i in crowd.size():
+		if not i in skip: free.append(i)
+	var made = 0
+	for g in groups:
+		if free.size() < per+1: break
+		var model: int = free.pop_at(rng.randi()%free.size())
+		for k in per:
+			var d = double_of(c,crowd[model],3 if k == 0 else 2,crowd,rng)
+			if d == null: continue
+			crowd[free.pop_at(rng.randi()%free.size())] = d
+			made += 1
+	return made
+
+# How many people of a cast look like t (two or more descriptions in common).
+static func doubles_count(c, t: Dictionary, crowd: Array) -> int:
+	var n = 0
+	for other in crowd:
+		if other != t and shared(c,other,t) >= 2: n += 1
+	return n
 
 # ---------------------------------------------------------------------------------------------
 # Texts of the verdict

@@ -1,6 +1,6 @@
 # 29 · Modo Paparazzi: supervivencia de encuadres con cámara ideal
 
-> **Estado: 📝 Planificado (25-11-2026), con las incógnitas técnicas despejadas por sondas sobre el juego real (§23).** Especificación completa para implementar. Pensada para que la siga una IA sin contexto previo: cada decisión está tomada y cada paso dice qué fichero tocar, qué función escribir y cómo comprobarlo. Lo único abierto está marcado como **«A calibrar»** (números que fija el solver, §19.4) o **«Preguntar al usuario»**.
+> **Estado: ✅ Hecho (E0–E10, 25/26-11-2026; falta la validación del usuario y E11, opcional).** Rediseñado tras la primera prueba a mano: todo en el parque grande, el tramo 1 con «un plano cualquiera» y el enganche voluntario (decisiones 10–14 y §9.1). El estado y las diferencias con el plan de cada etapa están en el §20; la calibración, en el §22. Lo que sigue es la especificación con la que se hizo, con sus incógnitas ya despejadas (§23).
 
 ## Decisiones del usuario (25-11-2026)
 
@@ -110,9 +110,9 @@ El juego **enseña el lenguaje del encuadre** (planos, cortes limpios, aire, de 
 |---|---|---|
 | `START_BANK` | 60 s | Reloj al empezar una carrera (desde el nivel 1 se pone en marcha en el nivel 4; desde un hito, en su primer nivel). |
 | `MAX_BANK` | 120 s | Tope: no se acumula más. |
-| `BONUS_FLOOR` | 12 s | Lo mínimo que da una foto buena. |
-| `BONUS_SPAN` | 18 s | `bonus(n) = BONUS_FLOOR + BONUS_SPAN·exp(−(n−1)/BONUS_DECAY)`, redondeado a 0,5 s. |
-| `BONUS_DECAY` | 60 niveles | Nivel 1 → 30 s; 30 → 23,0; 50 → 20,0; 100 → 15,5; 200 → 12,5 (con el redondeo; corregido en E3, los números anteriores no salían de la fórmula). **A calibrar** (§19.4). |
+| `BONUS_FLOOR` | 12 s | Lo mínimo que da una foto buena (calibrado, §19.4). |
+| `BONUS_SPAN` | 20 s | `bonus(n) = BONUS_FLOOR + BONUS_SPAN·exp(−(n−1)/BONUS_DECAY)`, redondeado a 0,5 s. |
+| `BONUS_DECAY` | 100 niveles | Nivel 1 → 32 s; 50 → 24,5; 100 → 19,5; 200 → 14,5. **Calibrado el 26-11-2026** con el solver (§19.4 y la tabla del §22): antes 12 / 18 / 60 con distancias de hasta 70 m. |
 | `HITO_BONUS` | +15 s | Extra al superar un hito (el reportaje son tres fotos). |
 | `FIRST_TRY_BONUS` | +2 s | Foto buena sin fallos en ese nivel (desde el tramo 2). |
 | `CLEAN_CUT_BONUS` | +3 s | Corte limpio, §4.5 (desde el tramo 4, cuando se enseña). |
@@ -338,7 +338,7 @@ En el parque grande el fotógrafo se acerca andando: todo plano es viable. Pero 
 | `acompanada` (1 o 2) | Exactamente N personas reconocibles más | general, entero, americano | Los dos | 4 | `others` |
 | `frente` | `facing <= 45°` | Todos menos general | Grande; en el clásico, **solo con la persona parada o sentada** (§5.1) | 5 | `facing` |
 | `perfil` | `60° <= facing <= 120°` | Todos menos general | Grande; en el clásico, solo con quien camina (siempre lo está: sirve para estrenarlo) | 5 | `facing` |
-| `perro` | El perro de la persona sale en el encuadre | general, entero, americano | Los dos (el perro existe en los dos parques) | 5 | `dog_in_frame` |
+| `perro` | El perro de la persona sale en el encuadre | general, entero (el perro llega a la rodilla: un americano lo corta; visto con el solver, 26-11-2026) | Los dos (el perro existe en los dos parques) | 5 | `dog_in_frame` |
 | `actividad` | Sentada haciendo algo (`activity != ""`; charlar cuenta) | entero, americano, medio (en la cara no se ve) | **Solo el clásico** (§10.2: en el grande casi nadie se sienta y las paradas duran unos 11 s) | 6 | `activity` |
 | `lugar` | El sitio (`quiosco`, `estanque`/fuente) sale en el encuadre | general, entero, americano | Los dos | 6 | `places` |
 
@@ -544,24 +544,27 @@ La franja más estrecha es la de la cara: ×1,25 en zoom (sonda `planos`, §23; 
 
 ### 9.1 Tramos diseñados (1–10)
 
-| T | Niveles | Escenario | Luz | Novedades (tarjetas) | Planos | Modificadores (máx · prob.) | `pace` | Dobles | Rasgos | `check_delay` | `lock_delay` | Auto | Penal. | Flecha / anillo |
-|---|---|---|---|---|---|---|---:|---:|---|---:|---:|:---:|---:|---|
-| 1 | 1–10 | clásico | día | Aprendizaje (§11.1), entero, medio, primer plano, reloj, comodines, hito | entero, medio, primer_plano | — (0) | 0,70 | 0 | todos | 0 | 0 | ✓ | 0 | 0/0 s (niv. 1–3), luego 4/12 s |
-| 2 | 11–20 | clásico | día | cara, fallos, sola, reportaje | + cara | sola (1 · 0,5) | 0,85 | 0 | todos | 0 | 0 | ✓ | 3 | 6/18 |
-| 3 | 21–30 | **grande** | día | parque grande, zona, taparse | igual | sola (1 · 0,4) | 1,0 | 0 | todos | 0 | 0 | ✓ | 5 | 8/22 |
-| 4 | 31–40 | clásico | dorada | americano, general, corte limpio, acompañada | + americano, general | sola, acompanada (1 · 0,7) | 1,0 | 1 | todos | 0 | 0 | ✓ | 5 | 10/26 |
-| 5 | 41–50 | **grande** | día | frente/perfil, perro | todos | + frente, perfil, perro (1 · 0,7) | 1,0 | 1 | todos | 0 | 0 | ✓ | 5 | 12/30 |
-| 6 | 51–60 | clásico | azul | comprobación lenta, lugar, actividad, corredores | todos | + actividad, lugar (1 · 0,7) | 1,0 | 1 | mínimos | 1,5 | 0 | ✓ | 5 | 14/32 |
-| 7 | 61–70 | **grande** | dorada | dobles, enganche lento, dos exigencias | todos | todos (2 · 0,6) | 1,0 | 2 | mínimos | 1,5 | 0,3 | ✓ | 5 | 16/34 |
-| 8 | 71–80 | clásico | noche | de noche | todos | todos (2 · 0,6) | 1,0 | 2 | mínimos | 1,5 | 0,3 | ✓ | 5 | 18/36 |
-| 9 | 81–90 | **grande** | azul | sin comprobación | todos | todos (2 · 0,6) | 1,0 | 2 | mínimos | −1 | 0,3 | ✓ | 5 | 20/38 |
-| 10 | 91–100 | clásico | día | encuadras tú | todos | todos (2 · 0,6) | 1,0 | 3 | mínimos | −1 | 0,3 | ✗ | 5 | 22/40 |
+**Rediseñada el 26-11-2026** tras la primera prueba a mano (decisiones 10–12 y la de jugar solo en el parque grande): todo el modo va en el parque grande; el tramo 1 pide a la persona con **un plano cualquiera** (de entero a cara, que no sea un plano general: se le tiene que ver la cara) y los planos llegan en el tramo 2. **La luz cambia también dentro de cada tramo** (niveles 1–4, 5–7 y 8–10), para dar variedad. El parque clásico sigue siendo un escenario que un tramo puede nombrar (`TRAMOS[t].scenario`), con todo su código.
 
-- **Rasgos «todos»:** los 4 descriptores de `casting.descriptors()`. **«Mínimos»:** `casting.predicates_for()` (3 o 4, lo justo para que sea única). Medido (§23): con el reparto actual siempre son 3; con dobles hechos a propósito, 3 o 4 a partes iguales.
-- **Dobles:** cuántas personas, como mínimo, comparten 2 o más descriptores con la buscada. **El reparto actual casi no tiene** (sonda `reparto`: 19 de 21 personas sin ninguno en el clásico y 43 de 45 en el grande): se crean a propósito al cargar la escena (§10.3).
-- **Corredores** como persona buscada: desde el tramo 6, solo en plano entero o general.
-- **Búsqueda en el clásico** (`min_turn`, giro mínimo desde donde mira el jugador hasta la persona): niveles 1–3, dentro de la vista (±15° y en pantalla a 24 mm); resto del tramo 1, 60°; tramo 2, 90°; desde el 4, 120°.
-- **Búsqueda en el grande** (`dist`, distancia en línea recta del fotógrafo a la persona): tramo 3, 8–25 m; 5, 15–40 m; 7, 20–55 m; desde el 9, 25–70 m.
+| T | Niveles | Luz (1–4 · 5–7 · 8–10) | Novedades (tarjetas) | Planos | Modificadores (máx · prob.) | `pace` | Dobles | Rasgos | `check_delay` | Auto | Penal. | Distancia | Flecha / anillo |
+|---|---|---|---|---|---|---:|---:|---|---:|:---:|---:|---|---|
+| 1 | 1–10 | día · dorada · día | bienvenida, parque grande, esquinas (1); enganche, comprobar (2); zona (3); reloj (4); Congelar (5); Otro (8); hito (10) | un plano cualquiera | — | 0,80 | 0 | todos | 0 | ✓ | 0 | 6–14 m (1–3), 6–15 m | 0/0 s (1–3), luego 4/12 s |
+| 2 | 11–20 | día · azul · dorada | los planos, entero, fallos (11); medio (14); primer plano (17); reportaje (20) | entero, medio, primer plano | — | 0,90 | 0 | todos | 0 | ✓ | 3 | 7–21 m | 6/18 |
+| 3 | 21–30 | dorada · día · azul | cara (21), sola (23), de frente y de perfil (26–27) | + cara | sola, frente, perfil (1 · 0,5) | 1,0 | 0 | todos | 0 | ✓ | 5 | 10–28 m | 8/22 |
+| 4 | 31–40 | día · dorada · azul | americano (31), general (32), corte limpio (33), acompañada (34), perro (36) | todos | + acompañada, perro (1 · 0,7) | 1,0 | 1 | todos | 0 | ✓ | 5 | 10–28 m | 10/26 |
+| 5 | 41–50 | azul · día · dorada | lugar y comprobación lenta (41), corredores (44) | todos | + lugar (1 · 0,7) | 1,0 | 1 | mínimos | 1,5 | ✓ | 5 | 14–30 m | 12/30 |
+| 6 | 51–60 | dorada · azul · día | dobles (51), dos exigencias (52) | todos | todos (2 · 0,6) | 1,0 | 2 | mínimos | 1,5 | ✓ | 5 | 14–30 m | 14/32 |
+| 7 | 61–70 | día · dorada · azul | — | todos | todos (2 · 0,6) | 1,0 | 2 | mínimos | 1,5 | ✓ | 5 | 17–30 m | 16/34 |
+| 8 | 71–80 | **noche** · noche · azul | de noche, sin comprobación (71) | todos | todos (2 · 0,6) | 1,0 | 2 | mínimos | −1 | ✓ | 5 | 17–30 m | 18/36 |
+| 9 | 81–90 | dorada · noche · día | — | todos | todos (2 · 0,6) | 1,0 | 3 | mínimos | −1 | ✓ | 5 | 17–30 m | 20/38 |
+| 10 | 91–100 | día · azul · noche | encuadras tú (91) | todos | todos (2 · 0,6) | 1,0 | 3 | mínimos | −1 | ✗ | 5 | 17–30 m | 22/40 |
+
+- **«Un plano cualquiera»** (`Paparazzi.ANY`): vale de plano entero a primerísimo primer plano, sin cabeza ni cara cortadas; un plano general da el motivo `pequena` («Sale muy pequeña: Acércate o usa el zoom…»). El encuadre automático centra el cuerpo si cabe con el zoom de ese momento, y si no, deja la coronilla arriba (`paparazzi_run.gd::anchor_for()`).
+- **«Haciendo algo»** (`actividad`) sale de `MODS`: en el grande casi nadie se sienta. Su código sigue para el clásico. **El enganche lento** (`lock_delay`) desapareció con el enganche voluntario.
+- **Rasgos «todos»:** los 4 descriptores de `casting.descriptors()`. **«Mínimos»:** `casting.predicates_for()` (3 o 4, lo justo para que sea única).
+- **Dobles:** el reparto del parque grande de una carrera lleva cuatro grupos de una persona modelo y tres variantes (solo cambian colores; §10.3). La columna dice cuántos dobles tiene que tener, como mínimo, la persona buscada; con 0, se prefiere a alguien sin ninguno.
+- **Corredores** como persona buscada: desde el nivel 44, solo en plano entero o general.
+- **Búsqueda** (`dist`, distancia en línea recta del fotógrafo a la persona al empezar el nivel): si no hay nadie a esa distancia, se amplía (×1,5, ×2, ×2,5) antes de simplificar el encargo, **nunca más allá de 30 m** (`REACH_MAX`). Una cara se pide de alguien a menos de 25 m. **Calibrado (26-11-2026):** lo que el reloj paga es andar hasta la persona; con las distancias primeras (hasta 70 m) y la búsqueda ampliada hasta 100 m, un jugador medio no pasaba del nivel 35.
 
 ### 9.2 Más allá del nivel 100: procedural
 
@@ -1348,29 +1351,40 @@ Cada etapa deja el juego funcionando y sus pruebas en verde. No se empieza una s
   - **HUD:** la ficha mide `Rect2(10,10,480,172)` (los rasgos largos pisaban las marcas ✓/✗). Las marcas, la flecha y el ✓ del plano se dibujan (las fuentes no tienen esos signos). Las esquinas van por debajo de la ficha y del reloj. Con mucho zoom los corchetes se quedan dentro de la pantalla, y si no queda sitio bajo ellos el consejo va encima de la etiqueta del plano.
 - **Queda para etapas posteriores:** el táctil de los comodines y la chuleta (E6), la flecha con distancia en el grande (E7).
 
-### E6 · Enseñar
-- [ ] Aprendizaje de los niveles 1–3, tarjetas, chuleta y `plane_icon.gd`.
-- [ ] Glifos de controles, táctil del §12.5 y todos los textos en español e inglés.
-- **Aceptación:** `check_text_fit --only=paparazzi` (es y en) sin fallos; capturas del §19.5 revisadas a ojo; `test_input.gd` y `test_touch.gd` en verde.
+### Rediseño tras la primera prueba a mano (26-11-2026)
+Antes de E6 se rehízo la curva (§9.1): **todo en el parque grande**, el tramo 1 con «un plano cualquiera» y la luz cambiando dentro de cada tramo; el enganche pasó a ser voluntario. Con eso, E7 (parque grande) dejó de ser una etapa aparte y se hizo junto a E6 y E8.
 
-### E7 · Parque grande
-- [ ] Recarga entre tramos.
-- [ ] Elección de persona por distancia, zona, flecha con distancia, la rueda que saca la cámara, taparse, de frente y de perfil, perro, actividad y lugar en el grande.
-- **Aceptación:** pruebas 14 y 15 del §19.3 y `test_big_park.gd` en verde.
+### E6 · Enseñar ✅ (26-11-2026)
+- [x] Aprendizaje (§11.1), ahora en los niveles 1 y 2: «andar» (3 m andados o la cámara arriba), «sacar», «zoom» (el semáforo en verde), «disparar»; «enganchar», «comprobar», «disparar». Y la línea de los controles cuando no se hace nada en 12 s (`pz_coach_quieto`). Suena `tutorial_ok` en cada paso.
+- [x] Tarjetas nuevas: `grande`, `zona` y `planos` (la que abre el tramo 2). Las de un plano llevan su pictograma.
+- [x] Chuleta (`PZ_HELP`, H · B · «Chuleta»): los seis planos con pictograma y una línea, el corte limpio, los controles del dispositivo y las tarjetas ya vistas, que se pueden releer. El reloj espera.
+- [x] `scripts/plane_icon.gd`: la figura, la franja donde puede caer el borde y la línea de corte; en la ficha, la ficha grande, las tarjetas, la chuleta y el arcade.
+- [x] Táctil (§12.5): «Chuleta», «Congelar» y «Otro» (estos dos, si quedan); se ocultan los botones de la cámara (AF, tercios, bloqueo, medición).
+- [x] Textos en español e inglés; `check_text_fit` tiene la sección `paparazzi`.
+- **Diferencias:** sin auto-enganche, el semáforo también juzga sin enganche (a quien saldría en la foto, diez veces por segundo), para que el nivel 1 se pueda jugar sin saber engancharse.
 
-### E8 · Hitos y remate
-- [ ] Reportaje, hoja de contactos, polaroid, álbum, sonidos y vibración.
-- **Aceptación:** pruebas 13 y 16 del §19.3.
+### E7 · Parque grande ✅ (26-11-2026)
+- [x] Todo el modo en el grande; la escena se recarga al empezar una carrera si el parque no tiene los dobles de la carrera (`main.pz_doubles`), nunca entre tramos.
+- [x] Persona por distancia (que se amplía si no hay nadie), zona en la ficha y en la ficha grande («Cerca de la fuente · a unos 20 m»: el sitio más cercano entre la fuente, el quiosco y los columpios), flecha con los metros, la rueda que saca la cámara, cada nivel con la cámara bajada, una cara solo de alguien a menos de 25 m. Taparse, de frente, de perfil, perro y lugar usan lo que ya había (`crowd_graph.gd` y `park.places`).
+- [x] **Dobles (§10.3)**: `Paparazzi.make_doubles()` en `main.populate_grande()` cuando hay una carrera: cuatro grupos de modelo y tres variantes; `prefer()` elige según `spec.dobles`.
+- **Diferencias:** sin la prueba 14 (recarga entre tramos: ya no hay). La 15 (taparse en el grande) la cubre el juez en `test_paparazzi.gd`.
 
-### E9 · Calibración y rendimiento
-- [ ] Solver y tabla de calibración (§19.4).
-- [ ] Capturas a 600 mm (`--focal=600`) en los dos parques: Ultra, Bajo y `--rendering-method gl_compatibility`. Mirar sombras en las caras, texturas y el maniquí `lo`.
-- [ ] `-- --metrics` con Paparazzi a 600 mm (presupuestos de `AGENTS.md` §3.1).
-- **Aceptación:** calibración del §19.4 cumplida y anotada; sin sorpresas visuales. Si las hay, bajar `LENS_MAX` a 400 y quitar la cara en el camino 2.
+### E8 · Hitos y remate ✅ (26-11-2026)
+- [x] Polaroid (`PZ_POLAROID`, 1,5 s: en el centro, vuela al reloj al 35 % y se desvanece; el reloj y el parque esperan).
+- [x] Álbum: la foto de cada hito y la última foto buena de una carrera con récord, sin revelar, con plano y focal (`album_caption()`: «Plano medio · 135 mm»; lugar «Paparazzi · nivel 20»).
+- [x] Sonidos propios sintetizados (`tools/audio/build_paparazzi_sounds.py`): `pz_polaroid`, `pz_hito`, `pz_congelar`, `pz_otro`. Vibración al acertar, en el hito, al enganchar, en el retén y al congelar.
+- [x] Reportaje y hoja de contactos (de E4).
+- **Aceptación:** pruebas 13 y 16 del §19.3 en `test_paparazzi_play.gd`.
 
-### E10 · Documentación
-- [ ] Lo del §21.
-- **Aceptación:** la documentación describe exactamente lo que hay.
+### E9 · Calibración y rendimiento ✅ (26-11-2026)
+- [x] `tools/paparazzi_solver.gd`: se planta a unos 8 m (delante para «de frente», al lado para «de perfil», con el sitio detrás para «con el sitio»), da la vuelta a la persona si algo tapa o sobra gente, encuadra a mano en el tramo 10, se engancha, sigue el consejo del semáforo y dispara en verde. **120/120 niveles.**
+- [x] Calibración (tabla del §22). Lo que el reloj paga es **andar hasta la persona**, no encuadrar (el solver encuadra en 1,6–3 s). Con las distancias primeras (hasta 70 m, y la búsqueda ampliada hasta 100 m) un jugador medio no pasaba del nivel 35. Ahora: distancias ×0,7 con un tope de 30 m (`REACH_MAX`), `BONUS_FLOOR` 12, `BONUS_SPAN` 20 y `BONUS_DECAY` 100.
+- [x] Lo que el solver encontró y se arregló: el perro llega a la rodilla (solo en plano entero o general); «con el sitio» no va con «sola» ni con «acompañada» (junto al quiosco y la fuente siempre hay gente); quien pasea al perro y quien está junto a un sitio se piden estén donde estén (hasta 45 m), porque son pocos y el encargo se simplificaba en un 29 % de los niveles (ahora, un 7 %); con mucho zoom para un plano entero, el encuadre automático deja la cabeza dentro (antes el semáforo decía «Apunta a alguien» en vez de «Menos zoom»).
+- [x] Capturas a 600 mm en el grande, de día, a la hora dorada y de noche, en Ultra y en `gl_compatibility`: sin sorpresas (sin desenfoque del visor, texturas y caras bien).
+- [x] Rendimiento en una carrera, a 1600 × 900 (script de medida propio: `--metrics` fija la focal a 24 mm). Ultra: fotograma de 11,3 ms (p95 12,7) a 24 mm y de 10,8 ms (p95 12,4) a 600 mm, GPU 7,3 y 7,0 ms; de noche, 10,6 y 10,0 ms. `gl_compatibility`: 8,0 y 7,7 ms, GPU 1,3 y 1,1 ms. A 600 mm no cuesta más que a 24.
+
+### E10 · Documentación ✅ (26-11-2026)
+- [x] Lo del §21: este documento, `AGENTS.md` (fila del §2 y pregunta del §5), `docs/futuro/README.md`, `docs/ARQUITECTURA.md` (estados y módulos), `docs/TESTS_Y_VERIFICACION.md` (suites, solver, `check_text_fit` y tabla §4.3), [21](21_ARCADE_CONDICIONES_TLR.md) (guía de planos del bloque 7), [22](22_MENU_TUTORIAL_MANDO.md) (siete tarjetas) y `README.md`.
 
 ### E11 · Opcional (preguntar al usuario)
 - [ ] **Insignias propias** («Paparazzi»: llegar al nivel 50; «Sin final»: al 100). Cambia `Badges.BADGES` y su prueba (hoy son 10).
@@ -1415,12 +1429,26 @@ Cada etapa deja el juego funcionando y sus pruebas en verde. No se empieza una s
 17. **`aim_point()` necesita las correcciones:** la fórmula cerrada sola falla hasta un 4,9 % del encuadre (§7.4).
 18. **El seguimiento necesita adelanto = 1/ganancia:** otro adelanto descoloca a la persona hasta un 9 % del encuadre, y ninguno, hasta un 27 % (§7.4).
 
-### Tabla de calibración (se rellena en E9)
+### Tabla de calibración (E9, 26-11-2026)
 
-| Tramo | Mediana del solver (s) | Jugador medio ×2,5 (s) | Bonificación media (s) | ¿Equilibrio? |
-|---|---:|---:|---:|---|
-| 1 | — | — | — | — |
-| … | | | | |
+Dos pasadas del solver con las distancias calibradas (`tools/paparazzi_solver.gd -- --from=1 --to=120`: 120/120 y 110/120; lo que no hace el solver es esquivar a quien se cuela o tapa, que un jugador resuelve moviéndose) y la carrera simulada con sus tiempos: **jugador medio** = encuadre del solver × 2,5 + andar hasta la persona a 1,4 m/s + 3 s de búsqueda por cada 10 m; **jugador bueno** = × 1,6, corriendo a 2,2 m/s y a la primera. Distancia: la mediana a la que estaba la persona al empezar el nivel.
+
+| Tramo | Encuadre del solver (s) | Distancia (m) | Coste del jugador medio (s) | Bonificación a mitad de tramo (s) |
+|---|---:|---:|---:|---:|
+| 1 | 1,7 | 8 | 12 | 31,0 |
+| 2 | 1,6 | 13 | 17 | 29,5 |
+| 3 | 1,7 | 14 | 18 | 27,5 |
+| 4 | 1,7 | 14 | 18 | 26,0 |
+| 5 | 1,6 | 16 | 20 | 25,0 |
+| 6 | 1,7 | 18 | 23 | 23,5 |
+| 7 | 1,7 | 23 | 28 | 22,5 |
+| 8 | 1,7 | 18 | 23 | 21,5 |
+| 9 | 1,7 | 18 | 23 | 20,5 |
+| 10 | 1,6 | 19 | 23 | 20,0 |
+
+**Resultado, con `BONUS_FLOOR` 12, `BONUS_SPAN` 20 y `BONUS_DECAY` 100:** el jugador medio llega al nivel **67–70** (según la pasada); el bueno, al **134–150**. Los hitos suman 15 s y el rescate, 30 una vez. El equilibrio se rompe hacia el tramo 6: a partir de ahí cada nivel cuesta algo más de lo que da y la carrera dura lo que dure la reserva. Simplificaciones de encargo (`PAPARAZZI_FALLBACK`): 8 de 120 (6,7 %; el objetivo era ≤ 2 %), casi todas «con el sitio» y «acompañada»: queda como mejora.
+
+**Una pasada sola engaña:** las distancias dependen de dónde esté la gente, y con los mismos valores dos pasadas dieron el nivel 77 y el 102. La calibración se hizo con las dos juntas.
 
 ---
 

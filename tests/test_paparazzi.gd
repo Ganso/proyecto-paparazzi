@@ -44,48 +44,50 @@ func curve() -> void:
 		var where = "level %d: " % n
 		check(s == Paparazzi.level_spec(n),where+"level_spec is not pure")
 		check(s.pace <= 1.0,where+"pace above 1.0")
-		var check_delay = 0.0 if n <= 50 else (1.5 if n <= 80 else -1.0)
+		var check_delay = 0.0 if n <= 40 else (1.5 if n <= 70 else -1.0)
 		check(is_equal_approx(s.check_delay,check_delay),where+"check_delay %.1f" % s.check_delay)
 		check(s.auto_frame == (n < 91),where+"auto_frame")
-		check(is_equal_approx(s.lock_delay,.3 if n >= 61 else 0.0),where+"lock_delay")
-		var t = (n-1)/10+1
-		var scenario = "clasico" if t <= 2 else ("grande" if t%2 == 1 else "clasico")
-		check(s.scenario == scenario,where+"scenario "+s.scenario)
-		check(not (s.scenario == "grande" and s.time == "night"),where+"night in the big park")
+		check(s.scenario == "grande",where+"scenario "+s.scenario)
 		check(s.time in ["day","golden","blue","night"],where+"light "+s.time)
+		check(n > 3 or s.time == "day",where+"the first levels by day")
 		check(s.hito == (n%10 == 0),where+"hito")
 		check(s.reportaje == (n%10 == 0 and n >= 20),where+"reportaje")
 		check(s.clock == (n > 3),where+"clock")
-		check(s.coach.is_empty() == (n > 3),where+"coach")
+		check(s.coach.is_empty() == (n > 2),where+"coach")
 		check(s.dobles >= 0 and s.dobles <= 3,where+"dobles")
-		check(s.rasgos == ("todos" if n <= 50 else "minimos"),where+"rasgos")
+		check(s.rasgos == ("todos" if n <= 40 else "minimos"),where+"rasgos")
+		check((s.planes == [Paparazzi.ANY]) == (n <= 10),where+"any shot only in stretch 1: %s" % str(s.planes))
 		check(s.max_mods >= s.min_mods,where+"min_mods above max_mods")
 		check(not s.planes.is_empty(),where+"no planes")
-		if s.scenario == "clasico" and n > 3: check(s.min_turn >= 60.0,where+"min_turn")
-		if s.scenario == "grande": check(s.dist.x > 0 and s.dist.y > s.dist.x,where+"dist")
+		check(s.dist.x > 0 and s.dist.y > s.dist.x,where+"dist")
 		check(s.in_view == (n <= 3),where+"in_view")
 		if n > 1:
 			check(s.bonus <= before.bonus,where+"the bonus went up")
 			check(s.arrow_after >= before.arrow_after,where+"the arrow came sooner")
 			check(s.ring_after >= before.ring_after,where+"the ring came sooner")
 			check(s.ring_after >= s.arrow_after,where+"ring before the arrow")
-			for p in before.planes: check(p in s.planes,where+"plane %s went away" % p)
+			for p in before.planes: check(p == Paparazzi.ANY or p in s.planes,where+"plane %s went away" % p)
 			for m in before.mods: check(m in s.mods,where+"modifier %s went away" % m)
 			check(s.penalty >= before.penalty,where+"the penalty went down")
 		before = s
 	# Some numbers of the plan, exactly.
-	check(Paparazzi.bonus(1) == 30.0,"bonus(1) %.1f" % Paparazzi.bonus(1))
-	check(Paparazzi.bonus(100) == 15.5,"bonus(100) %.1f" % Paparazzi.bonus(100))
-	check(Paparazzi.bonus(200) == 12.5,"bonus(200) %.1f" % Paparazzi.bonus(200))
+	check(Paparazzi.bonus(1) == 32.0,"bonus(1) %.1f" % Paparazzi.bonus(1))
+	check(Paparazzi.bonus(100) == 19.5,"bonus(100) %.1f" % Paparazzi.bonus(100))
+	check(Paparazzi.bonus(200) == 14.5,"bonus(200) %.1f" % Paparazzi.bonus(200))
 	check(Paparazzi.level_spec(11).penalty == 3.0 and Paparazzi.level_spec(21).penalty == 5.0 and Paparazzi.level_spec(5).penalty == 0.0,"penalty by stretch")
-	check(Paparazzi.level_spec(1).planes == ["entero"],"level 1 asks only for full shots")
-	check(not "primer_plano" in Paparazzi.level_spec(5).planes and "primer_plano" in Paparazzi.level_spec(6).planes,"close-up before its card")
+	check(Paparazzi.level_spec(1).planes == [Paparazzi.ANY],"level 1 asks for any shot")
+	check(Paparazzi.level_spec(11).planes == ["entero"],"level 11 brings the full shot")
+	check(not "primer_plano" in Paparazzi.level_spec(16).planes and "primer_plano" in Paparazzi.level_spec(17).planes,"close-up before its card")
 	check(Paparazzi.level_spec(30).planes.size() == 4 and Paparazzi.level_spec(32).planes.size() == 6,"planes of stretches 3 and 4")
-	check(not "sola" in Paparazzi.level_spec(12).mods and "sola" in Paparazzi.level_spec(13).mods,"alone before its card")
-	check(Paparazzi.level_spec(10).forced == "primer_plano","the milestone of stretch 1 is a close-up")
-	check(Paparazzi.level_spec(5).min_turn == 60.0 and Paparazzi.level_spec(15).min_turn == 90.0 and Paparazzi.level_spec(35).min_turn == 120.0,"min_turn by stretch")
-	check(Paparazzi.level_spec(25).dist == Vector2(8,25) and Paparazzi.level_spec(85).dist == Vector2(25,70),"dist by stretch")
-	check(not Paparazzi.level_spec(53).runners and Paparazzi.level_spec(54).runners,"runners from their debut")
+	check(not "sola" in Paparazzi.level_spec(22).mods and "sola" in Paparazzi.level_spec(23).mods,"alone before its card")
+	check(Paparazzi.level_spec(2).dist == Vector2(6,14) and Paparazzi.level_spec(25).dist == Vector2(10,28) and Paparazzi.level_spec(85).dist == Vector2(17,30),"dist by stretch")
+	check(not Paparazzi.level_spec(43).runners and Paparazzi.level_spec(44).runners,"runners from their debut")
+	# The light changes within a stretch, and night comes in stretch 8.
+	for t in range(1,11):
+		var lights = {}
+		for k in range(1,11): lights[Paparazzi.level_spec((t-1)*10+k).time] = true
+		check(lights.size() >= 2,"stretch %d: one light only" % t)
+	check(Paparazzi.level_spec(71).time == "night" and Paparazzi.level_spec(70).time != "night","night from level 71")
 	check(Paparazzi.start_points(3) == [1,11,21,31],"start_points(3)")
 	check(Paparazzi.start_points(0) == [1],"start_points(0)")
 
@@ -94,10 +96,9 @@ func far_levels() -> void:
 	for n in [101,150,999,10000]:
 		var s = Paparazzi.level_spec(n)
 		check(s.bonus >= Paparazzi.BONUS_FLOOR,"level %d: bonus under the floor" % n)
-		check(s.planes.size() == 6 and s.mods.size() == 7,"level %d: not everything is mixed" % n)
+		check(s.planes.size() == 6 and s.mods.size() == Paparazzi.MODS.size(),"level %d: not everything is mixed" % n)
 		check(s.pace == 1.0 and s.dobles == 3 and s.check_delay == -1.0 and not s.auto_frame,"level %d: fixed values" % n)
 		check(s.arrow_after <= 30.0 and s.ring_after == s.arrow_after+18.0,"level %d: arrow and ring" % n)
-		check(not (s.scenario == "grande" and s.time == "night"),"level %d: night in the big park" % n)
 		var rng = RandomNumberGenerator.new()
 		rng.seed = n
 		var request = Paparazzi.level_request(s,rng)
@@ -114,9 +115,9 @@ func texts() -> void:
 	for n in range(1,120):
 		var s = Paparazzi.level_spec(n)
 		for card in s.cards: check(card in Paparazzi.all_cards(),"level %d: unknown card %s" % [n,card])
-		if s.debut != "": check(Paparazzi.debut_card(s.debut) in Paparazzi.all_cards(),"level %d: debut %s without a card" % [n,s.debut])
+		if s.debut != "" and s.debut != Paparazzi.ANY: check(Paparazzi.debut_card(s.debut) in Paparazzi.all_cards(),"level %d: debut %s without a card" % [n,s.debut])
 		for step in s.coach: keys.append("pz_coach_"+step)
-	for plane in Framing.ORDER:
+	for plane in Framing.ORDER+[Paparazzi.ANY]:
 		keys.append("pz_plano_"+plane)
 		keys.append("pz_plano_un_"+plane)
 	for mod in Paparazzi.MODS:
@@ -210,6 +211,12 @@ func judge() -> void:
 		if plane == "general": continue
 		var v = Paparazzi.judge(good(plane),{"plane":plane,"mods":{}})
 		check(v.ok and v.tip == "listo" and v.plane == plane,"5. a good %s is refused: %s" % [plane,str(keys_of(v))])
+		# Any shot will do in stretch 1, from the full shot to the face.
+		check(Paparazzi.judge(good(plane),{"plane":Paparazzi.ANY,"mods":{}}).ok,"5. any shot refuses a good %s" % plane)
+	var r = Framing.rest_for(1.75,1.75-1.75/7.0)
+	var far = good().merged({"body":body(r,r.crown+(r.crown/.25-r.crown)*.5,r.crown/.25)},true)
+	var tiny = Paparazzi.judge(far,{"plane":Paparazzi.ANY,"mods":{}})
+	check(keys_of(tiny) == ["pequena"] and tiny.tip == "mas_zoom","5. any shot: a wide one is too small: %s" % str(keys_of(tiny)))
 	var e = good()
 	e.has_subject = false
 	check(keys_of(Paparazzi.judge(e,medio)) == ["nadie"],"5. nobody")

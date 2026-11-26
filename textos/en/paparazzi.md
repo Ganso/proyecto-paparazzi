@@ -38,6 +38,12 @@ a close-up
 ### pz_plano_un_cara
 an extreme close-up
 
+### pz_plano_cualquiera
+Any shot
+
+### pz_plano_un_cualquiera
+any shot
+
 ## Exigencias
 
 ### pz_mod_sola
@@ -104,6 +110,9 @@ That's %s and they wanted %s: %s.
 
 ### pz_motivo_corte_cara
 You're cutting their face: Zoom out a little.
+
+### pz_motivo_pequena
+They're too small: Get closer or zoom in so their face shows.
 
 ### pz_motivo_cabeza
 You're cutting off their head: Keep it all in.
@@ -193,6 +202,12 @@ Look around with {mirar} and find the person on the card.
 ### pz_coach_centro
 Got them: Put them in the middle of the picture.
 
+### pz_coach_andar
+Walk with {andar} towards where the card says and look for the person.
+
+### pz_coach_sacar
+Can you see them? Bring the camera up with the mouse wheel or {sacar}.
+
 ### pz_coach_zoom
 Zoom in with {zoom} until the corners turn green.
 
@@ -207,6 +222,9 @@ Check the card: Green means it matches who you're looking for.
 
 ### pz_coach_plano
 Zoom in until it says “%s” at the bottom.
+
+### pz_coach_quieto
+{mirar} to look · {zoom} to zoom · {pz_enganchar} to lock on · {disparar} for the photo · {pz_chuleta} cheat sheet
 
 ## Tramos
 
@@ -250,6 +268,18 @@ FIND
 
 ### pz_ficha_foto
 THE PHOTO
+
+### pz_zona_quiosco
+Near the bandstand
+
+### pz_zona_fuente
+Near the fountain
+
+### pz_zona_columpios
+Near the swings
+
+### pz_distancia
+about %d m away
 
 ### pz_nivel
 LEVEL %d
@@ -350,13 +380,61 @@ Use the rescue
 ### pz_rescate_no
 Finish
 
+### pz_chuleta_titulo
+Shot cheat sheet
+
+### pz_chuleta_general
+The person small and the place big: It tells where they are.
+
+### pz_chuleta_entero
+Head to toe: How they dress, how they move.
+
+### pz_chuleta_americano
+Cut between the hip and the knee: The one from westerns.
+
+### pz_chuleta_medio
+Cut between the chest and the hip: Face and hands show.
+
+### pz_chuleta_primer_plano
+Head and shoulders, cut across the chest: Emotion.
+
+### pz_chuleta_cara
+Just the face, cut under the chin: As close as it gets.
+
+### pz_chuleta_corte
+Never cut at a joint: Neck, waist, knees or ankles.
+
+### pz_chuleta_controles
+{mirar} Look · {zoom} Zoom · {pz_enganchar} Lock on · {disparar} Photo · {pz_congelar} Freeze · {pz_otro} New assignment
+
+### pz_chuleta_tarjetas
+Cards you've already seen (to read again):
+
+### pz_chuleta_volver
+Back to the search
+
+### pz_tactil_chuleta
+Cheat sheet
+
+### pz_tactil_congelar
+Freeze
+
+### pz_tactil_otro
+Skip
+
 ## Tarjetas de novedad
 
 ### pz_nov_bienvenida_titulo
 Paparazzi
 
 ### pz_nov_bienvenida_texto
-You'll be asked for photos of people in the park: Find them, frame them the way they say and shoot. The camera focuses and exposes by itself.
+You'll be asked for photos of people in the park: Find them and take a photo where their face shows well. The camera focuses and exposes by itself.
+
+### pz_nov_planos_titulo
+Shots
+
+### pz_nov_planos_texto
+From now on you're asked for a specific shot: How much of the person is in the photo. The card shows you where to cut and {pz_chuleta} goes over them all.
 
 ### pz_nov_entero_titulo
 Full shot
@@ -422,7 +500,7 @@ Pass this level and next time you can start from the next one, without repeating
 Extreme close-up
 
 ### pz_nov_cara_texto
-Just the face: It can cut the hair, but never the chin. It needs lots of zoom: Look on the nearby paths.
+Just the face: It can cut the hair, but never the chin. Walk up close: From far away it won't fit even with all the zoom.
 
 ### pz_nov_fallo_titulo
 Missed photos
@@ -519,12 +597,6 @@ Watch for look-alikes
 
 ### pz_nov_dobles_texto
 Some people are dressed almost the same. Compare every trait before you shoot.
-
-### pz_nov_enganche_lento_titulo
-Slow lock-on
-
-### pz_nov_enganche_lento_texto
-The camera takes a little longer to lock on: Keep the person in the middle.
 
 ### pz_nov_dos_mods_titulo
 Two demands

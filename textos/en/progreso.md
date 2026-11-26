@@ -103,5 +103,8 @@ pan
 ### album_nivel
 Level %d
 
+### album_paparazzi
+Paparazzi · level %d
+
 ### album_tutorial
 Tutorial

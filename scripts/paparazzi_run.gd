@@ -17,6 +17,8 @@ const Glyphs = preload("res://scripts/input_glyphs.gd")
 const UiStyle = preload("res://scripts/ui_style.gd")
 const Ideal = preload("res://scripts/ideal_equipment.gd")
 const Hud = preload("res://scripts/paparazzi_hud.gd")
+const PlaneIcon = preload("res://scripts/plane_icon.gd")
+const Album = preload("res://scripts/album.gd")
 const PLAYER_SAVE = "user://paparazzi.cfg"
 const NOTICEABLE = .10           # someone counts as «in the photo» from 10 % of the frame's height
 const WHEEL_STEP = 1.15          # one notch of the wheel or the D-pad (never skips a shot, §7.6)
@@ -55,6 +57,7 @@ var saved_equipment = null       # the player's camera, kept aside during the ru
 var cards = []                   # novelty cards still to show before the level's card
 var brief_open = false           # the level's card is on screen (a look or a zoom closes it)
 var recent = []                  # the last people asked for (not again soon)
+var reach_scale = 1.0            # the big park's search distance, widened when nobody is there
 var still_wanted = false         # the person is asked for still or seated (kept so: activity_on_duty)
 var pending_toast = ""           # said once the level's card is closed
 var last_evidence = {}           # (tests)
@@ -76,6 +79,12 @@ var frozen = 0.0                 # seconds of the park standing still
 var search_time = 0.0            # in this level (the arrow and the ring)
 var now = 0.0
 var locked_desc = PackedStringArray()   # the locked person's traits, in Spanish (§6.5)
+var live_timer = 0.0             # without a lock, the light judges whoever the photo would be of
+var coach_step = 0               # the learning line (§11.1)
+var coach_done_time = 0.0
+var idle_time = 0.0              # with nothing done for a while, the controls' line
+var walk_from = Vector3.ZERO     # where the level began (the step «andar»)
+var look_from = 0.0              # and where it looked (the step «mirar», classic park)
 
 var bank: float:
 	get: return float(Paparazzi.run.get("bank",0.0))
@@ -109,7 +118,8 @@ func resume() -> void:
 # Into the park of the current level: the same one, or a reload into the other.
 func enter() -> void:
 	var s = Paparazzi.level_spec(int(Paparazzi.run.n))
-	if s.scenario != main.scenario:
+	# (The big park is cast with the run's look-alikes, §10.3: a park cast without them reloads.)
+	if s.scenario != main.scenario or (s.scenario == "grande" and not main.pz_doubles):
 		restore_equipment()          # (reload_with() keeps the player's camera, not the ideal one)
 		active = false
 		main.reload_with(s.scenario,{"paparazzi":true})
@@ -174,6 +184,10 @@ func begin_level() -> void:
 	shown = range(count)
 	main.focal = 24.0
 	main.update_camera()
+	coach_step = 0
+	idle_time = 0.0
+	walk_from = main.camera.global_position
+	look_from = main.angle
 	hud.set_request()
 	cards.clear()
 	for card in spec.cards:
@@ -225,7 +239,15 @@ func card_panel(id: String, closed: Callable) -> void:
 	var args = Paparazzi.card_args(id,spec)
 	var body: String = Texts.get_rich("pz_nov_%s_texto" % id)
 	if not args.is_empty(): body = body % args
-	main.glyph_label(box,body,Rect2(32,88,536,160),18,UiStyle.INK)
+	# A shot's card shows its pictogram: where it cuts.
+	var text_x = 32
+	if id in Framing.ORDER:
+		var pictogram = PlaneIcon.new(id,UiStyle.INK)
+		pictogram.position = Vector2(32,84)
+		pictogram.size = Vector2(76,164)
+		box.add_child(pictogram)
+		text_x = 128
+	main.glyph_label(box,body,Rect2(text_x,88,568-text_x,160),18,UiStyle.INK)
 	main.button(box,Texts.get_text("pz_entendido"),Rect2(358,262,210,52),func(): closed.call(id),true)
 
 func close_card(id: String) -> void:
@@ -265,12 +287,21 @@ func show_brief() -> void:
 			dot.size = Vector2(22,22)
 			dot.add_theme_stylebox_override("panel",UiStyle.box(sample,11,UiStyle.LINE,1))
 			box.add_child(dot)
-		main.label(box,desc[i],Rect2(364,90+k*36,506,32),21,UiStyle.INK)
+		# (A long trait shrinks to fit beside the pictogram.)
+		var size = 21
+		while size > 14 and UiStyle.font("Roboto-Regular").get_string_size(desc[i],HORIZONTAL_ALIGNMENT_LEFT,-1,size).x > 420: size -= 1
+		main.label(box,desc[i],Rect2(364,90+k*36,420,32),size,UiStyle.INK)
 	var y = 96+shown.size()*36+18
 	main.label(box,Texts.get_text("pz_ficha_foto"),Rect2(330,y,540,20),13,UiStyle.SOFT)
 	var cur = current_request()
-	var plane_label = main.label(box,Paparazzi.plane_name(cur.plane),Rect2(330,y+22,540,40),28,UiStyle.BRAND)
+	var plane_label = main.label(box,Paparazzi.plane_name(cur.plane),Rect2(330,y+22,450,40),28,UiStyle.BRAND)
 	plane_label.add_theme_font_override("font",UiStyle.font("RussoOne-Regular"))
+	var pictogram = PlaneIcon.new(cur.plane,UiStyle.INK)
+	pictogram.position = Vector2(796,64)
+	pictogram.size = Vector2(76,170)
+	box.add_child(pictogram)
+	var zone = zone_text()
+	if zone != "": main.label(box,zone,Rect2(330,384,540,24),17,UiStyle.SKY_DEEP)
 	var lines = []
 	if request.has("sequence"):
 		var names = []
@@ -278,7 +309,7 @@ func show_brief() -> void:
 		lines.append(Texts.get_text("pz_reportaje_ficha") % " → ".join(names))
 	for mod in cur.mods: lines.append(Paparazzi.mod_text(mod,cur.mods[mod],spec.scenario))
 	if not lines.is_empty():
-		main.label(box,"\n".join(lines),Rect2(330,y+68,540,60),18,UiStyle.SOFT).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		main.label(box,"\n".join(lines),Rect2(330,y+68,450,60),18,UiStyle.SOFT).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	main.button(box,Texts.get_text("pz_empezar"),Rect2(610,418,260,56),begin_search,true)
 	main.button(box,Texts.get_text("pz_fin_menu"),Rect2(330,418,200,56),main.show_pause)
 
@@ -323,7 +354,7 @@ func miniature(parent: Control, rect: Rect2) -> void:
 	tween.tween_property(figure,"rotation:y",TAU,8.0).from(0.0)
 
 func begin_search() -> void:
-	if not main.mode in ["PZ_CARD","PZ_RESCUE"]: return
+	if not main.mode in ["PZ_CARD","PZ_RESCUE","PZ_HELP"]: return
 	brief_open = false
 	main.close_modal()
 	main.mode = "SEARCH"
@@ -344,7 +375,8 @@ func choose_target() -> void:
 	if not fresh.is_empty(): pool = fresh
 	var chosen = null
 	var seat = false
-	for attempt in 8:
+	reach_scale = 1.0
+	for attempt in 12:
 		var candidates = pool.filter(func(p): return suits(p))
 		# Levels 1 and 3 want someone still: failing that, a walker of the bench path sits down.
 		if candidates.is_empty() and learning_still() and not main.crowd:
@@ -354,11 +386,15 @@ func choose_target() -> void:
 			chosen = prefer(candidates)
 			break
 		seat = false
+		# The big park: nobody at the stretch's distance, so a little further first (×1.5, ×2, ×2.5).
+		if main.crowd and reach_scale < 2.5:
+			reach_scale += .5
+			continue
 		if not request.mods.is_empty():
 			var last = request.mods.keys()[-1]
 			request.mods.erase(last)
 			print("PAPARAZZI_FALLBACK n=%d motivo=sin_%s" % [spec.n,last])
-		elif not request.has("sequence") and request.plane != "entero":
+		elif not request.has("sequence") and request.plane != "entero" and request.plane != Paparazzi.ANY:
 			print("PAPARAZZI_FALLBACK n=%d motivo=plano_%s" % [spec.n,request.plane])
 			request.plane = "entero"
 		elif request.has("sequence"):
@@ -368,8 +404,12 @@ func choose_target() -> void:
 		else:
 			break
 	if chosen == null:
+		# Anyone left: the nearest grown-up who is not running.
 		print("PAPARAZZI_FALLBACK n=%d motivo=cualquiera" % spec.n)
-		chosen = pool[rng.randi()%pool.size()]
+		var near = pool.filter(func(p): return not p.runner and not p.is_child())
+		if near.is_empty(): near = pool
+		near.sort_custom(func(a,b): return a.global_position.distance_to(main.camera.global_position) < b.global_position.distance_to(main.camera.global_position))
+		chosen = near[0]
 	main.target = chosen
 	chosen.protected_target = true
 	if chosen.state in ["DETENIDO","SENTADO"] and learning_still(): chosen.state_time = maxf(chosen.state_time,90.0)
@@ -381,19 +421,33 @@ func choose_target() -> void:
 	elif learning_still():
 		still_wanted = true
 	# Levels 1–3: the person is in view, a little off the middle, so the first search is short.
-	# (After seat_target(), which takes the person to a bench.)
-	if spec.in_view and not main.crowd:
-		main.angle = fposmod(bearing_of(chosen)+(IN_VIEW*.5 if rng.randf() < .5 else -IN_VIEW*.5),360.0)
+	# (After seat_target(), which takes the person to a bench.) In the big park she is near, ahead.
+	if spec.in_view:
+		main.angle = fposmod(bearing_of(chosen)+(IN_VIEW*.5 if rng.randf() < .5 else -IN_VIEW*.5)*(.5 if main.crowd else 1.0),360.0)
 		main.pitch = 0.0
+		main.update_camera()
 	# The runner of a «quien corre» level keeps running.
 	if chosen.runner and main.runner_on_duty(chosen): chosen.pending_stop = {}
 
+# (Classic park: the people of levels 1 and 3 are still. In the big park everybody walks.)
 func learning_still() -> bool:
-	return spec.n in [1,3]
+	return spec.n in [1,3] and main.crowd == null
 
-# Prefers someone with look-alikes when the stretch has them (the look-alikes themselves are E7).
+# The stretch's look-alikes (§10.3): from stretch 4, someone with at least `dobles` of them (or the
+# one with most); before, someone without any, so the first searches are fair.
 func prefer(candidates: Array):
-	return candidates[rng.randi()%candidates.size()]
+	var all_traits = main.people.map(func(p): return p.traits)
+	var scored = candidates.map(func(p): return [p,Paparazzi.doubles_count(main.casting,p.traits,all_traits)])
+	var pool = []
+	if spec.dobles > 0:
+		pool = scored.filter(func(x): return x[1] >= spec.dobles)
+		if pool.is_empty():
+			var most = scored.map(func(x): return x[1]).max()
+			pool = scored.filter(func(x): return x[1] == most)
+	else:
+		pool = scored.filter(func(x): return x[1] == 0)
+		if pool.is_empty(): pool = scored
+	return pool[rng.randi()%pool.size()][0]
 
 # Whether this person can be asked for in this request.
 func suits(p) -> bool:
@@ -406,8 +460,15 @@ func suits(p) -> bool:
 	if p.is_child() and not wide_only: return false
 	if p.runner and not (spec.runners and wide_only): return false
 	if spec.debut == "corredor" and not p.runner: return false
-	if not in_reach(p): return false
+	# (The dog's walker and someone by a landmark are few: they are asked for wherever they are,
+	# within REACH_MAX; the card says where and the arrow guides. Seen with the solver, 26-11-2026.)
+	var anywhere = not classic and (request.mods.has("perro") or request.mods.has("lugar"))
+	if anywhere:
+		if main.camera.global_position.distance_to(p.global_position) > Paparazzi.REACH_MAX*1.5: return false
+	elif not in_reach(p): return false
 	if learning_still() and not p.state in ["DETENIDO","SENTADO"]: return false
+	# (A face from far away does not fit even at 600 mm: someone not far, §4.6.)
+	if not classic and "cara" in planes and main.camera.global_position.distance_to(p.global_position) > 25.0: return false
 	if spec.n == 2 and classic and not (p.lane == 1 and p.state == "CAMINANDO"): return false
 	for mod in request.mods:
 		match mod:
@@ -423,7 +484,7 @@ func suits(p) -> bool:
 				if classic and p.lane != 2: return false
 				if not classic:
 					var place: Vector3 = main.park.places.get(request.mods.lugar,Vector3.ZERO)
-					if p.global_position.distance_to(place) > 15.0: return false
+					if p.global_position.distance_to(place) > 18.0: return false
 			"acompanada":
 				if company(p) < int(request.mods.acompanada): return false
 	return true
@@ -432,15 +493,31 @@ func suits(p) -> bool:
 func in_reach(p) -> bool:
 	if main.crowd:
 		var d = main.camera.global_position.distance_to(p.global_position)
-		return spec.dist == Vector2.ZERO or (d >= spec.dist.x and d <= spec.dist.y)
+		return spec.dist == Vector2.ZERO or (d >= spec.dist.x/reach_scale and d <= minf(spec.dist.y*reach_scale,maxf(spec.dist.y,Paparazzi.REACH_MAX)))
 	# (Levels 1–3: anyone; the view is then turned towards the person, see choose_target().)
 	if spec.in_view: return true
 	var turn = absf(rad_to_deg(angle_difference(deg_to_rad(bearing_of(p)),deg_to_rad(main.angle))))
 	return turn >= spec.min_turn
 
-# Where someone is seen from the middle of the classic park (the convention of main.aim_at()).
+# Where someone is seen from the camera (the convention of main.aim_at()).
 func bearing_of(p) -> float:
-	return rad_to_deg(atan2(p.global_position.x,-p.global_position.z))
+	var to: Vector3 = p.global_position-main.camera.global_position
+	return rad_to_deg(atan2(to.x,-to.z))
+
+# Where the person is, for the card (big park): near which landmark, and how far from the player.
+const ZONES = {"fuente":"estanque", "quiosco":"quiosco"}
+const SWINGS = Vector3(24,0,30)     # park_grande.gd PLAYGROUND_POS
+func zone_text() -> String:
+	if main.crowd == null or not is_instance_valid(main.target): return ""
+	var at: Vector3 = main.target.global_position
+	var spots = {"columpios":SWINGS}
+	for zone in ZONES:
+		if main.park.places.has(ZONES[zone]): spots[zone] = main.park.places[ZONES[zone]]
+	var best = ""
+	for zone in spots:
+		if best == "" or at.distance_to(spots[zone]) < at.distance_to(spots[best]): best = zone
+	var d = main.camera.global_position.distance_to(at)
+	return Texts.get_text("pz_zona_"+best)+" · "+(Texts.get_text("pz_distancia") % maxi(5,roundi(d/5.0)*5))
 
 # An adult walker of the bench path with free hands, who can be sat down with something to do.
 func can_sit(p) -> bool:
@@ -473,9 +550,17 @@ func update(dt: float) -> void:
 		if bank <= 0.0:
 			time_out()
 			return
-	follow(dt)
-	update_live()
+	idle_time += dt
+	# Walking with the camera down (big park): nothing to follow nor to judge.
+	if not main.eye_ready():
+		release()
+		live = {}
+		on_plane = false
+	else:
+		follow(dt)
+		update_live(dt)
 	zoom_touched = false
+	coach(dt)
 	events()
 
 # At zero: the rescue if there is one left (§3.5), else the end.
@@ -578,12 +663,9 @@ func follow(dt: float) -> void:
 	var anchor: Vector3
 	var screen: Vector2
 	if spec.auto_frame:
-		if current_request().plane in ["entero","general"]:
-			anchor = (world.crown+world.feet)*.5
-			screen = Vector2(.5-.10*side,.5)
-		else:
-			anchor = world.crown
-			screen = Vector2(.5-.08*side,Framing.AIR)
+		var aim = anchor_for(p,world,side)
+		anchor = aim[0]
+		screen = aim[1]
 		# The size kept: the shot does not change as the person comes nearer or goes away.
 		var d = flat_distance(p)
 		if zoom_touched or f_ref <= 0.0:
@@ -600,20 +682,43 @@ func follow(dt: float) -> void:
 	main.aim_point(anchor+velocity/FOLLOW_GAIN,screen,1.0-exp(-FOLLOW_GAIN*dt))
 	last_set = Vector2(main.angle,main.pitch)
 
+# Where the auto-framing puts someone (§7.4): the whole body in the middle for a full, wide or any
+# shot when it fits the zoom now; otherwise (and for the rest) the crown under the top edge with its air.
+func anchor_for(p, world: Dictionary, side: float) -> Array:
+	var plane: String = current_request().plane
+	var whole = plane in ["entero","general",Paparazzi.ANY]
+	# With too much zoom for the whole body, the head stays in (the light then says «less zoom»).
+	if whole:
+		var body = main.body_landmarks(p)
+		whole = body.behind or body.feet.y-body.crown.y < .9
+	if whole: return [(world.crown+world.feet)*.5,Vector2(.5-.10*side,.5)]
+	return [world.crown,Vector2(.5-.08*side,Framing.AIR)]
+
 # The traffic light and the live shot: the locked person's frame judged as a photo, but never on
 # who it is (§3.4), or locking on to everybody until green would find the person.
-func update_live() -> void:
+func update_live(dt: float) -> void:
 	if locked == null:
-		live = {}
-		on_plane = false
+		# Without a lock, the light judges whoever the photo would be of, ten times a second.
+		live_timer -= dt
+		if live_timer > 0.0: return
+		live_timer = .1
+		var who = protagonist()
+		live = Paparazzi.judge(capture(who,true),current_request(),true) if who != null else {}
+		on_plane = not live.is_empty() and plane_met(live.plane)
 		return
 	live = Paparazzi.judge(capture(locked,true),current_request(),true)
-	var now_on: bool = live.plane == current_request().plane
+	var now_on: bool = plane_met(live.plane)
 	if now_on and not on_plane and detent_left <= 0.0:
 		main.play_sfx("dial_tope",-8.0)
 		main.rumble(.1,0,.04)
 		detent_left = DETENT_HOLD
 	on_plane = now_on
+
+# Whether a shot is the one asked for («any shot»: anything but a wide one).
+func plane_met(plane: String) -> bool:
+	var wanted: String = current_request().plane
+	if wanted == Paparazzi.ANY: return plane != "" and plane != "general"
+	return plane == wanted
 
 # The traits check (§8): per trait shown, 1 if the locked person has it, −1 if not; empty while it
 # waits (check_delay) or in the stretches without it.
@@ -662,6 +767,81 @@ func events() -> void:
 		show_event("taparse")
 
 # ---------------------------------------------------------------------------------------------
+# The cheat sheet (PZ_HELP, §11.3): the shots with their pictograms, the clean cut, the controls and
+# the cards already seen, to read again. The clock waits.
+
+func show_help() -> void:
+	if not main.mode in ["SEARCH","PZ_HELP"]: return
+	brief_open = false
+	main.mode = "PZ_HELP"
+	var root = main.create_modal()
+	var box = Panel.new()
+	box.position = Vector2(50,30)
+	box.size = Vector2(1180,660)
+	box.add_theme_stylebox_override("panel",UiStyle.box(UiStyle.surf(.94),18,UiStyle.LINE,1,16))
+	root.add_child(box)
+	main.label(box,Texts.get_text("pz_chuleta_titulo"),Rect2(32,18,700,44),30,UiStyle.BRAND)
+	for i in Framing.ORDER.size():
+		var plane: String = Framing.ORDER[i]
+		var at = Vector2(32+(i%3)*376,76+(i/3)*178)
+		var icon = PlaneIcon.new(plane,UiStyle.INK)
+		icon.position = at
+		icon.size = Vector2(70,160)
+		box.add_child(icon)
+		main.label(box,Paparazzi.plane_name(plane),Rect2(at.x+84,at.y+8,280,28),20,UiStyle.BRAND)
+		main.label(box,Texts.get_text("pz_chuleta_"+plane),Rect2(at.x+84,at.y+42,280,110),16,UiStyle.INK).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	main.label(box,Texts.get_text("pz_chuleta_corte"),Rect2(32,440,1116,26),17,UiStyle.SOFT)
+	main.glyph_label(box,Texts.get_rich("pz_chuleta_controles"),Rect2(32,476,1116,30),16,UiStyle.INK)
+	# The cards already seen, to read again.
+	var seen = Paparazzi.all_cards().filter(func(card): return card_seen(card))
+	main.label(box,Texts.get_text("pz_chuleta_tarjetas"),Rect2(32,518,400,22),14,UiStyle.SOFT)
+	var flow = HFlowContainer.new()
+	flow.position = Vector2(32,544)
+	flow.size = Vector2(860,100)
+	flow.add_theme_constant_override("h_separation",8)
+	flow.add_theme_constant_override("v_separation",6)
+	box.add_child(flow)
+	for card in seen:
+		var b = Button.new()
+		b.text = Texts.get_text("pz_nov_%s_titulo" % card)
+		b.add_theme_font_size_override("font_size",13)
+		b.pressed.connect(func(): card_panel(card,func(_id): show_help()))
+		flow.add_child(b)
+	main.button(box,Texts.get_text("pz_chuleta_volver"),Rect2(918,584,230,52),begin_search,true)
+
+# ---------------------------------------------------------------------------------------------
+# The learning line (§11.1): steps that complete themselves, with the sound of the tutorial.
+
+func coach_key() -> String:
+	if spec.is_empty(): return ""
+	if coach_step < spec.coach.size(): return "pz_coach_"+spec.coach[coach_step]
+	if idle_time > 12.0: return "pz_coach_quieto"
+	return ""
+
+func coach(dt: float) -> void:
+	coach_done_time = maxf(0.0,coach_done_time-dt)
+	if coach_step >= spec.coach.size(): return
+	var done = false
+	match spec.coach[coach_step]:
+		"andar": done = main.camera.global_position.distance_to(walk_from) > 3.0 or main.camera_raised
+		"sacar": done = main.camera_raised
+		"mirar": done = absf(angle_difference(deg_to_rad(look_from),deg_to_rad(main.angle))) > deg_to_rad(15.0)
+		"centro": done = is_instance_valid(main.target) and on_screen(main.target) and (main.camera.unproject_position(main.target.control_points()[1])/Vector2(main.viewport.size)-Vector2(.5,.5)).length() < .15
+		"zoom", "plano": done = not live.is_empty() and (live.ok if spec.coach[coach_step] == "zoom" else on_plane)
+		"enganchar": done = locked != null
+		"comprobar": done = locked != null and ((locked == main.target and trait_marks().all(func(m): return m > 0)) or lock_time > 4.0)
+		"disparar": done = false          # (the photo completes it, coach_photo())
+	if done: coach_next()
+
+func coach_next() -> void:
+	coach_step += 1
+	coach_done_time = .6
+	main.play_sfx("tutorial_ok",-6.0)
+
+func coach_photo() -> void:
+	if coach_step < spec.coach.size() and spec.coach[coach_step] == "disparar": coach_next()
+
+# ---------------------------------------------------------------------------------------------
 # Jokers (§3.5)
 
 func use_freeze() -> void:
@@ -669,14 +849,15 @@ func use_freeze() -> void:
 	if int(jokers.congelar) <= 0 or frozen > 0.0: return
 	jokers.congelar = int(jokers.congelar)-1
 	frozen = FREEZE_TIME
-	main.play_sfx("bloqueo",-4.0)
+	main.play_sfx("pz_congelar",-4.0)
+	main.rumble(.2,0,.1)
 
 func use_skip() -> void:
 	var jokers: Dictionary = Paparazzi.run.jokers
 	if int(jokers.otro) <= 0 or main.shooting: return
 	jokers.otro = int(jokers.otro)-1
 	Paparazzi.run["skips"] = int(Paparazzi.run.get("skips",0))+1
-	main.play_sfx("control_elegir",-4.0)
+	main.play_sfx("pz_otro",-4.0)
 	if is_instance_valid(main.target): main.target.protected_target = false
 	begin_level()
 
@@ -710,6 +891,7 @@ func use_rescue() -> void:
 
 func handle_input(event: InputEvent) -> bool:
 	if not active: return false
+	if not event is InputEventMouseMotion or event.button_mask != 0: idle_time = 0.0
 	var mode: String = main.mode
 	if mode == "PZ_CARD":
 		if brief_open and closes_brief(event):
@@ -719,8 +901,15 @@ func handle_input(event: InputEvent) -> bool:
 			if brief_open: main.show_pause()
 			return true
 		return false
+	# (The polaroid flies: a moment with nothing to do; not even the pause.)
+	if mode == "PZ_POLAROID": return event is InputEventKey or event is InputEventMouseButton
 	if mode == "PZ_RESCUE":
 		return event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE
+	if mode == "PZ_HELP":
+		if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_ESCAPE,KEY_H]:
+			begin_search()
+			return true
+		return false
 	if mode == "PZ_END":
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 			main.intro()
@@ -739,10 +928,16 @@ func handle_input(event: InputEvent) -> bool:
 				KEY_2:
 					use_skip()
 					return true
+				KEY_H:
+					show_help()
+					return true
 		if event.physical_keycode == KEY_Y and not main.crowd: return true
 		if event.physical_keycode in IDLE_KEYS: return true
 	if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
-		if main.crowd and not main.camera_raised: return false     # (the big park: the wheel brings the camera up)
+		# (The big park: the wheel brings the camera up, §8.)
+		if main.crowd and not main.camera_raised:
+			main.toggle_raise()
+			return true
 		zoom_step(1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1)
 		return true
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE: return true
@@ -768,7 +963,11 @@ func click(point: Vector2) -> void:
 
 # Gamepad buttons while searching (main.pad_button() asks first; true = taken).
 func pad_button(event: InputEventJoypadButton) -> bool:
-	if not active or not event.pressed or main.mode != "SEARCH": return false
+	if not active or not event.pressed: return false
+	if main.mode == "PZ_HELP" and event.button_index == JOY_BUTTON_B:
+		begin_search()
+		return true
+	if main.mode != "SEARCH": return false
 	match event.button_index:
 		JOY_BUTTON_START: return false             # (the pause, as always)
 		JOY_BUTTON_DPAD_UP: zoom_step(1)
@@ -776,6 +975,7 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 		JOY_BUTTON_DPAD_LEFT: use_freeze()
 		JOY_BUTTON_DPAD_RIGHT: use_skip()
 		JOY_BUTTON_A: lock_middle(true)
+		JOY_BUTTON_B: show_help()
 		JOY_BUTTON_Y:
 			if main.crowd: return false            # (the big park: up and down with the camera)
 	return true
@@ -797,6 +997,7 @@ func take_photo() -> void:
 	last_evidence = e
 	last_verdict = v
 	if not active: return
+	coach_photo()
 	if v.ok: on_success(v,image)
 	else: on_fail(v)
 
@@ -899,13 +1100,17 @@ func capture(p, live_check = false) -> Dictionary:
 
 func on_success(v: Dictionary, image: Image) -> void:
 	main.play_sfx("condicion_ok",-2.0)
+	main.rumble(.3,.15,.1)
 	var contacts: Array = Paparazzi.run.contacts
-	contacts.append({"image":image,"plane":v.plane})
+	contacts.append({"image":image,"plane":v.plane,"f":main.focal,"n":spec.n})
 	while contacts.size() > CONTACTS: contacts.pop_front()
+	await polaroid(image)
+	if not active: return
 	# A reportage: the next photo of the same person, no bonus until the third.
 	if request.has("sequence") and step < request.sequence.size()-1:
 		step += 1
 		hud.set_request()
+		main.mode = "SEARCH"
 		main.notify_player(Texts.get_text("pz_reportaje_siguiente") % [step+1,Paparazzi.plane_name(request.sequence[step])])
 		return
 	var lines = []
@@ -923,6 +1128,10 @@ func on_success(v: Dictionary, image: Image) -> void:
 	if may_save(): Paparazzi.level_passed(spec.n)
 	Paparazzi.run["passed"] = spec.n
 	if spec.hito:
+		main.play_sfx("pz_hito",-4.0)
+		main.rumble(.5,.4,.25)
+		# The milestone's photo goes to the album (§15).
+		if may_save(): save_to_album(image,v.plane,main.focal,spec.n)
 		lines.append(Texts.get_text("pz_hito_consolidado") % (spec.n+1))
 		var kind = Paparazzi.milestone_joker(spec.n)
 		var jokers: Dictionary = Paparazzi.run.jokers
@@ -937,6 +1146,40 @@ func on_success(v: Dictionary, image: Image) -> void:
 		enter()
 		return
 	begin_level()
+
+# The photo as an instant print (§12.2): in the middle, then flying to the clock, small, and gone.
+# The clock and the park wait meanwhile (PZ_POLAROID, Paparazzi.POLAROID_TIME).
+func polaroid(image: Image) -> void:
+	main.mode = "PZ_POLAROID"
+	main.play_sfx("pz_polaroid",-6.0)
+	var print_card = Panel.new()
+	print_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	print_card.add_theme_stylebox_override("panel",UiStyle.box(Color(.97,.96,.93),4))
+	print_card.size = Vector2(404,266)
+	print_card.position = Vector2(640,360)-print_card.size*.5
+	print_card.pivot_offset = print_card.size*.5
+	var shot = TextureRect.new()
+	shot.texture = ImageTexture.create_from_image(image)
+	shot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	shot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	shot.position = Vector2(10,10)
+	shot.size = Vector2(384,216)
+	print_card.add_child(shot)
+	main.ui.add_child(print_card)
+	print_card.scale = Vector2(.9,.9)
+	var tween = print_card.create_tween()
+	tween.tween_property(print_card,"scale",Vector2.ONE,.15)
+	tween.tween_interval(.25)
+	tween.tween_property(print_card,"position",Vector2(1154,170)-print_card.size*.5,.7).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tween.parallel().tween_property(print_card,"scale",Vector2(.35,.35),.7)
+	tween.tween_property(print_card,"modulate:a",0.0,.4)
+	await get_tree().create_timer(Paparazzi.POLAROID_TIME).timeout
+	print_card.queue_free()
+
+# Into the album, undeveloped (the ideal camera does not develop): with its shot and focal (§15).
+func save_to_album(image: Image, plane: String, focal: float, level: int) -> void:
+	Album.add(image,{"modo":"paparazzi","plano":plane,"f":focal,"date":Time.get_datetime_string_from_system(false,true).substr(0,16),"lugar":["album_paparazzi",level]})
+	main.play_sfx("album",-8.0)
 
 func on_fail(v: Dictionary) -> void:
 	main.play_sfx("foto_rechazada",-4.0)
@@ -958,6 +1201,12 @@ func end_run() -> void:
 	var passed = int(Paparazzi.run.get("passed",0))      # the last level passed in this run
 	var progress = Paparazzi.load_progress() if may_save() else {"record":maxi(passed,int(Paparazzi.run.record_before)),"hito":passed/10}
 	var new_record = passed > int(Paparazzi.run.record_before)
+	# A run with a record keeps its last good photo in the album (§15).
+	var kept: Array = Paparazzi.run.contacts
+	if new_record and may_save() and not kept.is_empty() and not bool(Paparazzi.run.get("album_done",false)):
+		Paparazzi.run["album_done"] = true
+		var last: Dictionary = kept[-1]
+		if int(last.get("n",0))%10 != 0: save_to_album(last.image,last.plane,float(last.get("f",50.0)),int(last.get("n",passed)))
 	var from = 10*int(progress.hito)+1
 	main.mode = "PZ_END"
 	brief_open = false

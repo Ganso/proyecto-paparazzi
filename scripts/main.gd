@@ -9,6 +9,7 @@ const UiStyle = preload("res://scripts/ui_style.gd")
 const Arcade = preload("res://scripts/arcade.gd")
 const Conditions = preload("res://scripts/conditions.gd")
 const Framing = preload("res://scripts/framing.gd")
+const Paparazzi = preload("res://scripts/paparazzi.gd")
 const Glyphs = preload("res://scripts/input_glyphs.gd")
 const Badges = preload("res://scripts/badges.gd")
 const Album = preload("res://scripts/album.gd")
@@ -108,6 +109,7 @@ var graphics_button_intro: Button
 var graphics_return: String = "INTRO"
 var sandbox = false
 var sandbox_paused = false
+var pz_doubles = false           # this big park was cast with Paparazzi's look-alikes
 var shot_serial = 0
 var sandbox_button: Button
 var brief_preview: Pedestrian
@@ -617,10 +619,21 @@ func populate_grande() -> void:
 	crowd = preload("res://scripts/crowd_graph.gd").new(self)
 	var rng = RandomNumberGenerator.new()
 	rng.seed = 2610
+	var cast = []
+	for i in GRANDE_PEOPLE: cast.append(casting.generate(i%7 == 0))
+	# A Paparazzi run casts look-alikes on purpose (docs/futuro/29 §10.3): four groups of a model and
+	# three variants. The run chooses, level by level, whom to ask for among them.
+	pz_doubles = false
+	if not Paparazzi.run.is_empty():
+		var double_rng = RandomNumberGenerator.new()
+		double_rng.seed = hash(["dobles",Paparazzi.run.get("seed",0)])
+		var runners = range(GRANDE_PEOPLE).filter(func(i): return i%7 == 0)
+		Paparazzi.make_doubles(casting,cast,double_rng,4,3,runners)
+		pz_doubles = true
 	for i in GRANDE_PEOPLE:
 		var p = Person.new()
 		viewport.add_child(p)
-		p.setup(casting.generate(people.size()%7 == 0),casting.catalog,people.size()+905)
+		p.setup(cast[i],casting.catalog,people.size()+905)
 		p.lane = 1
 		p.pref_offset = rng.randf_range(-.15,.25)
 		crowd.spawn(p,rng)
@@ -1599,6 +1612,8 @@ func show_album(page = 0) -> void:
 	if not photos.is_empty() and not OS.has_feature("web"): button(root,Texts.get_text("album_abrir_carpeta"),Rect2(955,640,260,52),func(): OS.shell_open(ProjectSettings.globalize_path(Album.DIR)))
 
 func album_caption(photo: Dictionary) -> String:
+	# Paparazzi's photos (docs/futuro/29 §15): the shot and the focal, nothing of exposure.
+	if photo.get("modo","") == "paparazzi": return "%s · %.0f mm" % [Paparazzi.plane_name(str(photo.get("plano",""))),float(photo.get("f",50.0))]
 	var caption = "%d/100 · %.0f mm · ƒ/%s · 1/%d s" % [int(photo.get("score",0)),float(photo.get("f",50.0)),str(photo.get("n",8.0)),roundi(1.0/float(photo.get("t",.004)))]
 	return caption+(" · "+Texts.get_text("album_barrido") if photo.get("panning",false) else "")
 
@@ -1955,12 +1970,14 @@ func _process(dt: float) -> void:
 		update_follow_mark()
 		update_hud_visibility(dt)
 		update_hunt_hint(dt)
+		update_arcade_shot(dt)
 		meter_timer -= dt
 		if meter_timer <= 0:
 			meter_timer = .1
 			update_meter()
 			if equipment.auto_exposure: auto_expose()
 			refresh()
+	if mode != "SEARCH" and is_instance_valid(arcade_shot_label): arcade_shot_label.visible = false
 	if run_metrics and boot_frames > 120 and mode == "SEARCH":
 		metrics.append(dt*1000)
 		gpu_metrics.append(RenderingServer.viewport_get_measured_render_time_gpu(viewport.get_viewport_rid()))
@@ -3370,6 +3387,40 @@ func darkroom_quality(on: bool) -> void:
 	RenderingServer.environment_set_ssao_quality(maxi(ssao,0) if ssao >= 0 else 2,true,.5,2,50.0,300.0)
 	RenderingServer.directional_soft_shadow_filter_set_quality(filter if filter >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality",2)))
 	RenderingServer.positional_soft_shadow_filter_set_quality(filter if filter >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality",2)))
+
+# The arcade's levels about shots (block 7): the shot being made of whoever is framed, live, at the
+# bottom of the finder, green when it is the one asked for. Never says who the person asked for is.
+var arcade_shot_label: Label
+var arcade_shot_timer = 0.0
+func update_arcade_shot(dt: float) -> void:
+	var on = arcade_level >= 0 and Arcade.LEVELS[arcade_level].get("cond",{}).has("plano") and eye_ready() and not paparazzi_active()
+	if not on:
+		if is_instance_valid(arcade_shot_label): arcade_shot_label.visible = false
+		return
+	if not is_instance_valid(arcade_shot_label):
+		arcade_shot_label = Label.new()
+		arcade_shot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		arcade_shot_label.add_theme_font_size_override("font_size",20)
+		arcade_shot_label.add_theme_constant_override("outline_size",6)
+		arcade_shot_label.add_theme_color_override("font_outline_color",Color(0,0,0,.75))
+		arcade_shot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ui.add_child(arcade_shot_label)
+	arcade_shot_label.visible = true
+	arcade_shot_label.size = Vector2(view_rect.size.x,30)
+	arcade_shot_label.position = Vector2(view_rect.position.x,view_rect.end.y-70)
+	arcade_shot_timer -= dt
+	if arcade_shot_timer > 0.0: return
+	arcade_shot_timer = .1
+	var who = framed_person()
+	var want = str(Arcade.LEVELS[arcade_level].cond.plano)
+	var shape = Framing.classify(body_landmarks(who)) if who != null else {"plane":"","defects":[]}
+	if shape.plane == "":
+		arcade_shot_label.text = ""
+		return
+	var good = shape.plane == want and shape.defects.is_empty()
+	var name = Conditions.plane_name(shape.plane)
+	arcade_shot_label.text = Texts.get_text("arcade_plano_ahora") % (name.substr(0,1).to_upper()+name.substr(1))+(" ✓" if good else "")
+	arcade_shot_label.add_theme_color_override("font_color",Color("6fdc8c") if good else Color.WHITE)
 
 # The world, a slice of the exposure on (what _process() does for it while searching).
 func advance_world(dt: float) -> void:
@@ -6183,7 +6234,18 @@ func show_level_briefing(root: Control) -> void:
 	if Arcade.clouds(arcade_level): conds.append(Texts.get_text("arcade_aviso_nubes"))
 	if Arcade.manual_exposure(arcade_level) and not exposure_thirds: conds.append(Texts.get_text("arcade_aviso_tercios_nivel" if thirds_on() else "arcade_aviso_tercios"))
 	if level.cond.has("barrido") and not Glyphs.pad() and Glyphs.device != "tactil": conds.append(Texts.get_text("arcade_aviso_barrido"))
-	rich_label(root,dotted(conds) if not conds.is_empty() else plain_bb(Texts.get_text("arcade_sin_condiciones")),Rect2(565,468,640,140),18)
+	# A shot asked for (block 7): its pictogram and where it cuts, in plain words (the user,
+	# 25-11-2026: without knowing film shots «es difícil saber qué quiere»).
+	var conds_width = 640
+	if level.cond.has("plano"):
+		var plane = str(level.cond.plano)
+		conds.append(Texts.get_text("arcade_plano_corte") % Texts.get_text("cond_plano_borde_"+plane))
+		var pictogram = preload("res://scripts/plane_icon.gd").new(plane,Color("e6ebdb"))
+		pictogram.position = Vector2(1128,440)
+		pictogram.size = Vector2(76,176)
+		root.add_child(pictogram)
+		conds_width = 550
+	rich_label(root,dotted(conds) if not conds.is_empty() else plain_bb(Texts.get_text("arcade_sin_condiciones")),Rect2(565,468,conds_width,140),18)
 	button(root,Texts.get_text("arcade_empezar"),Rect2(750,625,455,60),begin_assignment,true)
 	button(root,Texts.get_text("arcade_niveles"),Rect2(565,625,165,60),show_arcade)
 

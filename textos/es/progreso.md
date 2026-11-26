@@ -118,5 +118,8 @@ barrido
 ### album_nivel
 Nivel %d
 
+### album_paparazzi
+Paparazzi · nivel %d
+
 ### album_tutorial
 Tutorial

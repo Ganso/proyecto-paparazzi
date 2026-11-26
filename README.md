@@ -33,6 +33,7 @@ Prueba, por este orden: `GODOT_BIN`, `GODOT_FP`, `~/bin/godot-4-fp`, un `Godot*l
 godot --path .
 ```
 
+- **Modos**: Tutorial, **Paparazzi** (supervivencia: encuentra a la persona de la ficha en el parque grande y hazle la foto que te piden con una cámara ideal de 24–600 mm, nivel tras nivel, contra el reloj; hitos cada 10 niveles desde los que volver a empezar), Arcade (niveles con condiciones, incluido el bloque «El encuadre» de los planos), Sandbox, Academia, Opciones e Historia.
 - **Escenarios**: el *parque clásico* (fotografías desde su centro; es el de la Academia) y el *parque grande*, que se recorre a pie con WASD y el ratón. Allí el clic derecho saca la cámara al ojo (y la guarda), y solo entonces aparece el visor.
 - **Interfaz**: por defecto, la de la cámara (el visor real de cada cuerpo, con los datos dentro). **Tab** o llevar el ratón al borde de la pantalla muestra los controles; en *Equipo* se puede volver a la interfaz clásica.
 - **En macOS**: También puedes hacer doble clic en `Jugar.command`.

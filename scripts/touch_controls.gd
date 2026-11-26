@@ -62,6 +62,10 @@ func _ready() -> void:
 		main.update_finder_shader()
 		main.refresh())
 	make("manivela","tactil_manivela",func(): main.wind_film())
+	# Paparazzi (docs/futuro/29 §12.5): its cheat sheet and its jokers.
+	make("chuleta","pz_tactil_chuleta",func(): main.pz.show_help())
+	make("congelar","pz_tactil_congelar",func(): main.pz.use_freeze())
+	make("otro","pz_tactil_otro",func(): main.pz.use_skip())
 	# The big park (docs/futuro/26 B9): crouch, with the camera at the eye or not, and run without
 	# having to keep the stick against its edge. Both stay on until touched again.
 	for id in ["agachar","correr"]:
@@ -130,6 +134,17 @@ func _process(_dt: float) -> void:
 		buttons.correr.set_pressed_no_signal(false)
 		main.touch_crouch = false
 		main.touch_run = false
+	# Paparazzi: the camera's own controls give way to the mode's (§12.5).
+	var pz_on: bool = main.paparazzi_active()
+	if pz_on:
+		for id in ["ayuda","af","tercios","bloqueo","medicion","lupa","manivela"]: buttons[id].visible = false
+		var jokers: Dictionary = main.Paparazzi.run.get("jokers",{})
+		place("congelar",Rect2(lx,130,lw,74),int(jokers.get("congelar",0)) > 0 and not hands_off)
+		place("otro",Rect2(lx,212,lw,74),int(jokers.get("otro",0)) > 0 and not hands_off)
+	place("chuleta",Rect2(x,92,w,74),pz_on)
+	if not pz_on:
+		buttons.congelar.visible = false
+		buttons.otro.visible = false
 	main.touch_move = stick_vector if walking else Vector2.ZERO
 	if not walking:
 		stick_finger = -1

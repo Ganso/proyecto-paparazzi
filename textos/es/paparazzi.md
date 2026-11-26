@@ -38,6 +38,12 @@ un primer plano
 ### pz_plano_un_cara
 un primerísimo primer plano
 
+### pz_plano_cualquiera
+Un plano cualquiera
+
+### pz_plano_un_cualquiera
+un plano cualquiera
+
 ## Exigencias
 
 ### pz_mod_sola
@@ -104,6 +110,9 @@ Es %s y te pedían %s: %s.
 
 ### pz_motivo_corte_cara
 Le cortas la cara: Abre un poco el zoom.
+
+### pz_motivo_pequena
+Sale muy pequeña: Acércate o usa el zoom para que se le vea la cara.
 
 ### pz_motivo_cabeza
 Le cortas la cabeza: Déjala entera dentro.
@@ -193,6 +202,12 @@ Mira a tu alrededor con {mirar} y busca a la persona de la ficha.
 ### pz_coach_centro
 La tienes: Ponla en el centro de la imagen.
 
+### pz_coach_andar
+Camina con {andar} hacia donde dice la ficha y busca a la persona.
+
+### pz_coach_sacar
+¿La ves? Saca la cámara con la rueda del ratón o con {sacar}.
+
 ### pz_coach_zoom
 Acércate con {zoom} hasta que las esquinas se pongan verdes.
 
@@ -207,6 +222,9 @@ Mira la ficha: En verde, lo que coincide con quien buscas.
 
 ### pz_coach_plano
 Acerca el zoom hasta que abajo ponga «%s».
+
+### pz_coach_quieto
+{mirar} para mirar · {zoom} para acercar · {pz_enganchar} para engancharte · {disparar} para la foto · {pz_chuleta} chuleta
 
 ## Tramos
 
@@ -250,6 +268,18 @@ BUSCA A
 
 ### pz_ficha_foto
 LA FOTO
+
+### pz_zona_quiosco
+Cerca del quiosco
+
+### pz_zona_fuente
+Cerca de la fuente
+
+### pz_zona_columpios
+Cerca de los columpios
+
+### pz_distancia
+a unos %d m
 
 ### pz_nivel
 NIVEL %d
@@ -350,13 +380,61 @@ Usar el rescate
 ### pz_rescate_no
 Terminar
 
+### pz_chuleta_titulo
+Chuleta de planos
+
+### pz_chuleta_general
+La persona pequeña y el sitio grande: Cuenta dónde está.
+
+### pz_chuleta_entero
+De la cabeza a los pies: Cómo viste, cómo se mueve.
+
+### pz_chuleta_americano
+Corta entre la cadera y la rodilla: El de las películas del oeste.
+
+### pz_chuleta_medio
+Corta entre el pecho y la cadera: Se ven la cara y las manos.
+
+### pz_chuleta_primer_plano
+Cabeza y hombros, corta por el pecho: La emoción.
+
+### pz_chuleta_cara
+Solo la cara, corta bajo la barbilla: Lo más cercano.
+
+### pz_chuleta_corte
+Nunca cortes por una articulación: Cuello, cintura, rodillas o tobillos.
+
+### pz_chuleta_controles
+{mirar} Mirar · {zoom} Zoom · {pz_enganchar} Enganchar · {disparar} Foto · {pz_congelar} Congelar · {pz_otro} Otro encargo
+
+### pz_chuleta_tarjetas
+Tarjetas que ya has visto (para releerlas):
+
+### pz_chuleta_volver
+Volver a la búsqueda
+
+### pz_tactil_chuleta
+Chuleta
+
+### pz_tactil_congelar
+Congelar
+
+### pz_tactil_otro
+Otro
+
 ## Tarjetas de novedad
 
 ### pz_nov_bienvenida_titulo
 Paparazzi
 
 ### pz_nov_bienvenida_texto
-Te pedirán fotos de gente del parque: Encuéntrala, encuádrala como te digan y dispara. La cámara enfoca y expone sola.
+Te pedirán fotos de gente del parque: Encuéntrala y hazle una foto en la que se le vea bien la cara. La cámara enfoca y expone sola.
+
+### pz_nov_planos_titulo
+Los planos
+
+### pz_nov_planos_texto
+Desde ahora te piden un plano concreto: Cuánto de la persona sale en la foto. La ficha te enseña dónde cortar y {pz_chuleta} los repasa todos.
 
 ### pz_nov_entero_titulo
 Plano entero
@@ -422,7 +500,7 @@ Supera este nivel y la próxima vez podrás empezar desde el siguiente, sin repe
 Primerísimo primer plano
 
 ### pz_nov_cara_texto
-Solo la cara: Puede cortar el pelo, pero nunca la barbilla. Necesita mucho zoom: Busca en los caminos cercanos.
+Solo la cara: Puede cortar el pelo, pero nunca la barbilla. Acércate andando: Desde lejos no cabe ni con todo el zoom.
 
 ### pz_nov_fallo_titulo
 Las fotos fallidas
@@ -519,12 +597,6 @@ Ojo con los dobles
 
 ### pz_nov_dobles_texto
 Hay gente vestida casi igual. Compara todos los rasgos antes de disparar.
-
-### pz_nov_enganche_lento_titulo
-Enganche lento
-
-### pz_nov_enganche_lento_texto
-La cámara tarda un poco más en engancharse: Mantén a la persona en el centro.
 
 ### pz_nov_dos_mods_titulo
 Dos exigencias

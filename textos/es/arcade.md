@@ -505,6 +505,45 @@ ninguno (la cara no sale entera)
 ### cond_plano_defecto_aire
 , con demasiado cielo encima
 
+### cond_plano_guia
+%s: %s
+
+### cond_plano_mas_zoom
+Acerca el zoom
+
+### cond_plano_menos_zoom
+Abre el zoom
+
+### cond_plano_cabeza
+Sube un poco la vista
+
+### cond_plano_aire
+Baja un poco la vista
+
+### cond_plano_borde_general
+la persona pequeña y mucho sitio alrededor
+
+### cond_plano_borde_entero
+de la cabeza a los pies, sin cortar nada
+
+### cond_plano_borde_americano
+el borde de abajo, entre la cadera y la rodilla
+
+### cond_plano_borde_medio
+el borde de abajo, entre el pecho y la cadera
+
+### cond_plano_borde_primer_plano
+el borde de abajo, a la altura del pecho
+
+### cond_plano_borde_cara
+el borde de abajo, justo bajo la barbilla
+
+### arcade_plano_ahora
+Ahora: %s
+
+### arcade_plano_corte
+Dónde cortar: %s
+
 ### cond_frente
 > máximo 100 caracteres
 De frente · la cara se aparta %d° de ti (hasta 45°)

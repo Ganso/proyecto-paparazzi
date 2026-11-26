@@ -415,6 +415,45 @@ none (the face is not all in)
 ### cond_plano_defecto_aire
 , with too much sky above
 
+### cond_plano_guia
+%s: %s
+
+### cond_plano_mas_zoom
+Zoom in
+
+### cond_plano_menos_zoom
+Zoom out
+
+### cond_plano_cabeza
+Look up a little
+
+### cond_plano_aire
+Look down a little
+
+### cond_plano_borde_general
+the person small with plenty of space around
+
+### cond_plano_borde_entero
+head to toe, cutting nothing
+
+### cond_plano_borde_americano
+the bottom edge between the hip and the knee
+
+### cond_plano_borde_medio
+the bottom edge between the chest and the hip
+
+### cond_plano_borde_primer_plano
+the bottom edge across the chest
+
+### cond_plano_borde_cara
+the bottom edge just under the chin
+
+### arcade_plano_ahora
+Now: %s
+
+### arcade_plano_corte
+Where to cut: %s
+
 ### cond_frente
 Facing you · the face turns %d° away from you (45° at most)
 
