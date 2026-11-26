@@ -281,6 +281,10 @@ Vibración del mando: %s
 > máximo 24 caracteres
 Vibración: %s
 
+### opcion_ayudas · Opciones: flecha hacia la persona en el arcade del parque grande y plano en vivo en el modo libre (botón de 260 px)
+> máximo 24 caracteres
+Ayudas extra: %s
+
 ### opcion_invertir
 Invertir mirada: %s
 

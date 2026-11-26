@@ -1484,3 +1484,22 @@ Unos 5 minutos con todas las sondas. Escribe líneas `SONDA <id> · …`, el inf
 | `recarga` | ¿Sobrevive un estático a recargar la escena? ¿Cuánto tarda? | Sí. 4,1–4,9 s. | §14. |
 
 **Lo que queda abierto es de juego, no técnico:** el ritmo humano de cada nivel y, con él, las constantes del reloj. Lo fija el solver en la etapa E9 (§19.4).
+
+## 24. Las ayudas de Paparazzi en los demás modos (26-11-2026, usuario)
+
+El usuario pidió estudiar qué mejoras de la interfaz de Paparazzi (el seguimiento que señala a la persona, los maniquíes de los planos) servían en el resto del juego, y aprobó la propuesta. El criterio: llevar las ayudas que **enseñan o señalan**, no las que hacen el trabajo por el jugador, porque en el arcade y la Academia lo que se juzga es la foto.
+
+**Hecho:**
+
+| Ayuda | Dónde | Código |
+|---|---|---|
+| Corchetes sobre quien sigue la cámara al mantener el giro (además de «Esperando / Siguiendo al sujeto») | Arcade, modo libre, tutorial | `scripts/aim_overlay.gd`, `main.gd::body_box()` (lo usa también `paparazzi_run.gd`) |
+| Chuleta de planos compartida | La pantalla de controles (botón «Chuleta de planos»); en los niveles del bloque 7, la tecla de ayuda la abre directamente con el plano pedido resaltado | `scripts/shot_sheet.gd`, `main.gd::show_shot_sheet()`, `help_key()` |
+| Maniquí del plano pedido | Al final de la línea del encargo (interfaz clásica) o en la esquina de la imagen sobre cristal (interfaz de cámara) | `main.gd::update_arcade_icon()`, `update_arcade_icon_box()` |
+| Pedido frente a «Tu foto» | Pantalla de resultado de un nivel con plano: los dos maniquíes, el hecho en verde o en rojo | `main.gd::shots_compared()`; `Conditions.check()` guarda `want` y `made` |
+| Zona y distancia en la ficha | Niveles del arcade en el parque grande («Cerca de los columpios · a unos 55 m») | `paparazzi_run.gd::zone_text()` |
+| **Ayudas extra** (Opciones, apagadas por defecto) | Flecha hacia la persona en el arcade del parque grande tras 20 s sin verla, con los metros; «Ahora: Plano medio» en el modo libre, sin ✓ porque no se pide nada | `aim_overlay.gd::arrow_on()`, `main.gd::update_arcade_shot()`; `user://interfaz.cfg` → `ayudas_extra` |
+
+**Descartado a propósito:** el enganche con encuadre automático y zoom mantenido (resolvería las condiciones de encuadre, tercios y barrido que examinan el arcade y la Academia), el semáforo de esquinas para todas las condiciones (delataría la exposición, el foco o el movimiento antes de disparar), y la pantalla reducida con polaroid, que son la identidad de Paparazzi. Las marcas ✓ de los rasgos tampoco pasan al arcade: allí no hay ficha durante la búsqueda.
+
+Pruebas: `tests/test_aids.gd` (con display).

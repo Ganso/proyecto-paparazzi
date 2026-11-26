@@ -18,6 +18,7 @@ const UiStyle = preload("res://scripts/ui_style.gd")
 const Ideal = preload("res://scripts/ideal_equipment.gd")
 const Hud = preload("res://scripts/paparazzi_hud.gd")
 const PlaneIcon = preload("res://scripts/plane_icon.gd")
+const ShotSheet = preload("res://scripts/shot_sheet.gd")
 const Album = preload("res://scripts/album.gd")
 const PLAYER_SAVE = "user://paparazzi.cfg"
 const NOTICEABLE = .10           # someone counts as «in the photo» from 10 % of the frame's height
@@ -731,13 +732,7 @@ func trait_marks() -> Array:
 
 # Where someone is drawn on screen: the box of the body's points (main.ui's coordinates).
 func body_box(p) -> Rect2:
-	var world = Framing.world_landmarks(p)
-	var top: Vector2 = main.finder_position(world.crown)
-	var bottom: Vector2 = main.finder_position(world.feet)
-	var chest: Vector2 = main.finder_position(world.chest)
-	var tall = maxf(24.0,absf(bottom.y-top.y))
-	var wide = maxf(24.0,tall*.36)
-	return Rect2(chest.x-wide*.5,minf(top.y,bottom.y),wide,tall).grow(6)
+	return main.body_box(p)
 
 func on_screen(p) -> bool:
 	var chest: Vector3 = p.control_points()[1]
@@ -781,16 +776,7 @@ func show_help() -> void:
 	box.add_theme_stylebox_override("panel",UiStyle.box(UiStyle.surf(.94),18,UiStyle.LINE,1,16))
 	root.add_child(box)
 	main.label(box,Texts.get_text("pz_chuleta_titulo"),Rect2(32,18,700,44),30,UiStyle.BRAND)
-	for i in Framing.ORDER.size():
-		var plane: String = Framing.ORDER[i]
-		var at = Vector2(32+(i%3)*376,76+(i/3)*178)
-		var icon = PlaneIcon.new(plane,UiStyle.INK)
-		icon.position = at
-		icon.size = Vector2(70,160)
-		box.add_child(icon)
-		main.label(box,Paparazzi.plane_name(plane),Rect2(at.x+84,at.y+8,280,28),20,UiStyle.BRAND)
-		main.label(box,Texts.get_text("pz_chuleta_"+plane),Rect2(at.x+84,at.y+42,280,110),16,UiStyle.INK).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	main.label(box,Texts.get_text("pz_chuleta_corte"),Rect2(32,440,1116,26),17,UiStyle.SOFT)
+	ShotSheet.build(main,box,current_request().plane if not request.is_empty() else "")
 	main.glyph_label(box,Texts.get_rich("pz_chuleta_controles"),Rect2(32,476,1116,30),16,UiStyle.INK)
 	# The cards already seen, to read again.
 	var seen = Paparazzi.all_cards().filter(func(card): return card_seen(card))

@@ -326,18 +326,19 @@ func build_sandbox() -> void:
 
 func build_options() -> void:
 	enter_callback = Callable()
-	# One wide button and four rows of two, by pairs: language and theme, the camera (sandbox
-	# equipment, exposure steps), the controls (look, vibration) and the progress (album, badges).
+	# Five rows of two: graphics and language, theme and the sandbox's equipment, exposure steps and
+	# look, vibration and the extra aids, album and badges.
 	# (The on-screen help is switched while playing.)
 	var next_language = Texts.LANGUAGES[(Texts.LANGUAGES.find(Texts.current())+1) % Texts.LANGUAGES.size()]
 	var rows = [
-		[Texts.get_text("menu_graficos"),main.show_graphics_settings,true],
+		[Texts.get_text("menu_graficos"),main.show_graphics_settings],
 		[Texts.get_text("opcion_idioma") % Texts.get_text("idioma_"+Texts.current()),func(): main.set_language(next_language)],
 		[Texts.get_text("opcion_tema") % Texts.get_text("tema_oscuro" if UiStyle.dark else "tema_claro"),func(): main.set_theme(not UiStyle.dark)],
 		[Texts.get_text("opcion_equipo_sandbox"),main.show_equipment],
 		[Texts.get_text("opcion_pasos") % Texts.get_text("pasos_tercios" if main.exposure_thirds else "pasos_enteros"),func(): main.set_exposure_thirds(not main.exposure_thirds); build_card()],
 		[Texts.get_text("opcion_invertir") % Texts.get_text("invertir_"+main.look_invert),func(): main.set_look_invert(main.INVERT_CHOICES[(main.INVERT_CHOICES.find(main.look_invert)+1)%4]); build_card()],
 		[Texts.get_text("opcion_vibracion_tactil" if Glyphs.touch and OS.has_feature("mobile") else "opcion_vibracion") % Texts.get_text("si" if main.vibration else "no"),func(): main.set_vibration(not main.vibration); build_card()],
+		[Texts.get_text("opcion_ayudas") % Texts.get_text("si" if main.extra_aids else "no"),func(): main.set_extra_aids(not main.extra_aids); build_card()],
 		[Texts.get_text("menu_album"),func(): main.show_album()],
 		[Texts.get_text("menu_insignias"),main.show_badges],
 	]

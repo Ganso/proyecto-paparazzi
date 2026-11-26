@@ -454,6 +454,24 @@ Now: %s
 ### arcade_plano_corte
 Where to cut: %s
 
+### arcade_plano_chuleta · briefing
+The help key opens the shot cheat sheet
+
+### ayuda_chuleta · button
+Shot cheat sheet
+
+### chuleta_controles · button
+See the controls
+
+### chuleta_pedido · cheat sheet
+This level asks for: %s
+
+### resultado_plano_pedido · result
+Asked for
+
+### resultado_plano_hecho · result
+Your photo
+
 ### cond_frente
 Facing you · the face turns %d° away from you (45° at most)
 

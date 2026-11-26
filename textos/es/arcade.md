@@ -544,6 +544,30 @@ Ahora: %s
 ### arcade_plano_corte
 Dónde cortar: %s
 
+### arcade_plano_chuleta · Ficha de un nivel de planos: dónde está la chuleta
+> máximo 70 caracteres
+La tecla de ayuda abre la chuleta de planos
+
+### ayuda_chuleta · Botón de la pantalla de controles (250 px)
+> máximo 22 caracteres
+Chuleta de planos
+
+### chuleta_controles · Botón de la chuleta de planos (280 px)
+> máximo 24 caracteres
+Ver los controles
+
+### chuleta_pedido · Chuleta de planos en un nivel que pide uno
+> máximo 70 caracteres
+Este nivel pide: %s
+
+### resultado_plano_pedido · Resultado: rótulo sobre el maniquí del plano pedido
+> máximo 16 caracteres
+Pedido
+
+### resultado_plano_hecho · Resultado: rótulo sobre el maniquí del plano de la foto
+> máximo 16 caracteres
+Tu foto
+
 ### cond_frente
 > máximo 100 caracteres
 De frente · la cara se aparta %d° de ti (hasta 45°)

@@ -85,6 +85,7 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 	for key in cond:
 		var ok = false
 		var text_value = ""
+		var made_plane = null      # (the shot made, for the result's pictograms)
 		match key:
 			"ojos":
 				var blur = Photo.coc(e.f,e.n,e.get("d_eyes",e.d),e.s)
@@ -204,6 +205,7 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				var want = str(cond[key])
 				var got = Framing.classify(e.get("body",{"behind":true,"eyes":Vector2(-1,-1),"chin":Vector2.ZERO}))
 				ok = got.plane == want and got.defects.is_empty()
+				made_plane = got.plane
 				var made = plane_name(got.plane)
 				for d in got.defects:
 					if d in ["cabeza","pies","aire"]: made += Texts.get_text("cond_plano_defecto_"+d)
@@ -237,7 +239,11 @@ static func check(e: Dictionary, cond: Dictionary) -> Array:
 				elif needed < 0: why = Texts.get_text("cond_congelado_imposible") % roundi(e.f)
 				else: why = Texts.get_text("cond_congelado_lento") % [roundi(e.f),needed,roundi(1.0/e.t)]
 				text_value = Texts.get_text("cond_congelado") % why
-		out.append({"key":key,"ok":ok,"text":text_value})
+		var entry = {"key":key,"ok":ok,"text":text_value}
+		if made_plane != null:
+			entry["want"] = str(cond[key])
+			entry["made"] = made_plane
+		out.append(entry)
 	return out
 
 # What to do to get the shot asked for: zoom in or out, and where its bottom edge goes.

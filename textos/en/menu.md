@@ -273,6 +273,9 @@ Controller rumble: %s
 ### opcion_vibracion_tactil · Options, on a phone (260 px button)
 Vibration: %s
 
+### opcion_ayudas · Options (260 px button)
+Extra aids: %s
+
 ### opcion_invertir
 Invert look: %s
 

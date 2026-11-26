@@ -45,7 +45,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	make("pausa","tactil_pausa",func(): main.show_pause())
-	make("ayuda","tactil_ayuda",func(): main.show_help())
+	make("ayuda","tactil_ayuda",func(): main.help_key())
 	make("af","tactil_af",func(): main.autofocus())
 	# The shutter in two stages, as on a camera (docs/futuro/26 B1): pressing it focuses, letting
 	# go takes the photo, and sliding the finger off the button before letting go cancels it.

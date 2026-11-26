@@ -15,6 +15,8 @@ const Badges = preload("res://scripts/badges.gd")
 const Album = preload("res://scripts/album.gd")
 const Graphics = preload("res://scripts/graphics.gd")
 const Develop = preload("res://shaders/develop.gdshader")
+const ShotSheet = preload("res://scripts/shot_sheet.gd")
+const PlaneIcon = preload("res://scripts/plane_icon.gd")
 
 var equipment = preload("res://scripts/equipment.gd").new()
 var pitch = 0.0
@@ -856,6 +858,8 @@ func build_ui() -> void:
 	finder = Finder.new()
 	finder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.add_child(finder)
+	aim_overlay = preload("res://scripts/aim_overlay.gd").new(self)
+	ui.add_child(aim_overlay)
 	panel(ui,Rect2(0,627,1280,93),Color("141d18"),0)
 	focal_label = label(ui,"",Rect2(25,637,170,25),20,Color("b8d78c"))
 	lens_slider = HSlider.new()
@@ -922,7 +926,7 @@ func build_ui() -> void:
 	ui.add_child(meter_bar)
 	# HUD bars of the classic interface; the camera interface folds them away (Tab shows them).
 	for child in ui.get_children():
-		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,control_strip,tutorial,touch_controls]: continue
+		if child in [camera_body,focus_aid,finder,toast,fps_label,walk_label,walk_hint,raise_flash,control_help,aim_overlay,control_strip,tutorial,touch_controls]: continue
 		if child is Control:
 			if child.position.y < 300: hud_top.append(child)
 			else: hud_bottom.append(child)
@@ -1519,6 +1523,7 @@ func new_assignment() -> void:
 		var conds = []
 		for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]).to_lower())
 		briefing.text += "  ·  "+", ".join(conds)
+	update_arcade_icon(level)
 	best = {}
 	show_assignment()
 	refresh()
@@ -1978,6 +1983,7 @@ func _process(dt: float) -> void:
 			if equipment.auto_exposure: auto_expose()
 			refresh()
 	if mode != "SEARCH" and is_instance_valid(arcade_shot_label): arcade_shot_label.visible = false
+	if mode != "SEARCH" and is_instance_valid(arcade_icon_box): arcade_icon_box.visible = false
 	if run_metrics and boot_frames > 120 and mode == "SEARCH":
 		metrics.append(dt*1000)
 		gpu_metrics.append(RenderingServer.viewport_get_measured_render_time_gpu(viewport.get_viewport_rid()))
@@ -2012,7 +2018,7 @@ func _process(dt: float) -> void:
 	if boot_frames == 12 and start_screen != "":
 		match start_screen:
 			"insignias": show_badges()
-			"ayuda": show_help()
+			"ayuda": help_key()
 			"album": show_album()
 			"opciones":
 				if is_instance_valid(modal) and modal.has_method("change_mode"): modal.change_mode(modal.MODES.find("opciones")-modal.current)
@@ -3388,12 +3394,52 @@ func darkroom_quality(on: bool) -> void:
 	RenderingServer.directional_soft_shadow_filter_set_quality(filter if filter >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality",2)))
 	RenderingServer.positional_soft_shadow_filter_set_quality(filter if filter >= 0 else int(ProjectSettings.get_setting("rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality",2)))
 
+# The arcade's levels about shots (block 7): the shot asked for, drawn at the end of the assignment's
+# line while searching (the user, 26-11-2026: Paparazzi's mannequins in the other modes).
+func update_arcade_icon(level: Dictionary) -> void:
+	var plane = str(level.get("cond",{}).get("plano","")) if not sandbox else ""
+	if not is_instance_valid(arcade_icon):
+		arcade_icon = PlaneIcon.new("",Color("e6ebdb"))
+		arcade_icon.position = Vector2(1196,4)
+		arcade_icon.size = Vector2(26,60)
+		briefing.get_parent().add_child(arcade_icon)
+	arcade_icon.set_plane(plane)
+	arcade_icon.visible = plane != ""
+	briefing.size.x = 1170 if plane == "" else 1160
+
+# In the camera interface the assignment's line is a small text over the image: the pictogram goes
+# to the image's lower right corner, on glass.
+func update_arcade_icon_box(on: bool) -> void:
+	on = on and not briefing.is_visible_in_tree()
+	if not on:
+		if is_instance_valid(arcade_icon_box): arcade_icon_box.visible = false
+		return
+	if not is_instance_valid(arcade_icon_box):
+		arcade_icon_box = Panel.new()
+		arcade_icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arcade_icon_box.size = Vector2(44,96)
+		arcade_icon_box.add_theme_stylebox_override("panel",UiStyle.box(Color(.03,.05,.08,.55),8))
+		var icon = PlaneIcon.new("",Color("eef2e6"))
+		icon.position = Vector2(8,6)
+		icon.size = Vector2(28,84)
+		arcade_icon_box.add_child(icon)
+		ui.add_child(arcade_icon_box)
+	arcade_icon_box.get_child(0).set_plane(str(Arcade.LEVELS[arcade_level].cond.plano))
+	arcade_icon_box.position = Vector2(view_rect.end.x-64,view_rect.end.y-150)
+	arcade_icon_box.visible = true
+
+# The level asks for a shot (block 7): the help key opens the shots' cheat sheet first.
+func shot_level() -> bool:
+	return arcade_level >= 0 and not sandbox and Arcade.LEVELS[arcade_level].get("cond",{}).has("plano")
+
 # The arcade's levels about shots (block 7): the shot being made of whoever is framed, live, at the
 # bottom of the finder, green when it is the one asked for. Never says who the person asked for is.
 var arcade_shot_label: Label
 var arcade_shot_timer = 0.0
 func update_arcade_shot(dt: float) -> void:
-	var on = arcade_level >= 0 and Arcade.LEVELS[arcade_level].get("cond",{}).has("plano") and eye_ready() and not paparazzi_active()
+	# (and, with the extra aids, in the sandbox: the shot made, nothing asked for)
+	var on = (shot_level() or sandbox and extra_aids) and eye_ready() and not paparazzi_active()
+	update_arcade_icon_box(on and shot_level())
 	if not on:
 		if is_instance_valid(arcade_shot_label): arcade_shot_label.visible = false
 		return
@@ -3412,7 +3458,7 @@ func update_arcade_shot(dt: float) -> void:
 	if arcade_shot_timer > 0.0: return
 	arcade_shot_timer = .1
 	var who = framed_person()
-	var want = str(Arcade.LEVELS[arcade_level].cond.plano)
+	var want = str(Arcade.LEVELS[arcade_level].cond.plano) if shot_level() else ""
 	var shape = Framing.classify(body_landmarks(who)) if who != null else {"plane":"","defects":[]}
 	if shape.plane == "":
 		arcade_shot_label.text = ""
@@ -3655,6 +3701,12 @@ func set_interface(value: String) -> void:
 # Gamepad vibration (docs/futuro/22 §4): a tap on the shutter, a tick when the autofocus locks and
 # a rattle with the TLR crank. Only while the gamepad is the device in use; Options turns it off.
 var vibration = true
+# The extra aids (Options, off by default): the arrow towards the person asked for in the big park's
+# arcade after a long search, and the live shot («Ahora: Plano medio») in the sandbox.
+var extra_aids = false
+var aim_overlay                    # scripts/aim_overlay.gd: the follow's brackets and that arrow
+var arcade_icon                    # the shot asked for, by the assignment's line (arcade, block 7)
+var arcade_icon_box: Panel         # …and on the image's corner when that line is hidden (camera interface)
 var rumbles = 0          # how many were asked for (tests: no pad is plugged in there)
 func rumble(weak: float, strong: float, seconds: float) -> void:
 	if not vibration: return
@@ -3678,6 +3730,13 @@ func set_look_invert(value: String) -> void:
 	config.set_value("interfaz","invertir_mirada",value)
 	config.save("user://interfaz.cfg")
 
+func set_extra_aids(value: bool) -> void:
+	extra_aids = value
+	var config = ConfigFile.new()
+	config.load("user://interfaz.cfg")
+	config.set_value("interfaz","ayudas_extra",value)
+	config.save("user://interfaz.cfg")
+
 func set_vibration(value: bool) -> void:
 	vibration = value
 	var config = ConfigFile.new()
@@ -3691,6 +3750,7 @@ func load_theme() -> void:
 	var config = ConfigFile.new()
 	var dark = config.load("user://interfaz.cfg") == OK and str(config.get_value("interfaz","tema","claro")) == "oscuro"
 	vibration = bool(config.get_value("interfaz","vibracion",true))
+	extra_aids = bool(config.get_value("interfaz","ayudas_extra",false))
 	look_invert = str(config.get_value("interfaz","invertir_mirada","no"))
 	exposure_thirds = bool(config.get_value("interfaz","tercios",false))
 	if not look_invert in INVERT_CHOICES: look_invert = "no"
@@ -4024,7 +4084,7 @@ func pad_button(event: InputEventJoypadButton) -> bool:
 		JOY_BUTTON_A:
 			# A only accepts (user, 04-10-2026: it did too many things). Half the trigger focuses.
 			if not (tutorial and tutorial.handle_accept()): return false
-		JOY_BUTTON_B: show_help()
+		JOY_BUTTON_B: help_key()
 		JOY_BUTTON_START: show_pause()
 		JOY_BUTTON_X:
 			if equipment.tlr() and sandbox and eye_ready() and (not tlr_wound or tlr_frames <= 0) and not (academy and academy.active): wind_film()
@@ -4561,6 +4621,7 @@ func show_results() -> void:
 		cond_label.add_theme_color_override("font_color",UiStyle.SKY_DEEP if c.ok else UiStyle.WARN)
 		cond_label.add_theme_font_size_override("font_size",16)
 		column.add_child(cond_label)
+		if c.has("want"): column.add_child(shots_compared(c))
 	if r.rejected:
 		var reason = Label.new()
 		reason.text = r.reason
@@ -4592,6 +4653,25 @@ func show_results() -> void:
 		return
 	if shots > 0: button(root,Texts.get_text("reintentar_d") % shots,Rect2(803,642,204,52),resume_search)
 	button(root,Texts.get_text("siguiente"),Rect2(1020 if shots > 0 else 803,642,234 if shots > 0 else 451,52),finish_assignment,true)
+
+# A shot asked for, in the result: the pictogram asked for beside the one the photo made (the user,
+# 26-11-2026: Paparazzi's mannequins in the other modes).
+func shots_compared(c: Dictionary) -> Control:
+	var row = Control.new()
+	row.custom_minimum_size = Vector2(430,118)
+	var pairs = [[Texts.get_text("resultado_plano_pedido"),str(c.want),UiStyle.BRAND],[Texts.get_text("resultado_plano_hecho"),str(c.made),UiStyle.SKY_DEEP if c.ok else UiStyle.WARN]]
+	for k in pairs.size():
+		var x = 8+k*215
+		var icon = PlaneIcon.new(pairs[k][1] if pairs[k][1] != "" else "cualquiera",UiStyle.INK if pairs[k][1] != "" else UiStyle.FAINT)
+		icon.band_color = pairs[k][2]
+		icon.position = Vector2(x,4)
+		icon.size = Vector2(48,110)
+		row.add_child(icon)
+		label(row,pairs[k][0],Rect2(x+58,24,150,22),13,UiStyle.SOFT)
+		var name = Conditions.plane_name(pairs[k][1]) if pairs[k][1] != "" else "—"
+		var named = label(row,name.substr(0,1).to_upper()+name.substr(1),Rect2(x+58,46,150,60),16,pairs[k][2])
+		named.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return row
 
 func resume_search() -> void:
 	close_modal()
@@ -4845,7 +4925,37 @@ func show_help() -> void:
 		keyboard.position = Vector2(45,105)
 		keyboard.size = Vector2(1200,520)
 		root.add_child(keyboard)
-	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),func(): mode = help_return; intro() if help_return == "INTRO" else close_modal(),true)
+	# (The shots' cheat sheet, Paparazzi's, from any mode: the user, 26-11-2026.)
+	if help_return != "INTRO": button(root,Texts.get_text("ayuda_chuleta"),Rect2(695,628,250,53),show_shot_sheet)
+	button(root,Texts.get_text("volver"),Rect2(965,628,250,53),help_back,true)
+
+func help_back() -> void:
+	mode = help_return
+	if help_return == "INTRO": intro()
+	else: close_modal()
+
+# The help key: the controls, or in a level that asks for a shot, the shots' cheat sheet first.
+func help_key() -> void:
+	if shot_level() and mode == "SEARCH": show_shot_sheet()
+	else: show_help()
+
+# The shots' cheat sheet (scripts/shot_sheet.gd), with the shot asked for marked.
+func show_shot_sheet() -> void:
+	var previous = mode if mode != "HELP" else help_return
+	help_return = previous
+	mode = "HELP"
+	var root = create_modal()
+	var box = Panel.new()
+	box.position = Vector2(50,30)
+	box.size = Vector2(1180,660)
+	box.add_theme_stylebox_override("panel",UiStyle.box(UiStyle.surf(.94),18,UiStyle.LINE,1,16))
+	root.add_child(box)
+	label(box,Texts.get_text("pz_chuleta_titulo"),Rect2(32,18,700,44),30,UiStyle.BRAND)
+	var asked = str(Arcade.LEVELS[arcade_level].cond.plano) if shot_level() else ""
+	ShotSheet.build(self,box,asked)
+	if asked != "": label(box,Texts.get_text("chuleta_pedido") % Conditions.plane_name(asked),Rect2(32,490,860,26),18,UiStyle.INK)
+	button(box,Texts.get_text("chuleta_controles"),Rect2(618,584,280,52),show_help)
+	button(box,Texts.get_text("volver"),Rect2(918,584,230,52),help_back,true)
 
 var help_return = "SEARCH"
 func _unhandled_input(event: InputEvent) -> void:
@@ -4956,7 +5066,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					play_sfx("lupa_tlr",-2.0)
 					update_finder_shader()
 					refresh()
-		if event.keycode == KEY_QUESTION or event.physical_keycode == KEY_H: show_help()
+		if event.keycode == KEY_QUESTION or event.physical_keycode == KEY_H: help_key()
 		if event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9: finder.active = event.physical_keycode-KEY_1
 	if mode != "SEARCH": return
 	# Touch interface: the fingers drive the view (below); the mouse events a touch emulates, or
@@ -5847,6 +5957,17 @@ func finder_position(world: Vector3) -> Vector2:
 	if equipment.tlr(): local.x = 1.0-local.x
 	return local*view_rect.size+view_rect.position+view_shift
 
+# Where someone is drawn on screen: the box of the body's points (ui coordinates). Paparazzi's
+# brackets and the follow's (aim_overlay.gd).
+func body_box(p) -> Rect2:
+	var world = Framing.world_landmarks(p)
+	var top: Vector2 = finder_position(world.crown)
+	var bottom: Vector2 = finder_position(world.feet)
+	var chest: Vector2 = finder_position(world.chest)
+	var tall = maxf(24.0,absf(bottom.y-top.y))
+	var wide = maxf(24.0,tall*.36)
+	return Rect2(chest.x-wide*.5,minf(top.y,bottom.y),wide,tall).grow(6)
+
 # Someone whose chest shows within `reach` (half a rectangle, in finder pixels) of a point of the
 # finder, with nothing in front: the nearest to the point. Anybody, never the assignment's subject
 # as such (docs/futuro/12 §2.1).
@@ -6228,6 +6349,9 @@ func show_level_briefing(root: Control) -> void:
 	var rules = [Texts.get_text("arcade_camara_d") % [equipment.camera_name(equipment.body),equipment.lens_name(equipment.lens())],
 		(Texts.get_text("arcade_un_disparo") if level.shots == 1 else Texts.get_text("arcade_disparos_d") % level.shots)+" · "+(Texts.get_text("arcade_tiempo_d") % level.limit if level.limit > 0 else Texts.get_text("arcade_sin_tiempo"))+" · "+Texts.get_text("arcade_nota_minima_d") % level.min]
 	label(root,"\n".join(rules),Rect2(565,385,640,50),16,Color("b5c3ad")).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# The big park: near which landmark the person is, and how far (as Paparazzi's card).
+	if crowd and not anyone_level() and is_instance_valid(target):
+		label(root,pz.zone_text(),Rect2(565,115,640,30),17,UiStyle.SKY).horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	label(root,Texts.get_text("arcade_condiciones"),Rect2(565,442,640,24),15,Color("b8d78c"))
 	var conds = []
 	for key in level.cond: conds.append(Conditions.describe(key,level.cond[key]))
@@ -6240,6 +6364,7 @@ func show_level_briefing(root: Control) -> void:
 	if level.cond.has("plano"):
 		var plane = str(level.cond.plano)
 		conds.append(Texts.get_text("arcade_plano_corte") % Texts.get_text("cond_plano_borde_"+plane))
+		conds.append(Texts.get_text("arcade_plano_chuleta"))
 		var pictogram = preload("res://scripts/plane_icon.gd").new(plane,Color("e6ebdb"))
 		pictogram.position = Vector2(1128,440)
 		pictogram.size = Vector2(76,176)
