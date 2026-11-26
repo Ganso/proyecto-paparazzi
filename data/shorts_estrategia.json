@@ -2,7 +2,7 @@
   "version": 1,
   "project": "photohacks",
   "last_updated": "2026-11-26",
-  "next_episode": 7,
+  "next_episode": 11,
   "episodes": [
     {
       "id": 1,
@@ -676,7 +676,7 @@
       "id": 8,
       "slug": "clase_congelar_estela",
       "formato": "clase",
-      "status": "pendiente",
+      "status": "programado",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_congelar_estela.mp4",
       "title": "Por qué sale borroso el que corre: la velocidad de obturación #shorts #fotografia",
       "preview_text": "1/1000 vs 1/60",
@@ -785,13 +785,17 @@
       "playlists": [
         "PhotoHacks"
       ],
-      "description": "¿Por qué sale borroso el que corre?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 7 («El movimiento»), y en el arcade, «Congela al corredor».\nhttps://geese-bumps.itch.io/photohacks\n\nPor la velocidad de obturación: el tiempo que la cámara está mirando. A 1/60 s el corredor avanza unos centímetros mientras el obturador está abierto, y sale movido. A 1/1000 s el obturador se cierra antes de que le dé tiempo a moverse, y sale congelado. Lo lento no es un error: una estela también cuenta que algo se movía.\n\nLa regla: Velocidad rápida congela. Lenta cuenta el movimiento.\n\nPruébalo hoy: Fotografía a alguien andando a 1/500 s y a 1/30 s (en el móvil, en modo Pro). Compáralas.\n\n#shorts #fotografia #velocidad"
+      "description": "¿Por qué sale borroso el que corre?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 7 («El movimiento»), y en el arcade, «Congela al corredor».\nhttps://geese-bumps.itch.io/photohacks\n\nPor la velocidad de obturación: el tiempo que la cámara está mirando. A 1/60 s el corredor avanza unos centímetros mientras el obturador está abierto, y sale movido. A 1/1000 s el obturador se cierra antes de que le dé tiempo a moverse, y sale congelado. Lo lento no es un error: una estela también cuenta que algo se movía.\n\nLa regla: Velocidad rápida congela. Lenta cuenta el movimiento.\n\nPruébalo hoy: Fotografía a alguien andando a 1/500 s y a 1/30 s (en el móvil, en modo Pro). Compáralas.\n\n#shorts #fotografia #velocidad",
+      "youtube_id": "YlUcU-oIwfs",
+      "youtube_url": "https://youtube.com/shorts/YlUcU-oIwfs",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-11-30T18:00:00+01:00"
     },
     {
       "id": 9,
       "slug": "clase_fotometro_gris",
       "formato": "clase",
-      "status": "pendiente",
+      "status": "programado",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_fotometro_gris.mp4",
       "title": "Por qué sale la cara oscura a contraluz: el fotómetro quiere gris #shorts #fotografia",
       "preview_text": "Cara oscura",
@@ -884,13 +888,17 @@
       "playlists": [
         "PhotoHacks"
       ],
-      "description": "¿Por qué me sale la cara oscura?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 8 («Medir la luz»), y en el arcade, «A contraluz».\nhttps://geese-bumps.itch.io/photohacks\n\nPorque el fotómetro no sabe qué es lo importante. Mide la luz de toda la escena y la lleva a un gris medio. Con mucho cielo brillante detrás, baja la exposición y la cara queda oscura. Si mides en la cara (medición puntual) o compensas hacia +2, la cara sale bien, aunque el cielo se queme.\n\nLa regla: La cámara lo lleva todo a gris medio. Mide para lo que quieras ver bien.\n\nPruébalo hoy: Con el sol detrás de alguien, toca su cara en la pantalla del móvil antes de disparar, o sube la exposición.\n\n#shorts #fotografia #exposicion"
+      "description": "¿Por qué me sale la cara oscura?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 8 («Medir la luz»), y en el arcade, «A contraluz».\nhttps://geese-bumps.itch.io/photohacks\n\nPorque el fotómetro no sabe qué es lo importante. Mide la luz de toda la escena y la lleva a un gris medio. Con mucho cielo brillante detrás, baja la exposición y la cara queda oscura. Si mides en la cara (medición puntual) o compensas hacia +2, la cara sale bien, aunque el cielo se queme.\n\nLa regla: La cámara lo lleva todo a gris medio. Mide para lo que quieras ver bien.\n\nPruébalo hoy: Con el sol detrás de alguien, toca su cara en la pantalla del móvil antes de disparar, o sube la exposición.\n\n#shorts #fotografia #exposicion",
+      "youtube_id": "TaTrSw0_SpQ",
+      "youtube_url": "https://youtube.com/shorts/TaTrSw0_SpQ",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-02T18:00:00+01:00"
     },
     {
       "id": 10,
       "slug": "clase_articulaciones",
       "formato": "clase",
-      "status": "pendiente",
+      "status": "programado",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_articulaciones.mp4",
       "title": "Por qué esta foto queda rara: nunca cortes por una articulación #shorts #fotografia",
       "preview_text": "¿Dónde cortar?",
@@ -952,7 +960,11 @@
       "playlists": [
         "PhotoHacks"
       ],
-      "description": "¿Por qué esta foto queda rara?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 2 («Los planos»), y en el arcade, el bloque «El encuadre».\nhttps://geese-bumps.itch.io/photohacks\n\nPorque el borde corta justo en una articulación. Cuando el encuadre cae en el cuello, la cadera, las rodillas o los tobillos, el cuerpo parece amputado. Si corta entre dos articulaciones (a medio muslo, a media espinilla, a la altura del pecho), el ojo entiende que el cuerpo sigue fuera de la foto.\n\nLa regla: Corta entre articulaciones, nunca en ellas.\n\nPruébalo hoy: Repasa tus últimas diez fotos de personas: ¿cuántas cortan justo por las rodillas, los codos o los tobillos?\n\n#shorts #fotografia #encuadre"
+      "description": "¿Por qué esta foto queda rara?\n\nSigue aprendiendo con PhotoHacks, una escuela de fotografía que se juega: 11 lecciones con teoría, práctica y examen, gratis para PC, Mac, Linux, Android y navegador. Para practicar esta clase: Academia, lección 2 («Los planos»), y en el arcade, el bloque «El encuadre».\nhttps://geese-bumps.itch.io/photohacks\n\nPorque el borde corta justo en una articulación. Cuando el encuadre cae en el cuello, la cadera, las rodillas o los tobillos, el cuerpo parece amputado. Si corta entre dos articulaciones (a medio muslo, a media espinilla, a la altura del pecho), el ojo entiende que el cuerpo sigue fuera de la foto.\n\nLa regla: Corta entre articulaciones, nunca en ellas.\n\nPruébalo hoy: Repasa tus últimas diez fotos de personas: ¿cuántas cortan justo por las rodillas, los codos o los tobillos?\n\n#shorts #fotografia #encuadre",
+      "youtube_id": "u5vt5-IVb3E",
+      "youtube_url": "https://youtube.com/shorts/u5vt5-IVb3E",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-12-04T18:00:00+01:00"
     }
   ]
 }

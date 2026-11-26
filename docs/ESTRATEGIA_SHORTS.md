@@ -144,9 +144,9 @@ Primero, los fenómenos más visuales y las dudas más comunes de quien empieza.
 | # | Tema | Pregunta (vista previa) | Fenómeno | Regla y deberes | Imágenes |
 |---|---|---|---|---|---|
 | 1 | La hora dorada · **Programada (28-11-2026, 18:00)**: [`sTazaLwY3bQ`](https://youtube.com/shorts/sTazaLwY3bQ) | «¿Por qué las fotos de la tarde son más bonitas?» | El mismo encuadre de día, en la hora dorada, en la hora azul y de noche | La luz baja dibuja; la de mediodía aplana. Sal una hora antes de que se ponga el sol | Sandbox, `--time=day/golden/blue/night` |
-| 2 | Congelar o dejar estela | «¿Por qué sale borroso el que corre?» | El corredor a 1/1000 s y a 1/15 s | Rápida congela; lenta cuenta el movimiento | Lección 7, prioridad S |
-| 3 | El fotómetro quiere gris | «¿Por qué me sale la cara oscura?» | Matricial con mucho cielo frente a puntual en la cara o +1 de compensación | La cámara lo lleva todo a gris medio. Toca la cara en el móvil antes de disparar | Lección 8 y niveles de contraluz |
-| 4 | Nunca cortes por una articulación | «¿Por qué esta foto queda rara?» | Cortar por las rodillas frente a cortar por media pierna | Corta entre articulaciones, nunca en ellas | Arcade, nivel 32 |
+| 2 | Congelar o dejar estela · **Programada (30-11-2026, 18:00)**: [`YlUcU-oIwfs`](https://youtube.com/shorts/YlUcU-oIwfs) | «¿Por qué sale borroso el que corre?» | El corredor a 1/1000 s y a 1/15 s | Rápida congela; lenta cuenta el movimiento | Lección 7, prioridad S |
+| 3 | El fotómetro quiere gris · **Programada (02-12-2026, 18:00)**: [`TaTrSw0_SpQ`](https://youtube.com/shorts/TaTrSw0_SpQ) | «¿Por qué me sale la cara oscura?» | Matricial con mucho cielo frente a puntual en la cara o +1 de compensación | La cámara lo lleva todo a gris medio. Toca la cara en el móvil antes de disparar | Lección 8 y niveles de contraluz |
+| 4 | Nunca cortes por una articulación · **Programada (04-12-2026, 18:00)**: [`u5vt5-IVb3E`](https://youtube.com/shorts/u5vt5-IVb3E) | «¿Por qué esta foto queda rara?» | Cortar por las rodillas frente a cortar por media pierna | Corta entre articulaciones, nunca en ellas | Arcade, nivel 32 |
 | 5 | Desenfocar el fondo sin un objetivo caro | «¿Cómo consigo el fondo borroso?» | Mismo diafragma: cerca y con el fondo lejos frente a lejos y con el fondo cerca | Acércate, aleja el fondo, usa tele. Vale con el modo normal del móvil | Lección 6 |
 | 6 | Contraluz o silueta | «¿Error o silueta?» | El mismo contraluz medido para la cara y para el cielo | Mide para lo que quieras ver bien. Busca una silueta esta tarde | Arcade, contraluz y silueta |
 | 7 | La foto movida | «¿Por qué sale borrosa si nada se mueve?» | A 200 mm, 1/30 s tiembla y 1/250 s no | Velocidad mínima ≈ 1/focal | Trepidación, lección 7 |
@@ -158,6 +158,8 @@ Primero, los fenómenos más visuales y las dudas más comunes de quien empieza.
 | 13 | El gran angular deforma de cerca | «¿Por qué salgo con la nariz grande?» | Retrato a 24 mm pegado frente a 85 mm de lejos | Para retratos, aléjate y usa más focal | Lección 4 |
 | 14 | Enfocar y reencuadrar | «¿Cómo enfoco algo que no está en el centro?» | Foco al centro en el fondo frente a bloqueo de foco y reencuadre | Enfoca, mantén, reencuadra | Bloqueo AF/AE |
 | 15 | Cuándo todo nítido | «¿Cómo saco nítido el delante y el fondo?» | f/2 a 24 mm frente a f/11 a 24 mm, con banco cerca y quiosco lejos | Cierra y usa angular para paisaje | Lección 6 |
+
+**Calendario (26-11-2026):** Notrunner publica los días impares; las clases de PhotoHacks, los pares a las 18:00.
 
 ### 6.4 Lo que hay que añadir a `publicar_short.py`
 
