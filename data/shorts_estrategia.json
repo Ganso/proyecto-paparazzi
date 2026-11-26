@@ -529,7 +529,7 @@
       "id": 7,
       "slug": "clase_hora_dorada",
       "formato": "clase",
-      "status": "pendiente",
+      "status": "programado",
       "video_file": "/home/ganso/codigo/afotando/build/video/short_clase_hora_dorada.mp4",
       "title": "Por qué las fotos de la tarde son más bonitas: la hora dorada #shorts #fotografia",
       "preview_text": "Mediodía vs tarde",
@@ -666,7 +666,11 @@
       "playlists": [
         "PhotoHacks"
       ],
-      "practica": "Sandbox, con la luz «Hora dorada». Y la Academia, para todo lo demás."
+      "practica": "Sandbox, con la luz «Hora dorada». Y la Academia, para todo lo demás.",
+      "youtube_id": "sTazaLwY3bQ",
+      "youtube_url": "https://youtube.com/shorts/sTazaLwY3bQ",
+      "upload_date": "2026-11-26",
+      "publish_date": "2026-11-28T18:00:00+01:00"
     }
   ]
 }

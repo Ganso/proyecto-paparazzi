@@ -143,7 +143,7 @@ Primero, los fenómenos más visuales y las dudas más comunes de quien empieza.
 
 | # | Tema | Pregunta (vista previa) | Fenómeno | Regla y deberes | Imágenes |
 |---|---|---|---|---|---|
-| 1 | La hora dorada | «¿Por qué las fotos de la tarde son más bonitas?» | El mismo encuadre de día, en la hora dorada, en la hora azul y de noche | La luz baja dibuja; la de mediodía aplana. Sal una hora antes de que se ponga el sol | Sandbox, `--time=day/golden/blue/night` |
+| 1 | La hora dorada · **Programada (28-11-2026, 18:00)**: [`sTazaLwY3bQ`](https://youtube.com/shorts/sTazaLwY3bQ) | «¿Por qué las fotos de la tarde son más bonitas?» | El mismo encuadre de día, en la hora dorada, en la hora azul y de noche | La luz baja dibuja; la de mediodía aplana. Sal una hora antes de que se ponga el sol | Sandbox, `--time=day/golden/blue/night` |
 | 2 | Congelar o dejar estela | «¿Por qué sale borroso el que corre?» | El corredor a 1/1000 s y a 1/15 s | Rápida congela; lenta cuenta el movimiento | Lección 7, prioridad S |
 | 3 | El fotómetro quiere gris | «¿Por qué me sale la cara oscura?» | Matricial con mucho cielo frente a puntual en la cara o +1 de compensación | La cámara lo lleva todo a gris medio. Toca la cara en el móvil antes de disparar | Lección 8 y niveles de contraluz |
 | 4 | Nunca cortes por una articulación | «¿Por qué esta foto queda rara?» | Cortar por las rodillas frente a cortar por media pierna | Corta entre articulaciones, nunca en ellas | Arcade, nivel 32 |
