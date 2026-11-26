@@ -148,7 +148,7 @@ Night
 Blue hour
 
 ### menu_estudio
-ALPHA VERSION 0.6.0 · IN DEVELOPMENT
+ALPHA VERSION 0.7.0 · IN DEVELOPMENT
 
 ### nombre_juego
 PhotoHacks
@@ -362,6 +362,15 @@ Reset graphics
 
 ### novedades_restablecido · The same button, once pressed
 Graphics reset
+
+### novedades_0_7_0_1 · What's new in 0.7.0
+New mode, Paparazzi: Find the person on the card in the big park and take the photo you're asked for before time runs out.
+
+### novedades_0_7_0_2 · What's new in 0.7.0
+Endless levels with a milestone every ten, a camera that follows whoever you lock on to, a shot cheat sheet and jokers for tight spots.
+
+### novedades_0_7_0_3 · What's new in 0.7.0
+Arcade, the “Framing” block: Five levels about shots, with a drawing of where to cut and the shot you're making, live, in the finder.
 
 ### novedades_0_6_0_1 · What's new in 0.6.0
 The whole game is now in English too: Every text, menu and lesson. Pick the language on first launch and change it any time in Options.

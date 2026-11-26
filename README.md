@@ -1,4 +1,4 @@
-# PhotoHacks (v0.6.1-alpha)
+# PhotoHacks (v0.7.0-alpha)
 
 > Antes «Proyecto Paparazzi» (nombre de trabajo; sigue en el repositorio, el identificador del paquete y parte de la documentación). El nombre definitivo **PhotoHacks** es un homenaje explícito al proyecto **MusicHacks** de Jaime Altozano.
 

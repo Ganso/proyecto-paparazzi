@@ -148,7 +148,7 @@ Noche
 Hora azul
 
 ### menu_estudio
-VERSIÓN ALFA 0.6.0 · EN DESARROLLO
+VERSIÓN ALFA 0.7.0 · EN DESARROLLO
 
 ### nombre_juego
 PhotoHacks
@@ -381,6 +381,18 @@ Restablecer gráficos
 ### novedades_restablecido · El mismo botón, ya pulsado
 > máximo 24 caracteres
 Gráficos restablecidos
+
+### novedades_0_7_0_1 · Novedades de la versión 0.7.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Modo nuevo, Paparazzi: Busca a la persona de la ficha en el parque grande y hazle la foto que te piden antes de que se acabe el tiempo.
+
+### novedades_0_7_0_2 · Novedades de la versión 0.7.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Niveles sin final con hitos cada diez, la cámara que sigue a quien enganchas, una chuleta de planos y comodines para apurar.
+
+### novedades_0_7_0_3 · Novedades de la versión 0.7.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
+> máximo 150 caracteres
+Arcade, bloque «El encuadre»: Cinco niveles de planos, con un dibujo de dónde cortar y el plano que haces, en vivo, en el visor.
 
 ### novedades_0_6_0_1 · Novedades de la versión 0.6.0 (736 px a 17 px: dos líneas, unos 150 caracteres)
 > máximo 150 caracteres

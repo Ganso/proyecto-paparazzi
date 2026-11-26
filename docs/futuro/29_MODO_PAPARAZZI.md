@@ -1,6 +1,6 @@
 # 29 · Modo Paparazzi: supervivencia de encuadres con cámara ideal
 
-> **Estado: ✅ Hecho (E0–E10, 25/26-11-2026; falta la validación del usuario y E11, opcional).** Rediseñado tras la primera prueba a mano: todo en el parque grande, el tramo 1 con «un plano cualquiera» y el enganche voluntario (decisiones 10–14 y §9.1). El estado y las diferencias con el plan de cada etapa están en el §20; la calibración, en el §22. Lo que sigue es la especificación con la que se hizo, con sus incógnitas ya despejadas (§23).
+> **Estado: ✅ Hecho (E0–E10, 25/26-11-2026), publicado para probarlo a fondo en la 0.7.0-alpha (release de GitHub; itch, aún no). Falta la validación del usuario y E11, opcional.** Rediseñado tras la primera prueba a mano: todo en el parque grande, el tramo 1 con «un plano cualquiera» y el enganche voluntario (decisiones 10–14 y §9.1). El estado y las diferencias con el plan de cada etapa están en el §20; la calibración, en el §22. Lo que sigue es la especificación con la que se hizo, con sus incógnitas ya despejadas (§23).
 
 ## Decisiones del usuario (25-11-2026)
 
